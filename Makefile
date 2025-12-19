@@ -1,4 +1,4 @@
-.PHONY: dev run build test lint tidy clean
+.PHONY: dev run build test fmt lint tidy clean
 
 # 開発サーバーを起動（ホットリロード）
 dev:
@@ -15,6 +15,10 @@ build:
 # テストを実行
 test:
 	go test ./...
+
+# コードをフォーマット
+fmt:
+	gofmt -w .
 
 # 静的解析を実行
 lint:
