@@ -8,11 +8,13 @@ AI を活用してポッドキャストを作成・配信できるプラット�
 
 ## 技術スタック
 
-- **言語**: Go
+- **言語**: Go 1.24
+- **フレームワーク**: Gin
 - **API**: REST API
 - **DB**: PostgreSQL
 - **バージョン管理**: mise
 - **ローカル環境**: Docker Compose
+- **ホットリロード**: Air
 - **ホスティング**: Railway
 
 ## セットアップ
@@ -41,17 +43,32 @@ docker compose up -d
 ### 開発サーバーの起動
 
 ```bash
-go run main.go
+make dev
 ```
+
+## コマンド一覧
+
+| コマンド | 説明 |
+|----------|------|
+| `make dev` | 開発サーバーを起動（ホットリロード） |
+| `make run` | サーバーを起動 |
+| `make build` | バイナリをビルド |
+| `make test` | テストを実行 |
+| `make lint` | 静的解析を実行 |
+| `make tidy` | 依存関係を整理 |
+| `make clean` | ビルド成果物を削除 |
 
 ## ディレクトリ構成
 
 ```
 .
-├── README.md
-├── CLAUDE.md
-├── .mise.toml
-├── docker-compose.yml
+├── main.go              # エントリーポイント
 ├── go.mod
-└── main.go
+├── go.sum
+├── Makefile             # コマンド定義
+├── .air.toml            # Air 設定
+├── .mise.toml           # mise 設定
+├── docker-compose.yml   # ローカル DB
+├── README.md
+└── CLAUDE.md
 ```
