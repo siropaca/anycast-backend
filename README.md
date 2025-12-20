@@ -32,6 +32,9 @@ mise trust && mise install
 
 # 依存関係のインストール
 go mod download
+
+# 環境変数の設定
+cp .env.example .env
 ```
 
 ### DB の起動
@@ -47,6 +50,13 @@ make dev
 ```
 
 サーバーは http://localhost:8081 で起動します。
+
+## API エンドポイント
+
+| メソッド | パス | 説明 |
+|----------|------|------|
+| GET | `/` | Hello World |
+| GET | `/health` | ヘルスチェック |
 
 ## コマンド一覧
 
@@ -69,6 +79,7 @@ make dev
 ├── go.mod
 ├── go.sum
 ├── Makefile             # コマンド定義
+├── .env.example         # 環境変数のサンプル
 ├── .air.toml            # Air 設定
 ├── .mise.toml           # mise 設定
 ├── docker-compose.yml   # ローカル DB

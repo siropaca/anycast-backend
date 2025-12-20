@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"os"
 
@@ -19,5 +20,13 @@ func main() {
 		})
 	})
 
-	r.Run(":" + os.Getenv("PORT"))
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status": "ok",
+		})
+	})
+
+	if err := r.Run(":" + os.Getenv("PORT")); err != nil {
+		log.Fatal(err)
+	}
 }
