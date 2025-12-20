@@ -46,6 +46,8 @@ docker compose up -d
 make dev
 ```
 
+サーバーは http://localhost:8081 で起動します。
+
 ## コマンド一覧
 
 | コマンド | 説明 |
@@ -54,6 +56,7 @@ make dev
 | `make run` | サーバーを起動 |
 | `make build` | バイナリをビルド |
 | `make test` | テストを実行 |
+| `make fmt` | コードをフォーマット |
 | `make lint` | 静的解析を実行 |
 | `make tidy` | 依存関係を整理 |
 | `make clean` | ビルド成果物を削除 |
