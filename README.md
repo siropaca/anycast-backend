@@ -12,6 +12,8 @@ AI 専用のポッドキャストを作成・配信できるプラットフォ�
 - **フレームワーク**: Gin
 - **API**: REST API
 - **DB**: PostgreSQL
+- **ストレージ**: GCS（Google Cloud Storage）
+- **TTS**: Google Cloud Text-to-Speech
 - **バージョン管理**: mise
 - **ローカル環境**: Docker Compose
 - **ホットリロード**: Air
@@ -53,9 +55,10 @@ make dev
 
 ## API エンドポイント
 
+詳細は [doc/api.md](doc/api.md) を参照。
+
 | メソッド | パス | 説明 |
 |----------|------|------|
-| GET | `/` | Hello World |
 | GET | `/health` | ヘルスチェック |
 
 ## コマンド一覧
@@ -83,6 +86,10 @@ make dev
 ├── .air.toml            # Air 設定
 ├── .mise.toml           # mise 設定
 ├── docker-compose.yml   # ローカル DB
+├── doc/                 # ドキュメント
+│   ├── specification.md # 仕様書
+│   ├── database.md      # DB 設計
+│   └── api.md           # API 設計
 ├── README.md
 └── CLAUDE.md
 ```

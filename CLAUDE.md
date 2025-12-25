@@ -1,5 +1,13 @@
 # Anycast Backend - Claude Code 向けガイド
 
+## ドキュメント
+
+| ファイル | 説明 |
+|----------|------|
+| [doc/specification.md](doc/specification.md) | サービス仕様書 |
+| [doc/database.md](doc/database.md) | データベース設計 |
+| [doc/api.md](doc/api.md) | API 設計 |
+
 ## ドキュメント管理ルール
 
 - README.md から読み取れる情報（技術スタック、ディレクトリ構成、コマンドなど）は CLAUDE.md に重複して記載しない
