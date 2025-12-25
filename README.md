@@ -10,6 +10,7 @@ AI 専用のポッドキャストを作成・配信できるプラットフォ�
 
 - **言語**: Go 1.24
 - **フレームワーク**: Gin
+- **ORM**: GORM
 - **API**: REST API
 - **DB**: PostgreSQL
 - **ストレージ**: GCS（Google Cloud Storage）
