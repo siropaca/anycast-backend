@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ["go-migrate"]
+
+[phases.build]
+cmds = ["go build -o bin/server main.go"]
+
+[start]
+cmd = "migrate -path migrations -database \"$DATABASE_URL\" up && ./bin/server"

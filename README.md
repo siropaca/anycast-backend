@@ -98,6 +98,8 @@ make dev
 ├── .air.toml            # Air 設定
 ├── .mise.toml           # mise 設定
 ├── docker-compose.yml   # ローカル DB
+├── railway.toml         # Railway 設定
+├── nixpacks.toml        # Nixpacks ビルド設定
 ├── migrations/          # マイグレーションファイル
 ├── doc/                 # ドキュメント
 │   ├── specification.md # 仕様書
