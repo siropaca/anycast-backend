@@ -4,6 +4,10 @@
 
 ```mermaid
 erDiagram
+    users ||--o| credentials : has
+    users ||--o{ oauth_accounts : has
+    users ||--o{ channels : owns
+    users ||--o| images : avatar
     channels ||--o{ characters : has
     channels ||--o{ episodes : has
     channels ||--o| images : artwork
@@ -16,8 +20,38 @@ erDiagram
     script_lines ||--o| sound_effects : sfx
     sound_effects ||--|| audios : audio
 
+    users {
+        uuid id PK
+        varchar email
+        varchar name
+        uuid avatar_id FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    credentials {
+        uuid id PK
+        uuid user_id FK
+        varchar password_hash
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    oauth_accounts {
+        uuid id PK
+        uuid user_id FK
+        varchar provider
+        varchar provider_user_id
+        varchar access_token
+        varchar refresh_token
+        timestamp expires_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
     channels {
         uuid id PK
+        uuid user_id FK
         varchar name
         text description
         uuid artwork_id FK
@@ -106,6 +140,81 @@ erDiagram
 
 ## テーブル定義
 
+### 認証テーブル
+
+ユーザー認証に関するデータ。
+
+---
+
+#### users
+
+ユーザー情報を管理する。
+
+| カラム名 | 型 | NULLABLE | デフォルト | 説明 |
+|----------|-----|:--------:|------------|------|
+| id | UUID | | gen_random_uuid() | 主キー |
+| email | VARCHAR(255) | | - | メールアドレス |
+| name | VARCHAR(255) | | - | 表示名 |
+| avatar_id | UUID | ◯ | - | アバター画像（images 参照） |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
+| updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
+
+**インデックス:**
+- PRIMARY KEY (id)
+- UNIQUE (email)
+
+**外部キー:**
+- avatar_id → images(id) ON DELETE SET NULL
+
+---
+
+#### credentials
+
+パスワード認証情報を管理する。1 ユーザーにつき 1 レコード。
+
+| カラム名 | 型 | NULLABLE | デフォルト | 説明 |
+|----------|-----|:--------:|------------|------|
+| id | UUID | | gen_random_uuid() | 主キー |
+| user_id | UUID | | - | ユーザー（users 参照） |
+| password_hash | VARCHAR(255) | | - | パスワードハッシュ（bcrypt） |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
+| updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
+
+**インデックス:**
+- PRIMARY KEY (id)
+- UNIQUE (user_id)
+
+**外部キー:**
+- user_id → users(id) ON DELETE CASCADE
+
+---
+
+#### oauth_accounts
+
+OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバイダを紐付け可能。
+
+| カラム名 | 型 | NULLABLE | デフォルト | 説明 |
+|----------|-----|:--------:|------------|------|
+| id | UUID | | gen_random_uuid() | 主キー |
+| user_id | UUID | | - | ユーザー（users 参照） |
+| provider | VARCHAR(50) | | - | プロバイダ: `google` |
+| provider_user_id | VARCHAR(255) | | - | プロバイダ側のユーザー ID |
+| access_token | VARCHAR(1024) | ◯ | - | アクセストークン |
+| refresh_token | VARCHAR(1024) | ◯ | - | リフレッシュトークン |
+| expires_at | TIMESTAMP | ◯ | - | トークン有効期限 |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
+| updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
+
+**インデックス:**
+- PRIMARY KEY (id)
+- UNIQUE (provider, provider_user_id)
+- INDEX (user_id)
+
+**外部キー:**
+- user_id → users(id) ON DELETE CASCADE
+
+---
+
 ### ユーザーデータテーブル
 
 ユーザーが作成・管理するデータ。
@@ -119,6 +228,7 @@ erDiagram
 | カラム名 | 型 | NULLABLE | デフォルト | 説明 |
 |----------|-----|:--------:|------------|------|
 | id | UUID | | gen_random_uuid() | 主キー |
+| user_id | UUID | | - | オーナー（users 参照） |
 | name | VARCHAR(255) | | - | チャンネル名 |
 | description | TEXT | ◯ | - | チャンネルの説明 |
 | artwork_id | UUID | ◯ | - | カバー画像（images 参照） |
@@ -127,8 +237,10 @@ erDiagram
 
 **インデックス:**
 - PRIMARY KEY (id)
+- INDEX (user_id)
 
 **外部キー:**
+- user_id → users(id) ON DELETE CASCADE
 - artwork_id → images(id) ON DELETE SET NULL
 
 ---

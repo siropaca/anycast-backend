@@ -5,7 +5,7 @@
 - **ベース URL**: `/api/v1`
 - **形式**: REST API
 - **データ形式**: JSON
-- **認証**: Bearer Token（予定）
+- **認証**: Bearer Token（Next Auth 連携）
 
 ---
 
@@ -63,6 +63,7 @@
 
 | リソース | 参照 | 作成 | 更新 | 削除 |
 |----------|:----:|:----:|:----:|:----:|
+| Users | Owner | - | Owner | Owner |
 | Channels | Public | Owner | Owner | Owner |
 | Characters | Public | Owner | Owner | Owner |
 | Episodes | Public | Owner | Owner | Owner |
@@ -72,6 +73,77 @@
 | Images（アップロード） | Owner | Owner | - | Owner |
 | Voices | Public | Admin | Admin | Admin |
 | Sound Effects | Public | Admin | Admin | Admin |
+
+---
+
+## Auth（認証）
+
+認証は Next Auth（フロントエンド）で処理し、バックエンドはトークン検証とユーザー情報管理を担当。
+
+### 現在のユーザー取得
+
+```
+GET /auth/me
+```
+
+**レスポンス:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "name": "ユーザー名",
+    "avatar": { "id": "uuid", "url": "..." },
+    "hasPassword": true,
+    "oauthProviders": ["google"],
+    "createdAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+### ユーザー情報更新
+
+```
+PATCH /auth/me
+```
+
+**リクエスト:**
+```json
+{
+  "name": "新しい名前",
+  "avatarImageId": "uuid"
+}
+```
+
+### アカウント削除
+
+```
+DELETE /auth/me
+```
+
+---
+
+## Users（ユーザー）
+
+### ユーザー取得
+
+```
+GET /users/:userId
+```
+
+**レスポンス:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "name": "ユーザー名",
+    "avatar": { "id": "uuid", "url": "..." },
+    "createdAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+※ 他ユーザーの情報は公開プロフィールのみ（email は非公開）
 
 ---
 
@@ -677,8 +749,11 @@ GET /sound-effects/:sfxId
 
 | コード | HTTP Status | 説明 |
 |--------|-------------|------|
+| UNAUTHORIZED | 401 | 認証が必要 |
+| FORBIDDEN | 403 | アクセス権限がない |
 | NOT_FOUND | 404 | リソースが見つからない |
 | VALIDATION_ERROR | 400 | バリデーションエラー |
+| DUPLICATE_EMAIL | 409 | メールアドレスが既に登録済み |
 | DUPLICATE_NAME | 409 | 名前が重複している |
 | RESERVED_NAME | 400 | 予約語を使用している |
 | SCRIPT_PARSE_ERROR | 400 | 台本のパースに失敗 |
