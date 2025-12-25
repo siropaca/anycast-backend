@@ -8,6 +8,12 @@
 | [doc/database.md](doc/database.md) | データベース設計 |
 | [doc/api.md](doc/api.md) | API 設計 |
 
+### 外部ドキュメント
+
+| サービス | リンク |
+|----------|--------|
+| Google Cloud Text-to-Speech | https://cloud.google.com/text-to-speech/docs |
+
 ## ドキュメント管理ルール
 
 - README.md から読み取れる情報（技術スタック、ディレクトリ構成、コマンドなど）は CLAUDE.md に重複して記載しない
@@ -38,3 +44,8 @@
 ### ファイル・ディレクトリ管理
 
 - 新しいディレクトリを作成する際、空のままでも Git で管理する必要がある場合は `.gitkeep` を追加する
+
+### パッケージ管理
+
+- **ライブラリ**（コードから import するもの）: `go.mod` で管理（`go get`）
+- **CLI ツール**（ターミナルから実行するもの）: `.mise.toml` で管理（`mise install`）
