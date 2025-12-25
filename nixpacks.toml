@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["go-migrate"]
+nixPkgs = ["go", "go-migrate"]
 
 [phases.build]
 cmds = ["go build -o bin/server main.go"]
