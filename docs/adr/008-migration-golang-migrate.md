@@ -6,8 +6,9 @@ Accepted
 
 ## コンテキスト
 
-データベーススキーマのバージョン管理を行う方法を選定する必要があった。以下の要件を考慮した:
+データベーススキーマのバージョン管理を行う方法を選定する必要があった。
 
+以下の要件を考慮した:
 - SQL ベースのマイグレーション
 - Up/Down のサポート
 - CI/CD との統合
@@ -33,7 +34,6 @@ migrate -path migrations -database "$DATABASE_URL" down 1
 - CLI ツールとして使用可能
 - Docker イメージあり
 - 多くのデータベースをサポート
-- Railway などの PaaS との統合が容易
 
 ### 選択肢 2: GORM AutoMigrate
 
