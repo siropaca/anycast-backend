@@ -21,6 +21,7 @@ ADR（Architecture Decision Record）は、アーキテクチャ上の重要な�
 | [008](008-migration-golang-migrate.md) | マイグレーション: golang-migrate | Accepted |
 | [009](009-uuid-google-uuid.md) | UUID: google/uuid | Accepted |
 | [010](010-linter-golangci-lint.md) | 静的解析: golangci-lint | Accepted |
+| [011](011-testing-testify.md) | テストライブラリ: testify | Accepted |
 
 ## ステータス
 
