@@ -687,7 +687,6 @@ GET /voices
 |------------|-----|------------|------|
 | provider | string | - | プロバイダでフィルタ（例: google） |
 | gender | string | - | 性別でフィルタ（male / female / neutral） |
-| activeOnly | bool | true | true の場合 is_active = true のみ取得 |
 
 **レスポンス:**
 ```json

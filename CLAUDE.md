@@ -4,9 +4,10 @@
 
 | ファイル | 説明 |
 |----------|------|
-| [doc/specification.md](doc/specification.md) | サービス仕様書 |
-| [doc/database.md](doc/database.md) | データベース設計 |
-| [doc/api.md](doc/api.md) | API 設計 |
+| [docs/specification.md](docs/specification.md) | サービス仕様書 |
+| [docs/database.md](docs/database.md) | データベース設計 |
+| [docs/api.md](docs/api.md) | API 設計 |
+| [docs/adr/](docs/adr/) | Architecture Decision Records |
 
 ### 外部ドキュメント
 
@@ -26,16 +27,20 @@
 - Go の標準的なコーディング規約に従う
 - `gofmt` でフォーマットを統一する
 - エラーハンドリングは適切に行う
+- ソースコードには日本語でコメントを残す（細かすぎず適切に）
+- すべての関数には、その関数が何をするかを説明するコメントを追加する
 
 ### ディレクトリ構成
 
 - [golang-standards/project-layout](https://github.com/golang-standards/project-layout) を参考にする
 
-### コミット・プッシュ
+### Git / GitHub
 
 - ユーザーから指示があるまでコミットやプッシュを行わない
 - コミット前に `make fmt` でフォーマットを実行する
 - コミット前に `make lint` で静的解析を実行する
+- `git push` はユーザーから指示があった場合のみ実行する（勝手にプッシュしない）
+- PR 作成時は `.github/PULL_REQUEST_TEMPLATE.md` をテンプレートとして使用する
 
 ## 学習事項
 

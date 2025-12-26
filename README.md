@@ -4,7 +4,7 @@ AI 専用のポッドキャストを作成・配信できるプラットフォ�
 
 ## フロントエンド
 
-- https://github.com/siropaca/anycast-forntend
+- https://github.com/siropaca/anycast-frontend
 
 ## 技術スタック
 
@@ -13,6 +13,7 @@ AI 専用のポッドキャストを作成・配信できるプラットフォ�
 - **ORM**: GORM
 - **マイグレーション**: golang-migrate
 - **API**: REST API
+- **API ドキュメント**: Swagger (swaggo/swag)
 - **DB**: PostgreSQL
 - **ストレージ**: GCS（Google Cloud Storage）
 - **TTS**: Google Cloud Text-to-Speech
@@ -20,6 +21,24 @@ AI 専用のポッドキャストを作成・配信できるプラットフォ�
 - **ローカル環境**: Docker Compose
 - **ホットリロード**: Air
 - **ホスティング**: Railway
+
+## アーキテクチャ
+
+レイヤードアーキテクチャ + 軽量 DDD を採用しています。
+
+```
+Handler → Service → Repository → DB
+```
+
+| レイヤー | 責務 |
+|----------|------|
+| Handler | HTTP リクエスト/レスポンス処理 |
+| Service | ビジネスロジック |
+| Repository | データアクセス |
+| Model | ドメインモデル |
+| DTO | リクエスト/レスポンス構造体 |
+
+詳細は [docs/adr/](docs/adr/) を参照。
 
 ## セットアップ
 
@@ -41,6 +60,14 @@ go mod download
 cp .env.example .env
 ```
 
+### 環境変数
+
+| 変数 | 説明 | デフォルト |
+|------|------|------------|
+| `PORT` | サーバーのポート番号 | 8081 |
+| `DATABASE_URL` | PostgreSQL 接続 URL | - |
+| `APP_ENV` | 環境（development / production） | development |
+
 ### DB の起動
 
 ```bash
@@ -61,13 +88,36 @@ make dev
 
 サーバーは http://localhost:8081 で起動します。
 
-## API エンドポイント
+## API ドキュメント
 
-詳細は [doc/api.md](doc/api.md) を参照。
+### Swagger UI
+
+開発サーバー起動後、以下の URL で Swagger UI にアクセスできます。
+
+```
+http://localhost:8081/swagger/index.html
+```
+
+API の仕様確認やインタラクティブなテストが可能です。
+
+### ドキュメントの更新
+
+Handler に Swagger アノテーションを追加した後、以下のコマンドでドキュメントを再生成します。
+
+```bash
+make swagger
+```
+
+### API エンドポイント
+
+詳細は [docs/api.md](docs/api.md) を参照。
 
 | メソッド | パス | 説明 |
 |----------|------|------|
 | GET | `/health` | ヘルスチェック |
+| GET | `/swagger/*` | Swagger UI |
+| GET | `/api/v1/voices` | ボイス一覧取得 |
+| GET | `/api/v1/voices/:voiceId` | ボイス取得 |
 
 ## コマンド一覧
 
@@ -85,6 +135,7 @@ make dev
 | `make migrate-down` | マイグレーションロールバック |
 | `make migrate-reset` | マイグレーションリセット（down → up） |
 | `make migrate-status` | マイグレーション状態確認 |
+| `make swagger` | Swagger ドキュメント生成 |
 
 ## ディレクトリ構成
 
@@ -101,10 +152,26 @@ make dev
 ├── railway.toml         # Railway 設定
 ├── nixpacks.toml        # Nixpacks ビルド設定
 ├── migrations/          # マイグレーションファイル
-├── doc/                 # ドキュメント
+├── docs/                # ドキュメント
+│   ├── adr/             # Architecture Decision Records
 │   ├── specification.md # 仕様書
 │   ├── database.md      # DB 設計
 │   └── api.md           # API 設計
+├── swagger/             # Swagger ドキュメント（自動生成）
+├── http/                # HTTP リクエストファイル
+├── internal/            # 内部パッケージ
+│   ├── apperror/        # カスタムエラー型
+│   ├── config/          # 設定管理
+│   ├── db/              # DB 接続
+│   ├── di/              # DI コンテナ
+│   ├── dto/             # Data Transfer Objects
+│   ├── handler/         # ハンドラー
+│   ├── logger/          # 構造化ログ
+│   ├── middleware/      # ミドルウェア
+│   ├── model/           # ドメインモデル
+│   ├── repository/      # データアクセス層
+│   ├── router/          # ルーティング
+│   └── service/         # ビジネスロジック層
 ├── README.md
 └── CLAUDE.md
 ```

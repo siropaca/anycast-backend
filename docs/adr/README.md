@@ -1,0 +1,37 @@
+# Architecture Decision Records (ADR)
+
+このディレクトリには、Anycast Backend の技術的意思決定を記録した ADR を格納しています。
+
+## ADR とは
+
+ADR（Architecture Decision Record）は、アーキテクチャ上の重要な決定を記録するドキュメントです。
+なぜその決定を行ったのか、どのような選択肢を検討したのかを残すことで、将来の開発者が決定の背景を理解できるようにします。
+
+## ADR 一覧
+
+| 番号 | タイトル | ステータス |
+|------|----------|------------|
+| [001](001-layered-architecture.md) | レイヤードアーキテクチャの採用 | Accepted |
+| [002](002-manual-dependency-injection.md) | 手動による依存性注入 | Accepted |
+| [003](003-structured-logging-with-slog.md) | slog による構造化ログ | Accepted |
+| [004](004-openapi-swagger.md) | OpenAPI (Swagger) による API ドキュメント | Accepted |
+| [005](005-custom-error-type.md) | カスタムエラー型 | Accepted |
+| [006](006-web-framework-gin.md) | Web フレームワーク: Gin | Accepted |
+| [007](007-orm-gorm.md) | ORM: GORM | Accepted |
+| [008](008-migration-golang-migrate.md) | マイグレーション: golang-migrate | Accepted |
+| [009](009-uuid-google-uuid.md) | UUID: google/uuid | Accepted |
+
+## ステータス
+
+- **Proposed**: 提案中
+- **Accepted**: 採用
+- **Deprecated**: 非推奨（別の ADR で置き換え）
+- **Superseded**: 別の ADR で上書き
+
+## 新しい ADR の作成
+
+`template.md` をコピーして、連番でファイルを作成してください。
+
+```bash
+cp docs/adr/template.md docs/adr/00X-title.md
+```

@@ -1,4 +1,4 @@
-.PHONY: dev run build test fmt lint tidy clean migrate-up migrate-down migrate-reset migrate-status
+.PHONY: dev run build test fmt lint tidy clean migrate-up migrate-down migrate-reset migrate-status swagger
 
 DATABASE_URL ?= postgres://postgres:postgres@localhost:5432/anycast?sslmode=disable
 
@@ -50,3 +50,7 @@ migrate-reset:
 # マイグレーション状態確認
 migrate-status:
 	migrate -path migrations -database "$(DATABASE_URL)" version
+
+# Swagger ドキュメント生成
+swagger:
+	swag init -g main.go -o swagger
