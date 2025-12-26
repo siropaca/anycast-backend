@@ -1,4 +1,4 @@
-.PHONY: dev run build test fmt lint tidy clean migrate-up migrate-down migrate-reset migrate-status swagger
+.PHONY: dev run build test fmt lint lint-fix tidy clean migrate-up migrate-down migrate-reset migrate-status swagger
 
 DATABASE_URL ?= postgres://postgres:postgres@localhost:5433/anycast?sslmode=disable
 
@@ -24,7 +24,11 @@ fmt:
 
 # 静的解析を実行
 lint:
-	go vet ./...
+	golangci-lint run ./...
+
+# 静的解析を実行（自動修正あり）
+lint-fix:
+	golangci-lint run --fix ./...
 
 # 依存関係を整理
 tidy:
