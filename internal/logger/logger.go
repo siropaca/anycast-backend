@@ -6,16 +6,24 @@ import (
 	"os"
 )
 
+// 環境を表す型
+type Env string
+
+const (
+	EnvProduction  Env = "production"
+	EnvDevelopment Env = "development"
+)
+
 var defaultLogger *slog.Logger
 
 // ロガーを初期化する
-func Init(env string) {
+func Init(env Env) {
 	var handler slog.Handler
 	opts := &slog.HandlerOptions{
 		AddSource: true,
 	}
 
-	if env == "production" {
+	if env == EnvProduction {
 		opts.Level = slog.LevelInfo
 		handler = slog.NewJSONHandler(os.Stdout, opts)
 	} else {
@@ -30,7 +38,7 @@ func Init(env string) {
 // デフォルトのロガーを返す
 func Default() *slog.Logger {
 	if defaultLogger == nil {
-		Init("development")
+		Init(EnvDevelopment)
 	}
 	return defaultLogger
 }
