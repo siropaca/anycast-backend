@@ -1,6 +1,12 @@
-.PHONY: dev run build test fmt lint lint-fix tidy clean migrate-up migrate-down migrate-reset migrate-status swagger
+.PHONY: dev run build test fmt lint lint-fix tidy clean migrate-up migrate-down migrate-reset migrate-status swagger bootstrap bs
 
 DATABASE_URL ?= postgres://postgres:postgres@localhost:5433/anycast?sslmode=disable
+
+# 開発ツールをインストール
+bootstrap:
+	./scripts/bootstrap.sh
+
+bs: bootstrap
 
 # 開発サーバーを起動（ホットリロード）
 dev:
@@ -40,20 +46,20 @@ clean:
 
 # マイグレーション実行
 migrate-up:
-	~/go/bin/migrate -path migrations -database "$(DATABASE_URL)" up
+	migrate -path migrations -database "$(DATABASE_URL)" up
 
 # マイグレーションロールバック
 migrate-down:
-	~/go/bin/migrate -path migrations -database "$(DATABASE_URL)" down
+	migrate -path migrations -database "$(DATABASE_URL)" down
 
 # マイグレーションリセット（down → up）
 migrate-reset:
-	~/go/bin/migrate -path migrations -database "$(DATABASE_URL)" down -all
-	~/go/bin/migrate -path migrations -database "$(DATABASE_URL)" up
+	migrate -path migrations -database "$(DATABASE_URL)" down -all
+	migrate -path migrations -database "$(DATABASE_URL)" up
 
 # マイグレーション状態確認
 migrate-status:
-	~/go/bin/migrate -path migrations -database "$(DATABASE_URL)" version
+	migrate -path migrations -database "$(DATABASE_URL)" version
 
 # Swagger ドキュメント生成
 swagger:
