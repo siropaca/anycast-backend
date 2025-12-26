@@ -14,12 +14,12 @@ type voiceRepository struct {
 	db *gorm.DB
 }
 
-// NewVoiceRepository は VoiceRepository の実装を返す
+// VoiceRepository の実装を返す
 func NewVoiceRepository(db *gorm.DB) VoiceRepository {
 	return &voiceRepository{db: db}
 }
 
-// FindAll はフィルタ条件に基づいてアクティブなボイス一覧を取得する
+// フィルタ条件に基づいてアクティブなボイス一覧を取得する
 func (r *voiceRepository) FindAll(ctx context.Context, filter VoiceFilter) ([]model.Voice, error) {
 	var voices []model.Voice
 	tx := r.db.WithContext(ctx).Model(&model.Voice{}).Where("is_active = ?", true)
@@ -37,7 +37,7 @@ func (r *voiceRepository) FindAll(ctx context.Context, filter VoiceFilter) ([]mo
 	return voices, nil
 }
 
-// FindByID は指定された ID のボイスを取得する
+// 指定された ID のボイスを取得する
 func (r *voiceRepository) FindByID(ctx context.Context, id string) (*model.Voice, error) {
 	var voice model.Voice
 	if err := r.db.WithContext(ctx).First(&voice, "id = ?", id).Error; err != nil {

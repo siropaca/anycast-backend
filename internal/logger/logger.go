@@ -8,7 +8,7 @@ import (
 
 var defaultLogger *slog.Logger
 
-// Init はロガーを初期化する
+// ロガーを初期化する
 func Init(env string) {
 	var handler slog.Handler
 	opts := &slog.HandlerOptions{
@@ -27,7 +27,7 @@ func Init(env string) {
 	slog.SetDefault(defaultLogger)
 }
 
-// Default はデフォルトのロガーを返す
+// デフォルトのロガーを返す
 func Default() *slog.Logger {
 	if defaultLogger == nil {
 		Init("development")
@@ -37,12 +37,12 @@ func Default() *slog.Logger {
 
 type ctxKey struct{}
 
-// WithContext はコンテキストにロガーを設定する
+// コンテキストにロガーを設定する
 func WithContext(ctx context.Context, l *slog.Logger) context.Context {
 	return context.WithValue(ctx, ctxKey{}, l)
 }
 
-// FromContext はコンテキストからロガーを取得する
+// コンテキストからロガーを取得する
 func FromContext(ctx context.Context) *slog.Logger {
 	if l, ok := ctx.Value(ctxKey{}).(*slog.Logger); ok {
 		return l

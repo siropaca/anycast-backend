@@ -14,12 +14,12 @@ import (
 	"github.com/siropaca/anycast-backend/internal/service"
 )
 
-// VoiceHandler はボイス関連のハンドラー
+// ボイス関連のハンドラー
 type VoiceHandler struct {
 	voiceService service.VoiceService
 }
 
-// NewVoiceHandler は VoiceHandler を作成する
+// VoiceHandler を作成する
 func NewVoiceHandler(vs service.VoiceService) *VoiceHandler {
 	return &VoiceHandler{voiceService: vs}
 }

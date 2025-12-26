@@ -2,7 +2,7 @@ package apperror
 
 import "fmt"
 
-// AppError はアプリケーション全体で使用するエラー型
+// アプリケーション全体で使用するエラー型
 type AppError struct {
 	Code       string      `json:"code"`
 	Message    string      `json:"message"`
@@ -22,17 +22,17 @@ func (e *AppError) Unwrap() error {
 	return e.Err
 }
 
-// New は新しい AppError を作成する
+// 新しい AppError を作成する
 func New(code string, message string, status int) *AppError {
 	return &AppError{Code: code, Message: message, HTTPStatus: status}
 }
 
-// Wrap は既存のエラーをラップした AppError を作成する
+// 既存のエラーをラップした AppError を作成する
 func Wrap(err error, code string, message string, status int) *AppError {
 	return &AppError{Code: code, Message: message, HTTPStatus: status, Err: err}
 }
 
-// WithMessage は新しいメッセージでエラーをコピーする
+// 新しいメッセージでエラーをコピーする
 func (e *AppError) WithMessage(msg string) *AppError {
 	return &AppError{
 		Code:       e.Code,
@@ -43,7 +43,7 @@ func (e *AppError) WithMessage(msg string) *AppError {
 	}
 }
 
-// WithDetails は詳細情報を付与したエラーをコピーする
+// 詳細情報を付与したエラーをコピーする
 func (e *AppError) WithDetails(details interface{}) *AppError {
 	return &AppError{
 		Code:       e.Code,
@@ -54,7 +54,7 @@ func (e *AppError) WithDetails(details interface{}) *AppError {
 	}
 }
 
-// WithError は元のエラーを付与したエラーをコピーする
+// 元のエラーを付与したエラーをコピーする
 func (e *AppError) WithError(err error) *AppError {
 	return &AppError{
 		Code:       e.Code,

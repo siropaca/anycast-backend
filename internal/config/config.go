@@ -2,14 +2,14 @@ package config
 
 import "os"
 
-// Config はアプリケーション設定
+// アプリケーション設定
 type Config struct {
 	Port        string
 	DatabaseURL string
 	AppEnv      string
 }
 
-// Load は環境変数から設定を読み込む
+// 環境変数から設定を読み込む
 func Load() *Config {
 	return &Config{
 		Port:        getEnv("PORT", "8081"),

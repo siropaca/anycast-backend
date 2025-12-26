@@ -9,7 +9,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/logger"
 )
 
-// ErrorHandler はエラーをログに記録するミドルウェア
+// エラーをログに記録するミドルウェア
 func ErrorHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()

@@ -7,7 +7,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
-// VoiceService はボイス関連のビジネスロジックインターフェース
+// ボイス関連のビジネスロジックインターフェース
 type VoiceService interface {
 	ListVoices(ctx context.Context, filter repository.VoiceFilter) ([]model.Voice, error)
 	GetVoice(ctx context.Context, id string) (*model.Voice, error)

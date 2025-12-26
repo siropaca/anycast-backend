@@ -6,12 +6,12 @@ import (
 	"github.com/siropaca/anycast-backend/internal/apperror"
 )
 
-// Success は成功レスポンスを返す
+// 成功レスポンスを返す
 func Success(c *gin.Context, status int, data interface{}) {
 	c.JSON(status, gin.H{"data": data})
 }
 
-// Error はエラーレスポンスを返す
+// エラーレスポンスを返す
 func Error(c *gin.Context, err error) {
 	if appErr, ok := err.(*apperror.AppError); ok {
 		resp := gin.H{

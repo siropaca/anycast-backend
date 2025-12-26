@@ -10,7 +10,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/logger"
 )
 
-// Logger はリクエストログを出力するミドルウェア
+// リクエストログを出力するミドルウェア
 func Logger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()

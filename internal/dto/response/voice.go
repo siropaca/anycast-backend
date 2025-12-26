@@ -2,7 +2,7 @@ package response
 
 import "github.com/google/uuid"
 
-// VoiceResponse はボイスのレスポンス
+// ボイスのレスポンス
 type VoiceResponse struct {
 	ID              uuid.UUID `json:"id"`
 	Provider        string    `json:"provider"`
