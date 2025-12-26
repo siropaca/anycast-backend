@@ -8,6 +8,6 @@ type VoiceResponse struct {
 	Provider        string    `json:"provider"`
 	ProviderVoiceID string    `json:"providerVoiceId"`
 	Name            string    `json:"name"`
-	Gender          *string   `json:"gender"`
+	Gender          string    `json:"gender"`
 	IsActive        bool      `json:"isActive"`
 }
