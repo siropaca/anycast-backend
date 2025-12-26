@@ -4,9 +4,10 @@
 
 | ファイル | 説明 |
 |----------|------|
-| [doc/specification.md](doc/specification.md) | サービス仕様書 |
-| [doc/database.md](doc/database.md) | データベース設計 |
-| [doc/api.md](doc/api.md) | API 設計 |
+| [docs/specification.md](docs/specification.md) | サービス仕様書 |
+| [docs/database.md](docs/database.md) | データベース設計 |
+| [docs/api.md](docs/api.md) | API 設計 |
+| [docs/adr/](docs/adr/) | Architecture Decision Records |
 
 ### 外部ドキュメント
 
@@ -26,6 +27,7 @@
 - Go の標準的なコーディング規約に従う
 - `gofmt` でフォーマットを統一する
 - エラーハンドリングは適切に行う
+- ソースコードには日本語でコメントを残す（細かすぎず適切に）
 
 ### ディレクトリ構成
 
