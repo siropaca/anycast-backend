@@ -44,11 +44,9 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 
 	// API v1
 	api := r.Group("/api/v1")
-	{
-		// Voices
-		api.GET("/voices", container.VoiceHandler.ListVoices)
-		api.GET("/voices/:voiceId", container.VoiceHandler.GetVoice)
-	}
+	// Voices
+	api.GET("/voices", container.VoiceHandler.ListVoices)
+	api.GET("/voices/:voiceId", container.VoiceHandler.GetVoice)
 
 	return r
 }

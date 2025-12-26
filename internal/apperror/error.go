@@ -25,12 +25,12 @@ func (e *AppError) Unwrap() error {
 }
 
 // 新しい AppError を作成する
-func New(code string, message string, status int) *AppError {
+func New(code, message string, status int) *AppError {
 	return &AppError{Code: code, Message: message, HTTPStatus: status}
 }
 
 // 既存のエラーをラップした AppError を作成する
-func Wrap(err error, code string, message string, status int) *AppError {
+func Wrap(err error, code, message string, status int) *AppError {
 	return &AppError{Code: code, Message: message, HTTPStatus: status, Err: err}
 }
 

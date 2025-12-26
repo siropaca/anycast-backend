@@ -60,7 +60,7 @@ func TestVoiceHandler_ListVoices(t *testing.T) {
 		router := setupRouter(handler)
 
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/voices", nil)
+		req := httptest.NewRequest("GET", "/voices", http.NoBody)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
@@ -86,7 +86,7 @@ func TestVoiceHandler_ListVoices(t *testing.T) {
 		router := setupRouter(handler)
 
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/voices?provider=google&gender=female", nil)
+		req := httptest.NewRequest("GET", "/voices?provider=google&gender=female", http.NoBody)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
@@ -101,7 +101,7 @@ func TestVoiceHandler_ListVoices(t *testing.T) {
 		router := setupRouter(handler)
 
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/voices", nil)
+		req := httptest.NewRequest("GET", "/voices", http.NoBody)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
@@ -120,7 +120,7 @@ func TestVoiceHandler_GetVoice(t *testing.T) {
 		router := setupRouter(handler)
 
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/voices/"+id.String(), nil)
+		req := httptest.NewRequest("GET", "/voices/"+id.String(), http.NoBody)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
@@ -139,7 +139,7 @@ func TestVoiceHandler_GetVoice(t *testing.T) {
 		router := setupRouter(handler)
 
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/voices/invalid-uuid", nil)
+		req := httptest.NewRequest("GET", "/voices/invalid-uuid", http.NoBody)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)
@@ -155,7 +155,7 @@ func TestVoiceHandler_GetVoice(t *testing.T) {
 		router := setupRouter(handler)
 
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/voices/"+id.String(), nil)
+		req := httptest.NewRequest("GET", "/voices/"+id.String(), http.NoBody)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
@@ -171,7 +171,7 @@ func TestVoiceHandler_GetVoice(t *testing.T) {
 		router := setupRouter(handler)
 
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/voices/"+id.String(), nil)
+		req := httptest.NewRequest("GET", "/voices/"+id.String(), http.NoBody)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)

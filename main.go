@@ -19,7 +19,7 @@ import (
 // @host localhost:8081
 // @BasePath /api/v1
 func main() {
-	godotenv.Load()
+	_ = godotenv.Load() //nolint:errcheck // .env ファイルがなくてもエラーにしない
 
 	// 設定読み込み
 	cfg := config.Load()
