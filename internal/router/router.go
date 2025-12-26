@@ -9,7 +9,6 @@ import (
 
 	"github.com/siropaca/anycast-backend/internal/config"
 	"github.com/siropaca/anycast-backend/internal/di"
-	"github.com/siropaca/anycast-backend/internal/logger"
 	"github.com/siropaca/anycast-backend/internal/middleware"
 	_ "github.com/siropaca/anycast-backend/swagger"
 )
@@ -24,7 +23,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	r.Use(gin.Recovery())
 
 	// Swagger（本番環境では無効）
-	if cfg.AppEnv != logger.EnvProduction {
+	if cfg.AppEnv != config.EnvProduction {
 		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	}
 

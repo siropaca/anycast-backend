@@ -2,15 +2,21 @@ package config
 
 import (
 	"os"
+)
 
-	"github.com/siropaca/anycast-backend/internal/logger"
+// 環境を表す型
+type Env string
+
+const (
+	EnvProduction  Env = "production"
+	EnvDevelopment Env = "development"
 )
 
 // アプリケーション設定
 type Config struct {
 	Port        string
 	DatabaseURL string
-	AppEnv      logger.Env
+	AppEnv      Env
 }
 
 // 環境変数から設定を読み込む
@@ -18,7 +24,7 @@ func Load() *Config {
 	return &Config{
 		Port:        getEnv("PORT", "8081"),
 		DatabaseURL: getEnv("DATABASE_URL", ""),
-		AppEnv:      logger.Env(getEnv("APP_ENV", "development")),
+		AppEnv:      Env(getEnv("APP_ENV", "development")),
 	}
 }
 

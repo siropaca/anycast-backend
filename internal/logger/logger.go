@@ -4,26 +4,20 @@ import (
 	"context"
 	"log/slog"
 	"os"
-)
 
-// 環境を表す型
-type Env string
-
-const (
-	EnvProduction  Env = "production"
-	EnvDevelopment Env = "development"
+	"github.com/siropaca/anycast-backend/internal/config"
 )
 
 var defaultLogger *slog.Logger
 
 // ロガーを初期化する
-func Init(env Env) {
+func Init(env config.Env) {
 	var handler slog.Handler
 	opts := &slog.HandlerOptions{
 		AddSource: true,
 	}
 
-	if env == EnvProduction {
+	if env == config.EnvProduction {
 		opts.Level = slog.LevelInfo
 		handler = slog.NewJSONHandler(os.Stdout, opts)
 	} else {
@@ -38,7 +32,7 @@ func Init(env Env) {
 // デフォルトのロガーを返す
 func Default() *slog.Logger {
 	if defaultLogger == nil {
-		Init(EnvDevelopment)
+		Init(config.EnvDevelopment)
 	}
 	return defaultLogger
 }

@@ -4,8 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/siropaca/anycast-backend/internal/logger"
 )
 
 func TestLoad(t *testing.T) {
@@ -18,7 +16,7 @@ func TestLoad(t *testing.T) {
 
 		assert.Equal(t, "8081", cfg.Port)
 		assert.Equal(t, "", cfg.DatabaseURL)
-		assert.Equal(t, logger.Env("development"), cfg.AppEnv)
+		assert.Equal(t, Env("development"), cfg.AppEnv)
 	})
 
 	t.Run("環境変数が設定されている場合はその値を使用する", func(t *testing.T) {
@@ -30,7 +28,7 @@ func TestLoad(t *testing.T) {
 
 		assert.Equal(t, "9000", cfg.Port)
 		assert.Equal(t, "postgres://localhost:5432/test", cfg.DatabaseURL)
-		assert.Equal(t, logger.Env("production"), cfg.AppEnv)
+		assert.Equal(t, Env("production"), cfg.AppEnv)
 	})
 
 	t.Run("PORT のみ設定した場合は他はデフォルト値を使用する", func(t *testing.T) {
@@ -42,7 +40,7 @@ func TestLoad(t *testing.T) {
 
 		assert.Equal(t, "3000", cfg.Port)
 		assert.Equal(t, "", cfg.DatabaseURL)
-		assert.Equal(t, logger.Env("development"), cfg.AppEnv)
+		assert.Equal(t, Env("development"), cfg.AppEnv)
 	})
 }
 
