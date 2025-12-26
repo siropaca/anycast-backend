@@ -7,13 +7,14 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
+	"github.com/siropaca/anycast-backend/internal/config"
 	"github.com/siropaca/anycast-backend/internal/di"
 	"github.com/siropaca/anycast-backend/internal/middleware"
 	_ "github.com/siropaca/anycast-backend/swagger"
 )
 
 // Setup はルーターを設定して返す
-func Setup(container *di.Container) *gin.Engine {
+func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	r := gin.New()
 
 	// ミドルウェア
@@ -21,8 +22,10 @@ func Setup(container *di.Container) *gin.Engine {
 	r.Use(middleware.ErrorHandler())
 	r.Use(gin.Recovery())
 
-	// Swagger
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	// Swagger（本番環境では無効）
+	if cfg.AppEnv != "production" {
+		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	}
 
 	// ルートエンドポイント
 	r.GET("/", func(c *gin.Context) {

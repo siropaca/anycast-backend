@@ -37,7 +37,7 @@ func main() {
 	container := di.NewContainer(database)
 
 	// ルーター設定
-	r := router.Setup(container)
+	r := router.Setup(container, cfg)
 
 	// サーバー起動
 	if err := r.Run(":" + cfg.Port); err != nil {
