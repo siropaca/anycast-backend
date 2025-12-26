@@ -1,0 +1,22 @@
+@baseUrl = http://localhost:8081/api/v1
+
+### ボイス一覧取得
+GET {{baseUrl}}/voices
+
+### ボイス一覧取得（アクティブのみ）
+GET {{baseUrl}}/voices?activeOnly=true
+
+### ボイス一覧取得（非アクティブも含む）
+GET {{baseUrl}}/voices?activeOnly=false
+
+### ボイス一覧取得（プロバイダでフィルタ）
+GET {{baseUrl}}/voices?provider=google
+
+### ボイス一覧取得（性別でフィルタ）
+GET {{baseUrl}}/voices?gender=male
+
+### ボイス一覧取得（複合フィルタ）
+GET {{baseUrl}}/voices?provider=google&gender=female&activeOnly=true
+
+### ボイス取得
+GET {{baseUrl}}/voices/{{voiceId}}
