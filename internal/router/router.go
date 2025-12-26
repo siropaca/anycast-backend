@@ -30,7 +30,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	// ルートエンドポイント
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"message": "Hello, World!",
+			"message": "Welcome to Anycast API",
 		})
 	})
 
