@@ -16,8 +16,3 @@ type Voice struct {
 	CreatedAt       time.Time `gorm:"not null;default:CURRENT_TIMESTAMP" json:"-"`
 	UpdatedAt       time.Time `gorm:"not null;default:CURRENT_TIMESTAMP" json:"-"`
 }
-
-// GORM 用のテーブル名を返す
-func (Voice) TableName() string {
-	return "voices"
-}
