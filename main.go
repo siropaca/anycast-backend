@@ -2,31 +2,45 @@ package main
 
 import (
 	"log"
-	"net/http"
-	"os"
 
-	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+
+	"github.com/siropaca/anycast-backend/internal/config"
+	"github.com/siropaca/anycast-backend/internal/db"
+	"github.com/siropaca/anycast-backend/internal/di"
+	"github.com/siropaca/anycast-backend/internal/logger"
+	"github.com/siropaca/anycast-backend/internal/router"
 )
 
+// @title Anycast API
+// @version 1.0
+// @description AI ポッドキャスト作成・配信プラットフォーム API
+
+// @host localhost:8081
+// @BasePath /api/v1
 func main() {
 	godotenv.Load()
 
-	r := gin.Default()
+	// 設定読み込み
+	cfg := config.Load()
 
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Hello, World!",
-		})
-	})
+	// Logger 初期化
+	logger.Init(cfg.AppEnv)
 
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"status": "ok",
-		})
-	})
+	// DB 初期化
+	database, err := db.New(cfg.DatabaseURL)
+	if err != nil {
+		log.Fatal("Failed to connect to database:", err)
+	}
 
-	if err := r.Run(":" + os.Getenv("PORT")); err != nil {
+	// DI コンテナ構築
+	container := di.NewContainer(database)
+
+	// ルーター設定
+	r := router.Setup(container)
+
+	// サーバー起動
+	if err := r.Run(":" + cfg.Port); err != nil {
 		log.Fatal(err)
 	}
 }
