@@ -47,17 +47,15 @@ linters:
         - "-ST1020"  # 関数コメント形式は無効化（日本語コメントのため）
         - "-ST1021"  # 型コメント形式は無効化（日本語コメントのため）
 
+  exclusions:
+    # テストファイルでは一部ルールを除外
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+
 formatters:
   enable:
     - gofmt         # フォーマットチェック
     - goimports     # import の整理チェック
 
-issues:
-  # 同じエラーの最大表示数（0 = 無制限）
-  max-same-issues: 0
-
-  # テストファイルでは一部ルールを除外
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - errcheck
