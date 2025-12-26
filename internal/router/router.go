@@ -9,11 +9,12 @@ import (
 
 	"github.com/siropaca/anycast-backend/internal/config"
 	"github.com/siropaca/anycast-backend/internal/di"
+	"github.com/siropaca/anycast-backend/internal/logger"
 	"github.com/siropaca/anycast-backend/internal/middleware"
 	_ "github.com/siropaca/anycast-backend/swagger"
 )
 
-// Setup はルーターを設定して返す
+// ルーターを設定して返す
 func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	r := gin.New()
 
@@ -23,7 +24,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	r.Use(gin.Recovery())
 
 	// Swagger（本番環境では無効）
-	if cfg.AppEnv != "production" {
+	if cfg.AppEnv != logger.EnvProduction {
 		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	}
 
@@ -43,11 +44,9 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 
 	// API v1
 	api := r.Group("/api/v1")
-	{
-		// Voices
-		api.GET("/voices", container.VoiceHandler.ListVoices)
-		api.GET("/voices/:voiceId", container.VoiceHandler.GetVoice)
-	}
+	// Voices
+	api.GET("/voices", container.VoiceHandler.ListVoices)
+	api.GET("/voices/:voiceId", container.VoiceHandler.GetVoice)
 
 	return r
 }

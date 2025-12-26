@@ -1,19 +1,22 @@
 package handler
 
 import (
+	"errors"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
 )
 
-// Success は成功レスポンスを返す
-func Success(c *gin.Context, status int, data interface{}) {
+// 成功レスポンスを返す
+func Success(c *gin.Context, status int, data any) {
 	c.JSON(status, gin.H{"data": data})
 }
 
-// Error はエラーレスポンスを返す
+// エラーレスポンスを返す
 func Error(c *gin.Context, err error) {
-	if appErr, ok := err.(*apperror.AppError); ok {
+	var appErr *apperror.AppError
+	if errors.As(err, &appErr) {
 		resp := gin.H{
 			"code":    appErr.Code,
 			"message": appErr.Message,

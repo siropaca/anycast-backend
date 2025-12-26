@@ -14,12 +14,12 @@ import (
 	"github.com/siropaca/anycast-backend/internal/service"
 )
 
-// VoiceHandler はボイス関連のハンドラー
+// ボイス関連のハンドラー
 type VoiceHandler struct {
 	voiceService service.VoiceService
 }
 
-// NewVoiceHandler は VoiceHandler を作成する
+// VoiceHandler を作成する
 func NewVoiceHandler(vs service.VoiceService) *VoiceHandler {
 	return &VoiceHandler{voiceService: vs}
 }
@@ -33,8 +33,8 @@ func NewVoiceHandler(vs service.VoiceService) *VoiceHandler {
 // @Param provider query string false "プロバイダでフィルタ（例: google）"
 // @Param gender query string false "性別でフィルタ（male / female / neutral）"
 // @Success 200 {object} map[string][]response.VoiceResponse
-// @Failure 400 {object} map[string]interface{}
-// @Failure 500 {object} map[string]interface{}
+// @Failure 400 {object} map[string]any
+// @Failure 500 {object} map[string]any
 // @Router /voices [get]
 func (h *VoiceHandler) ListVoices(c *gin.Context) {
 	var req request.ListVoicesRequest
@@ -65,9 +65,9 @@ func (h *VoiceHandler) ListVoices(c *gin.Context) {
 // @Produce json
 // @Param voiceId path string true "ボイス ID（UUID 形式）"
 // @Success 200 {object} map[string]response.VoiceResponse
-// @Failure 400 {object} map[string]interface{}
-// @Failure 404 {object} map[string]interface{}
-// @Failure 500 {object} map[string]interface{}
+// @Failure 400 {object} map[string]any
+// @Failure 404 {object} map[string]any
+// @Failure 500 {object} map[string]any
 // @Router /voices/{voiceId} [get]
 func (h *VoiceHandler) GetVoice(c *gin.Context) {
 	id := c.Param("voiceId")
@@ -87,7 +87,7 @@ func (h *VoiceHandler) GetVoice(c *gin.Context) {
 	Success(c, http.StatusOK, toVoiceResponse(voice))
 }
 
-// toVoiceResponses は Voice モデルのスライスをレスポンス DTO のスライスに変換する
+// Voice モデルのスライスをレスポンス DTO のスライスに変換する
 func toVoiceResponses(voices []model.Voice) []response.VoiceResponse {
 	result := make([]response.VoiceResponse, len(voices))
 	for i, v := range voices {
@@ -96,7 +96,7 @@ func toVoiceResponses(voices []model.Voice) []response.VoiceResponse {
 	return result
 }
 
-// toVoiceResponse は Voice モデルをレスポンス DTO に変換する
+// Voice モデルをレスポンス DTO に変換する
 func toVoiceResponse(v *model.Voice) response.VoiceResponse {
 	return response.VoiceResponse{
 		ID:              v.ID,

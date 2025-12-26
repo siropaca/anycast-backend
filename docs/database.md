@@ -390,7 +390,7 @@ TTS ボイスのマスタデータを管理する。システム管理テーブ�
 | provider | VARCHAR(50) | | - | TTS プロバイダ: `google` / `azure` / etc |
 | provider_voice_id | VARCHAR(100) | | - | プロバイダの音声 ID（例: ja-JP-Wavenet-C） |
 | name | VARCHAR(100) | | - | 表示名（デフォルトは provider_voice_id） |
-| gender | VARCHAR(20) | ◯ | - | 性別: `male` / `female` / `neutral` |
+| gender | VARCHAR(20) | | - | 性別: `male` / `female` / `neutral` |
 | is_active | BOOLEAN | | true | 有効フラグ（false で新規選択不可） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |

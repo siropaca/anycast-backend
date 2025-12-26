@@ -6,16 +6,24 @@ import (
 	"os"
 )
 
+// 環境を表す型
+type Env string
+
+const (
+	EnvProduction  Env = "production"
+	EnvDevelopment Env = "development"
+)
+
 var defaultLogger *slog.Logger
 
-// Init はロガーを初期化する
-func Init(env string) {
+// ロガーを初期化する
+func Init(env Env) {
 	var handler slog.Handler
 	opts := &slog.HandlerOptions{
 		AddSource: true,
 	}
 
-	if env == "production" {
+	if env == EnvProduction {
 		opts.Level = slog.LevelInfo
 		handler = slog.NewJSONHandler(os.Stdout, opts)
 	} else {
@@ -27,22 +35,22 @@ func Init(env string) {
 	slog.SetDefault(defaultLogger)
 }
 
-// Default はデフォルトのロガーを返す
+// デフォルトのロガーを返す
 func Default() *slog.Logger {
 	if defaultLogger == nil {
-		Init("development")
+		Init(EnvDevelopment)
 	}
 	return defaultLogger
 }
 
 type ctxKey struct{}
 
-// WithContext はコンテキストにロガーを設定する
+// コンテキストにロガーを設定する
 func WithContext(ctx context.Context, l *slog.Logger) context.Context {
 	return context.WithValue(ctx, ctxKey{}, l)
 }
 
-// FromContext はコンテキストからロガーを取得する
+// コンテキストからロガーを取得する
 func FromContext(ctx context.Context) *slog.Logger {
 	if l, ok := ctx.Value(ctxKey{}).(*slog.Logger); ok {
 		return l

@@ -8,12 +8,12 @@ import (
 	"github.com/siropaca/anycast-backend/internal/service"
 )
 
-// Container は DI コンテナ
+// DI コンテナ
 type Container struct {
 	VoiceHandler *handler.VoiceHandler
 }
 
-// NewContainer は依存関係を構築して Container を返す
+// 依存関係を構築して Container を返す
 func NewContainer(db *gorm.DB) *Container {
 	// Repository 層
 	voiceRepo := repository.NewVoiceRepository(db)

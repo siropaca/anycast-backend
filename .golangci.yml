@@ -1,0 +1,61 @@
+# golangci-lint 設定ファイル
+# 参考: https://golangci-lint.run/usage/configuration/
+
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  # デフォルトの linter を無効化して、明示的に有効化する
+  default: none
+  enable:
+    # 基本的なチェック
+    - govet         # go vet 相当（怪しいコードパターンを検出）
+    - errcheck      # エラーを無視していないかチェック
+    - staticcheck   # バグになりやすいコードを検出（gosimple 含む）
+    - unused        # 使われていないコードを検出
+    - ineffassign   # 無駄な代入を検出
+
+    # コード品質
+    - gocritic      # コードの改善提案
+
+    # nil 関連
+    - nilnil        # (nil, nil) を返していないかチェック
+
+  settings:
+    errcheck:
+      # _ = err のようなエラー無視もチェックする
+      check-blank: true
+      # defer での Close() エラー無視は許可
+      exclude-functions:
+        - (*os.File).Close
+        - (io.Closer).Close
+
+    gocritic:
+      # 有効にするチェックグループ
+      enabled-tags:
+        - diagnostic
+        - style
+      disabled-checks:
+        - commentFormatting  # コメントフォーマットは緩めに
+
+    staticcheck:
+      checks:
+        - "all"
+        - "-ST1000"  # パッケージコメントは無効化
+        - "-ST1020"  # 関数コメント形式は無効化（日本語コメントのため）
+        - "-ST1021"  # 型コメント形式は無効化（日本語コメントのため）
+
+  exclusions:
+    # テストファイルでは一部ルールを除外
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+
+formatters:
+  enable:
+    - gofmt         # フォーマットチェック
+    - goimports     # import の整理チェック
+

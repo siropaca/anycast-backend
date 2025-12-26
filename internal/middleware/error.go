@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"log/slog"
 
 	"github.com/gin-gonic/gin"
@@ -9,7 +10,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/logger"
 )
 
-// ErrorHandler はエラーをログに記録するミドルウェア
+// エラーをログに記録するミドルウェア
 func ErrorHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
@@ -19,7 +20,8 @@ func ErrorHandler() gin.HandlerFunc {
 			err := c.Errors.Last().Err
 			log := logger.FromContext(c.Request.Context())
 
-			if appErr, ok := err.(*apperror.AppError); ok {
+			var appErr *apperror.AppError
+			if errors.As(err, &appErr) {
 				log.Error("request error",
 					slog.String("code", appErr.Code),
 					slog.String("message", appErr.Message),
