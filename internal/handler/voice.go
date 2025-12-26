@@ -87,7 +87,7 @@ func (h *VoiceHandler) GetVoice(c *gin.Context) {
 	Success(c, http.StatusOK, toVoiceResponse(voice))
 }
 
-// toVoiceResponses は Voice モデルのスライスをレスポンス DTO のスライスに変換する
+// Voice モデルのスライスをレスポンス DTO のスライスに変換する
 func toVoiceResponses(voices []model.Voice) []response.VoiceResponse {
 	result := make([]response.VoiceResponse, len(voices))
 	for i, v := range voices {
@@ -96,7 +96,7 @@ func toVoiceResponses(voices []model.Voice) []response.VoiceResponse {
 	return result
 }
 
-// toVoiceResponse は Voice モデルをレスポンス DTO に変換する
+// Voice モデルをレスポンス DTO に変換する
 func toVoiceResponse(v *model.Voice) response.VoiceResponse {
 	return response.VoiceResponse{
 		ID:              v.ID,
