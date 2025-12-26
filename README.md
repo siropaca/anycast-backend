@@ -50,13 +50,12 @@ Handler → Service → Repository → DB
 ### インストール
 
 ```bash
-# mise でツールのバージョンを設定
+# 自動セットアップ（推奨）
+./bootstrap.sh
+
+# または手動でセットアップ
 mise trust && mise install
-
-# 依存関係のインストール
 go mod download
-
-# 環境変数の設定
 cp .env.example .env
 ```
 
