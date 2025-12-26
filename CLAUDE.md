@@ -34,12 +34,13 @@
 
 - [golang-standards/project-layout](https://github.com/golang-standards/project-layout) を参考にする
 
-### コミット・プッシュ
+### Git / GitHub
 
 - ユーザーから指示があるまでコミットやプッシュを行わない
 - コミット前に `make fmt` でフォーマットを実行する
 - コミット前に `make lint` で静的解析を実行する
-- `git push` を実行する前に、必ずユーザーに確認を取る
+- `git push` はユーザーから指示があった場合のみ実行する（勝手にプッシュしない）
+- PR 作成時は `.github/PULL_REQUEST_TEMPLATE.md` をテンプレートとして使用する
 
 ## 学習事項
 
