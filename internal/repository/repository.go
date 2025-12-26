@@ -14,7 +14,6 @@ type VoiceRepository interface {
 
 // VoiceFilter はボイス検索のフィルタ条件
 type VoiceFilter struct {
-	Provider   *string
-	Gender     *string
-	ActiveOnly bool
+	Provider *string
+	Gender   *string
 }

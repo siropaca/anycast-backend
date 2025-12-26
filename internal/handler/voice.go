@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/request"
@@ -31,7 +32,6 @@ func NewVoiceHandler(vs service.VoiceService) *VoiceHandler {
 // @Produce json
 // @Param provider query string false "プロバイダでフィルタ（例: google）"
 // @Param gender query string false "性別でフィルタ（male / female / neutral）"
-// @Param activeOnly query bool false "有効なボイスのみ取得" default(true)
 // @Success 200 {object} map[string][]response.VoiceResponse
 // @Failure 400 {object} map[string]interface{}
 // @Failure 500 {object} map[string]interface{}
@@ -43,16 +43,9 @@ func (h *VoiceHandler) ListVoices(c *gin.Context) {
 		return
 	}
 
-	// デフォルト値の設定
-	activeOnly := true
-	if req.ActiveOnly != nil {
-		activeOnly = *req.ActiveOnly
-	}
-
 	filter := repository.VoiceFilter{
-		Provider:   req.Provider,
-		Gender:     req.Gender,
-		ActiveOnly: activeOnly,
+		Provider: req.Provider,
+		Gender:   req.Gender,
 	}
 
 	voices, err := h.voiceService.ListVoices(c.Request.Context(), filter)
@@ -70,13 +63,20 @@ func (h *VoiceHandler) ListVoices(c *gin.Context) {
 // @Tags voices
 // @Accept json
 // @Produce json
-// @Param voiceId path string true "ボイス ID"
+// @Param voiceId path string true "ボイス ID（UUID 形式）"
 // @Success 200 {object} map[string]response.VoiceResponse
+// @Failure 400 {object} map[string]interface{}
 // @Failure 404 {object} map[string]interface{}
 // @Failure 500 {object} map[string]interface{}
 // @Router /voices/{voiceId} [get]
 func (h *VoiceHandler) GetVoice(c *gin.Context) {
 	id := c.Param("voiceId")
+
+	// UUID 形式のバリデーション
+	if _, err := uuid.Parse(id); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage("Invalid voice ID format"))
+		return
+	}
 
 	voice, err := h.voiceService.GetVoice(c.Request.Context(), id)
 	if err != nil {
@@ -87,6 +87,7 @@ func (h *VoiceHandler) GetVoice(c *gin.Context) {
 	Success(c, http.StatusOK, toVoiceResponse(voice))
 }
 
+// toVoiceResponses は Voice モデルのスライスをレスポンス DTO のスライスに変換する
 func toVoiceResponses(voices []model.Voice) []response.VoiceResponse {
 	result := make([]response.VoiceResponse, len(voices))
 	for i, v := range voices {
@@ -95,6 +96,7 @@ func toVoiceResponses(voices []model.Voice) []response.VoiceResponse {
 	return result
 }
 
+// toVoiceResponse は Voice モデルをレスポンス DTO に変換する
 func toVoiceResponse(v *model.Voice) response.VoiceResponse {
 	return response.VoiceResponse{
 		ID:              v.ID,

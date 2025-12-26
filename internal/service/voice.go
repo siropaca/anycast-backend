@@ -18,6 +18,7 @@ func NewVoiceService(voiceRepo repository.VoiceRepository) VoiceService {
 	return &voiceService{voiceRepo: voiceRepo}
 }
 
+// ListVoices はフィルタ条件に基づいてボイス一覧を取得する
 func (s *voiceService) ListVoices(ctx context.Context, filter repository.VoiceFilter) ([]model.Voice, error) {
 	log := logger.FromContext(ctx)
 	log.Debug("listing voices", slog.Any("filter", filter))
@@ -32,6 +33,7 @@ func (s *voiceService) ListVoices(ctx context.Context, filter repository.VoiceFi
 	return voices, nil
 }
 
+// GetVoice は指定された ID のボイスを取得する
 func (s *voiceService) GetVoice(ctx context.Context, id string) (*model.Voice, error) {
 	log := logger.FromContext(ctx)
 	log.Debug("getting voice", slog.String("id", id))

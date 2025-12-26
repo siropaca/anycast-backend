@@ -19,18 +19,16 @@ func NewVoiceRepository(db *gorm.DB) VoiceRepository {
 	return &voiceRepository{db: db}
 }
 
+// FindAll はフィルタ条件に基づいてアクティブなボイス一覧を取得する
 func (r *voiceRepository) FindAll(ctx context.Context, filter VoiceFilter) ([]model.Voice, error) {
 	var voices []model.Voice
-	tx := r.db.WithContext(ctx).Model(&model.Voice{})
+	tx := r.db.WithContext(ctx).Model(&model.Voice{}).Where("is_active = ?", true)
 
 	if filter.Provider != nil {
 		tx = tx.Where("provider = ?", *filter.Provider)
 	}
 	if filter.Gender != nil {
 		tx = tx.Where("gender = ?", *filter.Gender)
-	}
-	if filter.ActiveOnly {
-		tx = tx.Where("is_active = ?", true)
 	}
 
 	if err := tx.Find(&voices).Error; err != nil {
@@ -39,6 +37,7 @@ func (r *voiceRepository) FindAll(ctx context.Context, filter VoiceFilter) ([]mo
 	return voices, nil
 }
 
+// FindByID は指定された ID のボイスを取得する
 func (r *voiceRepository) FindByID(ctx context.Context, id string) (*model.Voice, error) {
 	var voice model.Voice
 	if err := r.db.WithContext(ctx).First(&voice, "id = ?", id).Error; err != nil {

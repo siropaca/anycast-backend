@@ -7,9 +7,9 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	_ "github.com/siropaca/anycast-backend/swagger"
 	"github.com/siropaca/anycast-backend/internal/di"
 	"github.com/siropaca/anycast-backend/internal/middleware"
+	_ "github.com/siropaca/anycast-backend/swagger"
 )
 
 // Setup はルーターを設定して返す

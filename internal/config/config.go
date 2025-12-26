@@ -18,6 +18,7 @@ func Load() *Config {
 	}
 }
 
+// getEnv は環境変数を取得し、未設定の場合はデフォルト値を返す
 func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
