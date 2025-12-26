@@ -7,7 +7,7 @@ import (
 )
 
 // 成功レスポンスを返す
-func Success(c *gin.Context, status int, data interface{}) {
+func Success(c *gin.Context, status int, data any) {
 	c.JSON(status, gin.H{"data": data})
 }
 

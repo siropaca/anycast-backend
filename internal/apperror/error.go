@@ -4,11 +4,11 @@ import "fmt"
 
 // アプリケーション全体で使用するエラー型
 type AppError struct {
-	Code       string      `json:"code"`
-	Message    string      `json:"message"`
-	HTTPStatus int         `json:"-"`
-	Details    interface{} `json:"details,omitempty"`
-	Err        error       `json:"-"`
+	Code       string `json:"code"`
+	Message    string `json:"message"`
+	HTTPStatus int    `json:"-"`
+	Details    any    `json:"details,omitempty"`
+	Err        error  `json:"-"`
 }
 
 // error インターフェースの実装
@@ -46,7 +46,7 @@ func (e *AppError) WithMessage(msg string) *AppError {
 }
 
 // 詳細情報を付与したエラーをコピーする
-func (e *AppError) WithDetails(details interface{}) *AppError {
+func (e *AppError) WithDetails(details any) *AppError {
 	return &AppError{
 		Code:       e.Code,
 		Message:    e.Message,
