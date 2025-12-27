@@ -5,7 +5,65 @@
 - **ベース URL**: `/api/v1`
 - **形式**: REST API
 - **データ形式**: JSON
-- **認証**: Bearer Token（Next Auth 連携）
+- **認証**: Bearer Token（JWT）
+
+---
+
+## API 一覧
+
+| メソッド | パス | 説明 | 実装 |
+|----------|------|------|:----:|
+| **システム** ||||
+| GET | `/health` | ヘルスチェック | ✅ |
+| GET | `/swagger/*` | Swagger UI（開発環境のみ） | ✅ |
+| **Auth（認証）** ||||
+| GET | `/api/v1/auth/me` | 現在のユーザー取得 | |
+| PATCH | `/api/v1/auth/me` | ユーザー情報更新 | |
+| **Users（ユーザー）** ||||
+| GET | `/api/v1/users/:userId` | ユーザー取得 | |
+| **Channels** ||||
+| GET | `/api/v1/channels` | チャンネル一覧取得 | |
+| GET | `/api/v1/channels/:channelId` | チャンネル取得 | |
+| POST | `/api/v1/channels` | チャンネル作成 | |
+| PATCH | `/api/v1/channels/:channelId` | チャンネル更新 | |
+| DELETE | `/api/v1/channels/:channelId` | チャンネル削除 | |
+| **Characters** ||||
+| GET | `/api/v1/channels/:channelId/characters` | キャラクター一覧取得 | |
+| POST | `/api/v1/channels/:channelId/characters` | キャラクター作成 | |
+| PATCH | `/api/v1/channels/:channelId/characters/:characterId` | キャラクター更新 | |
+| DELETE | `/api/v1/channels/:channelId/characters/:characterId` | キャラクター削除 | |
+| **Episodes** ||||
+| GET | `/api/v1/channels/:channelId/episodes` | エピソード一覧取得 | |
+| GET | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード取得 | |
+| POST | `/api/v1/channels/:channelId/episodes` | エピソード作成 | |
+| PATCH | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード更新 | |
+| DELETE | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード削除 | |
+| **Script（台本）** ||||
+| POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/import` | 台本テキスト取り込み | |
+| GET | `/api/v1/channels/:channelId/episodes/:episodeId/script/export` | 台本テキスト出力 | |
+| POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/generate` | 台本を AI で生成 | |
+| **ScriptLines（台本行）** ||||
+| POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines` | 行追加 | |
+| PATCH | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | 行更新 | |
+| DELETE | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | 行削除 | |
+| POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/reorder` | 行並び替え | |
+| **Audio（音声生成）** ||||
+| POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId/audio/generate` | 行単位音声生成 | |
+| POST | `/api/v1/channels/:channelId/episodes/:episodeId/audio/generate` | エピソード全体音声生成 | |
+| **Audios（音声ファイル）** ||||
+| POST | `/api/v1/audios` | 音声アップロード | |
+| GET | `/api/v1/audios/:audioId` | 音声取得 | |
+| DELETE | `/api/v1/audios/:audioId` | 音声削除 | |
+| **Images（画像ファイル）** ||||
+| POST | `/api/v1/images` | 画像アップロード | |
+| GET | `/api/v1/images/:imageId` | 画像取得 | |
+| DELETE | `/api/v1/images/:imageId` | 画像削除 | |
+| **Voices（ボイス）** ||||
+| GET | `/api/v1/voices` | ボイス一覧取得 | ✅ |
+| GET | `/api/v1/voices/:voiceId` | ボイス取得 | ✅ |
+| **Sound Effects（効果音）** ||||
+| GET | `/api/v1/sound-effects` | 効果音一覧取得 | |
+| GET | `/api/v1/sound-effects/:sfxId` | 効果音取得 | |
 
 ---
 
@@ -114,12 +172,6 @@ PATCH /auth/me
   "name": "新しい名前",
   "avatarImageId": "uuid"
 }
-```
-
-### アカウント削除
-
-```
-DELETE /auth/me
 ```
 
 ---
