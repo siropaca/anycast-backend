@@ -14,8 +14,7 @@ import (
 const defaultUserID = "8def69af-dae9-4641-a0e5-100107626933"
 
 func main() {
-	// .env ファイルから環境変数を読み込む
-	_ = godotenv.Load()
+	_ = godotenv.Load() //nolint:errcheck // .env ファイルがなくてもエラーにしない
 
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
