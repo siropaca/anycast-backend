@@ -1,4 +1,4 @@
-.PHONY: dev run build test fmt lint lint-fix tidy clean migrate-up migrate-down migrate-reset swagger bootstrap bs seed token
+.PHONY: bootstrap bs dev run build test fmt lint lint-fix tidy clean swagger migrate-up migrate-down migrate-reset seed token
 
 DATABASE_URL ?= postgres://postgres:postgres@localhost:5433/anycast?sslmode=disable
 

@@ -136,12 +136,12 @@ make swagger
 | `make lint-fix` | 静的解析を実行（自動修正あり） |
 | `make tidy` | 依存関係を整理 |
 | `make clean` | ビルド成果物を削除 |
+| `make swagger` | Swagger ドキュメント生成 |
 | `make migrate-up` | マイグレーション実行 |
 | `make migrate-down` | マイグレーションロールバック |
 | `make migrate-reset` | マイグレーションリセット（down → up） |
 | `make seed` | シードデータを投入（開発環境用） |
 | `make token` | 開発用 JWT トークンを生成 |
-| `make swagger` | Swagger ドキュメント生成 |
 
 ## ディレクトリ構成
 
