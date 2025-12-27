@@ -41,8 +41,9 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 		})
 	})
 
-	// API v1
+	// API v1（認証必須）
 	api := r.Group("/api/v1")
+	api.Use(middleware.Auth(cfg.JWTSecret))
 	// Voices
 	api.GET("/voices", container.VoiceHandler.ListVoices)
 	api.GET("/voices/:voiceId", container.VoiceHandler.GetVoice)
