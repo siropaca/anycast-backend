@@ -19,7 +19,7 @@ User (1) ── (0..N) Channel (1) ─┬─ (1..N) Character
 
 | 項目 | 必須 | 説明 |
 |------|:----:|------|
-| id | ◯ | ユーザー ID（Firebase Authentication の UID） |
+| id | ◯ | ユーザー ID（UUID） |
 
 ---
 

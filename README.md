@@ -69,7 +69,8 @@ cp .env.example .env        # 環境変数ファイルの作成
 | `PORT` | サーバーのポート番号 | 8081 |
 | `DATABASE_URL` | PostgreSQL 接続 URL | - |
 | `APP_ENV` | 環境（development / production） | development |
-| `JWT_SECRET` | JWT 署名用シークレットキー | - |
+| `AUTH_SECRET` | JWT 検証用シークレットキー（フロントエンドの AUTH_SECRET と同じ値） | - |
+| `CORS_ALLOWED_ORIGINS` | CORS 許可オリジン（カンマ区切りで複数指定可能） | http://localhost:3210 |
 
 ### DB の起動
 
@@ -114,13 +115,6 @@ make swagger
 ### API エンドポイント
 
 詳細は [docs/api.md](docs/api.md) を参照。
-
-| メソッド | パス | 説明 |
-|----------|------|------|
-| GET | `/health` | ヘルスチェック |
-| GET | `/swagger/*` | Swagger UI |
-| GET | `/api/v1/voices` | ボイス一覧取得 |
-| GET | `/api/v1/voices/:voiceId` | ボイス取得 |
 
 ## コマンド一覧
 
