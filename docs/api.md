@@ -17,6 +17,9 @@
 | GET | `/health` | ヘルスチェック | ✅ |
 | GET | `/swagger/*` | Swagger UI（開発環境のみ） | ✅ |
 | **Auth（認証）** ||||
+| POST | `/api/v1/auth/register` | ユーザー登録 | |
+| POST | `/api/v1/auth/login` | メール/パスワード認証 | |
+| POST | `/api/v1/auth/oauth/google` | Google OAuth 認証 | |
 | GET | `/api/v1/auth/me` | 現在のユーザー取得 | |
 | PATCH | `/api/v1/auth/me` | ユーザー情報更新 | |
 | **Users（ユーザー）** ||||
@@ -137,7 +140,112 @@
 
 ## Auth（認証）
 
-認証は Next Auth（フロントエンド）で処理し、バックエンドはトークン検証とユーザー情報管理を担当。
+認証は Auth.js（フロントエンド）で処理し、バックエンドはユーザーの作成・検証とトークン検証を担当。
+
+### ユーザー登録
+
+```
+POST /auth/register
+```
+
+**リクエスト:**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "name": "ユーザー名"
+}
+```
+
+**レスポンス（201 Created）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "name": "ユーザー名",
+    "avatarUrl": null
+  }
+}
+```
+
+**エラー（409 Conflict）:**
+```json
+{
+  "error": {
+    "code": "DUPLICATE_EMAIL",
+    "message": "このメールアドレスは既に使用されています"
+  }
+}
+```
+
+### メール/パスワード認証
+
+```
+POST /auth/login
+```
+
+**リクエスト:**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "name": "ユーザー名",
+    "avatarUrl": "https://..."
+  }
+}
+```
+
+**エラー（401 Unauthorized）:**
+```json
+{
+  "error": {
+    "code": "INVALID_CREDENTIALS",
+    "message": "メールアドレスまたはパスワードが正しくありません"
+  }
+}
+```
+
+### Google OAuth 認証
+
+```
+POST /auth/oauth/google
+```
+
+ユーザーが存在しない場合は新規作成、存在する場合はトークン情報を更新。
+
+**リクエスト:**
+```json
+{
+  "providerUserId": "google-provider-id",
+  "email": "user@gmail.com",
+  "name": "ユーザー名",
+  "accessToken": "...",
+  "refreshToken": "...",
+  "expiresAt": 1234567890
+}
+```
+
+**レスポンス（200 OK / 201 Created）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "email": "user@gmail.com",
+    "name": "ユーザー名",
+    "avatarUrl": "https://..."
+  }
+}
+```
 
 ### 現在のユーザー取得
 
