@@ -1,17 +1,25 @@
 @baseUrl = http://localhost:8081/api/v1
 
+# トークン生成: make token
+@token = YOUR_TOKEN_HERE
+
 ### ボイス一覧取得
 GET {{baseUrl}}/voices
+Authorization: Bearer {{token}}
 
 ### ボイス一覧取得（プロバイダでフィルタ）
 GET {{baseUrl}}/voices?provider=google
+Authorization: Bearer {{token}}
 
 ### ボイス一覧取得（性別でフィルタ）
 GET {{baseUrl}}/voices?gender=male
+Authorization: Bearer {{token}}
 
 ### ボイス一覧取得（複合フィルタ）
 GET {{baseUrl}}/voices?provider=google&gender=female
+Authorization: Bearer {{token}}
 
 ### ボイス取得
 @voiceId = 52cbccc4-46d7-4424-8a37-da36ee2951d1
 GET {{baseUrl}}/voices/{{voiceId}}
+Authorization: Bearer {{token}}

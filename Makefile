@@ -1,4 +1,4 @@
-.PHONY: dev run build test fmt lint lint-fix tidy clean migrate-up migrate-down migrate-reset swagger bootstrap bs seed
+.PHONY: dev run build test fmt lint lint-fix tidy clean migrate-up migrate-down migrate-reset swagger bootstrap bs seed token
 
 DATABASE_URL ?= postgres://postgres:postgres@localhost:5433/anycast?sslmode=disable
 
@@ -67,3 +67,7 @@ seed:
 		echo "Running $$file..."; \
 		docker exec -i anycast-db psql -U postgres -d anycast < "$$file"; \
 	done
+
+# 開発用 JWT トークンを生成
+token:
+	@go run ./scripts/gentoken

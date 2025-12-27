@@ -69,6 +69,7 @@ cp .env.example .env        # 環境変数ファイルの作成
 | `PORT` | サーバーのポート番号 | 8081 |
 | `DATABASE_URL` | PostgreSQL 接続 URL | - |
 | `APP_ENV` | 環境（development / production） | development |
+| `JWT_SECRET` | JWT 署名用シークレットキー | - |
 
 ### DB の起動
 
@@ -139,6 +140,7 @@ make swagger
 | `make migrate-down` | マイグレーションロールバック |
 | `make migrate-reset` | マイグレーションリセット（down → up） |
 | `make seed` | シードデータを投入（開発環境用） |
+| `make token` | 開発用 JWT トークンを生成 |
 | `make swagger` | Swagger ドキュメント生成 |
 
 ## ディレクトリ構成
