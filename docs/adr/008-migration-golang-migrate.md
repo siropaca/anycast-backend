@@ -84,5 +84,5 @@ migrate -path migrations -database "$DATABASE_URL" down 1
 
 - `migrations/` ディレクトリにマイグレーションファイルを配置
 - ファイル名は `XXXXXX_description.up.sql` / `XXXXXX_description.down.sql`
-- Makefile に `migrate-up`, `migrate-down`, `migrate-status` を定義
+- Makefile に `migrate-up`, `migrate-down` を定義
 - Railway では起動コマンドでマイグレーション実行

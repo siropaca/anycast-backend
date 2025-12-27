@@ -138,7 +138,7 @@ make swagger
 | `make migrate-up` | マイグレーション実行 |
 | `make migrate-down` | マイグレーションロールバック |
 | `make migrate-reset` | マイグレーションリセット（down → up） |
-| `make migrate-status` | マイグレーション状態確認 |
+| `make seed` | シードデータを投入（開発環境用） |
 | `make swagger` | Swagger ドキュメント生成 |
 
 ## ディレクトリ構成
@@ -157,6 +157,7 @@ make swagger
 ├── nixpacks.toml        # Nixpacks ビルド設定
 ├── scripts/             # セットアップスクリプト
 ├── migrations/          # マイグレーションファイル
+├── seeds/               # シードデータ（開発環境用）
 ├── docs/                # ドキュメント
 │   ├── adr/             # Architecture Decision Records
 │   ├── specification.md # 仕様書
