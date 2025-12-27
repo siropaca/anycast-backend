@@ -69,6 +69,7 @@ cp .env.example .env        # 環境変数ファイルの作成
 | `PORT` | サーバーのポート番号 | 8081 |
 | `DATABASE_URL` | PostgreSQL 接続 URL | - |
 | `APP_ENV` | 環境（development / production） | development |
+| `JWT_SECRET` | JWT 署名用シークレットキー | - |
 
 ### DB の起動
 
@@ -135,11 +136,12 @@ make swagger
 | `make lint-fix` | 静的解析を実行（自動修正あり） |
 | `make tidy` | 依存関係を整理 |
 | `make clean` | ビルド成果物を削除 |
+| `make swagger` | Swagger ドキュメント生成 |
 | `make migrate-up` | マイグレーション実行 |
 | `make migrate-down` | マイグレーションロールバック |
 | `make migrate-reset` | マイグレーションリセット（down → up） |
-| `make migrate-status` | マイグレーション状態確認 |
-| `make swagger` | Swagger ドキュメント生成 |
+| `make seed` | シードデータを投入（開発環境用） |
+| `make token` | 開発用 JWT トークンを生成 |
 
 ## ディレクトリ構成
 
@@ -157,6 +159,7 @@ make swagger
 ├── nixpacks.toml        # Nixpacks ビルド設定
 ├── scripts/             # セットアップスクリプト
 ├── migrations/          # マイグレーションファイル
+├── seeds/               # シードデータ（開発環境用）
 ├── docs/                # ドキュメント
 │   ├── adr/             # Architecture Decision Records
 │   ├── specification.md # 仕様書

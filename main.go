@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"os"
 
 	"github.com/joho/godotenv"
 
@@ -30,7 +30,8 @@ func main() {
 	// DB 初期化
 	database, err := db.New(cfg.DatabaseURL)
 	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+		logger.Default().Error("Failed to connect to database", "error", err)
+		os.Exit(1)
 	}
 
 	// DI コンテナ構築
@@ -40,7 +41,12 @@ func main() {
 	r := router.Setup(container, cfg)
 
 	// サーバー起動
+	if cfg.AppEnv == config.EnvDevelopment {
+		logger.Default().Info("Server listening on http://localhost:" + cfg.Port)
+		logger.Default().Info("Swagger UI: http://localhost:" + cfg.Port + "/swagger/index.html")
+	}
 	if err := r.Run(":" + cfg.Port); err != nil {
-		log.Fatal(err)
+		logger.Default().Error("Failed to start server", "error", err)
+		os.Exit(1)
 	}
 }

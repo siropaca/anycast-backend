@@ -1,4 +1,4 @@
-.PHONY: dev run build test fmt lint lint-fix tidy clean migrate-up migrate-down migrate-reset migrate-status swagger bootstrap bs
+.PHONY: bootstrap bs dev run build test fmt lint lint-fix tidy clean swagger migrate-up migrate-down migrate-reset seed token
 
 DATABASE_URL ?= postgres://postgres:postgres@localhost:5433/anycast?sslmode=disable
 
@@ -44,6 +44,10 @@ tidy:
 clean:
 	rm -rf bin/ tmp/
 
+# Swagger ドキュメント生成
+swagger:
+	swag init -g main.go -o swagger
+
 # マイグレーション実行
 migrate-up:
 	migrate -path migrations -database "$(DATABASE_URL)" up
@@ -57,10 +61,13 @@ migrate-reset:
 	migrate -path migrations -database "$(DATABASE_URL)" down -all
 	migrate -path migrations -database "$(DATABASE_URL)" up
 
-# マイグレーション状態確認
-migrate-status:
-	migrate -path migrations -database "$(DATABASE_URL)" version
+# シードデータを投入（開発環境用）
+seed:
+	@for file in seeds/*.sql; do \
+		echo "Running $$file..."; \
+		docker exec -i anycast-db psql -U postgres -d anycast < "$$file"; \
+	done
 
-# Swagger ドキュメント生成
-swagger:
-	swag init -g main.go -o swagger
+# 開発用 JWT トークンを生成
+token:
+	@go run ./scripts/gentoken

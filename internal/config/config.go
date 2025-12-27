@@ -17,6 +17,7 @@ type Config struct {
 	Port        string
 	DatabaseURL string
 	AppEnv      Env
+	JWTSecret   string
 }
 
 // 環境変数から設定を読み込む
@@ -24,7 +25,8 @@ func Load() *Config {
 	return &Config{
 		Port:        getEnv("PORT", "8081"),
 		DatabaseURL: getEnv("DATABASE_URL", ""),
-		AppEnv:      Env(getEnv("APP_ENV", "development")),
+		AppEnv:      Env(getEnv("APP_ENV", string(EnvDevelopment))),
+		JWTSecret:   getEnv("JWT_SECRET", ""),
 	}
 }
 

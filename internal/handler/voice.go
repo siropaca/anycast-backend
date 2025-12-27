@@ -32,9 +32,9 @@ func NewVoiceHandler(vs service.VoiceService) *VoiceHandler {
 // @Produce json
 // @Param provider query string false "プロバイダでフィルタ（例: google）"
 // @Param gender query string false "性別でフィルタ（male / female / neutral）"
-// @Success 200 {object} map[string][]response.VoiceResponse
-// @Failure 400 {object} map[string]any
-// @Failure 500 {object} map[string]any
+// @Success 200 {object} response.VoiceListResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
 // @Router /voices [get]
 func (h *VoiceHandler) ListVoices(c *gin.Context) {
 	var req request.ListVoicesRequest
@@ -64,10 +64,10 @@ func (h *VoiceHandler) ListVoices(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param voiceId path string true "ボイス ID（UUID 形式）"
-// @Success 200 {object} map[string]response.VoiceResponse
-// @Failure 400 {object} map[string]any
-// @Failure 404 {object} map[string]any
-// @Failure 500 {object} map[string]any
+// @Success 200 {object} response.VoiceDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
 // @Router /voices/{voiceId} [get]
 func (h *VoiceHandler) GetVoice(c *gin.Context) {
 	id := c.Param("voiceId")

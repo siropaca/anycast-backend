@@ -11,3 +11,13 @@ type VoiceResponse struct {
 	Gender          string    `json:"gender"`
 	IsActive        bool      `json:"isActive"`
 }
+
+// ボイス一覧のレスポンス
+type VoiceListResponse struct {
+	Data []VoiceResponse `json:"data"`
+}
+
+// ボイス単体のレスポンス
+type VoiceDataResponse struct {
+	Data VoiceResponse `json:"data"`
+}
