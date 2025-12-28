@@ -40,6 +40,18 @@ var (
 		Message:    "Email already exists",
 		HTTPStatus: http.StatusConflict,
 	}
+	// ユーザー名が既に使用されている場合
+	ErrDuplicateUsername = &AppError{
+		Code:       "DUPLICATE_USERNAME",
+		Message:    "Username already exists",
+		HTTPStatus: http.StatusConflict,
+	}
+	// 認証情報が無効な場合
+	ErrInvalidCredentials = &AppError{
+		Code:       "INVALID_CREDENTIALS",
+		Message:    "Invalid email or password",
+		HTTPStatus: http.StatusUnauthorized,
+	}
 	// 名前が既に使用されている場合
 	ErrDuplicateName = &AppError{
 		Code:       "DUPLICATE_NAME",
