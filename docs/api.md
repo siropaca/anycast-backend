@@ -13,55 +13,58 @@
 
 | メソッド | パス | 説明 | 実装 |
 |----------|------|------|:----:|
-| **システム** ||||
+| **システム** | - | - | - |
 | GET | `/health` | ヘルスチェック | ✅ |
 | GET | `/swagger/*` | Swagger UI（開発環境のみ） | ✅ |
-| **Auth（認証）** ||||
+| **Auth（認証）** | - | - | - |
+| POST | `/api/v1/auth/register` | ユーザー登録 | ✅ |
+| POST | `/api/v1/auth/login` | メール/パスワード認証 | ✅ |
+| POST | `/api/v1/auth/oauth/google` | Google OAuth 認証 | ✅ |
 | GET | `/api/v1/auth/me` | 現在のユーザー取得 | |
 | PATCH | `/api/v1/auth/me` | ユーザー情報更新 | |
-| **Users（ユーザー）** ||||
+| **Users（ユーザー）** | - | - | - |
 | GET | `/api/v1/users/:userId` | ユーザー取得 | |
-| **Channels** ||||
+| **Channels** | - | - | - |
 | GET | `/api/v1/channels` | チャンネル一覧取得 | |
 | GET | `/api/v1/channels/:channelId` | チャンネル取得 | |
 | POST | `/api/v1/channels` | チャンネル作成 | |
 | PATCH | `/api/v1/channels/:channelId` | チャンネル更新 | |
 | DELETE | `/api/v1/channels/:channelId` | チャンネル削除 | |
-| **Characters** ||||
+| **Characters** | - | - | - |
 | GET | `/api/v1/channels/:channelId/characters` | キャラクター一覧取得 | |
 | POST | `/api/v1/channels/:channelId/characters` | キャラクター作成 | |
 | PATCH | `/api/v1/channels/:channelId/characters/:characterId` | キャラクター更新 | |
 | DELETE | `/api/v1/channels/:channelId/characters/:characterId` | キャラクター削除 | |
-| **Episodes** ||||
+| **Episodes** | - | - | - |
 | GET | `/api/v1/channels/:channelId/episodes` | エピソード一覧取得 | |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード取得 | |
 | POST | `/api/v1/channels/:channelId/episodes` | エピソード作成 | |
 | PATCH | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード更新 | |
 | DELETE | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード削除 | |
-| **Script（台本）** ||||
+| **Script（台本）** | - | - | - |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/import` | 台本テキスト取り込み | |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId/script/export` | 台本テキスト出力 | |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/generate` | 台本を AI で生成 | |
-| **ScriptLines（台本行）** ||||
+| **ScriptLines（台本行）** | - | - | - |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines` | 行追加 | |
 | PATCH | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | 行更新 | |
 | DELETE | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | 行削除 | |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/reorder` | 行並び替え | |
-| **Audio（音声生成）** ||||
+| **Audio（音声生成）** | - | - | - |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId/audio/generate` | 行単位音声生成 | |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/audio/generate` | エピソード全体音声生成 | |
-| **Audios（音声ファイル）** ||||
+| **Audios（音声ファイル）** | - | - | - |
 | POST | `/api/v1/audios` | 音声アップロード | |
 | GET | `/api/v1/audios/:audioId` | 音声取得 | |
 | DELETE | `/api/v1/audios/:audioId` | 音声削除 | |
-| **Images（画像ファイル）** ||||
+| **Images（画像ファイル）** | - | - | - |
 | POST | `/api/v1/images` | 画像アップロード | |
 | GET | `/api/v1/images/:imageId` | 画像取得 | |
 | DELETE | `/api/v1/images/:imageId` | 画像削除 | |
-| **Voices（ボイス）** ||||
+| **Voices（ボイス）** | - | - | - |
 | GET | `/api/v1/voices` | ボイス一覧取得 | ✅ |
 | GET | `/api/v1/voices/:voiceId` | ボイス取得 | ✅ |
-| **Sound Effects（効果音）** ||||
+| **Sound Effects（効果音）** | - | - | - |
 | GET | `/api/v1/sound-effects` | 効果音一覧取得 | |
 | GET | `/api/v1/sound-effects/:sfxId` | 効果音取得 | |
 
@@ -137,7 +140,126 @@
 
 ## Auth（認証）
 
-認証は Next Auth（フロントエンド）で処理し、バックエンドはトークン検証とユーザー情報管理を担当。
+認証は Auth.js（フロントエンド）で処理し、バックエンドはユーザーの作成・検証とトークン検証を担当。
+
+### ユーザー登録
+
+```
+POST /auth/register
+```
+
+**リクエスト:**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "displayName": "ユーザー名"
+}
+```
+
+**バリデーション:**
+| フィールド | ルール |
+|------------|--------|
+| email | 必須、有効なメールアドレス形式 |
+| password | 必須、8〜100文字 |
+| displayName | 必須、20文字以内 |
+
+> **Note:** `username` は `displayName` から自動生成されます。スペースはアンダースコアに変換され、重複時はランダムな番号がサフィックスとして付与されます。
+
+**レスポンス（201 Created）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "username": "user_name",
+    "displayName": "ユーザー名",
+    "avatarUrl": null
+  }
+}
+```
+
+**エラー（409 Conflict）:**
+```json
+{
+  "error": {
+    "code": "DUPLICATE_EMAIL",
+    "message": "このメールアドレスは既に使用されています"
+  }
+}
+```
+
+### メール/パスワード認証
+
+```
+POST /auth/login
+```
+
+**リクエスト:**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "username": "user_name",
+    "displayName": "ユーザー名",
+    "avatarUrl": "https://..."
+  }
+}
+```
+
+**エラー（401 Unauthorized）:**
+```json
+{
+  "error": {
+    "code": "INVALID_CREDENTIALS",
+    "message": "メールアドレスまたはパスワードが正しくありません"
+  }
+}
+```
+
+### Google OAuth 認証
+
+```
+POST /auth/oauth/google
+```
+
+ユーザーが存在しない場合は新規作成、存在する場合はトークン情報を更新。
+
+**リクエスト:**
+```json
+{
+  "providerUserId": "google-provider-id",
+  "email": "user@gmail.com",
+  "displayName": "ユーザー名",
+  "accessToken": "...",
+  "refreshToken": "...",
+  "expiresAt": 1234567890
+}
+```
+
+> **Note:** `username` は `displayName` から自動生成されます（新規ユーザー作成時のみ）。
+
+**レスポンス（200 OK / 201 Created）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "email": "user@gmail.com",
+    "username": "user_name",
+    "displayName": "ユーザー名",
+    "avatarUrl": "https://..."
+  }
+}
+```
 
 ### 現在のユーザー取得
 
@@ -151,7 +273,8 @@ GET /auth/me
   "data": {
     "id": "uuid",
     "email": "user@example.com",
-    "name": "ユーザー名",
+    "username": "user_name",
+    "displayName": "ユーザー名",
     "avatar": { "id": "uuid", "url": "..." },
     "hasPassword": true,
     "oauthProviders": ["google"],
@@ -169,7 +292,8 @@ PATCH /auth/me
 **リクエスト:**
 ```json
 {
-  "name": "新しい名前",
+  "username": "new_username",
+  "displayName": "新しい名前",
   "avatarImageId": "uuid"
 }
 ```
@@ -189,7 +313,8 @@ GET /users/:userId
 {
   "data": {
     "id": "uuid",
-    "name": "ユーザー名",
+    "username": "user_name",
+    "displayName": "ユーザー名",
     "avatar": { "id": "uuid", "url": "..." },
     "createdAt": "2025-01-01T00:00:00Z"
   }

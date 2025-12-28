@@ -56,9 +56,9 @@ migrate-up:
 migrate-down:
 	migrate -path migrations -database "$(DATABASE_URL)" down
 
-# マイグレーションリセット（down → up）
+# マイグレーションリセット（テーブル全削除 → 再マイグレーション）
 migrate-reset:
-	migrate -path migrations -database "$(DATABASE_URL)" down -all
+	docker exec -i anycast-db psql -U postgres -d anycast -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 	migrate -path migrations -database "$(DATABASE_URL)" up
 
 # シードデータを投入（開発環境用）

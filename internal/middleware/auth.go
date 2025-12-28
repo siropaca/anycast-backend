@@ -4,10 +4,10 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/logger"
+	"github.com/siropaca/anycast-backend/internal/pkg/jwt"
 )
 
 // コンテキストキー
@@ -18,14 +18,8 @@ const (
 	UserIDKey contextKey = "user_id"
 )
 
-// JWT クレーム
-type Claims struct {
-	jwt.RegisteredClaims
-	UserID string `json:"sub"`
-}
-
 // Bearer Token 認証を行うミドルウェア
-func Auth(jwtSecret string) gin.HandlerFunc {
+func Auth(tokenManager jwt.TokenManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		log := logger.FromContext(c.Request.Context())
 
@@ -48,16 +42,8 @@ func Auth(jwtSecret string) gin.HandlerFunc {
 		tokenString := parts[1]
 
 		// JWT を検証
-		claims := &Claims{}
-		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (any, error) {
-			// 署名アルゴリズムを検証（HMAC のみ許可）
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, jwt.ErrSignatureInvalid
-			}
-			return []byte(jwtSecret), nil
-		})
-
-		if err != nil || !token.Valid {
+		claims, err := tokenManager.Validate(tokenString)
+		if err != nil {
 			log.Warn("invalid token", "error", err)
 			abortWithUnauthorized(c)
 			return

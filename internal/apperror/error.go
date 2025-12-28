@@ -1,14 +1,17 @@
 package apperror
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 // アプリケーション全体で使用するエラー型
 type AppError struct {
-	Code       string `json:"code"`
-	Message    string `json:"message"`
-	HTTPStatus int    `json:"-"`
-	Details    any    `json:"details,omitempty"`
-	Err        error  `json:"-"`
+	Code       ErrorCode `json:"code"`
+	Message    string    `json:"message"`
+	HTTPStatus int       `json:"-"`
+	Details    any       `json:"details,omitempty"`
+	Err        error     `json:"-"`
 }
 
 // error インターフェースの実装
@@ -25,13 +28,22 @@ func (e *AppError) Unwrap() error {
 }
 
 // 新しい AppError を作成する
-func New(code, message string, status int) *AppError {
+func New(code ErrorCode, message string, status int) *AppError {
 	return &AppError{Code: code, Message: message, HTTPStatus: status}
 }
 
 // 既存のエラーをラップした AppError を作成する
-func Wrap(err error, code, message string, status int) *AppError {
+func Wrap(err error, code ErrorCode, message string, status int) *AppError {
 	return &AppError{Code: code, Message: message, HTTPStatus: status, Err: err}
+}
+
+// エラーが指定したコードかどうかを判定する
+func IsCode(err error, code ErrorCode) bool {
+	var appErr *AppError
+	if errors.As(err, &appErr) {
+		return appErr.Code == code
+	}
+	return false
 }
 
 // 新しいメッセージでエラーをコピーする

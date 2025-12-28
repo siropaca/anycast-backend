@@ -23,7 +23,8 @@ erDiagram
     users {
         uuid id PK
         varchar email
-        varchar name
+        varchar username
+        varchar display_name
         uuid avatar_id FK
         timestamp created_at
         timestamp updated_at
@@ -154,7 +155,8 @@ erDiagram
 |----------|-----|:--------:|------------|------|
 | id | UUID | | gen_random_uuid() | 主キー |
 | email | VARCHAR(255) | | - | メールアドレス |
-| name | VARCHAR(255) | | - | 表示名 |
+| username | VARCHAR(20) | | - | ユーザー ID（displayName から自動生成、日本語可） |
+| display_name | VARCHAR(20) | | - | 表示名 |
 | avatar_id | UUID | ◯ | - | アバター画像（images 参照） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
@@ -162,6 +164,7 @@ erDiagram
 **インデックス:**
 - PRIMARY KEY (id)
 - UNIQUE (email)
+- UNIQUE (username)
 
 **外部キー:**
 - avatar_id → images(id) ON DELETE SET NULL

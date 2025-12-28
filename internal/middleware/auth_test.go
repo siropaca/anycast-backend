@@ -7,36 +7,17 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+
+	"github.com/siropaca/anycast-backend/internal/pkg/jwt"
 )
 
 const testSecret = "test-secret-key"
 
-// テスト用の有効な JWT トークンを生成する
-func generateTestToken(t *testing.T, userID string, expiresAt time.Time) string {
-	t.Helper()
-
-	claims := &Claims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(expiresAt),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-		},
-		UserID: userID,
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte(testSecret))
-	require.NoError(t, err)
-
-	return tokenString
-}
-
-func setupRouter(jwtSecret string) *gin.Engine {
+func setupRouter(tokenManager jwt.TokenManager) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	r.Use(Auth(jwtSecret))
+	r.Use(Auth(tokenManager))
 	r.GET("/test", func(c *gin.Context) {
 		userID, _ := GetUserID(c)
 		c.JSON(http.StatusOK, gin.H{"user_id": userID})
@@ -45,8 +26,10 @@ func setupRouter(jwtSecret string) *gin.Engine {
 }
 
 func TestAuth(t *testing.T) {
+	tokenManager := jwt.NewTokenManager(testSecret)
+
 	t.Run("Authorization ヘッダーがない場合は 401 を返す", func(t *testing.T) {
-		router := setupRouter(testSecret)
+		router := setupRouter(tokenManager)
 		req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 		rec := httptest.NewRecorder()
 
@@ -57,7 +40,7 @@ func TestAuth(t *testing.T) {
 	})
 
 	t.Run("Bearer プレフィックスがない場合は 401 を返す", func(t *testing.T) {
-		router := setupRouter(testSecret)
+		router := setupRouter(tokenManager)
 		req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 		req.Header.Set("Authorization", "InvalidToken")
 		rec := httptest.NewRecorder()
@@ -69,7 +52,7 @@ func TestAuth(t *testing.T) {
 	})
 
 	t.Run("無効なトークンの場合は 401 を返す", func(t *testing.T) {
-		router := setupRouter(testSecret)
+		router := setupRouter(tokenManager)
 		req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 		req.Header.Set("Authorization", "Bearer invalid-token")
 		rec := httptest.NewRecorder()
@@ -81,8 +64,8 @@ func TestAuth(t *testing.T) {
 	})
 
 	t.Run("期限切れのトークンの場合は 401 を返す", func(t *testing.T) {
-		router := setupRouter(testSecret)
-		expiredToken := generateTestToken(t, "user-123", time.Now().Add(-1*time.Hour))
+		router := setupRouter(tokenManager)
+		expiredToken, _ := tokenManager.Generate("user-123", -1*time.Hour)
 		req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 		req.Header.Set("Authorization", "Bearer "+expiredToken)
 		rec := httptest.NewRecorder()
@@ -94,18 +77,11 @@ func TestAuth(t *testing.T) {
 	})
 
 	t.Run("異なるシークレットで署名されたトークンの場合は 401 を返す", func(t *testing.T) {
-		router := setupRouter(testSecret)
+		router := setupRouter(tokenManager)
 
 		// 異なるシークレットでトークンを生成
-		claims := &Claims{
-			RegisteredClaims: jwt.RegisteredClaims{
-				ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
-			},
-			UserID: "user-123",
-		}
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-		wrongToken, err := token.SignedString([]byte("wrong-secret"))
-		require.NoError(t, err)
+		wrongManager := jwt.NewTokenManager("wrong-secret")
+		wrongToken, _ := wrongManager.Generate("user-123", 1*time.Hour)
 
 		req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 		req.Header.Set("Authorization", "Bearer "+wrongToken)
@@ -117,8 +93,8 @@ func TestAuth(t *testing.T) {
 	})
 
 	t.Run("有効なトークンの場合は次のハンドラーが呼ばれる", func(t *testing.T) {
-		router := setupRouter(testSecret)
-		validToken := generateTestToken(t, "user-123", time.Now().Add(1*time.Hour))
+		router := setupRouter(tokenManager)
+		validToken, _ := tokenManager.Generate("user-123", 1*time.Hour)
 		req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 		req.Header.Set("Authorization", "Bearer "+validToken)
 		rec := httptest.NewRecorder()
@@ -130,8 +106,8 @@ func TestAuth(t *testing.T) {
 	})
 
 	t.Run("Bearer の大文字小文字を区別しない", func(t *testing.T) {
-		router := setupRouter(testSecret)
-		validToken := generateTestToken(t, "user-456", time.Now().Add(1*time.Hour))
+		router := setupRouter(tokenManager)
+		validToken, _ := tokenManager.Generate("user-456", 1*time.Hour)
 		req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
 		req.Header.Set("Authorization", "bearer "+validToken)
 		rec := httptest.NewRecorder()
