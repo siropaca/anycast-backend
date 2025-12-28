@@ -172,7 +172,8 @@ make swagger
 │   ├── middleware/      # ミドルウェア
 │   ├── model/           # ドメインモデル
 │   ├── pkg/             # 共通ユーティリティ
-│   │   └── crypto/      # 暗号化処理
+│   │   ├── crypto/      # パスワードハッシュ
+│   │   └── jwt/         # JWT トークン管理
 │   ├── repository/      # データアクセス層
 │   ├── router/          # ルーティング
 │   └── service/         # ビジネスロジック層

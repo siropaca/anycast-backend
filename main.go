@@ -35,7 +35,7 @@ func main() {
 	}
 
 	// DI コンテナ構築
-	container := di.NewContainer(database)
+	container := di.NewContainer(database, cfg)
 
 	// ルーター設定
 	r := router.Setup(container, cfg)

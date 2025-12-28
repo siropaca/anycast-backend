@@ -62,7 +62,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 
 	// 認証必須のエンドポイント
 	authenticated := api.Group("")
-	authenticated.Use(middleware.Auth(cfg.AuthSecret))
+	authenticated.Use(middleware.Auth(container.TokenManager))
 
 	// Voices
 	authenticated.GET("/voices", container.VoiceHandler.ListVoices)
