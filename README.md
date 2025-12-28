@@ -171,6 +171,8 @@ make swagger
 │   ├── logger/          # 構造化ログ
 │   ├── middleware/      # ミドルウェア
 │   ├── model/           # ドメインモデル
+│   ├── pkg/             # 共通ユーティリティ
+│   │   └── crypto/      # 暗号化処理
 │   ├── repository/      # データアクセス層
 │   ├── router/          # ルーティング
 │   └── service/         # ビジネスロジック層
