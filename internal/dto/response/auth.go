@@ -15,3 +15,14 @@ type UserResponse struct {
 type UserDataResponse struct {
 	Data UserResponse `json:"data"`
 }
+
+// 認証成功時のレスポンス
+type AuthResponse struct {
+	User  UserResponse `json:"user"`
+	Token string       `json:"token"`
+}
+
+// 認証成功時のレスポンス（data ラッパー）
+type AuthDataResponse struct {
+	Data AuthResponse `json:"data"`
+}

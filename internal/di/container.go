@@ -36,7 +36,7 @@ func NewContainer(db *gorm.DB, cfg *config.Config) *Container {
 
 	// Handler 層
 	voiceHandler := handler.NewVoiceHandler(voiceService)
-	authHandler := handler.NewAuthHandler(authService)
+	authHandler := handler.NewAuthHandler(authService, tokenManager)
 
 	return &Container{
 		VoiceHandler: voiceHandler,
