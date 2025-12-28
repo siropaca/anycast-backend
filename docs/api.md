@@ -926,14 +926,17 @@ GET /sound-effects/:sfxId
 
 | コード | HTTP Status | 説明 |
 |--------|-------------|------|
-| UNAUTHORIZED | 401 | 認証が必要 |
-| FORBIDDEN | 403 | アクセス権限がない |
-| NOT_FOUND | 404 | リソースが見つからない |
 | VALIDATION_ERROR | 400 | バリデーションエラー |
-| DUPLICATE_EMAIL | 409 | メールアドレスが既に登録済み |
-| DUPLICATE_NAME | 409 | 名前が重複している |
 | RESERVED_NAME | 400 | 予約語を使用している |
 | SCRIPT_PARSE_ERROR | 400 | 台本のパースに失敗 |
+| UNAUTHORIZED | 401 | 認証が必要 |
+| INVALID_CREDENTIALS | 401 | メールアドレスまたはパスワードが正しくない |
+| FORBIDDEN | 403 | アクセス権限がない |
+| NOT_FOUND | 404 | リソースが見つからない |
+| DUPLICATE_EMAIL | 409 | メールアドレスが既に登録済み |
+| DUPLICATE_USERNAME | 409 | ユーザー名が既に使用されている |
+| DUPLICATE_NAME | 409 | 名前が重複している |
+| SFX_IN_USE | 409 | 効果音が使用中のため削除不可 |
+| INTERNAL_ERROR | 500 | サーバー内部エラー |
 | GENERATION_FAILED | 500 | 音声/台本の生成に失敗 |
 | MEDIA_UPLOAD_FAILED | 500 | メディアアップロードに失敗 |
-| SFX_IN_USE | 409 | 効果音が使用中のため削除不可 |
