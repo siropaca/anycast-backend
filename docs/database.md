@@ -8,6 +8,7 @@ erDiagram
     users ||--o{ oauth_accounts : has
     users ||--o{ channels : owns
     users ||--o| images : avatar
+    categories ||--o{ channels : has
     channels ||--o{ characters : has
     channels ||--o{ episodes : has
     channels ||--o| images : artwork
@@ -50,9 +51,19 @@ erDiagram
         timestamp updated_at
     }
 
+    categories {
+        uuid id PK
+        varchar slug
+        varchar name
+        integer sort_order
+        timestamp created_at
+        timestamp updated_at
+    }
+
     channels {
         uuid id PK
         uuid user_id FK
+        uuid category_id FK
         varchar name
         text description
         uuid artwork_id FK
@@ -232,6 +243,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 |----------|-----|:--------:|------------|------|
 | id | UUID | | gen_random_uuid() | 主キー |
 | user_id | UUID | | - | オーナー（users 参照） |
+| category_id | UUID | ◯ | - | カテゴリ（categories 参照） |
 | name | VARCHAR(255) | | - | チャンネル名 |
 | description | TEXT | ◯ | - | チャンネルの説明 |
 | artwork_id | UUID | ◯ | - | カバー画像（images 参照） |
@@ -241,9 +253,11 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 **インデックス:**
 - PRIMARY KEY (id)
 - INDEX (user_id)
+- INDEX (category_id)
 
 **外部キー:**
 - user_id → users(id) ON DELETE CASCADE
+- category_id → categories(id) ON DELETE SET NULL
 - artwork_id → images(id) ON DELETE SET NULL
 
 ---
@@ -383,6 +397,26 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 
 ---
 
+#### categories
+
+ポッドキャストのカテゴリマスタを管理する。
+
+| カラム名 | 型 | NULLABLE | デフォルト | 説明 |
+|----------|-----|:--------:|------------|------|
+| id | UUID | | gen_random_uuid() | 主キー |
+| slug | VARCHAR(50) | | - | 一意識別子（例: technology） |
+| name | VARCHAR(100) | | - | 表示名（例: テクノロジー） |
+| sort_order | INTEGER | | 0 | 表示順 |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
+| updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
+
+**インデックス:**
+- PRIMARY KEY (id)
+- UNIQUE (slug)
+- INDEX (sort_order)
+
+---
+
 #### voices
 
 TTS ボイスのマスタデータを管理する。システム管理テーブルのため、ユーザーは参照のみ可能。
@@ -464,3 +498,11 @@ TTS ボイスのマスタデータを管理する。システム管理テーブ�
 - is_active = false のボイスは新規キャラクター作成時に選択不可（既存キャラクターは継続利用可）
 - 初期データとして各プロバイダのボイス一覧をシードで投入
 - 物理削除は行わず、is_active フラグで無効化
+
+### カテゴリの管理
+
+- categories テーブルでポッドキャストのカテゴリマスタを管理（システム管理、ユーザーは参照のみ）
+- slug は一意で、API やフィルタリングで使用
+- sort_order で表示順を制御
+- チャンネルは 1 つのカテゴリを持つ（任意）
+- 初期データとして Apple Podcasts 準拠のカテゴリをシードで投入
