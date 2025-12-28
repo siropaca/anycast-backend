@@ -46,7 +46,7 @@ clean:
 
 # Swagger ドキュメント生成
 swagger:
-	swag init -g main.go -o swagger
+	swag init -g main.go -o swagger --outputTypes go,json
 
 # マイグレーション実行
 migrate-up:
