@@ -155,7 +155,7 @@ erDiagram
 |----------|-----|:--------:|------------|------|
 | id | UUID | | gen_random_uuid() | 主キー |
 | email | VARCHAR(255) | | - | メールアドレス |
-| username | VARCHAR(50) | | - | ユーザー ID（displayName から自動生成、日本語可） |
+| username | VARCHAR(20) | | - | ユーザー ID（displayName から自動生成、日本語可） |
 | display_name | VARCHAR(20) | | - | 表示名 |
 | avatar_id | UUID | ◯ | - | アバター画像（images 参照） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
