@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "swagger/swagger.json"
+  workflow_dispatch:
 
 jobs:
   sync:
