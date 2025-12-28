@@ -1,16 +1,16 @@
-name: Sync OpenAPI to Frontend
+name: Sync Swagger to Frontend
 
 on:
   push:
     branches:
       - main
     paths:
-      - "swagger/openapi.json"
+      - "swagger/swagger.json"
   workflow_dispatch:
 
 jobs:
   sync:
-    name: Sync openapi.json to frontend
+    name: Sync swagger.json to frontend
     runs-on: ubuntu-latest
     steps:
       - name: Checkout backend
@@ -23,8 +23,8 @@ jobs:
           token: ${{ secrets.FRONTEND_REPO_TOKEN }}
           path: frontend
 
-      - name: Copy openapi.json
-        run: cp swagger/openapi.json frontend/openapi.json
+      - name: Copy swagger.json as openapi.json
+        run: cp swagger/swagger.json frontend/openapi.json
 
       - name: Check for changes
         id: check

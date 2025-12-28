@@ -47,7 +47,6 @@ clean:
 # Swagger ドキュメント生成
 swagger:
 	swag init -g main.go -o swagger --outputTypes go,json
-	mv swagger/swagger.json swagger/openapi.json
 
 # マイグレーション実行
 migrate-up:
