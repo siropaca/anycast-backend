@@ -19,11 +19,6 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Generate Swagger docs
-        run: |
-          go install github.com/swaggo/swag/cmd/swag@latest
-          swag init -g main.go -o swagger
-
       - name: Build
         run: go build ./...
 
@@ -37,11 +32,6 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Generate Swagger docs
-        run: |
-          go install github.com/swaggo/swag/cmd/swag@latest
-          swag init -g main.go -o swagger
-
       - name: Run tests
         run: go test ./... -v
 
@@ -54,11 +44,6 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-
-      - name: Generate Swagger docs
-        run: |
-          go install github.com/swaggo/swag/cmd/swag@latest
-          swag init -g main.go -o swagger
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v7

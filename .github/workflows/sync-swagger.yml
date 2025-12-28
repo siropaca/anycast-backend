@@ -1,0 +1,69 @@
+name: Sync Swagger to Frontend
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "swagger/swagger.json"
+
+jobs:
+  sync:
+    name: Sync swagger.json to frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout backend
+        uses: actions/checkout@v4
+
+      - name: Checkout frontend
+        uses: actions/checkout@v4
+        with:
+          repository: siropaca/anycast-forntend
+          token: ${{ secrets.FRONTEND_REPO_TOKEN }}
+          path: frontend
+
+      - name: Copy swagger.json
+        run: cp swagger/swagger.json frontend/swagger.json
+
+      - name: Check for changes
+        id: check
+        working-directory: frontend
+        run: |
+          if git diff --quiet; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.check.outputs.changed == 'true'
+        id: create-pr
+        working-directory: frontend
+        env:
+          GH_TOKEN: ${{ secrets.FRONTEND_REPO_TOKEN }}
+        run: |
+          BRANCH_NAME="chore/sync-swagger-$(date +%Y%m%d%H%M%S)"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git checkout -b "$BRANCH_NAME"
+          git add swagger.json
+          git commit -m "chore: sync swagger.json from backend"
+          git push origin "$BRANCH_NAME"
+
+          PR_URL=$(gh pr create \
+            --title "chore: sync swagger.json from backend" \
+            --body "Backend の swagger.json を同期します。" \
+            --base main \
+            --head "$BRANCH_NAME")
+
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+
+      - name: Merge Pull Request
+        if: steps.check.outputs.changed == 'true'
+        working-directory: frontend
+        env:
+          GH_TOKEN: ${{ secrets.FRONTEND_REPO_TOKEN }}
+        run: |
+          gh pr merge --squash --delete-branch "${{ steps.create-pr.outputs.pr_url }}"

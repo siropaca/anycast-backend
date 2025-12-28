@@ -3,9 +3,7 @@ nixPkgs = ["go"]
 
 [phases.build]
 cmds = [
-    "go install github.com/swaggo/swag/cmd/swag@latest",
     "go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest",
-    "$(go env GOPATH)/bin/swag init -o swagger",
     "go build -o bin/server main.go",
     "cp $(go env GOPATH)/bin/migrate bin/migrate"
 ]
