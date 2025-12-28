@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand/v2"
+	"regexp"
 	"strings"
 	"time"
 
@@ -188,10 +189,24 @@ func (s *authService) OAuthGoogle(ctx context.Context, req request.OAuthGoogleRe
 	}, nil
 }
 
+// 連続する半角スペースにマッチする正規表現
+var multiSpaceRegex = regexp.MustCompile(`\s+`)
+
+// displayName をユーザー名形式に変換する
+func displayNameToUsername(displayName string) string {
+	// 全角スペースを半角スペースに変換
+	s := strings.ReplaceAll(displayName, "\u3000", " ")
+	// 連続する半角スペースを1個に圧縮
+	s = multiSpaceRegex.ReplaceAllString(s, " ")
+	// 前後の空白を削除
+	s = strings.TrimSpace(s)
+	// 半角スペースをアンダースコアに変換
+	return strings.ReplaceAll(s, " ", "_")
+}
+
 // displayName からユニークなユーザー名を生成する
 func (s *authService) generateUniqueUsername(ctx context.Context, displayName string) (string, error) {
-	// スペースをアンダースコアに変換
-	base := strings.ReplaceAll(displayName, " ", "_")
+	base := displayNameToUsername(displayName)
 
 	// まずベース名で重複チェック
 	exists, err := s.userRepo.ExistsByUsername(ctx, base)
