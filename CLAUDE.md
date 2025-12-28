@@ -80,6 +80,10 @@
 
 - ハンドラー（`internal/handler/`）を修正した際は `make swagger` で Swagger ドキュメントを再生成する
 
+### マイグレーション
+
+- スキーマを変更した際は `docs/database.md` も更新する
+
 ### ログ
 
 | レベル | 用途 | 自動追加 |
