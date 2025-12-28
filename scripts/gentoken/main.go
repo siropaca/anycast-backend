@@ -16,9 +16,9 @@ const defaultUserID = "8def69af-dae9-4641-a0e5-100107626933"
 func main() {
 	_ = godotenv.Load() //nolint:errcheck // .env ファイルがなくてもエラーにしない
 
-	jwtSecret := os.Getenv("JWT_SECRET")
+	jwtSecret := os.Getenv("AUTH_SECRET")
 	if jwtSecret == "" {
-		fmt.Fprintln(os.Stderr, "Error: JWT_SECRET is not set")
+		fmt.Fprintln(os.Stderr, "Error: AUTH_SECRET is not set")
 		os.Exit(1)
 	}
 
