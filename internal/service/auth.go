@@ -204,6 +204,12 @@ func displayNameToUsername(displayName string) string {
 	return strings.ReplaceAll(s, " ", "_")
 }
 
+// ユーザー名にランダムなサフィックスを付与する
+func appendRandomSuffix(username string) string {
+	suffix := rand.IntN(10000)
+	return fmt.Sprintf("%s_%d", username, suffix)
+}
+
 // displayName からユニークなユーザー名を生成する
 func (s *authService) generateUniqueUsername(ctx context.Context, displayName string) (string, error) {
 	base := displayNameToUsername(displayName)
@@ -220,8 +226,7 @@ func (s *authService) generateUniqueUsername(ctx context.Context, displayName st
 	// 重複する場合はランダムな番号を付与してリトライ
 	const maxRetries = 10
 	for i := 0; i < maxRetries; i++ {
-		suffix := rand.IntN(10000)
-		candidate := fmt.Sprintf("%s_%d", base, suffix)
+		candidate := appendRandomSuffix(base)
 
 		exists, err := s.userRepo.ExistsByUsername(ctx, candidate)
 		if err != nil {

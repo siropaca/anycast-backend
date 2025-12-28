@@ -1,6 +1,7 @@
 package service
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -60,4 +61,26 @@ func TestDisplayNameToUsername(t *testing.T) {
 			assert.Equal(t, tt.want, got)
 		})
 	}
+}
+
+func TestAppendRandomSuffix(t *testing.T) {
+	t.Run("ユーザー名にランダムなサフィックスを付与する", func(t *testing.T) {
+		username := "testuser"
+		result := appendRandomSuffix(username)
+
+		// 形式が "testuser_数字" であることを確認
+		pattern := regexp.MustCompile(`^testuser_\d+$`)
+		assert.True(t, pattern.MatchString(result), "結果は 'testuser_数字' の形式であるべき: %s", result)
+	})
+
+	t.Run("サフィックスは0から9999の範囲", func(t *testing.T) {
+		username := "user"
+		pattern := regexp.MustCompile(`^user_(\d{1,4})$`)
+
+		// 複数回実行して形式を確認
+		for i := 0; i < 100; i++ {
+			result := appendRandomSuffix(username)
+			assert.True(t, pattern.MatchString(result), "サフィックスは1〜4桁の数字であるべき: %s", result)
+		}
+	})
 }
