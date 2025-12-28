@@ -35,6 +35,9 @@
 | POST | `/api/v1/channels/:channelId/characters` | キャラクター作成 | |
 | PATCH | `/api/v1/channels/:channelId/characters/:characterId` | キャラクター更新 | |
 | DELETE | `/api/v1/channels/:channelId/characters/:characterId` | キャラクター削除 | |
+| **Search（検索）** | - | - | - |
+| GET | `/api/v1/search/channels` | チャンネル検索 | |
+| GET | `/api/v1/search/episodes` | エピソード検索 | |
 | **Episodes** | - | - | - |
 | GET | `/api/v1/channels/:channelId/episodes` | エピソード一覧取得 | |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード取得 | |
@@ -64,6 +67,8 @@
 | **Voices（ボイス）** | - | - | - |
 | GET | `/api/v1/voices` | ボイス一覧取得 | ✅ |
 | GET | `/api/v1/voices/:voiceId` | ボイス取得 | ✅ |
+| **Categories（カテゴリ）** | - | - | - |
+| GET | `/api/v1/categories` | カテゴリ一覧取得 | |
 | **Sound Effects（効果音）** | - | - | - |
 | GET | `/api/v1/sound-effects` | 効果音一覧取得 | |
 | GET | `/api/v1/sound-effects/:sfxId` | 効果音取得 | |
@@ -134,6 +139,7 @@
 | Audios（アップロード） | Owner | Owner | - | Owner |
 | Images（アップロード） | Owner | Owner | - | Owner |
 | Voices | Public | Admin | Admin | Admin |
+| Categories | Public | Admin | Admin | Admin |
 | Sound Effects | Public | Admin | Admin | Admin |
 
 ---
@@ -333,7 +339,13 @@ GET /users/:userId
 GET /channels
 ```
 
-**クエリパラメータ:** ページネーション
+**クエリパラメータ:**
+
+| パラメータ | 型 | デフォルト | 説明 |
+|------------|-----|------------|------|
+| categoryId | uuid | - | カテゴリ ID でフィルタ |
+| limit | int | 20 | 取得件数（最大 100） |
+| offset | int | 0 | オフセット |
 
 **レスポンス:**
 ```json
@@ -343,6 +355,7 @@ GET /channels
       "id": "uuid",
       "name": "チャンネル名",
       "description": "説明",
+      "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
       "artwork": { "id": "uuid", "url": "..." },
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2025-01-01T00:00:00Z"
@@ -364,6 +377,7 @@ GET /channels/:channelId
     "id": "uuid",
     "name": "チャンネル名",
     "description": "説明",
+    "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
     "artwork": { "id": "uuid", "url": "..." },
     "characters": [
       {
@@ -395,6 +409,7 @@ POST /channels
 {
   "name": "チャンネル名",
   "description": "説明",
+  "categoryId": "uuid",
   "artworkImageId": "uuid"
 }
 ```
@@ -410,6 +425,7 @@ PATCH /channels/:channelId
 {
   "name": "新しいチャンネル名",
   "description": "新しい説明",
+  "categoryId": "uuid",
   "artworkImageId": "uuid"
 }
 ```
@@ -468,6 +484,87 @@ PATCH /channels/:channelId/characters/:characterId
 
 ```
 DELETE /channels/:channelId/characters/:characterId
+```
+
+---
+
+## Search（検索）
+
+フリーワード検索用のエンドポイント。
+
+### チャンネル検索
+
+```
+GET /search/channels
+```
+
+**クエリパラメータ:**
+
+| パラメータ | 型 | デフォルト | 説明 |
+|------------|-----|------------|------|
+| q | string | **必須** | 検索キーワード（name, description を対象） |
+| categoryId | uuid | - | カテゴリ ID でフィルタ |
+| limit | int | 20 | 取得件数（最大 100） |
+| offset | int | 0 | オフセット |
+
+**レスポンス:**
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "name": "チャンネル名",
+      "description": "説明",
+      "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
+      "artwork": { "id": "uuid", "url": "..." },
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "total": 100,
+    "limit": 20,
+    "offset": 0
+  }
+}
+```
+
+### エピソード検索
+
+```
+GET /search/episodes
+```
+
+**クエリパラメータ:**
+
+| パラメータ | 型 | デフォルト | 説明 |
+|------------|-----|------------|------|
+| q | string | **必須** | 検索キーワード（title, description を対象） |
+| limit | int | 20 | 取得件数（最大 100） |
+| offset | int | 0 | オフセット |
+
+**レスポンス:**
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "title": "エピソードタイトル",
+      "description": "エピソードの説明",
+      "channel": {
+        "id": "uuid",
+        "name": "チャンネル名"
+      },
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "total": 100,
+    "limit": 20,
+    "offset": 0
+  }
+}
 ```
 
 ---
@@ -886,6 +983,31 @@ GET /voices
 
 ```
 GET /voices/:voiceId
+```
+
+---
+
+## Categories（カテゴリ）
+
+システム管理のマスタデータ。参照のみ可能。
+
+### カテゴリ一覧取得
+
+```
+GET /categories
+```
+
+**レスポンス:**
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "slug": "technology",
+      "name": "テクノロジー"
+    }
+  ]
+}
 ```
 
 ---
