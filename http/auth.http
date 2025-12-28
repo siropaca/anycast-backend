@@ -1,0 +1,40 @@
+@baseUrl = http://localhost:8081/api/v1
+
+# トークン生成: make token
+@token = YOUR_TOKEN_HERE
+
+### ユーザー登録
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123",
+  "displayName": "テストユーザー"
+}
+
+### メール/パスワード認証
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+### Google OAuth 認証
+POST {{baseUrl}}/auth/oauth/google
+Content-Type: application/json
+
+{
+  "providerUserId": "google-user-id-123",
+  "email": "oauth@example.com",
+  "displayName": "OAuth ユーザー",
+  "accessToken": "access-token-here",
+  "refreshToken": "refresh-token-here",
+  "expiresAt": 1735689600
+}
+
+### 現在のユーザー取得
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
