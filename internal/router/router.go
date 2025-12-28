@@ -3,6 +3,7 @@ package router
 import (
 	"net/http"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -21,6 +22,15 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	r.Use(middleware.Logger())
 	r.Use(middleware.ErrorHandler())
 	r.Use(gin.Recovery())
+
+	// CORS 設定
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     cfg.CORSAllowedOrigins,
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
 
 	// Swagger（本番環境では無効）
 	if cfg.AppEnv != config.EnvProduction {
@@ -41,12 +51,22 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 		})
 	})
 
-	// API v1（認証必須）
+	// API v1
 	api := r.Group("/api/v1")
-	api.Use(middleware.Auth(cfg.JWTSecret))
+
+	// Auth（認証不要）
+	auth := api.Group("/auth")
+	auth.POST("/register", container.AuthHandler.Register)
+	auth.POST("/login", container.AuthHandler.Login)
+	auth.POST("/oauth/google", container.AuthHandler.OAuthGoogle)
+
+	// 認証必須のエンドポイント
+	authenticated := api.Group("")
+	authenticated.Use(middleware.Auth(cfg.AuthSecret))
+
 	// Voices
-	api.GET("/voices", container.VoiceHandler.ListVoices)
-	api.GET("/voices/:voiceId", container.VoiceHandler.GetVoice)
+	authenticated.GET("/voices", container.VoiceHandler.ListVoices)
+	authenticated.GET("/voices/:voiceId", container.VoiceHandler.GetVoice)
 
 	return r
 }
