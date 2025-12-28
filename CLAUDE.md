@@ -84,6 +84,12 @@
 
 - スキーマを変更した際は `docs/database.md` も更新する
 
+### pkg ユーティリティ
+
+- `internal/pkg/` 配下のユーティリティを積極的に使用する
+- `github.com/google/uuid` の代わりに `internal/pkg/uuid` を使用する（統一されたエラーハンドリングのため）
+- 汎用的な処理は `internal/pkg/` にまとめ、テストを必ず実装する
+
 ### ログ
 
 | レベル | 用途 | 自動追加 |

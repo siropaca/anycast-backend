@@ -8,13 +8,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/request"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/model"
 	"github.com/siropaca/anycast-backend/internal/pkg/crypto"
+	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
@@ -258,7 +257,7 @@ func (s *authService) GetMe(ctx context.Context, userID string) (*response.MeRes
 	// UUID をパース
 	id, err := uuid.Parse(userID)
 	if err != nil {
-		return nil, apperror.ErrValidation.WithMessage("Invalid user ID format")
+		return nil, err
 	}
 
 	// ユーザーを取得

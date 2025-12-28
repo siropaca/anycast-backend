@@ -4,12 +4,12 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/request"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/model"
+	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 	"github.com/siropaca/anycast-backend/internal/repository"
 	"github.com/siropaca/anycast-backend/internal/service"
 )
@@ -73,8 +73,8 @@ func (h *VoiceHandler) GetVoice(c *gin.Context) {
 	id := c.Param("voiceId")
 
 	// UUID 形式のバリデーション
-	if _, err := uuid.Parse(id); err != nil {
-		Error(c, apperror.ErrValidation.WithMessage("Invalid voice ID format"))
+	if err := uuid.Validate(id); err != nil {
+		Error(c, err)
 		return
 	}
 
