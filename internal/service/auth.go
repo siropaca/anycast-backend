@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math/rand/v2"
 	"strings"
@@ -89,8 +88,7 @@ func (s *authService) Login(ctx context.Context, req request.LoginRequest) (*res
 	user, err := s.userRepo.FindByEmail(ctx, req.Email)
 	if err != nil {
 		// NotFound エラーの場合も認証エラーとして扱う
-		var appErr *apperror.AppError
-		if errors.As(err, &appErr) && appErr.Code == "NOT_FOUND" {
+		if apperror.IsCode(err, apperror.CodeNotFound) {
 			return nil, apperror.ErrInvalidCredentials.WithMessage("メールアドレスまたはパスワードが正しくありません")
 		}
 		return nil, err
@@ -100,8 +98,7 @@ func (s *authService) Login(ctx context.Context, req request.LoginRequest) (*res
 	credential, err := s.credentialRepo.FindByUserID(ctx, user.ID)
 	if err != nil {
 		// 認証情報がない場合（OAuth のみのユーザー）
-		var appErr *apperror.AppError
-		if errors.As(err, &appErr) && appErr.Code == "NOT_FOUND" {
+		if apperror.IsCode(err, apperror.CodeNotFound) {
 			return nil, apperror.ErrInvalidCredentials.WithMessage("メールアドレスまたはパスワードが正しくありません")
 		}
 		return nil, err
@@ -121,8 +118,7 @@ func (s *authService) OAuthGoogle(ctx context.Context, req request.OAuthGoogleRe
 	existingAccount, err := s.oauthAccountRepo.FindByProviderAndProviderUserID(ctx, "google", req.ProviderUserID)
 	if err != nil {
 		// NotFound エラーの場合は新規作成へ進む
-		var appErr *apperror.AppError
-		if !errors.As(err, &appErr) || appErr.Code != "NOT_FOUND" {
+		if !apperror.IsCode(err, apperror.CodeNotFound) {
 			return nil, err
 		}
 		existingAccount = nil

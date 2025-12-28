@@ -23,7 +23,7 @@ func ErrorHandler() gin.HandlerFunc {
 			var appErr *apperror.AppError
 			if errors.As(err, &appErr) {
 				log.Error("request error",
-					slog.String("code", appErr.Code),
+					slog.String("code", string(appErr.Code)),
 					slog.String("message", appErr.Message),
 					slog.Any("underlying", appErr.Err),
 				)
