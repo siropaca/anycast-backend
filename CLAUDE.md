@@ -78,7 +78,7 @@
 
 ### API ドキュメント
 
-- ハンドラー（`internal/handler/`）を修正した際は `make swagger` で Swagger ドキュメントを再生成する
+- ハンドラー（`internal/handler/`）を追加・変更した際は `make swagger` で Swagger ドキュメントを再生成する
 
 ### マイグレーション
 
