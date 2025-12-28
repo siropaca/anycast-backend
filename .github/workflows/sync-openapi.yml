@@ -1,16 +1,16 @@
-name: Sync Swagger to Frontend
+name: Sync OpenAPI to Frontend
 
 on:
   push:
     branches:
       - main
     paths:
-      - "swagger/swagger.json"
+      - "swagger/openapi.json"
   workflow_dispatch:
 
 jobs:
   sync:
-    name: Sync swagger.json to frontend
+    name: Sync openapi.json to frontend
     runs-on: ubuntu-latest
     steps:
       - name: Checkout backend
@@ -23,14 +23,14 @@ jobs:
           token: ${{ secrets.FRONTEND_REPO_TOKEN }}
           path: frontend
 
-      - name: Copy swagger.json
-        run: cp swagger/swagger.json frontend/swagger.json
+      - name: Copy openapi.json
+        run: cp swagger/openapi.json frontend/openapi.json
 
       - name: Check for changes
         id: check
         working-directory: frontend
         run: |
-          git add swagger.json
+          git add openapi.json
           if git diff --cached --quiet; then
             echo "changed=false" >> $GITHUB_OUTPUT
           else
@@ -44,19 +44,19 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.FRONTEND_REPO_TOKEN }}
         run: |
-          BRANCH_NAME="chore/sync-swagger-$(date +%Y%m%d%H%M%S)"
+          BRANCH_NAME="chore/sync-openapi-$(date +%Y%m%d%H%M%S)"
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git checkout -b "$BRANCH_NAME"
-          git add swagger.json
-          git commit -m "chore: sync swagger.json from backend"
+          git add openapi.json
+          git commit -m "chore: sync openapi.json from backend"
           git push origin "$BRANCH_NAME"
 
           PR_URL=$(gh pr create \
-            --title "chore: sync swagger.json from backend" \
-            --body "Backend の swagger.json を同期します。" \
+            --title "chore: sync openapi.json from backend" \
+            --body "Backend の openapi.json を同期します。" \
             --base main \
             --head "$BRANCH_NAME")
 
