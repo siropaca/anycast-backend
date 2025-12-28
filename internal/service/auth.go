@@ -1,0 +1,236 @@
+package service
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"math/rand/v2"
+	"strings"
+	"time"
+
+	"github.com/siropaca/anycast-backend/internal/apperror"
+	"github.com/siropaca/anycast-backend/internal/dto/request"
+	"github.com/siropaca/anycast-backend/internal/dto/response"
+	"github.com/siropaca/anycast-backend/internal/model"
+	"github.com/siropaca/anycast-backend/internal/pkg/crypto"
+	"github.com/siropaca/anycast-backend/internal/repository"
+)
+
+type authService struct {
+	userRepo         repository.UserRepository
+	credentialRepo   repository.CredentialRepository
+	oauthAccountRepo repository.OAuthAccountRepository
+	passwordHasher   crypto.PasswordHasher
+}
+
+// AuthService の実装を返す
+func NewAuthService(
+	userRepo repository.UserRepository,
+	credentialRepo repository.CredentialRepository,
+	oauthAccountRepo repository.OAuthAccountRepository,
+	passwordHasher crypto.PasswordHasher,
+) AuthService {
+	return &authService{
+		userRepo:         userRepo,
+		credentialRepo:   credentialRepo,
+		oauthAccountRepo: oauthAccountRepo,
+		passwordHasher:   passwordHasher,
+	}
+}
+
+// ユーザーを登録する
+func (s *authService) Register(ctx context.Context, req request.RegisterRequest) (*response.UserResponse, error) {
+	// メールアドレスの重複チェック
+	exists, err := s.userRepo.ExistsByEmail(ctx, req.Email)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, apperror.ErrDuplicateEmail.WithMessage("このメールアドレスは既に使用されています")
+	}
+
+	// ユーザー名を自動生成
+	username, err := s.generateUniqueUsername(ctx, req.DisplayName)
+	if err != nil {
+		return nil, err
+	}
+
+	// パスワードをハッシュ化
+	hashedPassword, err := s.passwordHasher.Hash(req.Password)
+	if err != nil {
+		return nil, apperror.ErrInternal.WithMessage("Failed to hash password").WithError(err)
+	}
+
+	// ユーザーを作成
+	user := &model.User{
+		Email:       req.Email,
+		Username:    username,
+		DisplayName: req.DisplayName,
+	}
+	if err := s.userRepo.Create(ctx, user); err != nil {
+		return nil, err
+	}
+
+	// 認証情報を作成
+	credential := &model.Credential{
+		UserID:       user.ID,
+		PasswordHash: hashedPassword,
+	}
+	if err := s.credentialRepo.Create(ctx, credential); err != nil {
+		return nil, err
+	}
+
+	return s.toUserResponse(user), nil
+}
+
+// メールアドレスとパスワードで認証する
+func (s *authService) Login(ctx context.Context, req request.LoginRequest) (*response.UserResponse, error) {
+	// ユーザーを取得
+	user, err := s.userRepo.FindByEmail(ctx, req.Email)
+	if err != nil {
+		// NotFound エラーの場合も認証エラーとして扱う
+		var appErr *apperror.AppError
+		if errors.As(err, &appErr) && appErr.Code == "NOT_FOUND" {
+			return nil, apperror.ErrInvalidCredentials.WithMessage("メールアドレスまたはパスワードが正しくありません")
+		}
+		return nil, err
+	}
+
+	// 認証情報を取得
+	credential, err := s.credentialRepo.FindByUserID(ctx, user.ID)
+	if err != nil {
+		// 認証情報がない場合（OAuth のみのユーザー）
+		var appErr *apperror.AppError
+		if errors.As(err, &appErr) && appErr.Code == "NOT_FOUND" {
+			return nil, apperror.ErrInvalidCredentials.WithMessage("メールアドレスまたはパスワードが正しくありません")
+		}
+		return nil, err
+	}
+
+	// パスワードを検証
+	if err := s.passwordHasher.Compare(credential.PasswordHash, req.Password); err != nil {
+		return nil, apperror.ErrInvalidCredentials.WithMessage("メールアドレスまたはパスワードが正しくありません")
+	}
+
+	return s.toUserResponse(user), nil
+}
+
+// Google OAuth で認証する
+func (s *authService) OAuthGoogle(ctx context.Context, req request.OAuthGoogleRequest) (*AuthResult, error) {
+	// 既存の OAuth アカウントを検索
+	existingAccount, err := s.oauthAccountRepo.FindByProviderAndProviderUserID(ctx, "google", req.ProviderUserID)
+	if err != nil {
+		// NotFound エラーの場合は新規作成へ進む
+		var appErr *apperror.AppError
+		if !errors.As(err, &appErr) || appErr.Code != "NOT_FOUND" {
+			return nil, err
+		}
+		existingAccount = nil
+	}
+
+	if existingAccount != nil {
+		// 既存ユーザー: トークン情報を更新
+		existingAccount.AccessToken = &req.AccessToken
+		existingAccount.RefreshToken = req.RefreshToken
+		if req.ExpiresAt != nil {
+			expiresAt := time.Unix(*req.ExpiresAt, 0)
+			existingAccount.ExpiresAt = &expiresAt
+		}
+		existingAccount.UpdatedAt = time.Now()
+
+		if err := s.oauthAccountRepo.Update(ctx, existingAccount); err != nil {
+			return nil, err
+		}
+
+		// ユーザー情報を取得
+		user, err := s.userRepo.FindByID(ctx, existingAccount.UserID)
+		if err != nil {
+			return nil, err
+		}
+
+		return &AuthResult{
+			User:      *s.toUserResponse(user),
+			IsCreated: false,
+		}, nil
+	}
+
+	// ユーザー名を自動生成
+	username, err := s.generateUniqueUsername(ctx, req.DisplayName)
+	if err != nil {
+		return nil, err
+	}
+
+	// 新規ユーザー: ユーザーと OAuth アカウントを作成
+	user := &model.User{
+		Email:       req.Email,
+		Username:    username,
+		DisplayName: req.DisplayName,
+	}
+	if err := s.userRepo.Create(ctx, user); err != nil {
+		return nil, err
+	}
+
+	oauthAccount := &model.OAuthAccount{
+		UserID:         user.ID,
+		Provider:       "google",
+		ProviderUserID: req.ProviderUserID,
+		AccessToken:    &req.AccessToken,
+		RefreshToken:   req.RefreshToken,
+	}
+	if req.ExpiresAt != nil {
+		expiresAt := time.Unix(*req.ExpiresAt, 0)
+		oauthAccount.ExpiresAt = &expiresAt
+	}
+
+	if err := s.oauthAccountRepo.Create(ctx, oauthAccount); err != nil {
+		return nil, err
+	}
+
+	return &AuthResult{
+		User:      *s.toUserResponse(user),
+		IsCreated: true,
+	}, nil
+}
+
+// displayName からユニークなユーザー名を生成する
+func (s *authService) generateUniqueUsername(ctx context.Context, displayName string) (string, error) {
+	// スペースをアンダースコアに変換
+	base := strings.ReplaceAll(displayName, " ", "_")
+
+	// まずベース名で重複チェック
+	exists, err := s.userRepo.ExistsByUsername(ctx, base)
+	if err != nil {
+		return "", err
+	}
+	if !exists {
+		return base, nil
+	}
+
+	// 重複する場合はランダムな番号を付与してリトライ
+	const maxRetries = 10
+	for i := 0; i < maxRetries; i++ {
+		suffix := rand.IntN(10000)
+		candidate := fmt.Sprintf("%s_%d", base, suffix)
+
+		exists, err := s.userRepo.ExistsByUsername(ctx, candidate)
+		if err != nil {
+			return "", err
+		}
+		if !exists {
+			return candidate, nil
+		}
+	}
+
+	return "", apperror.ErrInternal.WithMessage("ユーザー名の生成に失敗しました")
+}
+
+// model.User を response.UserResponse に変換する
+func (s *authService) toUserResponse(user *model.User) *response.UserResponse {
+	return &response.UserResponse{
+		ID:          user.ID,
+		Email:       user.Email,
+		Username:    user.Username,
+		DisplayName: user.DisplayName,
+		AvatarURL:   nil, // 現時点ではアバター URL の解決は行わない
+	}
+}
