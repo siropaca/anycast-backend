@@ -7,99 +7,52 @@ type ErrorCode string
 
 // エラーコード定数
 const (
-	CodeNotFound           ErrorCode = "NOT_FOUND"
-	CodeValidation         ErrorCode = "VALIDATION_ERROR"
-	CodeInternal           ErrorCode = "INTERNAL_ERROR"
-	CodeUnauthorized       ErrorCode = "UNAUTHORIZED"
-	CodeForbidden          ErrorCode = "FORBIDDEN"
-	CodeDuplicateEmail     ErrorCode = "DUPLICATE_EMAIL"
-	CodeDuplicateUsername  ErrorCode = "DUPLICATE_USERNAME"
-	CodeInvalidCredentials ErrorCode = "INVALID_CREDENTIALS"
-	CodeDuplicateName      ErrorCode = "DUPLICATE_NAME"
-	CodeReservedName       ErrorCode = "RESERVED_NAME"
-	CodeScriptParse        ErrorCode = "SCRIPT_PARSE_ERROR"
-	CodeGenerationFailed   ErrorCode = "GENERATION_FAILED"
-	CodeMediaUploadFailed  ErrorCode = "MEDIA_UPLOAD_FAILED"
+	CodeValidation         ErrorCode = "VALIDATION_ERROR"    // 400
+	CodeReservedName       ErrorCode = "RESERVED_NAME"       // 400
+	CodeScriptParse        ErrorCode = "SCRIPT_PARSE_ERROR"  // 400
+	CodeUnauthorized       ErrorCode = "UNAUTHORIZED"        // 401
+	CodeInvalidCredentials ErrorCode = "INVALID_CREDENTIALS" // 401
+	CodeForbidden          ErrorCode = "FORBIDDEN"           // 403
+	CodeNotFound           ErrorCode = "NOT_FOUND"           // 404
+	CodeDuplicateEmail     ErrorCode = "DUPLICATE_EMAIL"     // 409
+	CodeDuplicateUsername  ErrorCode = "DUPLICATE_USERNAME"  // 409
+	CodeDuplicateName      ErrorCode = "DUPLICATE_NAME"      // 409
+	CodeSfxInUse           ErrorCode = "SFX_IN_USE"          // 409
+	CodeInternal           ErrorCode = "INTERNAL_ERROR"      // 500
+	CodeGenerationFailed   ErrorCode = "GENERATION_FAILED"   // 500
+	CodeMediaUploadFailed  ErrorCode = "MEDIA_UPLOAD_FAILED" // 500
 )
+
+// newError は定義済みエラーを生成するヘルパー関数
+func newError(code ErrorCode, message string, status int) *AppError {
+	return &AppError{Code: code, Message: message, HTTPStatus: status}
+}
 
 // 定義済みエラー
 var (
-	// リソースが見つからない場合
-	ErrNotFound = &AppError{
-		Code:       CodeNotFound,
-		Message:    "Resource not found",
-		HTTPStatus: http.StatusNotFound,
-	}
-	// リクエストのバリデーションに失敗した場合
-	ErrValidation = &AppError{
-		Code:       CodeValidation,
-		Message:    "Validation failed",
-		HTTPStatus: http.StatusBadRequest,
-	}
-	// サーバー内部でエラーが発生した場合
-	ErrInternal = &AppError{
-		Code:       CodeInternal,
-		Message:    "Internal server error",
-		HTTPStatus: http.StatusInternalServerError,
-	}
-	// 認証が必要な場合
-	ErrUnauthorized = &AppError{
-		Code:       CodeUnauthorized,
-		Message:    "Authentication required",
-		HTTPStatus: http.StatusUnauthorized,
-	}
-	// アクセス権限がない場合
-	ErrForbidden = &AppError{
-		Code:       CodeForbidden,
-		Message:    "Access denied",
-		HTTPStatus: http.StatusForbidden,
-	}
-	// メールアドレスが既に使用されている場合
-	ErrDuplicateEmail = &AppError{
-		Code:       CodeDuplicateEmail,
-		Message:    "Email already exists",
-		HTTPStatus: http.StatusConflict,
-	}
-	// ユーザー名が既に使用されている場合
-	ErrDuplicateUsername = &AppError{
-		Code:       CodeDuplicateUsername,
-		Message:    "Username already exists",
-		HTTPStatus: http.StatusConflict,
-	}
-	// 認証情報が無効な場合
-	ErrInvalidCredentials = &AppError{
-		Code:       CodeInvalidCredentials,
-		Message:    "Invalid email or password",
-		HTTPStatus: http.StatusUnauthorized,
-	}
-	// 名前が既に使用されている場合
-	ErrDuplicateName = &AppError{
-		Code:       CodeDuplicateName,
-		Message:    "Name already exists",
-		HTTPStatus: http.StatusConflict,
-	}
-	// 予約された名前を使用しようとした場合
-	ErrReservedName = &AppError{
-		Code:       CodeReservedName,
-		Message:    "Reserved name cannot be used",
-		HTTPStatus: http.StatusBadRequest,
-	}
-	// 台本のパースに失敗した場合
-	ErrScriptParse = &AppError{
-		Code:       CodeScriptParse,
-		Message:    "Failed to parse script",
-		HTTPStatus: http.StatusBadRequest,
-	}
-	// 音声生成に失敗した場合
-	ErrGenerationFailed = &AppError{
-		Code:       CodeGenerationFailed,
-		Message:    "Generation failed",
-		HTTPStatus: http.StatusInternalServerError,
-	}
-	// メディアのアップロードに失敗した場合
-	ErrMediaUploadFailed = &AppError{
-		Code:       CodeMediaUploadFailed,
-		Message:    "Media upload failed",
-		HTTPStatus: http.StatusInternalServerError,
-	}
+	// 400 Bad Request
+	ErrValidation   = newError(CodeValidation, "Validation failed", http.StatusBadRequest)              // バリデーションエラー
+	ErrReservedName = newError(CodeReservedName, "Reserved name cannot be used", http.StatusBadRequest) // 予約された名前を使用
+	ErrScriptParse  = newError(CodeScriptParse, "Failed to parse script", http.StatusBadRequest)        // 台本のパースに失敗
+
+	// 401 Unauthorized
+	ErrUnauthorized       = newError(CodeUnauthorized, "Authentication required", http.StatusUnauthorized)         // 認証が必要
+	ErrInvalidCredentials = newError(CodeInvalidCredentials, "Invalid email or password", http.StatusUnauthorized) // 認証情報が無効
+
+	// 403 Forbidden
+	ErrForbidden = newError(CodeForbidden, "Access denied", http.StatusForbidden) // アクセス権限がない
+
+	// 404 Not Found
+	ErrNotFound = newError(CodeNotFound, "Resource not found", http.StatusNotFound) // リソースが見つからない
+
+	// 409 Conflict
+	ErrDuplicateEmail    = newError(CodeDuplicateEmail, "Email already exists", http.StatusConflict)       // メールアドレスが既に使用されている
+	ErrDuplicateUsername = newError(CodeDuplicateUsername, "Username already exists", http.StatusConflict) // ユーザー名が既に使用されている
+	ErrDuplicateName     = newError(CodeDuplicateName, "Name already exists", http.StatusConflict)         // 名前が既に使用されている
+	ErrSfxInUse          = newError(CodeSfxInUse, "Sound effect is in use", http.StatusConflict)           // 効果音が使用中
+
+	// 500 Internal Server Error
+	ErrInternal          = newError(CodeInternal, "Internal server error", http.StatusInternalServerError)        // サーバー内部エラー
+	ErrGenerationFailed  = newError(CodeGenerationFailed, "Generation failed", http.StatusInternalServerError)    // 音声生成に失敗
+	ErrMediaUploadFailed = newError(CodeMediaUploadFailed, "Media upload failed", http.StatusInternalServerError) // メディアアップロードに失敗
 )

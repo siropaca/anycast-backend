@@ -9,6 +9,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/request"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
+	"github.com/siropaca/anycast-backend/internal/middleware"
 	"github.com/siropaca/anycast-backend/internal/pkg/jwt"
 	"github.com/siropaca/anycast-backend/internal/service"
 )
@@ -145,4 +146,30 @@ func (h *AuthHandler) OAuthGoogle(c *gin.Context) {
 	} else {
 		Success(c, http.StatusOK, authResponse)
 	}
+}
+
+// GetMe godoc
+// @Summary 現在のユーザー取得
+// @Description 認証済みユーザーの情報を取得します
+// @Tags auth
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} response.MeDataResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /auth/me [get]
+func (h *AuthHandler) GetMe(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	me, err := h.authService.GetMe(c.Request.Context(), userID)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	Success(c, http.StatusOK, me)
 }

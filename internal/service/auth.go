@@ -13,6 +13,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/model"
 	"github.com/siropaca/anycast-backend/internal/pkg/crypto"
+	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
@@ -20,6 +21,7 @@ type authService struct {
 	userRepo         repository.UserRepository
 	credentialRepo   repository.CredentialRepository
 	oauthAccountRepo repository.OAuthAccountRepository
+	imageRepo        repository.ImageRepository
 	passwordHasher   crypto.PasswordHasher
 }
 
@@ -28,12 +30,14 @@ func NewAuthService(
 	userRepo repository.UserRepository,
 	credentialRepo repository.CredentialRepository,
 	oauthAccountRepo repository.OAuthAccountRepository,
+	imageRepo repository.ImageRepository,
 	passwordHasher crypto.PasswordHasher,
 ) AuthService {
 	return &authService{
 		userRepo:         userRepo,
 		credentialRepo:   credentialRepo,
 		oauthAccountRepo: oauthAccountRepo,
+		imageRepo:        imageRepo,
 		passwordHasher:   passwordHasher,
 	}
 }
@@ -80,7 +84,7 @@ func (s *authService) Register(ctx context.Context, req request.RegisterRequest)
 		return nil, err
 	}
 
-	return s.toUserResponse(user), nil
+	return s.toUserResponse(ctx, user), nil
 }
 
 // メールアドレスとパスワードで認証する
@@ -110,7 +114,7 @@ func (s *authService) Login(ctx context.Context, req request.LoginRequest) (*res
 		return nil, apperror.ErrInvalidCredentials.WithMessage("メールアドレスまたはパスワードが正しくありません")
 	}
 
-	return s.toUserResponse(user), nil
+	return s.toUserResponse(ctx, user), nil
 }
 
 // Google OAuth で認証する
@@ -146,7 +150,7 @@ func (s *authService) OAuthGoogle(ctx context.Context, req request.OAuthGoogleRe
 		}
 
 		return &AuthResult{
-			User:      *s.toUserResponse(user),
+			User:      *s.toUserResponse(ctx, user),
 			IsCreated: false,
 		}, nil
 	}
@@ -184,7 +188,7 @@ func (s *authService) OAuthGoogle(ctx context.Context, req request.OAuthGoogleRe
 	}
 
 	return &AuthResult{
-		User:      *s.toUserResponse(user),
+		User:      *s.toUserResponse(ctx, user),
 		IsCreated: true,
 	}, nil
 }
@@ -241,12 +245,74 @@ func (s *authService) generateUniqueUsername(ctx context.Context, displayName st
 }
 
 // model.User を response.UserResponse に変換する
-func (s *authService) toUserResponse(user *model.User) *response.UserResponse {
+func (s *authService) toUserResponse(ctx context.Context, user *model.User) *response.UserResponse {
+	var avatarURL *string
+	if user.AvatarID != nil {
+		image, err := s.imageRepo.FindByID(ctx, *user.AvatarID)
+		if err == nil {
+			avatarURL = &image.URL
+		}
+		// アバターが見つからない場合はエラーにせず nil のまま
+	}
+
 	return &response.UserResponse{
 		ID:          user.ID,
 		Email:       user.Email,
 		Username:    user.Username,
 		DisplayName: user.DisplayName,
-		AvatarURL:   nil, // 現時点ではアバター URL の解決は行わない
+		AvatarURL:   avatarURL,
 	}
+}
+
+// 現在のユーザー情報を取得する
+func (s *authService) GetMe(ctx context.Context, userID string) (*response.MeResponse, error) {
+	// UUID をパース
+	id, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// ユーザーを取得
+	user, err := s.userRepo.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// パスワード設定の有無を確認
+	_, credErr := s.credentialRepo.FindByUserID(ctx, id)
+	hasPassword := credErr == nil
+
+	// 連携済みの OAuth プロバイダを取得
+	oauthAccounts, err := s.oauthAccountRepo.FindByUserID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	providers := make([]string, 0, len(oauthAccounts))
+	for _, account := range oauthAccounts {
+		providers = append(providers, account.Provider)
+	}
+
+	// アバター画像を取得
+	var avatar *response.AvatarResponse
+	if user.AvatarID != nil {
+		image, err := s.imageRepo.FindByID(ctx, *user.AvatarID)
+		if err == nil {
+			avatar = &response.AvatarResponse{
+				ID:  image.ID,
+				URL: image.URL,
+			}
+		}
+		// アバターが見つからない場合はエラーにせず nil のまま
+	}
+
+	return &response.MeResponse{
+		ID:             user.ID,
+		Email:          user.Email,
+		Username:       user.Username,
+		DisplayName:    user.DisplayName,
+		Avatar:         avatar,
+		HasPassword:    hasPassword,
+		OAuthProviders: providers,
+		CreatedAt:      user.CreatedAt,
+	}, nil
 }
