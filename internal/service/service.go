@@ -26,4 +26,5 @@ type AuthService interface {
 	Register(ctx context.Context, req request.RegisterRequest) (*response.UserResponse, error)
 	Login(ctx context.Context, req request.LoginRequest) (*response.UserResponse, error)
 	OAuthGoogle(ctx context.Context, req request.OAuthGoogleRequest) (*AuthResult, error)
+	GetMe(ctx context.Context, userID string) (*response.MeResponse, error)
 }

@@ -40,4 +40,5 @@ type OAuthAccountRepository interface {
 	Create(ctx context.Context, account *model.OAuthAccount) error
 	Update(ctx context.Context, account *model.OAuthAccount) error
 	FindByProviderAndProviderUserID(ctx context.Context, provider, providerUserID string) (*model.OAuthAccount, error)
+	FindByUserID(ctx context.Context, userID uuid.UUID) ([]model.OAuthAccount, error)
 }

@@ -20,7 +20,7 @@
 | POST | `/api/v1/auth/register` | ユーザー登録 | ✅ |
 | POST | `/api/v1/auth/login` | メール/パスワード認証 | ✅ |
 | POST | `/api/v1/auth/oauth/google` | Google OAuth 認証 | ✅ |
-| GET | `/api/v1/auth/me` | 現在のユーザー取得 | |
+| GET | `/api/v1/auth/me` | 現在のユーザー取得 | ✅ |
 | PATCH | `/api/v1/auth/me` | ユーザー情報更新 | |
 | **Users（ユーザー）** | - | - | - |
 | GET | `/api/v1/users/:userId` | ユーザー取得 | |

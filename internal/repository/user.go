@@ -135,3 +135,12 @@ func (r *oauthAccountRepository) FindByProviderAndProviderUserID(ctx context.Con
 	}
 	return &account, nil
 }
+
+// 指定されたユーザー ID の OAuth 認証情報一覧を取得する
+func (r *oauthAccountRepository) FindByUserID(ctx context.Context, userID uuid.UUID) ([]model.OAuthAccount, error) {
+	var accounts []model.OAuthAccount
+	if err := r.db.WithContext(ctx).Where("user_id = ?", userID).Find(&accounts).Error; err != nil {
+		return nil, apperror.ErrInternal.WithMessage("Failed to fetch OAuth accounts").WithError(err)
+	}
+	return accounts, nil
+}

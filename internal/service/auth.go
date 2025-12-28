@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/request"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
@@ -249,4 +251,44 @@ func (s *authService) toUserResponse(user *model.User) *response.UserResponse {
 		DisplayName: user.DisplayName,
 		AvatarURL:   nil, // 現時点ではアバター URL の解決は行わない
 	}
+}
+
+// 現在のユーザー情報を取得する
+func (s *authService) GetMe(ctx context.Context, userID string) (*response.MeResponse, error) {
+	// UUID をパース
+	id, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, apperror.ErrValidation.WithMessage("Invalid user ID format")
+	}
+
+	// ユーザーを取得
+	user, err := s.userRepo.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// パスワード設定の有無を確認
+	_, credErr := s.credentialRepo.FindByUserID(ctx, id)
+	hasPassword := credErr == nil
+
+	// 連携済みの OAuth プロバイダを取得
+	oauthAccounts, err := s.oauthAccountRepo.FindByUserID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	providers := make([]string, 0, len(oauthAccounts))
+	for _, account := range oauthAccounts {
+		providers = append(providers, account.Provider)
+	}
+
+	return &response.MeResponse{
+		ID:             user.ID,
+		Email:          user.Email,
+		Username:       user.Username,
+		DisplayName:    user.DisplayName,
+		Avatar:         nil, // 現時点ではアバター URL の解決は行わない
+		HasPassword:    hasPassword,
+		OAuthProviders: providers,
+		CreatedAt:      user.CreatedAt,
+	}, nil
 }
