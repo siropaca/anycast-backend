@@ -44,7 +44,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.FRONTEND_REPO_TOKEN }}
         run: |
-          BRANCH_NAME="chore/sync-openapi-$(date +%Y%m%d%H%M%S)"
+          BRANCH_NAME="chore/sync-swagger-$(date +%Y%m%d%H%M%S)"
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -56,7 +56,7 @@ jobs:
 
           PR_URL=$(gh pr create \
             --title "chore: sync openapi.json from backend" \
-            --body "Backend の openapi.json を同期します。" \
+            --body "Backend の swagger.json を同期します。" \
             --base main \
             --head "$BRANCH_NAME")
 
