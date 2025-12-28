@@ -153,7 +153,7 @@ POST /auth/register
 {
   "email": "user@example.com",
   "password": "password123",
-  "name": "ユーザー名"
+  "displayName": "ユーザー名"
 }
 ```
 
@@ -162,7 +162,9 @@ POST /auth/register
 |------------|--------|
 | email | 必須、有効なメールアドレス形式 |
 | password | 必須、8〜100文字 |
-| name | 必須、50文字以内 |
+| displayName | 必須、20文字以内 |
+
+> **Note:** `username` は `displayName` から自動生成されます。スペースはアンダースコアに変換され、重複時はランダムな番号がサフィックスとして付与されます。
 
 **レスポンス（201 Created）:**
 ```json
@@ -170,7 +172,8 @@ POST /auth/register
   "data": {
     "id": "uuid",
     "email": "user@example.com",
-    "name": "ユーザー名",
+    "username": "user_name",
+    "displayName": "ユーザー名",
     "avatarUrl": null
   }
 }
@@ -206,7 +209,8 @@ POST /auth/login
   "data": {
     "id": "uuid",
     "email": "user@example.com",
-    "name": "ユーザー名",
+    "username": "user_name",
+    "displayName": "ユーザー名",
     "avatarUrl": "https://..."
   }
 }
@@ -235,12 +239,14 @@ POST /auth/oauth/google
 {
   "providerUserId": "google-provider-id",
   "email": "user@gmail.com",
-  "name": "ユーザー名",
+  "displayName": "ユーザー名",
   "accessToken": "...",
   "refreshToken": "...",
   "expiresAt": 1234567890
 }
 ```
+
+> **Note:** `username` は `displayName` から自動生成されます（新規ユーザー作成時のみ）。
 
 **レスポンス（200 OK / 201 Created）:**
 ```json
@@ -248,7 +254,8 @@ POST /auth/oauth/google
   "data": {
     "id": "uuid",
     "email": "user@gmail.com",
-    "name": "ユーザー名",
+    "username": "user_name",
+    "displayName": "ユーザー名",
     "avatarUrl": "https://..."
   }
 }
@@ -266,7 +273,8 @@ GET /auth/me
   "data": {
     "id": "uuid",
     "email": "user@example.com",
-    "name": "ユーザー名",
+    "username": "user_name",
+    "displayName": "ユーザー名",
     "avatar": { "id": "uuid", "url": "..." },
     "hasPassword": true,
     "oauthProviders": ["google"],
@@ -284,7 +292,8 @@ PATCH /auth/me
 **リクエスト:**
 ```json
 {
-  "name": "新しい名前",
+  "username": "new_username",
+  "displayName": "新しい名前",
   "avatarImageId": "uuid"
 }
 ```
@@ -304,7 +313,8 @@ GET /users/:userId
 {
   "data": {
     "id": "uuid",
-    "name": "ユーザー名",
+    "username": "user_name",
+    "displayName": "ユーザー名",
     "avatar": { "id": "uuid", "url": "..." },
     "createdAt": "2025-01-01T00:00:00Z"
   }
