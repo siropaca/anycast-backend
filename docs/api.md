@@ -38,6 +38,10 @@
 | **Search（検索）** | - | - | - |
 | GET | `/api/v1/search/channels` | チャンネル検索 | |
 | GET | `/api/v1/search/episodes` | エピソード検索 | |
+| **Likes（いいね）** | - | - | - |
+| POST | `/api/v1/episodes/:episodeId/like` | いいね登録 | |
+| DELETE | `/api/v1/episodes/:episodeId/like` | いいね解除 | |
+| GET | `/api/v1/auth/me/likes` | いいねしたエピソード一覧 | |
 | **Episodes** | - | - | - |
 | GET | `/api/v1/channels/:channelId/episodes` | エピソード一覧取得 | |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード取得 | |
@@ -135,6 +139,7 @@
 | Characters | Public | Owner | Owner | Owner |
 | Episodes | Public | Owner | Owner | Owner |
 | Script / ScriptLines | Public | Owner | Owner | Owner |
+| Likes | Owner | Owner | - | Owner |
 | Audio（生成） | - | Owner | - | - |
 | Audios（アップロード） | Owner | Owner | - | Owner |
 | Images（アップロード） | Owner | Owner | - | Owner |
@@ -557,6 +562,96 @@ GET /search/episodes
       },
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2025-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "total": 100,
+    "limit": 20,
+    "offset": 0
+  }
+}
+```
+
+---
+
+## Likes（いいね）
+
+エピソードへのいいね機能。
+
+### いいね登録
+
+```
+POST /episodes/:episodeId/like
+```
+
+**レスポンス（201 Created）:**
+```json
+{
+  "data": {
+    "episodeId": "uuid",
+    "createdAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+**エラー（409 Conflict）:**
+```json
+{
+  "error": {
+    "code": "ALREADY_LIKED",
+    "message": "既にいいね済みです"
+  }
+}
+```
+
+### いいね解除
+
+```
+DELETE /episodes/:episodeId/like
+```
+
+**レスポンス（204 No Content）:**
+レスポンスボディなし
+
+**エラー（404 Not Found）:**
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "いいねが見つかりません"
+  }
+}
+```
+
+### いいねしたエピソード一覧
+
+```
+GET /auth/me/likes
+```
+
+**クエリパラメータ:**
+
+| パラメータ | 型 | デフォルト | 説明 |
+|------------|-----|------------|------|
+| limit | int | 20 | 取得件数（最大 100） |
+| offset | int | 0 | オフセット |
+
+**レスポンス:**
+```json
+{
+  "data": [
+    {
+      "episode": {
+        "id": "uuid",
+        "title": "エピソードタイトル",
+        "description": "説明",
+        "channel": {
+          "id": "uuid",
+          "name": "チャンネル名",
+          "artwork": { "id": "uuid", "url": "..." }
+        }
+      },
+      "likedAt": "2025-01-01T00:00:00Z"
     }
   ],
   "pagination": {
@@ -1058,6 +1153,7 @@ GET /sound-effects/:sfxId
 | DUPLICATE_EMAIL | 409 | メールアドレスが既に登録済み |
 | DUPLICATE_USERNAME | 409 | ユーザー名が既に使用されている |
 | DUPLICATE_NAME | 409 | 名前が重複している |
+| ALREADY_LIKED | 409 | 既にいいね済み |
 | SFX_IN_USE | 409 | 効果音が使用中のため削除不可 |
 | INTERNAL_ERROR | 500 | サーバー内部エラー |
 | GENERATION_FAILED | 500 | 音声/台本の生成に失敗 |
