@@ -42,6 +42,8 @@
 | POST | `/api/v1/episodes/:episodeId/like` | いいね登録 | |
 | DELETE | `/api/v1/episodes/:episodeId/like` | いいね解除 | |
 | GET | `/api/v1/auth/me/likes` | いいねしたエピソード一覧 | |
+| **My Channels（自分のチャンネル）** | - | - | - |
+| GET | `/api/v1/auth/me/channels` | 自分のチャンネル一覧 | |
 | **Episodes** | - | - | - |
 | GET | `/api/v1/channels/:channelId/episodes` | エピソード一覧取得 | |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード取得 | |
@@ -146,6 +148,24 @@
 | Voices | Public | Admin | Admin | Admin |
 | Categories | Public | Admin | Admin | Admin |
 | Sound Effects | Public | Admin | Admin | Admin |
+
+### 公開状態によるアクセス制御
+
+チャンネルとエピソードには公開状態（`publishedAt`）があり、参照時のアクセス制御に影響する。
+
+| エンドポイント | オーナー | 他ユーザー |
+|---------------|----------|------------|
+| `GET /channels` | - | 公開中のみ |
+| `GET /channels/:channelId` | 全て | 公開中のみ |
+| `GET /channels/:channelId/episodes` | 全て | 公開中のみ |
+| `GET /channels/:channelId/episodes/:episodeId` | 全て | 公開中のみ |
+| `GET /search/channels` | - | 公開中のみ |
+| `GET /search/episodes` | - | 公開中のみ |
+| `GET /auth/me/channels` | 全て | - |
+
+- **公開中**: `publishedAt IS NOT NULL AND publishedAt <= NOW()`
+- **非公開（下書き）**: `publishedAt IS NULL`
+- **予約公開**: `publishedAt > NOW()`（将来的に対応可能）
 
 ---
 
@@ -344,6 +364,8 @@ GET /users/:userId
 GET /channels
 ```
 
+公開中のチャンネルのみ取得可能。自分のチャンネル（非公開含む）は `GET /auth/me/channels` を使用。
+
 **クエリパラメータ:**
 
 | パラメータ | 型 | デフォルト | 説明 |
@@ -362,6 +384,7 @@ GET /channels
       "description": "説明",
       "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
       "artwork": { "id": "uuid", "url": "..." },
+      "publishedAt": "2025-01-01T00:00:00Z",
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2025-01-01T00:00:00Z"
     }
@@ -374,6 +397,8 @@ GET /channels
 ```
 GET /channels/:channelId
 ```
+
+公開中のチャンネル、または自分のチャンネルのみ取得可能。
 
 **レスポンス:**
 ```json
@@ -397,6 +422,7 @@ GET /channels/:channelId
         }
       }
     ],
+    "publishedAt": "2025-01-01T00:00:00Z",
     "createdAt": "2025-01-01T00:00:00Z",
     "updatedAt": "2025-01-01T00:00:00Z"
   }
@@ -431,9 +457,12 @@ PATCH /channels/:channelId
   "name": "新しいチャンネル名",
   "description": "新しい説明",
   "categoryId": "uuid",
-  "artworkImageId": "uuid"
+  "artworkImageId": "uuid",
+  "publishedAt": "2025-01-01T00:00:00Z"
 }
 ```
+
+- `publishedAt`: 公開日時を設定（`null` で非公開化）
 
 ### チャンネル削除
 
@@ -495,7 +524,7 @@ DELETE /channels/:channelId/characters/:characterId
 
 ## Search（検索）
 
-フリーワード検索用のエンドポイント。
+フリーワード検索用のエンドポイント。公開中のコンテンツのみ検索可能。
 
 ### チャンネル検索
 
@@ -522,6 +551,7 @@ GET /search/channels
       "description": "説明",
       "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
       "artwork": { "id": "uuid", "url": "..." },
+      "publishedAt": "2025-01-01T00:00:00Z",
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2025-01-01T00:00:00Z"
     }
@@ -560,6 +590,7 @@ GET /search/episodes
         "id": "uuid",
         "name": "チャンネル名"
       },
+      "publishedAt": "2025-01-01T00:00:00Z",
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2025-01-01T00:00:00Z"
     }
@@ -649,9 +680,53 @@ GET /auth/me/likes
           "id": "uuid",
           "name": "チャンネル名",
           "artwork": { "id": "uuid", "url": "..." }
-        }
+        },
+        "publishedAt": "2025-01-01T00:00:00Z"
       },
       "likedAt": "2025-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "total": 100,
+    "limit": 20,
+    "offset": 0
+  }
+}
+```
+
+---
+
+## My Channels（自分のチャンネル）
+
+### 自分のチャンネル一覧取得
+
+```
+GET /auth/me/channels
+```
+
+自分のチャンネル一覧を取得（非公開含む）。
+
+**クエリパラメータ:**
+
+| パラメータ | 型 | デフォルト | 説明 |
+|------------|-----|------------|------|
+| status | string | - | 公開状態でフィルタ: `published` / `draft` |
+| limit | int | 20 | 取得件数（最大 100） |
+| offset | int | 0 | オフセット |
+
+**レスポンス:**
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "name": "チャンネル名",
+      "description": "説明",
+      "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
+      "artwork": { "id": "uuid", "url": "..." },
+      "publishedAt": "2025-01-01T00:00:00Z",
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
     }
   ],
   "pagination": {
@@ -672,6 +747,8 @@ GET /auth/me/likes
 GET /channels/:channelId/episodes
 ```
 
+オーナーの場合は全エピソード（非公開含む）、それ以外は公開中のエピソードのみ取得可能。
+
 **クエリパラメータ:** ページネーション
 
 ### エピソード取得
@@ -679,6 +756,8 @@ GET /channels/:channelId/episodes
 ```
 GET /channels/:channelId/episodes/:episodeId
 ```
+
+公開中のエピソード、または自分のエピソードのみ取得可能。
 
 **レスポンス:**
 ```json
@@ -713,6 +792,7 @@ GET /channels/:channelId/episodes/:episodeId
         "volume": 0.8
       }
     ],
+    "publishedAt": "2025-01-01T00:00:00Z",
     "createdAt": "2025-01-01T00:00:00Z",
     "updatedAt": "2025-01-01T00:00:00Z"
   }
@@ -745,9 +825,12 @@ PATCH /channels/:channelId/episodes/:episodeId
 {
   "title": "新しいタイトル",
   "description": "新しい説明",
-  "bgmAudioId": "uuid"
+  "bgmAudioId": "uuid",
+  "publishedAt": "2025-01-01T00:00:00Z"
 }
 ```
+
+- `publishedAt`: 公開日時を設定（`null` で非公開化）
 
 ### エピソード削除
 

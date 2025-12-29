@@ -76,6 +76,7 @@ erDiagram
         varchar name
         text description
         uuid artwork_id FK
+        timestamp published_at
         timestamp created_at
         timestamp updated_at
     }
@@ -108,6 +109,7 @@ erDiagram
         text description
         uuid bgm_id FK
         uuid full_audio_id FK
+        timestamp published_at
         timestamp created_at
         timestamp updated_at
     }
@@ -256,6 +258,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | name | VARCHAR(255) | | - | チャンネル名 |
 | description | TEXT | | - | チャンネルの説明 |
 | artwork_id | UUID | ◯ | - | カバー画像（images 参照） |
+| published_at | TIMESTAMP | ◯ | - | 公開日時（NULL = 下書き） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
 
@@ -263,6 +266,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 - PRIMARY KEY (id)
 - INDEX (user_id)
 - INDEX (category_id)
+- INDEX (published_at)
 
 **外部キー:**
 - user_id → users(id) ON DELETE CASCADE
@@ -308,12 +312,14 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | description | TEXT | | - | エピソードの説明 |
 | bgm_id | UUID | ◯ | - | BGM（audios 参照） |
 | full_audio_id | UUID | ◯ | - | 結合済み音声（audios 参照） |
+| published_at | TIMESTAMP | ◯ | - | 公開日時（NULL = 下書き） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
 
 **インデックス:**
 - PRIMARY KEY (id)
 - INDEX (channel_id)
+- INDEX (published_at)
 
 **外部キー:**
 - channel_id → channels(id) ON DELETE CASCADE
