@@ -7,6 +7,7 @@ erDiagram
     users ||--o| credentials : has
     users ||--o{ oauth_accounts : has
     users ||--o{ channels : owns
+    users ||--o{ likes : has
     users ||--o| images : avatar
     categories ||--o{ channels : has
     channels ||--o{ characters : has
@@ -14,12 +15,20 @@ erDiagram
     channels ||--o| images : artwork
     characters ||--|| voices : uses
     episodes ||--o{ script_lines : has
+    episodes ||--o{ likes : has
     episodes ||--o| audios : bgm
     episodes ||--o| audios : full_audio
     script_lines ||--o| characters : speaker
     script_lines ||--o| audios : audio
     script_lines ||--o| sound_effects : sfx
     sound_effects ||--|| audios : audio
+
+    likes {
+        uuid id PK
+        uuid user_id FK
+        uuid episode_id FK
+        timestamp created_at
+    }
 
     users {
         uuid id PK
@@ -310,6 +319,29 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 - channel_id → channels(id) ON DELETE CASCADE
 - bgm_id → audios(id) ON DELETE SET NULL
 - full_audio_id → audios(id) ON DELETE SET NULL
+
+---
+
+#### likes
+
+エピソードへのいいねを管理する。
+
+| カラム名 | 型 | NULLABLE | デフォルト | 説明 |
+|----------|-----|:--------:|------------|------|
+| id | UUID | | gen_random_uuid() | 主キー |
+| user_id | UUID | | - | ユーザー（users 参照） |
+| episode_id | UUID | | - | エピソード（episodes 参照） |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | いいね登録日時 |
+
+**インデックス:**
+- PRIMARY KEY (id)
+- UNIQUE (user_id, episode_id)
+- INDEX (user_id)
+- INDEX (episode_id)
+
+**外部キー:**
+- user_id → users(id) ON DELETE CASCADE
+- episode_id → episodes(id) ON DELETE CASCADE
 
 ---
 
