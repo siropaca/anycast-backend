@@ -629,6 +629,7 @@ POST /episodes/:episodeId/like
 ```json
 {
   "data": {
+    "id": "uuid",
     "episodeId": "uuid",
     "createdAt": "2025-01-01T00:00:00Z"
   }
@@ -720,6 +721,7 @@ POST /episodes/:episodeId/bookmark
 ```json
 {
   "data": {
+    "id": "uuid",
     "episodeId": "uuid",
     "createdAt": "2025-01-01T00:00:00Z"
   }
@@ -954,7 +956,34 @@ GET /channels/:channelId/episodes
 
 オーナーの場合は全エピソード（非公開含む）、それ以外は公開中のエピソードのみ取得可能。
 
-**クエリパラメータ:** ページネーション
+**クエリパラメータ:**
+
+| パラメータ | 型 | デフォルト | 説明 |
+|------------|-----|------------|------|
+| limit | int | 20 | 取得件数（最大 100） |
+| offset | int | 0 | オフセット |
+
+**レスポンス:**
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "title": "エピソードタイトル",
+      "description": "エピソードの説明",
+      "fullAudio": { "id": "uuid", "url": "...", "durationMs": 180000 },
+      "publishedAt": "2025-01-01T00:00:00Z",
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "total": 100,
+    "limit": 20,
+    "offset": 0
+  }
+}
+```
 
 ### エピソード取得
 
@@ -1387,7 +1416,8 @@ GET /categories
     {
       "id": "uuid",
       "slug": "technology",
-      "name": "テクノロジー"
+      "name": "テクノロジー",
+      "sortOrder": 0
     }
   ]
 }
