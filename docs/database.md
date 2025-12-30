@@ -9,6 +9,7 @@ erDiagram
     users ||--o{ channels : owns
     users ||--o{ likes : has
     users ||--o{ bookmarks : has
+    users ||--o{ playback_histories : has
     users ||--o| images : avatar
     categories ||--o{ channels : has
     channels ||--o{ characters : has
@@ -18,6 +19,7 @@ erDiagram
     episodes ||--o{ script_lines : has
     episodes ||--o{ likes : has
     episodes ||--o{ bookmarks : has
+    episodes ||--o{ playback_histories : has
     episodes ||--o| audios : bgm
     episodes ||--o| audios : full_audio
     script_lines ||--o| characters : speaker
@@ -37,6 +39,17 @@ erDiagram
         uuid user_id FK
         uuid episode_id FK
         timestamp created_at
+    }
+
+    playback_histories {
+        uuid id PK
+        uuid user_id FK
+        uuid episode_id FK
+        integer progress_ms
+        boolean completed
+        timestamp played_at
+        timestamp created_at
+        timestamp updated_at
     }
 
     users {
@@ -376,6 +389,34 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 - UNIQUE (user_id, episode_id)
 - INDEX (user_id)
 - INDEX (episode_id)
+
+**外部キー:**
+- user_id → users(id) ON DELETE CASCADE
+- episode_id → episodes(id) ON DELETE CASCADE
+
+---
+
+#### playback_histories
+
+エピソードの再生履歴を管理する。
+
+| カラム名 | 型 | NULLABLE | デフォルト | 説明 |
+|----------|-----|:--------:|------------|------|
+| id | UUID | | gen_random_uuid() | 主キー |
+| user_id | UUID | | - | ユーザー（users 参照） |
+| episode_id | UUID | | - | エピソード（episodes 参照） |
+| progress_ms | INTEGER | | 0 | 再生位置（ミリ秒） |
+| completed | BOOLEAN | | false | 再生完了フラグ |
+| played_at | TIMESTAMP | | CURRENT_TIMESTAMP | 最終再生日時 |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 初回再生日時 |
+| updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
+
+**インデックス:**
+- PRIMARY KEY (id)
+- UNIQUE (user_id, episode_id)
+- INDEX (user_id)
+- INDEX (episode_id)
+- INDEX (user_id, played_at)
 
 **外部キー:**
 - user_id → users(id) ON DELETE CASCADE

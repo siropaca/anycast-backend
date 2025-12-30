@@ -46,6 +46,10 @@
 | POST | `/api/v1/episodes/:episodeId/bookmark` | ブックマーク登録 | |
 | DELETE | `/api/v1/episodes/:episodeId/bookmark` | ブックマーク解除 | |
 | GET | `/api/v1/auth/me/bookmarks` | ブックマークしたエピソード一覧 | |
+| **Playback History（再生履歴）** | - | - | - |
+| PUT | `/api/v1/episodes/:episodeId/playback` | 再生履歴を更新 | |
+| DELETE | `/api/v1/episodes/:episodeId/playback` | 再生履歴を削除 | |
+| GET | `/api/v1/auth/me/playback-history` | 再生履歴一覧を取得 | |
 | **My Channels（自分のチャンネル）** | - | - | - |
 | GET | `/api/v1/auth/me/channels` | 自分のチャンネル一覧 | |
 | **Episodes** | - | - | - |
@@ -147,6 +151,7 @@
 | Script / ScriptLines | Public | Owner | Owner | Owner |
 | Likes | Owner | Owner | - | Owner |
 | Bookmarks | Owner | Owner | - | Owner |
+| Playback History | Owner | Owner | Owner | Owner |
 | Audio（生成） | - | Owner | - | - |
 | Audios（アップロード） | Owner | Owner | - | Owner |
 | Images（アップロード） | Owner | Owner | - | Owner |
@@ -780,6 +785,110 @@ GET /auth/me/bookmarks
         "publishedAt": "2025-01-01T00:00:00Z"
       },
       "bookmarkedAt": "2025-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "total": 100,
+    "limit": 20,
+    "offset": 0
+  }
+}
+```
+
+---
+
+## Playback History（再生履歴）
+
+エピソードの再生履歴を管理する。
+
+### 再生履歴を更新
+
+```
+PUT /episodes/:episodeId/playback
+```
+
+再生位置や完了状態を更新する。履歴が存在しない場合は新規作成（Upsert）。
+
+**リクエスト:**
+```json
+{
+  "progressMs": 120000,
+  "completed": false
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| progressMs | int | | 再生位置（ミリ秒） |
+| completed | bool | | 再生完了フラグ |
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "episodeId": "uuid",
+    "progressMs": 120000,
+    "completed": false,
+    "playedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+### 再生履歴を削除
+
+```
+DELETE /episodes/:episodeId/playback
+```
+
+**レスポンス（204 No Content）:**
+レスポンスボディなし
+
+**エラー（404 Not Found）:**
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "再生履歴が見つかりません"
+  }
+}
+```
+
+### 再生履歴一覧を取得
+
+```
+GET /auth/me/playback-history
+```
+
+最近再生した順で一覧を取得。
+
+**クエリパラメータ:**
+
+| パラメータ | 型 | デフォルト | 説明 |
+|------------|-----|------------|------|
+| completed | bool | - | 完了状態でフィルタ |
+| limit | int | 20 | 取得件数（最大 100） |
+| offset | int | 0 | オフセット |
+
+**レスポンス:**
+```json
+{
+  "data": [
+    {
+      "episode": {
+        "id": "uuid",
+        "title": "エピソードタイトル",
+        "description": "説明",
+        "fullAudio": { "id": "uuid", "url": "...", "durationMs": 180000 },
+        "channel": {
+          "id": "uuid",
+          "name": "チャンネル名",
+          "artwork": { "id": "uuid", "url": "..." }
+        },
+        "publishedAt": "2025-01-01T00:00:00Z"
+      },
+      "progressMs": 120000,
+      "completed": false,
+      "playedAt": "2025-01-01T00:00:00Z"
     }
   ],
   "pagination": {
