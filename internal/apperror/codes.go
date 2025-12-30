@@ -54,7 +54,7 @@ var (
 	ErrDuplicateEmail    = newError(CodeDuplicateEmail, "Email already exists", http.StatusConflict)       // メールアドレスが既に使用されている
 	ErrDuplicateUsername = newError(CodeDuplicateUsername, "Username already exists", http.StatusConflict) // ユーザー名が既に使用されている
 	ErrDuplicateName     = newError(CodeDuplicateName, "Name already exists", http.StatusConflict)         // 名前が既に使用されている
-	ErrAlreadyLiked      = newError(CodeAlreadyLiked, "Already liked", http.StatusConflict)                // 既にいいね済み
+	ErrAlreadyLiked      = newError(CodeAlreadyLiked, "Already liked", http.StatusConflict)                // 既にお気に入り済み
 	ErrAlreadyBookmarked = newError(CodeAlreadyBookmarked, "Already bookmarked", http.StatusConflict)      // 既にブックマーク済み
 	ErrAlreadyFollowed   = newError(CodeAlreadyFollowed, "Already followed", http.StatusConflict)          // 既にフォロー済み
 	ErrSfxInUse          = newError(CodeSfxInUse, "Sound effect is in use", http.StatusConflict)           // 効果音が使用中

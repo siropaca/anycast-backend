@@ -38,10 +38,10 @@
 | **Search（検索）** | - | - | - |
 | GET | `/api/v1/search/channels` | チャンネル検索 | |
 | GET | `/api/v1/search/episodes` | エピソード検索 | |
-| **Likes（いいね）** | - | - | - |
-| POST | `/api/v1/episodes/:episodeId/like` | いいね登録 | |
-| DELETE | `/api/v1/episodes/:episodeId/like` | いいね解除 | |
-| GET | `/api/v1/auth/me/likes` | いいねしたエピソード一覧 | |
+| **Likes（お気に入り）** | - | - | - |
+| POST | `/api/v1/episodes/:episodeId/like` | お気に入り登録 | |
+| DELETE | `/api/v1/episodes/:episodeId/like` | お気に入り解除 | |
+| GET | `/api/v1/auth/me/likes` | お気に入りしたエピソード一覧 | |
 | **Bookmarks（後で見る）** | - | - | - |
 | POST | `/api/v1/episodes/:episodeId/bookmark` | ブックマーク登録 | |
 | DELETE | `/api/v1/episodes/:episodeId/bookmark` | ブックマーク解除 | |
@@ -629,11 +629,11 @@ GET /search/episodes
 
 ---
 
-## Likes（いいね）
+## Likes（お気に入り）
 
-エピソードへのいいね機能。
+エピソードへのお気に入り機能。
 
-### いいね登録
+### お気に入り登録
 
 ```
 POST /episodes/:episodeId/like
@@ -655,12 +655,12 @@ POST /episodes/:episodeId/like
 {
   "error": {
     "code": "ALREADY_LIKED",
-    "message": "既にいいね済みです"
+    "message": "既にお気に入り済みです"
   }
 }
 ```
 
-### いいね解除
+### お気に入り解除
 
 ```
 DELETE /episodes/:episodeId/like
@@ -674,12 +674,12 @@ DELETE /episodes/:episodeId/like
 {
   "error": {
     "code": "NOT_FOUND",
-    "message": "いいねが見つかりません"
+    "message": "お気に入りが見つかりません"
   }
 }
 ```
 
-### いいねしたエピソード一覧
+### お気に入りしたエピソード一覧
 
 ```
 GET /auth/me/likes
@@ -1593,7 +1593,7 @@ GET /sound-effects/:sfxId
 | DUPLICATE_EMAIL | 409 | メールアドレスが既に登録済み |
 | DUPLICATE_USERNAME | 409 | ユーザー名が既に使用されている |
 | DUPLICATE_NAME | 409 | 名前が重複している |
-| ALREADY_LIKED | 409 | 既にいいね済み |
+| ALREADY_LIKED | 409 | 既にお気に入り済み |
 | ALREADY_BOOKMARKED | 409 | 既にブックマーク済み |
 | ALREADY_FOLLOWED | 409 | 既にフォロー済み |
 | SELF_FOLLOW_NOT_ALLOWED | 400 | 自分のエピソードはフォロー不可 |

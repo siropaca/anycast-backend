@@ -365,14 +365,14 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 
 #### likes
 
-エピソードへのいいねを管理する。
+エピソードへのお気に入りを管理する。
 
 | カラム名 | 型 | NULLABLE | デフォルト | 説明 |
 |----------|-----|:--------:|------------|------|
 | id | UUID | | gen_random_uuid() | 主キー |
 | user_id | UUID | | - | ユーザー（users 参照） |
 | episode_id | UUID | | - | エピソード（episodes 参照） |
-| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | いいね登録日時 |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | お気に入り登録日時 |
 
 **インデックス:**
 - PRIMARY KEY (id)
