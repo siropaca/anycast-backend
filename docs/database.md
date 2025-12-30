@@ -8,6 +8,8 @@ erDiagram
     users ||--o{ oauth_accounts : has
     users ||--o{ channels : owns
     users ||--o{ likes : has
+    users ||--o{ bookmarks : has
+    users ||--o{ playback_histories : has
     users ||--o| images : avatar
     categories ||--o{ channels : has
     channels ||--o{ characters : has
@@ -16,6 +18,8 @@ erDiagram
     characters ||--|| voices : uses
     episodes ||--o{ script_lines : has
     episodes ||--o{ likes : has
+    episodes ||--o{ bookmarks : has
+    episodes ||--o{ playback_histories : has
     episodes ||--o| audios : bgm
     episodes ||--o| audios : full_audio
     script_lines ||--o| characters : speaker
@@ -28,6 +32,24 @@ erDiagram
         uuid user_id FK
         uuid episode_id FK
         timestamp created_at
+    }
+
+    bookmarks {
+        uuid id PK
+        uuid user_id FK
+        uuid episode_id FK
+        timestamp created_at
+    }
+
+    playback_histories {
+        uuid id PK
+        uuid user_id FK
+        uuid episode_id FK
+        integer progress_ms
+        boolean completed
+        timestamp played_at
+        timestamp created_at
+        timestamp updated_at
     }
 
     users {
@@ -75,7 +97,9 @@ erDiagram
         uuid category_id FK
         varchar name
         text description
+        text script_prompt
         uuid artwork_id FK
+        timestamp published_at
         timestamp created_at
         timestamp updated_at
     }
@@ -106,8 +130,10 @@ erDiagram
         uuid channel_id FK
         varchar title
         text description
+        text script_prompt
         uuid bgm_id FK
         uuid full_audio_id FK
+        timestamp published_at
         timestamp created_at
         timestamp updated_at
     }
@@ -220,7 +246,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 |----------|-----|:--------:|------------|------|
 | id | UUID | | gen_random_uuid() | 主キー |
 | user_id | UUID | | - | ユーザー（users 参照） |
-| provider | VARCHAR(50) | | - | プロバイダ: `google` |
+| provider | oauth_provider | | - | プロバイダ: `google` |
 | provider_user_id | VARCHAR(255) | | - | プロバイダ側のユーザー ID |
 | access_token | VARCHAR(1024) | ◯ | - | アクセストークン |
 | refresh_token | VARCHAR(1024) | ◯ | - | リフレッシュトークン |
@@ -254,8 +280,10 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | user_id | UUID | | - | オーナー（users 参照） |
 | category_id | UUID | | - | カテゴリ（categories 参照） |
 | name | VARCHAR(255) | | - | チャンネル名 |
-| description | TEXT | | - | チャンネルの説明 |
+| description | TEXT | | - | チャンネルの説明（公開情報） |
+| script_prompt | TEXT | ◯ | - | 台本生成の全体方針（AI への指示、内部管理用） |
 | artwork_id | UUID | ◯ | - | カバー画像（images 参照） |
+| published_at | TIMESTAMP | ◯ | - | 公開日時（NULL = 下書き） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
 
@@ -263,6 +291,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 - PRIMARY KEY (id)
 - INDEX (user_id)
 - INDEX (category_id)
+- INDEX (published_at)
 
 **外部キー:**
 - user_id → users(id) ON DELETE CASCADE
@@ -305,15 +334,18 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | id | UUID | | gen_random_uuid() | 主キー |
 | channel_id | UUID | | - | 所属チャンネル |
 | title | VARCHAR(255) | | - | エピソードタイトル |
-| description | TEXT | | - | エピソードの説明 |
+| description | TEXT | | - | エピソードの説明（公開情報） |
+| script_prompt | TEXT | ◯ | - | エピソード固有の台本生成設定（内部管理用） |
 | bgm_id | UUID | ◯ | - | BGM（audios 参照） |
 | full_audio_id | UUID | ◯ | - | 結合済み音声（audios 参照） |
+| published_at | TIMESTAMP | ◯ | - | 公開日時（NULL = 下書き） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
 
 **インデックス:**
 - PRIMARY KEY (id)
 - INDEX (channel_id)
+- INDEX (published_at)
 
 **外部キー:**
 - channel_id → channels(id) ON DELETE CASCADE
@@ -345,6 +377,57 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 
 ---
 
+#### bookmarks
+
+エピソードへの「後で見る」を管理する。
+
+| カラム名 | 型 | NULLABLE | デフォルト | 説明 |
+|----------|-----|:--------:|------------|------|
+| id | UUID | | gen_random_uuid() | 主キー |
+| user_id | UUID | | - | ユーザー（users 参照） |
+| episode_id | UUID | | - | エピソード（episodes 参照） |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | ブックマーク登録日時 |
+
+**インデックス:**
+- PRIMARY KEY (id)
+- UNIQUE (user_id, episode_id)
+- INDEX (user_id)
+- INDEX (episode_id)
+
+**外部キー:**
+- user_id → users(id) ON DELETE CASCADE
+- episode_id → episodes(id) ON DELETE CASCADE
+
+---
+
+#### playback_histories
+
+エピソードの再生履歴を管理する。
+
+| カラム名 | 型 | NULLABLE | デフォルト | 説明 |
+|----------|-----|:--------:|------------|------|
+| id | UUID | | gen_random_uuid() | 主キー |
+| user_id | UUID | | - | ユーザー（users 参照） |
+| episode_id | UUID | | - | エピソード（episodes 参照） |
+| progress_ms | INTEGER | | 0 | 再生位置（ミリ秒） |
+| completed | BOOLEAN | | false | 再生完了フラグ |
+| played_at | TIMESTAMP | | CURRENT_TIMESTAMP | 最終再生日時 |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 初回再生日時 |
+| updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
+
+**インデックス:**
+- PRIMARY KEY (id)
+- UNIQUE (user_id, episode_id)
+- INDEX (user_id)
+- INDEX (episode_id)
+- INDEX (user_id, played_at)
+
+**外部キー:**
+- user_id → users(id) ON DELETE CASCADE
+- episode_id → episodes(id) ON DELETE CASCADE
+
+---
+
 #### script_lines
 
 台本の各行（イベント）を管理する。
@@ -354,7 +437,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | id | UUID | | gen_random_uuid() | 主キー（= lineId） |
 | episode_id | UUID | | - | 所属エピソード |
 | line_order | INTEGER | | - | 行の順序（0 始まり） |
-| line_type | VARCHAR(50) | | - | 行種別: `speech` / `silence` / `sfx` |
+| line_type | line_type | | - | 行種別: `speech` / `silence` / `sfx` |
 | speaker_id | UUID | ◯ | - | 話者（speech 時のみ、characters 参照） |
 | text | TEXT | ◯ | - | セリフ（speech 時のみ） |
 | emotion | TEXT | ◯ | - | 感情・喋り方（speech 時のみ）例: 嬉しい、悲しい、笑いながら |
@@ -459,7 +542,7 @@ TTS ボイスのマスタデータを管理する。システム管理テーブ�
 | provider | VARCHAR(50) | | - | TTS プロバイダ: `google` / `azure` / etc |
 | provider_voice_id | VARCHAR(100) | | - | プロバイダの音声 ID（例: ja-JP-Wavenet-C） |
 | name | VARCHAR(100) | | - | 表示名（デフォルトは provider_voice_id） |
-| gender | VARCHAR(20) | | - | 性別: `male` / `female` / `neutral` |
+| gender | gender | | - | 性別: `male` / `female` / `neutral` |
 | is_active | BOOLEAN | | true | 有効フラグ（false で新規選択不可） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
@@ -495,6 +578,16 @@ TTS ボイスのマスタデータを管理する。システム管理テーブ�
 ---
 
 ## 補足
+
+### Enum 型
+
+PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証する。
+
+| 型名 | 値 | 用途 |
+|------|-----|------|
+| oauth_provider | `google` | OAuth プロバイダ |
+| line_type | `speech`, `silence`, `sfx` | 台本行の種別 |
+| gender | `male`, `female`, `neutral` | ボイスの性別 |
 
 ### UUID について
 

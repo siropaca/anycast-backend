@@ -42,6 +42,16 @@
 | POST | `/api/v1/episodes/:episodeId/like` | いいね登録 | |
 | DELETE | `/api/v1/episodes/:episodeId/like` | いいね解除 | |
 | GET | `/api/v1/auth/me/likes` | いいねしたエピソード一覧 | |
+| **Bookmarks（後で見る）** | - | - | - |
+| POST | `/api/v1/episodes/:episodeId/bookmark` | ブックマーク登録 | |
+| DELETE | `/api/v1/episodes/:episodeId/bookmark` | ブックマーク解除 | |
+| GET | `/api/v1/auth/me/bookmarks` | ブックマークしたエピソード一覧 | |
+| **Playback History（再生履歴）** | - | - | - |
+| PUT | `/api/v1/episodes/:episodeId/playback` | 再生履歴を更新 | |
+| DELETE | `/api/v1/episodes/:episodeId/playback` | 再生履歴を削除 | |
+| GET | `/api/v1/auth/me/playback-history` | 再生履歴一覧を取得 | |
+| **My Channels（自分のチャンネル）** | - | - | - |
+| GET | `/api/v1/auth/me/channels` | 自分のチャンネル一覧 | |
 | **Episodes** | - | - | - |
 | GET | `/api/v1/channels/:channelId/episodes` | エピソード一覧取得 | |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード取得 | |
@@ -140,12 +150,32 @@
 | Episodes | Public | Owner | Owner | Owner |
 | Script / ScriptLines | Public | Owner | Owner | Owner |
 | Likes | Owner | Owner | - | Owner |
+| Bookmarks | Owner | Owner | - | Owner |
+| Playback History | Owner | Owner | Owner | Owner |
 | Audio（生成） | - | Owner | - | - |
 | Audios（アップロード） | Owner | Owner | - | Owner |
 | Images（アップロード） | Owner | Owner | - | Owner |
 | Voices | Public | Admin | Admin | Admin |
 | Categories | Public | Admin | Admin | Admin |
 | Sound Effects | Public | Admin | Admin | Admin |
+
+### 公開状態によるアクセス制御
+
+チャンネルとエピソードには公開状態（`publishedAt`）があり、参照時のアクセス制御に影響する。
+
+| エンドポイント | オーナー | 他ユーザー |
+|---------------|----------|------------|
+| `GET /channels` | - | 公開中のみ |
+| `GET /channels/:channelId` | 全て | 公開中のみ |
+| `GET /channels/:channelId/episodes` | 全て | 公開中のみ |
+| `GET /channels/:channelId/episodes/:episodeId` | 全て | 公開中のみ |
+| `GET /search/channels` | - | 公開中のみ |
+| `GET /search/episodes` | - | 公開中のみ |
+| `GET /auth/me/channels` | 全て | - |
+
+- **公開中**: `publishedAt IS NOT NULL AND publishedAt <= NOW()`
+- **非公開（下書き）**: `publishedAt IS NULL`
+- **予約公開**: `publishedAt > NOW()`（将来的に対応可能）
 
 ---
 
@@ -344,6 +374,8 @@ GET /users/:userId
 GET /channels
 ```
 
+公開中のチャンネルのみ取得可能。自分のチャンネル（非公開含む）は `GET /auth/me/channels` を使用。
+
 **クエリパラメータ:**
 
 | パラメータ | 型 | デフォルト | 説明 |
@@ -362,6 +394,7 @@ GET /channels
       "description": "説明",
       "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
       "artwork": { "id": "uuid", "url": "..." },
+      "publishedAt": "2025-01-01T00:00:00Z",
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2025-01-01T00:00:00Z"
     }
@@ -375,6 +408,8 @@ GET /channels
 GET /channels/:channelId
 ```
 
+公開中のチャンネル、または自分のチャンネルのみ取得可能。
+
 **レスポンス:**
 ```json
 {
@@ -382,6 +417,7 @@ GET /channels/:channelId
     "id": "uuid",
     "name": "チャンネル名",
     "description": "説明",
+    "scriptPrompt": "明るく楽しい雰囲気で...",
     "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
     "artwork": { "id": "uuid", "url": "..." },
     "characters": [
@@ -397,11 +433,14 @@ GET /channels/:channelId
         }
       }
     ],
+    "publishedAt": "2025-01-01T00:00:00Z",
     "createdAt": "2025-01-01T00:00:00Z",
     "updatedAt": "2025-01-01T00:00:00Z"
   }
 }
 ```
+
+> **Note:** `scriptPrompt` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
 
 ### チャンネル作成
 
@@ -414,6 +453,7 @@ POST /channels
 {
   "name": "チャンネル名",
   "description": "説明",
+  "scriptPrompt": "明るく楽しい雰囲気で...",
   "categoryId": "uuid",
   "artworkImageId": "uuid"
 }
@@ -430,10 +470,14 @@ PATCH /channels/:channelId
 {
   "name": "新しいチャンネル名",
   "description": "新しい説明",
+  "scriptPrompt": "明るく楽しい雰囲気で...",
   "categoryId": "uuid",
-  "artworkImageId": "uuid"
+  "artworkImageId": "uuid",
+  "publishedAt": "2025-01-01T00:00:00Z"
 }
 ```
+
+- `publishedAt`: 公開日時を設定（`null` で非公開化）
 
 ### チャンネル削除
 
@@ -469,6 +513,7 @@ POST /channels/:channelId/characters
 **バリデーション:**
 - name: 必須、同一チャンネル内で一意、`__` で始まる名前は禁止
 - voiceId: 必須、is_active = true のボイスのみ指定可能
+- チャンネルのキャラクター数が 2 人を超える場合はエラー
 
 ### キャラクター更新
 
@@ -491,11 +536,14 @@ PATCH /channels/:channelId/characters/:characterId
 DELETE /channels/:channelId/characters/:characterId
 ```
 
+**バリデーション:**
+- チャンネルのキャラクター数が 1 人の場合は削除不可（最低 1 人必要）
+
 ---
 
 ## Search（検索）
 
-フリーワード検索用のエンドポイント。
+フリーワード検索用のエンドポイント。公開中のコンテンツのみ検索可能。
 
 ### チャンネル検索
 
@@ -522,6 +570,7 @@ GET /search/channels
       "description": "説明",
       "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
       "artwork": { "id": "uuid", "url": "..." },
+      "publishedAt": "2025-01-01T00:00:00Z",
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2025-01-01T00:00:00Z"
     }
@@ -560,6 +609,7 @@ GET /search/episodes
         "id": "uuid",
         "name": "チャンネル名"
       },
+      "publishedAt": "2025-01-01T00:00:00Z",
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2025-01-01T00:00:00Z"
     }
@@ -588,6 +638,7 @@ POST /episodes/:episodeId/like
 ```json
 {
   "data": {
+    "id": "uuid",
     "episodeId": "uuid",
     "createdAt": "2025-01-01T00:00:00Z"
   }
@@ -649,9 +700,250 @@ GET /auth/me/likes
           "id": "uuid",
           "name": "チャンネル名",
           "artwork": { "id": "uuid", "url": "..." }
-        }
+        },
+        "publishedAt": "2025-01-01T00:00:00Z"
       },
       "likedAt": "2025-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "total": 100,
+    "limit": 20,
+    "offset": 0
+  }
+}
+```
+
+---
+
+## Bookmarks（後で見る）
+
+エピソードへの「後で見る」機能。
+
+### ブックマーク登録
+
+```
+POST /episodes/:episodeId/bookmark
+```
+
+**レスポンス（201 Created）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "episodeId": "uuid",
+    "createdAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+**エラー（409 Conflict）:**
+```json
+{
+  "error": {
+    "code": "ALREADY_BOOKMARKED",
+    "message": "既にブックマーク済みです"
+  }
+}
+```
+
+### ブックマーク解除
+
+```
+DELETE /episodes/:episodeId/bookmark
+```
+
+**レスポンス（204 No Content）:**
+レスポンスボディなし
+
+**エラー（404 Not Found）:**
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "ブックマークが見つかりません"
+  }
+}
+```
+
+### ブックマークしたエピソード一覧
+
+```
+GET /auth/me/bookmarks
+```
+
+**クエリパラメータ:**
+
+| パラメータ | 型 | デフォルト | 説明 |
+|------------|-----|------------|------|
+| limit | int | 20 | 取得件数（最大 100） |
+| offset | int | 0 | オフセット |
+
+**レスポンス:**
+```json
+{
+  "data": [
+    {
+      "episode": {
+        "id": "uuid",
+        "title": "エピソードタイトル",
+        "description": "説明",
+        "channel": {
+          "id": "uuid",
+          "name": "チャンネル名",
+          "artwork": { "id": "uuid", "url": "..." }
+        },
+        "publishedAt": "2025-01-01T00:00:00Z"
+      },
+      "bookmarkedAt": "2025-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "total": 100,
+    "limit": 20,
+    "offset": 0
+  }
+}
+```
+
+---
+
+## Playback History（再生履歴）
+
+エピソードの再生履歴を管理する。
+
+### 再生履歴を更新
+
+```
+PUT /episodes/:episodeId/playback
+```
+
+再生位置や完了状態を更新する。履歴が存在しない場合は新規作成（Upsert）。
+
+**リクエスト:**
+```json
+{
+  "progressMs": 120000,
+  "completed": false
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| progressMs | int | | 再生位置（ミリ秒） |
+| completed | bool | | 再生完了フラグ |
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "episodeId": "uuid",
+    "progressMs": 120000,
+    "completed": false,
+    "playedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+### 再生履歴を削除
+
+```
+DELETE /episodes/:episodeId/playback
+```
+
+**レスポンス（204 No Content）:**
+レスポンスボディなし
+
+**エラー（404 Not Found）:**
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "再生履歴が見つかりません"
+  }
+}
+```
+
+### 再生履歴一覧を取得
+
+```
+GET /auth/me/playback-history
+```
+
+最近再生した順で一覧を取得。
+
+**クエリパラメータ:**
+
+| パラメータ | 型 | デフォルト | 説明 |
+|------------|-----|------------|------|
+| completed | bool | - | 完了状態でフィルタ |
+| limit | int | 20 | 取得件数（最大 100） |
+| offset | int | 0 | オフセット |
+
+**レスポンス:**
+```json
+{
+  "data": [
+    {
+      "episode": {
+        "id": "uuid",
+        "title": "エピソードタイトル",
+        "description": "説明",
+        "fullAudio": { "id": "uuid", "url": "...", "durationMs": 180000 },
+        "channel": {
+          "id": "uuid",
+          "name": "チャンネル名",
+          "artwork": { "id": "uuid", "url": "..." }
+        },
+        "publishedAt": "2025-01-01T00:00:00Z"
+      },
+      "progressMs": 120000,
+      "completed": false,
+      "playedAt": "2025-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "total": 100,
+    "limit": 20,
+    "offset": 0
+  }
+}
+```
+
+---
+
+## My Channels（自分のチャンネル）
+
+### 自分のチャンネル一覧取得
+
+```
+GET /auth/me/channels
+```
+
+自分のチャンネル一覧を取得（非公開含む）。
+
+**クエリパラメータ:**
+
+| パラメータ | 型 | デフォルト | 説明 |
+|------------|-----|------------|------|
+| status | string | - | 公開状態でフィルタ: `published` / `draft` |
+| limit | int | 20 | 取得件数（最大 100） |
+| offset | int | 0 | オフセット |
+
+**レスポンス:**
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "name": "チャンネル名",
+      "description": "説明",
+      "scriptPrompt": "明るく楽しい雰囲気で...",
+      "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
+      "artwork": { "id": "uuid", "url": "..." },
+      "publishedAt": "2025-01-01T00:00:00Z",
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
     }
   ],
   "pagination": {
@@ -672,13 +964,44 @@ GET /auth/me/likes
 GET /channels/:channelId/episodes
 ```
 
-**クエリパラメータ:** ページネーション
+オーナーの場合は全エピソード（非公開含む）、それ以外は公開中のエピソードのみ取得可能。
+
+**クエリパラメータ:**
+
+| パラメータ | 型 | デフォルト | 説明 |
+|------------|-----|------------|------|
+| limit | int | 20 | 取得件数（最大 100） |
+| offset | int | 0 | オフセット |
+
+**レスポンス:**
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "title": "エピソードタイトル",
+      "description": "エピソードの説明",
+      "fullAudio": { "id": "uuid", "url": "...", "durationMs": 180000 },
+      "publishedAt": "2025-01-01T00:00:00Z",
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "total": 100,
+    "limit": 20,
+    "offset": 0
+  }
+}
+```
 
 ### エピソード取得
 
 ```
 GET /channels/:channelId/episodes/:episodeId
 ```
+
+公開中のエピソード、または自分のエピソードのみ取得可能。
 
 **レスポンス:**
 ```json
@@ -687,6 +1010,7 @@ GET /channels/:channelId/episodes/:episodeId
     "id": "uuid",
     "title": "エピソードタイトル",
     "description": "エピソードの説明",
+    "scriptPrompt": "今回のテーマについて詳しく解説する",
     "bgm": { "id": "uuid", "url": "..." },
     "fullAudio": { "id": "uuid", "url": "..." },
     "script": [
@@ -713,11 +1037,14 @@ GET /channels/:channelId/episodes/:episodeId
         "volume": 0.8
       }
     ],
+    "publishedAt": "2025-01-01T00:00:00Z",
     "createdAt": "2025-01-01T00:00:00Z",
     "updatedAt": "2025-01-01T00:00:00Z"
   }
 }
 ```
+
+> **Note:** `scriptPrompt` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
 
 ### エピソード作成
 
@@ -730,6 +1057,7 @@ POST /channels/:channelId/episodes
 {
   "title": "エピソードタイトル",
   "description": "エピソードの説明",
+  "scriptPrompt": "今回のテーマについて詳しく解説する",
   "bgmAudioId": "uuid"
 }
 ```
@@ -745,9 +1073,13 @@ PATCH /channels/:channelId/episodes/:episodeId
 {
   "title": "新しいタイトル",
   "description": "新しい説明",
-  "bgmAudioId": "uuid"
+  "scriptPrompt": "今回のテーマについて詳しく解説する",
+  "bgmAudioId": "uuid",
+  "publishedAt": "2025-01-01T00:00:00Z"
 }
 ```
+
+- `publishedAt`: 公開日時を設定（`null` で非公開化）
 
 ### エピソード削除
 
@@ -1099,7 +1431,8 @@ GET /categories
     {
       "id": "uuid",
       "slug": "technology",
-      "name": "テクノロジー"
+      "name": "テクノロジー",
+      "sortOrder": 0
     }
   ]
 }
@@ -1154,6 +1487,7 @@ GET /sound-effects/:sfxId
 | DUPLICATE_USERNAME | 409 | ユーザー名が既に使用されている |
 | DUPLICATE_NAME | 409 | 名前が重複している |
 | ALREADY_LIKED | 409 | 既にいいね済み |
+| ALREADY_BOOKMARKED | 409 | 既にブックマーク済み |
 | SFX_IN_USE | 409 | 効果音が使用中のため削除不可 |
 | INTERNAL_ERROR | 500 | サーバー内部エラー |
 | GENERATION_FAILED | 500 | 音声/台本の生成に失敗 |
