@@ -42,6 +42,10 @@
 | POST | `/api/v1/episodes/:episodeId/like` | いいね登録 | |
 | DELETE | `/api/v1/episodes/:episodeId/like` | いいね解除 | |
 | GET | `/api/v1/auth/me/likes` | いいねしたエピソード一覧 | |
+| **Bookmarks（後で見る）** | - | - | - |
+| POST | `/api/v1/episodes/:episodeId/bookmark` | ブックマーク登録 | |
+| DELETE | `/api/v1/episodes/:episodeId/bookmark` | ブックマーク解除 | |
+| GET | `/api/v1/auth/me/bookmarks` | ブックマークしたエピソード一覧 | |
 | **My Channels（自分のチャンネル）** | - | - | - |
 | GET | `/api/v1/auth/me/channels` | 自分のチャンネル一覧 | |
 | **Episodes** | - | - | - |
@@ -142,6 +146,7 @@
 | Episodes | Public | Owner | Owner | Owner |
 | Script / ScriptLines | Public | Owner | Owner | Owner |
 | Likes | Owner | Owner | - | Owner |
+| Bookmarks | Owner | Owner | - | Owner |
 | Audio（生成） | - | Owner | - | - |
 | Audios（アップロード） | Owner | Owner | - | Owner |
 | Images（アップロード） | Owner | Owner | - | Owner |
@@ -696,6 +701,97 @@ GET /auth/me/likes
 
 ---
 
+## Bookmarks（後で見る）
+
+エピソードへの「後で見る」機能。
+
+### ブックマーク登録
+
+```
+POST /episodes/:episodeId/bookmark
+```
+
+**レスポンス（201 Created）:**
+```json
+{
+  "data": {
+    "episodeId": "uuid",
+    "createdAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+**エラー（409 Conflict）:**
+```json
+{
+  "error": {
+    "code": "ALREADY_BOOKMARKED",
+    "message": "既にブックマーク済みです"
+  }
+}
+```
+
+### ブックマーク解除
+
+```
+DELETE /episodes/:episodeId/bookmark
+```
+
+**レスポンス（204 No Content）:**
+レスポンスボディなし
+
+**エラー（404 Not Found）:**
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "ブックマークが見つかりません"
+  }
+}
+```
+
+### ブックマークしたエピソード一覧
+
+```
+GET /auth/me/bookmarks
+```
+
+**クエリパラメータ:**
+
+| パラメータ | 型 | デフォルト | 説明 |
+|------------|-----|------------|------|
+| limit | int | 20 | 取得件数（最大 100） |
+| offset | int | 0 | オフセット |
+
+**レスポンス:**
+```json
+{
+  "data": [
+    {
+      "episode": {
+        "id": "uuid",
+        "title": "エピソードタイトル",
+        "description": "説明",
+        "channel": {
+          "id": "uuid",
+          "name": "チャンネル名",
+          "artwork": { "id": "uuid", "url": "..." }
+        },
+        "publishedAt": "2025-01-01T00:00:00Z"
+      },
+      "bookmarkedAt": "2025-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "total": 100,
+    "limit": 20,
+    "offset": 0
+  }
+}
+```
+
+---
+
 ## My Channels（自分のチャンネル）
 
 ### 自分のチャンネル一覧取得
@@ -1237,6 +1333,7 @@ GET /sound-effects/:sfxId
 | DUPLICATE_USERNAME | 409 | ユーザー名が既に使用されている |
 | DUPLICATE_NAME | 409 | 名前が重複している |
 | ALREADY_LIKED | 409 | 既にいいね済み |
+| ALREADY_BOOKMARKED | 409 | 既にブックマーク済み |
 | SFX_IN_USE | 409 | 効果音が使用中のため削除不可 |
 | INTERNAL_ERROR | 500 | サーバー内部エラー |
 | GENERATION_FAILED | 500 | 音声/台本の生成に失敗 |
