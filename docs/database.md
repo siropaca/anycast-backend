@@ -97,6 +97,7 @@ erDiagram
         uuid category_id FK
         varchar name
         text description
+        text script_prompt
         uuid artwork_id FK
         timestamp published_at
         timestamp created_at
@@ -129,6 +130,7 @@ erDiagram
         uuid channel_id FK
         varchar title
         text description
+        text script_prompt
         uuid bgm_id FK
         uuid full_audio_id FK
         timestamp published_at
@@ -278,7 +280,8 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | user_id | UUID | | - | オーナー（users 参照） |
 | category_id | UUID | | - | カテゴリ（categories 参照） |
 | name | VARCHAR(255) | | - | チャンネル名 |
-| description | TEXT | | - | チャンネルの説明 |
+| description | TEXT | | - | チャンネルの説明（公開情報） |
+| script_prompt | TEXT | ◯ | - | 台本生成の全体方針（AI への指示、内部管理用） |
 | artwork_id | UUID | ◯ | - | カバー画像（images 参照） |
 | published_at | TIMESTAMP | ◯ | - | 公開日時（NULL = 下書き） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
@@ -331,7 +334,8 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | id | UUID | | gen_random_uuid() | 主キー |
 | channel_id | UUID | | - | 所属チャンネル |
 | title | VARCHAR(255) | | - | エピソードタイトル |
-| description | TEXT | | - | エピソードの説明 |
+| description | TEXT | | - | エピソードの説明（公開情報） |
+| script_prompt | TEXT | ◯ | - | エピソード固有の台本生成設定（内部管理用） |
 | bgm_id | UUID | ◯ | - | BGM（audios 参照） |
 | full_audio_id | UUID | ◯ | - | 結合済み音声（audios 参照） |
 | published_at | TIMESTAMP | ◯ | - | 公開日時（NULL = 下書き） |

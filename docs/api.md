@@ -417,6 +417,7 @@ GET /channels/:channelId
     "id": "uuid",
     "name": "チャンネル名",
     "description": "説明",
+    "scriptPrompt": "明るく楽しい雰囲気で...",
     "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
     "artwork": { "id": "uuid", "url": "..." },
     "characters": [
@@ -439,6 +440,8 @@ GET /channels/:channelId
 }
 ```
 
+> **Note:** `scriptPrompt` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
+
 ### チャンネル作成
 
 ```
@@ -450,6 +453,7 @@ POST /channels
 {
   "name": "チャンネル名",
   "description": "説明",
+  "scriptPrompt": "明るく楽しい雰囲気で...",
   "categoryId": "uuid",
   "artworkImageId": "uuid"
 }
@@ -466,6 +470,7 @@ PATCH /channels/:channelId
 {
   "name": "新しいチャンネル名",
   "description": "新しい説明",
+  "scriptPrompt": "明るく楽しい雰囲気で...",
   "categoryId": "uuid",
   "artworkImageId": "uuid",
   "publishedAt": "2025-01-01T00:00:00Z"
@@ -929,6 +934,7 @@ GET /auth/me/channels
       "id": "uuid",
       "name": "チャンネル名",
       "description": "説明",
+      "scriptPrompt": "明るく楽しい雰囲気で...",
       "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
       "artwork": { "id": "uuid", "url": "..." },
       "publishedAt": "2025-01-01T00:00:00Z",
@@ -1000,6 +1006,7 @@ GET /channels/:channelId/episodes/:episodeId
     "id": "uuid",
     "title": "エピソードタイトル",
     "description": "エピソードの説明",
+    "scriptPrompt": "今回のテーマについて詳しく解説する",
     "bgm": { "id": "uuid", "url": "..." },
     "fullAudio": { "id": "uuid", "url": "..." },
     "script": [
@@ -1033,6 +1040,8 @@ GET /channels/:channelId/episodes/:episodeId
 }
 ```
 
+> **Note:** `scriptPrompt` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
+
 ### エピソード作成
 
 ```
@@ -1044,6 +1053,7 @@ POST /channels/:channelId/episodes
 {
   "title": "エピソードタイトル",
   "description": "エピソードの説明",
+  "scriptPrompt": "今回のテーマについて詳しく解説する",
   "bgmAudioId": "uuid"
 }
 ```
@@ -1059,6 +1069,7 @@ PATCH /channels/:channelId/episodes/:episodeId
 {
   "title": "新しいタイトル",
   "description": "新しい説明",
+  "scriptPrompt": "今回のテーマについて詳しく解説する",
   "bgmAudioId": "uuid",
   "publishedAt": "2025-01-01T00:00:00Z"
 }
