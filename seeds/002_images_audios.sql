@@ -1,4 +1,4 @@
--- テスト用の画像・音声データを作成する（開発環境専用）
+-- テスト用の画像・音声データを作成する
 
 -- 既存のテストデータを削除（冪等性のため）
 DELETE FROM images WHERE url LIKE 'https://storage.googleapis.com/anycast-dev/%';
