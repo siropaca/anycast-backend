@@ -10,6 +10,7 @@ erDiagram
     users ||--o{ likes : has
     users ||--o{ bookmarks : has
     users ||--o{ playback_histories : has
+    users ||--o{ follows : has
     users ||--o| images : avatar
     categories ||--o{ channels : has
     channels ||--o{ characters : has
@@ -20,6 +21,7 @@ erDiagram
     episodes ||--o{ likes : has
     episodes ||--o{ bookmarks : has
     episodes ||--o{ playback_histories : has
+    episodes ||--o{ follows : has
     episodes ||--o| audios : bgm
     episodes ||--o| audios : full_audio
     script_lines ||--o| characters : speaker
@@ -50,6 +52,13 @@ erDiagram
         timestamp played_at
         timestamp created_at
         timestamp updated_at
+    }
+
+    follows {
+        uuid id PK
+        uuid user_id FK
+        uuid episode_id FK
+        timestamp created_at
     }
 
     users {
@@ -425,6 +434,32 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 **外部キー:**
 - user_id → users(id) ON DELETE CASCADE
 - episode_id → episodes(id) ON DELETE CASCADE
+
+---
+
+#### follows
+
+エピソードへのフォローを管理する。自分のチャンネルのエピソードはフォロー不可。
+
+| カラム名 | 型 | NULLABLE | デフォルト | 説明 |
+|----------|-----|:--------:|------------|------|
+| id | UUID | | gen_random_uuid() | 主キー |
+| user_id | UUID | | - | ユーザー（users 参照） |
+| episode_id | UUID | | - | エピソード（episodes 参照） |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | フォロー登録日時 |
+
+**インデックス:**
+- PRIMARY KEY (id)
+- UNIQUE (user_id, episode_id)
+- INDEX (user_id)
+- INDEX (episode_id)
+
+**外部キー:**
+- user_id → users(id) ON DELETE CASCADE
+- episode_id → episodes(id) ON DELETE CASCADE
+
+**制約:**
+- 自分が所有するチャンネルのエピソードはフォロー不可（アプリケーション層で検証）
 
 ---
 
