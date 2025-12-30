@@ -28,15 +28,15 @@ type Credential struct {
 
 // OAuth 認証情報
 type OAuthAccount struct {
-	ID             uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	UserID         uuid.UUID  `gorm:"type:uuid;not null;index"`
-	Provider       string     `gorm:"type:varchar(50);not null"`
-	ProviderUserID string     `gorm:"type:varchar(255);not null;column:provider_user_id"`
-	AccessToken    *string    `gorm:"type:varchar(1024);column:access_token"`
-	RefreshToken   *string    `gorm:"type:varchar(1024);column:refresh_token"`
-	ExpiresAt      *time.Time `gorm:"column:expires_at"`
-	CreatedAt      time.Time  `gorm:"not null;default:CURRENT_TIMESTAMP"`
-	UpdatedAt      time.Time  `gorm:"not null;default:CURRENT_TIMESTAMP"`
+	ID             uuid.UUID     `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	UserID         uuid.UUID     `gorm:"type:uuid;not null;index"`
+	Provider       OAuthProvider `gorm:"type:oauth_provider;not null"`
+	ProviderUserID string        `gorm:"type:varchar(255);not null;column:provider_user_id"`
+	AccessToken    *string       `gorm:"type:varchar(1024);column:access_token"`
+	RefreshToken   *string       `gorm:"type:varchar(1024);column:refresh_token"`
+	ExpiresAt      *time.Time    `gorm:"column:expires_at"`
+	CreatedAt      time.Time     `gorm:"not null;default:CURRENT_TIMESTAMP"`
+	UpdatedAt      time.Time     `gorm:"not null;default:CURRENT_TIMESTAMP"`
 }
 
 func (OAuthAccount) TableName() string {
