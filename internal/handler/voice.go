@@ -103,7 +103,7 @@ func toVoiceResponse(v *model.Voice) response.VoiceResponse {
 		Provider:        v.Provider,
 		ProviderVoiceID: v.ProviderVoiceID,
 		Name:            v.Name,
-		Gender:          v.Gender,
+		Gender:          string(v.Gender),
 		IsActive:        v.IsActive,
 	}
 }

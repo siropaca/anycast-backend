@@ -120,7 +120,7 @@ func (s *authService) Login(ctx context.Context, req request.LoginRequest) (*res
 // Google OAuth で認証する
 func (s *authService) OAuthGoogle(ctx context.Context, req request.OAuthGoogleRequest) (*AuthResult, error) {
 	// 既存の OAuth アカウントを検索
-	existingAccount, err := s.oauthAccountRepo.FindByProviderAndProviderUserID(ctx, "google", req.ProviderUserID)
+	existingAccount, err := s.oauthAccountRepo.FindByProviderAndProviderUserID(ctx, model.OAuthProviderGoogle, req.ProviderUserID)
 	if err != nil {
 		// NotFound エラーの場合は新規作成へ進む
 		if !apperror.IsCode(err, apperror.CodeNotFound) {
@@ -173,7 +173,7 @@ func (s *authService) OAuthGoogle(ctx context.Context, req request.OAuthGoogleRe
 
 	oauthAccount := &model.OAuthAccount{
 		UserID:         user.ID,
-		Provider:       "google",
+		Provider:       model.OAuthProviderGoogle,
 		ProviderUserID: req.ProviderUserID,
 		AccessToken:    &req.AccessToken,
 		RefreshToken:   req.RefreshToken,
@@ -289,7 +289,7 @@ func (s *authService) GetMe(ctx context.Context, userID string) (*response.MeRes
 	}
 	providers := make([]string, 0, len(oauthAccounts))
 	for _, account := range oauthAccounts {
-		providers = append(providers, account.Provider)
+		providers = append(providers, string(account.Provider))
 	}
 
 	// アバター画像を取得

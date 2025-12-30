@@ -15,7 +15,7 @@ import (
 type OAuthAccountRepository interface {
 	Create(ctx context.Context, account *model.OAuthAccount) error
 	Update(ctx context.Context, account *model.OAuthAccount) error
-	FindByProviderAndProviderUserID(ctx context.Context, provider, providerUserID string) (*model.OAuthAccount, error)
+	FindByProviderAndProviderUserID(ctx context.Context, provider model.OAuthProvider, providerUserID string) (*model.OAuthAccount, error)
 	FindByUserID(ctx context.Context, userID uuid.UUID) ([]model.OAuthAccount, error)
 }
 
@@ -45,7 +45,7 @@ func (r *oauthAccountRepository) Update(ctx context.Context, account *model.OAut
 }
 
 // 指定されたプロバイダとプロバイダユーザー ID の OAuth 認証情報を取得する
-func (r *oauthAccountRepository) FindByProviderAndProviderUserID(ctx context.Context, provider, providerUserID string) (*model.OAuthAccount, error) {
+func (r *oauthAccountRepository) FindByProviderAndProviderUserID(ctx context.Context, provider model.OAuthProvider, providerUserID string) (*model.OAuthAccount, error) {
 	var account model.OAuthAccount
 	if err := r.db.WithContext(ctx).First(&account, "provider = ? AND provider_user_id = ?", provider, providerUserID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
