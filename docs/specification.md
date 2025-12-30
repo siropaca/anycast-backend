@@ -115,7 +115,29 @@ AI 専用のポッドキャストを作成・配信できるプラットフォ�
 | エンティティ | Like, Bookmark, PlaybackHistory | ユーザーとエピソードの関連を表す |
 | エンティティ | Voice, Category, SoundEffect | システム管理のマスタデータ |
 | エンティティ | Audio, Image | メディアファイル（外部ストレージへの参照） |
-| 値オブジェクト | Email, Username, PublishStatus | 属性の集合として扱われ、同値性で比較される |
+| 値オブジェクト | Email, Username, LineType, Gender, Volume | ドメイン固有のルール・制約を持つ値 |
+
+### 値オブジェクト定義
+
+値オブジェクトは **ドメイン固有のルール・バリデーション** を持つ型。同値性で比較され、不変（immutable）として扱う。
+
+| 値オブジェクト | 型 | ルール |
+|---------------|-----|--------|
+| Email | String | メールアドレス形式、255文字以内、小文字正規化 |
+| Username | String | 20文字以内、一意、`__` 始まり禁止、日本語可 |
+| LineType | Enum | `speech` / `silence` / `sfx` |
+| Gender | Enum | `male` / `female` / `neutral` |
+| Volume | Decimal | 0.00〜1.00 の範囲 |
+| MimeType | String | 有効な MIME タイプ形式（例: `audio/mpeg`, `image/png`） |
+
+#### 値オブジェクトにしない例
+
+以下は特別なルールを持たないため、単純な `String` として扱う：
+
+- `displayName` - 文字数制限のみ（20文字以内）
+- `description` - 自由入力テキスト
+- `persona` - キャラクター設定（自由記述）
+- `name`（Channel, Character, SoundEffect など）- 一意性は DB 制約で担保
 
 ---
 
