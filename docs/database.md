@@ -244,7 +244,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 |----------|-----|:--------:|------------|------|
 | id | UUID | | gen_random_uuid() | 主キー |
 | user_id | UUID | | - | ユーザー（users 参照） |
-| provider | VARCHAR(50) | | - | プロバイダ: `google` |
+| provider | oauth_provider | | - | プロバイダ: `google` |
 | provider_user_id | VARCHAR(255) | | - | プロバイダ側のユーザー ID |
 | access_token | VARCHAR(1024) | ◯ | - | アクセストークン |
 | refresh_token | VARCHAR(1024) | ◯ | - | リフレッシュトークン |
@@ -433,7 +433,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | id | UUID | | gen_random_uuid() | 主キー（= lineId） |
 | episode_id | UUID | | - | 所属エピソード |
 | line_order | INTEGER | | - | 行の順序（0 始まり） |
-| line_type | VARCHAR(50) | | - | 行種別: `speech` / `silence` / `sfx` |
+| line_type | line_type | | - | 行種別: `speech` / `silence` / `sfx` |
 | speaker_id | UUID | ◯ | - | 話者（speech 時のみ、characters 参照） |
 | text | TEXT | ◯ | - | セリフ（speech 時のみ） |
 | emotion | TEXT | ◯ | - | 感情・喋り方（speech 時のみ）例: 嬉しい、悲しい、笑いながら |
@@ -538,7 +538,7 @@ TTS ボイスのマスタデータを管理する。システム管理テーブ�
 | provider | VARCHAR(50) | | - | TTS プロバイダ: `google` / `azure` / etc |
 | provider_voice_id | VARCHAR(100) | | - | プロバイダの音声 ID（例: ja-JP-Wavenet-C） |
 | name | VARCHAR(100) | | - | 表示名（デフォルトは provider_voice_id） |
-| gender | VARCHAR(20) | | - | 性別: `male` / `female` / `neutral` |
+| gender | gender | | - | 性別: `male` / `female` / `neutral` |
 | is_active | BOOLEAN | | true | 有効フラグ（false で新規選択不可） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
@@ -574,6 +574,16 @@ TTS ボイスのマスタデータを管理する。システム管理テーブ�
 ---
 
 ## 補足
+
+### Enum 型
+
+PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証する。
+
+| 型名 | 値 | 用途 |
+|------|-----|------|
+| oauth_provider | `google` | OAuth プロバイダ |
+| line_type | `speech`, `silence`, `sfx` | 台本行の種別 |
+| gender | `male`, `female`, `neutral` | ボイスの性別 |
 
 ### UUID について
 
