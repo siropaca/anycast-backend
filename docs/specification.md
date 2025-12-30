@@ -232,12 +232,12 @@ OAuth プロバイダとの連携情報。
 | scriptPrompt | String | | 台本生成の全体方針（AI への指示、内部管理用） |
 | category | Category | ◯ | カテゴリ |
 | artwork | Image | | カバー画像（ポッドキャストのアートワーク） |
-| characters | Character[] | ◯ | 登場人物（1 人以上） |
+| characters | Character[] | ◯ | 登場人物（1〜2 人） |
 | publishedAt | DateTime | | 公開日時（NULL = 下書き） |
 
 #### 不変条件
 
-- characters は 1 人以上必須
+- characters は 1〜2 人（最小 1 人、最大 2 人）
 - 公開中のチャンネルは削除不可（先に非公開化が必要、将来的に検討）
 
 ### Character（登場人物）

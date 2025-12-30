@@ -513,6 +513,7 @@ POST /channels/:channelId/characters
 **バリデーション:**
 - name: 必須、同一チャンネル内で一意、`__` で始まる名前は禁止
 - voiceId: 必須、is_active = true のボイスのみ指定可能
+- チャンネルのキャラクター数が 2 人を超える場合はエラー
 
 ### キャラクター更新
 
@@ -534,6 +535,9 @@ PATCH /channels/:channelId/characters/:characterId
 ```
 DELETE /channels/:channelId/characters/:characterId
 ```
+
+**バリデーション:**
+- チャンネルのキャラクター数が 1 人の場合は削除不可（最低 1 人必要）
 
 ---
 
