@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
+	"github.com/siropaca/anycast-backend/internal/logger"
 	"github.com/siropaca/anycast-backend/internal/model"
 )
 
@@ -32,6 +33,7 @@ func (r *imageRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Im
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperror.ErrNotFound.WithMessage("Image not found")
 		}
+		logger.FromContext(ctx).Error("failed to fetch image", "error", err, "image_id", id)
 		return nil, apperror.ErrInternal.WithMessage("Failed to fetch image").WithError(err)
 	}
 	return &image, nil

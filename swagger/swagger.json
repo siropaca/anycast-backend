@@ -438,6 +438,10 @@
         },
         "response.ArtworkResponse": {
             "type": "object",
+            "required": [
+                "id",
+                "url"
+            ],
             "properties": {
                 "id": {
                     "type": "string"
@@ -449,6 +453,9 @@
         },
         "response.AuthDataResponse": {
             "type": "object",
+            "required": [
+                "data"
+            ],
             "properties": {
                 "data": {
                     "$ref": "#/definitions/response.AuthResponse"
@@ -457,6 +464,10 @@
         },
         "response.AuthResponse": {
             "type": "object",
+            "required": [
+                "token",
+                "user"
+            ],
             "properties": {
                 "token": {
                     "type": "string"
@@ -468,6 +479,10 @@
         },
         "response.AvatarResponse": {
             "type": "object",
+            "required": [
+                "id",
+                "url"
+            ],
             "properties": {
                 "id": {
                     "type": "string"
@@ -479,6 +494,11 @@
         },
         "response.CategoryResponse": {
             "type": "object",
+            "required": [
+                "id",
+                "name",
+                "slug"
+            ],
             "properties": {
                 "id": {
                     "type": "string"
@@ -493,6 +513,10 @@
         },
         "response.ChannelListWithPaginationResponse": {
             "type": "object",
+            "required": [
+                "data",
+                "pagination"
+            ],
             "properties": {
                 "data": {
                     "type": "array",
@@ -507,6 +531,15 @@
         },
         "response.ChannelResponse": {
             "type": "object",
+            "required": [
+                "category",
+                "createdAt",
+                "description",
+                "id",
+                "name",
+                "scriptPrompt",
+                "updatedAt"
+            ],
             "properties": {
                 "artwork": {
                     "$ref": "#/definitions/response.ArtworkResponse"
@@ -539,6 +572,10 @@
         },
         "response.ErrorDetail": {
             "type": "object",
+            "required": [
+                "code",
+                "message"
+            ],
             "properties": {
                 "code": {
                     "type": "string",
@@ -553,6 +590,9 @@
         },
         "response.ErrorResponse": {
             "type": "object",
+            "required": [
+                "error"
+            ],
             "properties": {
                 "error": {
                     "$ref": "#/definitions/response.ErrorDetail"
@@ -561,6 +601,9 @@
         },
         "response.MeDataResponse": {
             "type": "object",
+            "required": [
+                "data"
+            ],
             "properties": {
                 "data": {
                     "$ref": "#/definitions/response.MeResponse"
@@ -569,6 +612,15 @@
         },
         "response.MeResponse": {
             "type": "object",
+            "required": [
+                "createdAt",
+                "displayName",
+                "email",
+                "hasPassword",
+                "id",
+                "oauthProviders",
+                "username"
+            ],
             "properties": {
                 "avatar": {
                     "$ref": "#/definitions/response.AvatarResponse"
@@ -601,6 +653,11 @@
         },
         "response.PaginationResponse": {
             "type": "object",
+            "required": [
+                "limit",
+                "offset",
+                "total"
+            ],
             "properties": {
                 "limit": {
                     "type": "integer"
@@ -615,6 +672,12 @@
         },
         "response.UserResponse": {
             "type": "object",
+            "required": [
+                "displayName",
+                "email",
+                "id",
+                "username"
+            ],
             "properties": {
                 "avatarUrl": {
                     "type": "string"
@@ -635,6 +698,9 @@
         },
         "response.VoiceDataResponse": {
             "type": "object",
+            "required": [
+                "data"
+            ],
             "properties": {
                 "data": {
                     "$ref": "#/definitions/response.VoiceResponse"
@@ -643,6 +709,9 @@
         },
         "response.VoiceListResponse": {
             "type": "object",
+            "required": [
+                "data"
+            ],
             "properties": {
                 "data": {
                     "type": "array",
@@ -654,6 +723,14 @@
         },
         "response.VoiceResponse": {
             "type": "object",
+            "required": [
+                "gender",
+                "id",
+                "isActive",
+                "name",
+                "provider",
+                "providerVoiceId"
+            ],
             "properties": {
                 "gender": {
                     "type": "string"

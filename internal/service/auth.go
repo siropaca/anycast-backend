@@ -11,6 +11,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/request"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
+	"github.com/siropaca/anycast-backend/internal/logger"
 	"github.com/siropaca/anycast-backend/internal/model"
 	"github.com/siropaca/anycast-backend/internal/pkg/crypto"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
@@ -76,6 +77,7 @@ func (s *authService) Register(ctx context.Context, req request.RegisterRequest)
 	// パスワードをハッシュ化
 	hashedPassword, err := s.passwordHasher.Hash(req.Password)
 	if err != nil {
+		logger.FromContext(ctx).Error("failed to hash password", "error", err)
 		return nil, apperror.ErrInternal.WithMessage("Failed to hash password").WithError(err)
 	}
 
@@ -255,6 +257,7 @@ func (s *authService) generateUniqueUsername(ctx context.Context, displayName st
 		}
 	}
 
+	logger.FromContext(ctx).Error("failed to generate unique username after retries", "display_name", displayName)
 	return "", apperror.ErrInternal.WithMessage("ユーザー名の生成に失敗しました")
 }
 

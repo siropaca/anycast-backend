@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
+	"github.com/siropaca/anycast-backend/internal/logger"
 	"github.com/siropaca/anycast-backend/internal/model"
 )
 
@@ -29,6 +30,7 @@ func NewCredentialRepository(db *gorm.DB) CredentialRepository {
 // パスワード認証情報を作成する
 func (r *credentialRepository) Create(ctx context.Context, credential *model.Credential) error {
 	if err := r.db.WithContext(ctx).Create(credential).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to create credential", "error", err)
 		return apperror.ErrInternal.WithMessage("Failed to create credential").WithError(err)
 	}
 	return nil
@@ -41,6 +43,7 @@ func (r *credentialRepository) FindByUserID(ctx context.Context, userID uuid.UUI
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperror.ErrNotFound.WithMessage("Credential not found")
 		}
+		logger.FromContext(ctx).Error("failed to fetch credential", "error", err, "user_id", userID)
 		return nil, apperror.ErrInternal.WithMessage("Failed to fetch credential").WithError(err)
 	}
 	return &credential, nil
