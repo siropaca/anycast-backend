@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
+	"github.com/siropaca/anycast-backend/internal/logger"
 	"github.com/siropaca/anycast-backend/internal/model"
 )
 
@@ -31,6 +32,7 @@ func NewOAuthAccountRepository(db *gorm.DB) OAuthAccountRepository {
 // OAuth 認証情報を作成する
 func (r *oauthAccountRepository) Create(ctx context.Context, account *model.OAuthAccount) error {
 	if err := r.db.WithContext(ctx).Create(account).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to create oauth account", "error", err, "provider", account.Provider)
 		return apperror.ErrInternal.WithMessage("Failed to create OAuth account").WithError(err)
 	}
 	return nil
@@ -39,6 +41,7 @@ func (r *oauthAccountRepository) Create(ctx context.Context, account *model.OAut
 // OAuth 認証情報を更新する
 func (r *oauthAccountRepository) Update(ctx context.Context, account *model.OAuthAccount) error {
 	if err := r.db.WithContext(ctx).Save(account).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to update oauth account", "error", err, "account_id", account.ID)
 		return apperror.ErrInternal.WithMessage("Failed to update OAuth account").WithError(err)
 	}
 	return nil
@@ -51,6 +54,7 @@ func (r *oauthAccountRepository) FindByProviderAndProviderUserID(ctx context.Con
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperror.ErrNotFound.WithMessage("OAuth account not found")
 		}
+		logger.FromContext(ctx).Error("failed to fetch oauth account", "error", err, "provider", provider)
 		return nil, apperror.ErrInternal.WithMessage("Failed to fetch OAuth account").WithError(err)
 	}
 	return &account, nil
@@ -60,6 +64,7 @@ func (r *oauthAccountRepository) FindByProviderAndProviderUserID(ctx context.Con
 func (r *oauthAccountRepository) FindByUserID(ctx context.Context, userID uuid.UUID) ([]model.OAuthAccount, error) {
 	var accounts []model.OAuthAccount
 	if err := r.db.WithContext(ctx).Where("user_id = ?", userID).Find(&accounts).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to fetch oauth accounts", "error", err, "user_id", userID)
 		return nil, apperror.ErrInternal.WithMessage("Failed to fetch OAuth accounts").WithError(err)
 	}
 	return accounts, nil

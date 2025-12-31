@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
+	"github.com/siropaca/anycast-backend/internal/logger"
 	"github.com/siropaca/anycast-backend/internal/model"
 )
 
@@ -51,6 +52,7 @@ func (r *channelRepository) FindByUserID(ctx context.Context, userID uuid.UUID, 
 
 	// 総件数を取得
 	if err := tx.Count(&total).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to count channels", "error", err, "user_id", userID)
 		return nil, 0, apperror.ErrInternal.WithMessage("Failed to count channels").WithError(err)
 	}
 
@@ -62,6 +64,7 @@ func (r *channelRepository) FindByUserID(ctx context.Context, userID uuid.UUID, 
 		Limit(filter.Limit).
 		Offset(filter.Offset).
 		Find(&channels).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to fetch channels", "error", err, "user_id", userID)
 		return nil, 0, apperror.ErrInternal.WithMessage("Failed to fetch channels").WithError(err)
 	}
 

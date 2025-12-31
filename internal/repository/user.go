@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
+	"github.com/siropaca/anycast-backend/internal/logger"
 	"github.com/siropaca/anycast-backend/internal/model"
 )
 
@@ -32,6 +33,7 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 // ユーザーを作成する
 func (r *userRepository) Create(ctx context.Context, user *model.User) error {
 	if err := r.db.WithContext(ctx).Create(user).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to create user", "error", err)
 		return apperror.ErrInternal.WithMessage("Failed to create user").WithError(err)
 	}
 	return nil
@@ -44,6 +46,7 @@ func (r *userRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Use
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperror.ErrNotFound.WithMessage("User not found")
 		}
+		logger.FromContext(ctx).Error("failed to fetch user by id", "error", err, "user_id", id)
 		return nil, apperror.ErrInternal.WithMessage("Failed to fetch user").WithError(err)
 	}
 	return &user, nil
@@ -56,6 +59,7 @@ func (r *userRepository) FindByEmail(ctx context.Context, email string) (*model.
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperror.ErrNotFound.WithMessage("User not found")
 		}
+		logger.FromContext(ctx).Error("failed to fetch user by email", "error", err)
 		return nil, apperror.ErrInternal.WithMessage("Failed to fetch user").WithError(err)
 	}
 	return &user, nil
@@ -65,6 +69,7 @@ func (r *userRepository) FindByEmail(ctx context.Context, email string) (*model.
 func (r *userRepository) ExistsByEmail(ctx context.Context, email string) (bool, error) {
 	var count int64
 	if err := r.db.WithContext(ctx).Model(&model.User{}).Where("email = ?", email).Count(&count).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to check email existence", "error", err)
 		return false, apperror.ErrInternal.WithMessage("Failed to check email existence").WithError(err)
 	}
 	return count > 0, nil
@@ -74,6 +79,7 @@ func (r *userRepository) ExistsByEmail(ctx context.Context, email string) (bool,
 func (r *userRepository) ExistsByUsername(ctx context.Context, username string) (bool, error) {
 	var count int64
 	if err := r.db.WithContext(ctx).Model(&model.User{}).Where("username = ?", username).Count(&count).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to check username existence", "error", err)
 		return false, apperror.ErrInternal.WithMessage("Failed to check username existence").WithError(err)
 	}
 	return count > 0, nil
