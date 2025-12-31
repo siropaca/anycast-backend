@@ -96,6 +96,13 @@
 
 - ハンドラー（`internal/handler/`）を追加・変更した際は `make swagger` で Swagger ドキュメントを再生成する
 
+### DTO
+
+- レスポンス DTO で常に値が存在するフィールドには `validate:"required"` タグを付ける
+  - Swagger 生成時に `required` として出力され、フロントエンドの型がオプショナルにならない
+  - `binding:"required"` はリクエストのバリデーション用なので、レスポンスには使用しない
+- ポインタ型（`*string` など）や省略可能なフィールドには `validate:"required"` を付けない
+
 ### マイグレーション
 
 - スキーマを変更した際は `docs/database.md` も更新する

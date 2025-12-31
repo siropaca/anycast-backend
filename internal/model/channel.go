@@ -21,7 +21,7 @@ type Channel struct {
 	ID           uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	UserID       uuid.UUID  `gorm:"type:uuid;not null;column:user_id"`
 	Name         string     `gorm:"type:varchar(255);not null"`
-	Description  *string    `gorm:"type:text"`
+	Description  string     `gorm:"type:text;not null"`
 	ScriptPrompt *string    `gorm:"type:text;column:script_prompt"`
 	CategoryID   uuid.UUID  `gorm:"type:uuid;not null;column:category_id"`
 	ArtworkID    *uuid.UUID `gorm:"type:uuid;column:artwork_id"`

@@ -4,20 +4,20 @@ import "github.com/google/uuid"
 
 // ボイスのレスポンス
 type VoiceResponse struct {
-	ID              uuid.UUID `json:"id"`
-	Provider        string    `json:"provider"`
-	ProviderVoiceID string    `json:"providerVoiceId"`
-	Name            string    `json:"name"`
-	Gender          string    `json:"gender"`
-	IsActive        bool      `json:"isActive"`
+	ID              uuid.UUID `json:"id" validate:"required"`
+	Provider        string    `json:"provider" validate:"required"`
+	ProviderVoiceID string    `json:"providerVoiceId" validate:"required"`
+	Name            string    `json:"name" validate:"required"`
+	Gender          string    `json:"gender" validate:"required"`
+	IsActive        bool      `json:"isActive" validate:"required"`
 }
 
 // ボイス一覧のレスポンス
 type VoiceListResponse struct {
-	Data []VoiceResponse `json:"data"`
+	Data []VoiceResponse `json:"data" validate:"required"`
 }
 
 // ボイス単体のレスポンス
 type VoiceDataResponse struct {
-	Data VoiceResponse `json:"data"`
+	Data VoiceResponse `json:"data" validate:"required"`
 }

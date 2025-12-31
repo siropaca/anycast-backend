@@ -444,6 +444,10 @@ const docTemplate = `{
         },
         "response.ArtworkResponse": {
             "type": "object",
+            "required": [
+                "id",
+                "url"
+            ],
             "properties": {
                 "id": {
                     "type": "string"
@@ -455,6 +459,9 @@ const docTemplate = `{
         },
         "response.AuthDataResponse": {
             "type": "object",
+            "required": [
+                "data"
+            ],
             "properties": {
                 "data": {
                     "$ref": "#/definitions/response.AuthResponse"
@@ -463,6 +470,10 @@ const docTemplate = `{
         },
         "response.AuthResponse": {
             "type": "object",
+            "required": [
+                "token",
+                "user"
+            ],
             "properties": {
                 "token": {
                     "type": "string"
@@ -474,6 +485,10 @@ const docTemplate = `{
         },
         "response.AvatarResponse": {
             "type": "object",
+            "required": [
+                "id",
+                "url"
+            ],
             "properties": {
                 "id": {
                     "type": "string"
@@ -485,6 +500,11 @@ const docTemplate = `{
         },
         "response.CategoryResponse": {
             "type": "object",
+            "required": [
+                "id",
+                "name",
+                "slug"
+            ],
             "properties": {
                 "id": {
                     "type": "string"
@@ -499,6 +519,10 @@ const docTemplate = `{
         },
         "response.ChannelListWithPaginationResponse": {
             "type": "object",
+            "required": [
+                "data",
+                "pagination"
+            ],
             "properties": {
                 "data": {
                     "type": "array",
@@ -513,6 +537,14 @@ const docTemplate = `{
         },
         "response.ChannelResponse": {
             "type": "object",
+            "required": [
+                "category",
+                "createdAt",
+                "description",
+                "id",
+                "name",
+                "updatedAt"
+            ],
             "properties": {
                 "artwork": {
                     "$ref": "#/definitions/response.ArtworkResponse"
@@ -545,6 +577,10 @@ const docTemplate = `{
         },
         "response.ErrorDetail": {
             "type": "object",
+            "required": [
+                "code",
+                "message"
+            ],
             "properties": {
                 "code": {
                     "type": "string",
@@ -559,6 +595,9 @@ const docTemplate = `{
         },
         "response.ErrorResponse": {
             "type": "object",
+            "required": [
+                "error"
+            ],
             "properties": {
                 "error": {
                     "$ref": "#/definitions/response.ErrorDetail"
@@ -567,6 +606,9 @@ const docTemplate = `{
         },
         "response.MeDataResponse": {
             "type": "object",
+            "required": [
+                "data"
+            ],
             "properties": {
                 "data": {
                     "$ref": "#/definitions/response.MeResponse"
@@ -575,6 +617,15 @@ const docTemplate = `{
         },
         "response.MeResponse": {
             "type": "object",
+            "required": [
+                "createdAt",
+                "displayName",
+                "email",
+                "hasPassword",
+                "id",
+                "oauthProviders",
+                "username"
+            ],
             "properties": {
                 "avatar": {
                     "$ref": "#/definitions/response.AvatarResponse"
@@ -607,6 +658,11 @@ const docTemplate = `{
         },
         "response.PaginationResponse": {
             "type": "object",
+            "required": [
+                "limit",
+                "offset",
+                "total"
+            ],
             "properties": {
                 "limit": {
                     "type": "integer"
@@ -621,6 +677,12 @@ const docTemplate = `{
         },
         "response.UserResponse": {
             "type": "object",
+            "required": [
+                "displayName",
+                "email",
+                "id",
+                "username"
+            ],
             "properties": {
                 "avatarUrl": {
                     "type": "string"
@@ -641,6 +703,9 @@ const docTemplate = `{
         },
         "response.VoiceDataResponse": {
             "type": "object",
+            "required": [
+                "data"
+            ],
             "properties": {
                 "data": {
                     "$ref": "#/definitions/response.VoiceResponse"
@@ -649,6 +714,9 @@ const docTemplate = `{
         },
         "response.VoiceListResponse": {
             "type": "object",
+            "required": [
+                "data"
+            ],
             "properties": {
                 "data": {
                     "type": "array",
@@ -660,6 +728,14 @@ const docTemplate = `{
         },
         "response.VoiceResponse": {
             "type": "object",
+            "required": [
+                "gender",
+                "id",
+                "isActive",
+                "name",
+                "provider",
+                "providerVoiceId"
+            ],
             "properties": {
                 "gender": {
                     "type": "string"
