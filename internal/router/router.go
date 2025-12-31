@@ -64,8 +64,9 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated := api.Group("")
 	authenticated.Use(middleware.Auth(container.TokenManager))
 
-	// Auth（認証必須）
-	authenticated.GET("/auth/me", container.AuthHandler.GetMe)
+	// Me（自分のリソース）
+	authenticated.GET("/me", container.AuthHandler.GetMe)
+	authenticated.GET("/me/channels", container.ChannelHandler.ListMyChannels)
 
 	// Voices
 	authenticated.GET("/voices", container.VoiceHandler.ListVoices)

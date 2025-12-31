@@ -7,6 +7,12 @@ import (
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
+// ボイス関連のビジネスロジックインターフェース
+type VoiceService interface {
+	ListVoices(ctx context.Context, filter repository.VoiceFilter) ([]model.Voice, error)
+	GetVoice(ctx context.Context, id string) (*model.Voice, error)
+}
+
 type voiceService struct {
 	voiceRepo repository.VoiceRepository
 }

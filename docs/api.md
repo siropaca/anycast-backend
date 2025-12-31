@@ -20,8 +20,6 @@
 | POST | `/api/v1/auth/register` | ユーザー登録 | ✅ |
 | POST | `/api/v1/auth/login` | メール/パスワード認証 | ✅ |
 | POST | `/api/v1/auth/oauth/google` | Google OAuth 認証 | ✅ |
-| GET | `/api/v1/auth/me` | 現在のユーザー取得 | ✅ |
-| PATCH | `/api/v1/auth/me` | ユーザー情報更新 | |
 | **Users（ユーザー）** | - | - | - |
 | GET | `/api/v1/users/:userId` | ユーザー取得 | |
 | **Channels** | - | - | - |
@@ -41,21 +39,23 @@
 | **Likes（お気に入り）** | - | - | - |
 | POST | `/api/v1/episodes/:episodeId/like` | お気に入り登録 | |
 | DELETE | `/api/v1/episodes/:episodeId/like` | お気に入り解除 | |
-| GET | `/api/v1/auth/me/likes` | お気に入りしたエピソード一覧 | |
+| GET | `/api/v1/me/likes` | お気に入りしたエピソード一覧 | |
 | **Bookmarks（後で見る）** | - | - | - |
 | POST | `/api/v1/episodes/:episodeId/bookmark` | ブックマーク登録 | |
 | DELETE | `/api/v1/episodes/:episodeId/bookmark` | ブックマーク解除 | |
-| GET | `/api/v1/auth/me/bookmarks` | ブックマークしたエピソード一覧 | |
+| GET | `/api/v1/me/bookmarks` | ブックマークしたエピソード一覧 | |
 | **Playback History（再生履歴）** | - | - | - |
 | PUT | `/api/v1/episodes/:episodeId/playback` | 再生履歴を更新 | |
 | DELETE | `/api/v1/episodes/:episodeId/playback` | 再生履歴を削除 | |
-| GET | `/api/v1/auth/me/playback-history` | 再生履歴一覧を取得 | |
+| GET | `/api/v1/me/playback-history` | 再生履歴一覧を取得 | |
 | **Follows（フォロー）** | - | - | - |
 | POST | `/api/v1/episodes/:episodeId/follow` | フォロー登録 | |
 | DELETE | `/api/v1/episodes/:episodeId/follow` | フォロー解除 | |
-| GET | `/api/v1/auth/me/follows` | フォロー中のエピソード一覧 | |
-| **My Channels（自分のチャンネル）** | - | - | - |
-| GET | `/api/v1/auth/me/channels` | 自分のチャンネル一覧 | |
+| GET | `/api/v1/me/follows` | フォロー中のエピソード一覧 | |
+| **Me（自分のリソース）** | - | - | - |
+| GET | `/api/v1/me` | 現在のユーザー取得 | ✅ |
+| PATCH | `/api/v1/me` | ユーザー情報更新 | |
+| GET | `/api/v1/me/channels` | 自分のチャンネル一覧 | ✅ |
 | **Episodes** | - | - | - |
 | GET | `/api/v1/channels/:channelId/episodes` | エピソード一覧取得 | |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード取得 | |
@@ -176,7 +176,7 @@
 | `GET /channels/:channelId/episodes/:episodeId` | 全て | 公開中のみ |
 | `GET /search/channels` | - | 公開中のみ |
 | `GET /search/episodes` | - | 公開中のみ |
-| `GET /auth/me/channels` | 全て | - |
+| `GET /me/channels` | 全て | - |
 
 - **公開中**: `publishedAt IS NOT NULL AND publishedAt <= NOW()`
 - **非公開（下書き）**: `publishedAt IS NULL`
@@ -310,7 +310,7 @@ POST /auth/oauth/google
 ### 現在のユーザー取得
 
 ```
-GET /auth/me
+GET /me
 ```
 
 **レスポンス:**
@@ -332,7 +332,7 @@ GET /auth/me
 ### ユーザー情報更新
 
 ```
-PATCH /auth/me
+PATCH /me
 ```
 
 **リクエスト:**
@@ -379,7 +379,7 @@ GET /users/:userId
 GET /channels
 ```
 
-公開中のチャンネルのみ取得可能。自分のチャンネル（非公開含む）は `GET /auth/me/channels` を使用。
+公開中のチャンネルのみ取得可能。自分のチャンネル（非公開含む）は `GET /me/channels` を使用。
 
 **クエリパラメータ:**
 
@@ -1019,12 +1019,12 @@ GET /auth/me/follows
 
 ---
 
-## My Channels（自分のチャンネル）
+## Me（自分のリソース）
 
 ### 自分のチャンネル一覧取得
 
 ```
-GET /auth/me/channels
+GET /me/channels
 ```
 
 自分のチャンネル一覧を取得（非公開含む）。

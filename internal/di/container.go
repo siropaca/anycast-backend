@@ -13,9 +13,10 @@ import (
 
 // DI コンテナ
 type Container struct {
-	VoiceHandler *handler.VoiceHandler
-	AuthHandler  *handler.AuthHandler
-	TokenManager jwt.TokenManager
+	VoiceHandler   *handler.VoiceHandler
+	AuthHandler    *handler.AuthHandler
+	ChannelHandler *handler.ChannelHandler
+	TokenManager   jwt.TokenManager
 }
 
 // 依存関係を構築して Container を返す
@@ -30,18 +31,22 @@ func NewContainer(db *gorm.DB, cfg *config.Config) *Container {
 	credentialRepo := repository.NewCredentialRepository(db)
 	oauthAccountRepo := repository.NewOAuthAccountRepository(db)
 	imageRepo := repository.NewImageRepository(db)
+	channelRepo := repository.NewChannelRepository(db)
 
 	// Service 層
 	voiceService := service.NewVoiceService(voiceRepo)
 	authService := service.NewAuthService(userRepo, credentialRepo, oauthAccountRepo, imageRepo, passwordHasher)
+	channelService := service.NewChannelService(channelRepo)
 
 	// Handler 層
 	voiceHandler := handler.NewVoiceHandler(voiceService)
 	authHandler := handler.NewAuthHandler(authService, tokenManager)
+	channelHandler := handler.NewChannelHandler(channelService)
 
 	return &Container{
-		VoiceHandler: voiceHandler,
-		AuthHandler:  authHandler,
-		TokenManager: tokenManager,
+		VoiceHandler:   voiceHandler,
+		AuthHandler:    authHandler,
+		ChannelHandler: channelHandler,
+		TokenManager:   tokenManager,
 	}
 }
