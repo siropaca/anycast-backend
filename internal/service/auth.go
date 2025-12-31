@@ -17,6 +17,20 @@ import (
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
+// 認証結果
+type AuthResult struct {
+	User      response.UserResponse
+	IsCreated bool // 新規作成されたかどうか（OAuth 用）
+}
+
+// 認証関連のビジネスロジックインターフェース
+type AuthService interface {
+	Register(ctx context.Context, req request.RegisterRequest) (*response.UserResponse, error)
+	Login(ctx context.Context, req request.LoginRequest) (*response.UserResponse, error)
+	OAuthGoogle(ctx context.Context, req request.OAuthGoogleRequest) (*AuthResult, error)
+	GetMe(ctx context.Context, userID string) (*response.MeResponse, error)
+}
+
 type authService struct {
 	userRepo         repository.UserRepository
 	credentialRepo   repository.CredentialRepository
