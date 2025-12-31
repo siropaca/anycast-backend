@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"time"
 
+	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/request"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/model"
@@ -12,6 +14,7 @@ import (
 
 // チャンネル関連のビジネスロジックインターフェース
 type ChannelService interface {
+	GetChannel(ctx context.Context, userID string, channelID string) (*response.ChannelDataResponse, error)
 	ListMyChannels(ctx context.Context, userID string, filter repository.ChannelFilter) (*response.ChannelListWithPaginationResponse, error)
 	CreateChannel(ctx context.Context, userID string, req request.CreateChannelRequest) (*response.ChannelDataResponse, error)
 }
@@ -33,6 +36,37 @@ func NewChannelService(
 		categoryRepo: categoryRepo,
 		imageRepo:    imageRepo,
 	}
+}
+
+// チャンネルを取得する
+// オーナーまたは公開中のチャンネルのみ取得可能
+func (s *channelService) GetChannel(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	isOwner := channel.UserID == uid
+	isPublished := channel.PublishedAt != nil && !channel.PublishedAt.After(time.Now())
+
+	// オーナーでなく、かつ公開されていない場合は 404
+	if !isOwner && !isPublished {
+		return nil, apperror.ErrNotFound.WithMessage("Channel not found")
+	}
+
+	return &response.ChannelDataResponse{
+		Data: toChannelResponse(channel, isOwner),
+	}, nil
 }
 
 // 自分のチャンネル一覧を取得する
@@ -105,26 +139,33 @@ func (s *channelService) CreateChannel(ctx context.Context, userID string, req r
 	}
 
 	return &response.ChannelDataResponse{
-		Data: toChannelResponse(created),
+		Data: toChannelResponse(created, true),
 	}, nil
 }
 
 // Channel モデルのスライスをレスポンス DTO のスライスに変換する
+// ListMyChannels で使用するため、常にオーナーとして扱う
 func toChannelResponses(channels []model.Channel) []response.ChannelResponse {
 	result := make([]response.ChannelResponse, len(channels))
 	for i, c := range channels {
-		result[i] = toChannelResponse(&c)
+		result[i] = toChannelResponse(&c, true)
 	}
 	return result
 }
 
 // Channel モデルをレスポンス DTO に変換する
-func toChannelResponse(c *model.Channel) response.ChannelResponse {
+// isOwner が false の場合、scriptPrompt は空文字になる
+func toChannelResponse(c *model.Channel, isOwner bool) response.ChannelResponse {
+	scriptPrompt := ""
+	if isOwner {
+		scriptPrompt = c.ScriptPrompt
+	}
+
 	resp := response.ChannelResponse{
 		ID:           c.ID,
 		Name:         c.Name,
 		Description:  c.Description,
-		ScriptPrompt: c.ScriptPrompt,
+		ScriptPrompt: scriptPrompt,
 		Category: response.CategoryResponse{
 			ID:   c.Category.ID,
 			Slug: c.Category.Slug,

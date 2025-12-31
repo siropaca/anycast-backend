@@ -100,3 +100,39 @@ func (h *ChannelHandler) CreateChannel(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, result)
 }
+
+// GetChannel godoc
+// @Summary チャンネル取得
+// @Description チャンネルを取得します（公開中、または自分のチャンネルのみ）
+// @Tags channels
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Success 200 {object} response.ChannelDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId} [get]
+func (h *ChannelHandler) GetChannel(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		return
+	}
+
+	result, err := h.channelService.GetChannel(c.Request.Context(), userID, channelID)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}

@@ -70,6 +70,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 
 	// Channels
 	authenticated.POST("/channels", container.ChannelHandler.CreateChannel)
+	authenticated.GET("/channels/:channelId", container.ChannelHandler.GetChannel)
 
 	// Voices
 	authenticated.GET("/voices", container.VoiceHandler.ListVoices)

@@ -24,7 +24,7 @@
 | GET | `/api/v1/users/:userId` | ユーザー取得 | |
 | **Channels** | - | - | - |
 | GET | `/api/v1/channels` | チャンネル一覧取得 | |
-| GET | `/api/v1/channels/:channelId` | チャンネル取得 | |
+| GET | `/api/v1/channels/:channelId` | チャンネル取得 | ✅ |
 | POST | `/api/v1/channels` | チャンネル作成 | ✅ |
 | PATCH | `/api/v1/channels/:channelId` | チャンネル更新 | |
 | DELETE | `/api/v1/channels/:channelId` | チャンネル削除 | |
