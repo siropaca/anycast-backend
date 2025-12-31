@@ -68,6 +68,9 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.GET("/me", container.AuthHandler.GetMe)
 	authenticated.GET("/me/channels", container.ChannelHandler.ListMyChannels)
 
+	// Channels
+	authenticated.POST("/channels", container.ChannelHandler.CreateChannel)
+
 	// Voices
 	authenticated.GET("/voices", container.VoiceHandler.ListVoices)
 	authenticated.GET("/voices/:voiceId", container.VoiceHandler.GetVoice)

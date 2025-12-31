@@ -95,6 +95,7 @@
 ### API ドキュメント
 
 - ハンドラー（`internal/handler/`）を追加・変更した際は `make swagger` で Swagger ドキュメントを再生成する
+- API を作成・更新した際は `http/` ディレクトリ内の対応する `.http` ファイルも作成・更新する
 
 ### DTO
 

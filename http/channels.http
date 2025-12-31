@@ -1,0 +1,41 @@
+@baseUrl = http://localhost:8081/api/v1
+
+# トークン生成: make token
+@token = YOUR_TOKEN_HERE
+
+### 自分のチャンネル一覧取得
+GET {{baseUrl}}/me/channels
+Authorization: Bearer {{token}}
+
+### 自分のチャンネル一覧取得（公開済みのみ）
+GET {{baseUrl}}/me/channels?status=published
+Authorization: Bearer {{token}}
+
+### 自分のチャンネル一覧取得（下書きのみ）
+GET {{baseUrl}}/me/channels?status=draft
+Authorization: Bearer {{token}}
+
+### チャンネル作成
+POST {{baseUrl}}/channels
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "テストチャンネル",
+  "description": "テスト用のチャンネルです",
+  "scriptPrompt": "明るく楽しい雰囲気で話してください",
+  "categoryId": "YOUR_CATEGORY_ID_HERE"
+}
+
+### チャンネル作成（アートワーク付き）
+POST {{baseUrl}}/channels
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "テストチャンネル",
+  "description": "テスト用のチャンネルです",
+  "scriptPrompt": "明るく楽しい雰囲気で話してください",
+  "categoryId": "YOUR_CATEGORY_ID_HERE",
+  "artworkImageId": "YOUR_IMAGE_ID_HERE"
+}

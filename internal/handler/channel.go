@@ -64,3 +64,39 @@ func (h *ChannelHandler) ListMyChannels(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+
+// CreateChannel godoc
+// @Summary チャンネル作成
+// @Description 新しいチャンネルを作成します
+// @Tags channels
+// @Accept json
+// @Produce json
+// @Param request body request.CreateChannelRequest true "チャンネル作成リクエスト"
+// @Success 201 {object} response.ChannelDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels [post]
+func (h *ChannelHandler) CreateChannel(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	var req request.CreateChannelRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		return
+	}
+
+	result, err := h.channelService.CreateChannel(c.Request.Context(), userID, req)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, result)
+}

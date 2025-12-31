@@ -24,3 +24,8 @@ type ChannelListWithPaginationResponse struct {
 	Data       []ChannelResponse  `json:"data" validate:"required"`
 	Pagination PaginationResponse `json:"pagination" validate:"required"`
 }
+
+// チャンネル単体のレスポンス
+type ChannelDataResponse struct {
+	Data ChannelResponse `json:"data" validate:"required"`
+}
