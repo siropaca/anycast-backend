@@ -151,13 +151,13 @@ func (h *AuthHandler) OAuthGoogle(c *gin.Context) {
 // GetMe godoc
 // @Summary 現在のユーザー取得
 // @Description 認証済みユーザーの情報を取得します
-// @Tags auth
+// @Tags me
 // @Produce json
 // @Security BearerAuth
 // @Success 200 {object} response.MeDataResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
-// @Router /auth/me [get]
+// @Router /me [get]
 func (h *AuthHandler) GetMe(c *gin.Context) {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
