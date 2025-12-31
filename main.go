@@ -45,6 +45,7 @@ func main() {
 		logger.Default().Info("Server listening on http://localhost:" + cfg.Port)
 		logger.Default().Info("Swagger UI: http://localhost:" + cfg.Port + "/swagger/index.html")
 	}
+
 	if err := r.Run(":" + cfg.Port); err != nil {
 		logger.Default().Error("Failed to start server", "error", err)
 		os.Exit(1)
