@@ -537,6 +537,7 @@
                 "description",
                 "id",
                 "name",
+                "scriptPrompt",
                 "updatedAt"
             ],
             "properties": {

@@ -543,6 +543,7 @@ const docTemplate = `{
                 "description",
                 "id",
                 "name",
+                "scriptPrompt",
                 "updatedAt"
             ],
             "properties": {

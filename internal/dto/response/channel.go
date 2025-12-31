@@ -11,7 +11,7 @@ type ChannelResponse struct {
 	ID           uuid.UUID        `json:"id" validate:"required"`
 	Name         string           `json:"name" validate:"required"`
 	Description  string           `json:"description" validate:"required"`
-	ScriptPrompt *string          `json:"scriptPrompt"`
+	ScriptPrompt string           `json:"scriptPrompt" validate:"required"`
 	Category     CategoryResponse `json:"category" validate:"required"`
 	Artwork      *ArtworkResponse `json:"artwork"`
 	PublishedAt  *time.Time       `json:"publishedAt"`
