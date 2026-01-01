@@ -37,7 +37,7 @@ func NewContainer(db *gorm.DB, cfg *config.Config) *Container {
 	// Service 層
 	voiceService := service.NewVoiceService(voiceRepo)
 	authService := service.NewAuthService(userRepo, credentialRepo, oauthAccountRepo, imageRepo, passwordHasher)
-	channelService := service.NewChannelService(channelRepo, categoryRepo, imageRepo)
+	channelService := service.NewChannelService(channelRepo, categoryRepo, imageRepo, voiceRepo)
 
 	// Handler 層
 	voiceHandler := handler.NewVoiceHandler(voiceService)

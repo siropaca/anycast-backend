@@ -64,6 +64,8 @@ func (r *channelRepository) FindByUserID(ctx context.Context, userID uuid.UUID, 
 	if err := tx.
 		Preload("Category").
 		Preload("Artwork").
+		Preload("Characters").
+		Preload("Characters.Voice").
 		Order("created_at DESC").
 		Limit(filter.Limit).
 		Offset(filter.Offset).
@@ -81,6 +83,8 @@ func (r *channelRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.
 	if err := r.db.WithContext(ctx).
 		Preload("Category").
 		Preload("Artwork").
+		Preload("Characters").
+		Preload("Characters.Voice").
 		First(&channel, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperror.ErrNotFound.WithMessage("Channel not found")

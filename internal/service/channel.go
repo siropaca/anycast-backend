@@ -24,6 +24,7 @@ type channelService struct {
 	channelRepo  repository.ChannelRepository
 	categoryRepo repository.CategoryRepository
 	imageRepo    repository.ImageRepository
+	voiceRepo    repository.VoiceRepository
 }
 
 // ChannelService の実装を返す
@@ -31,11 +32,13 @@ func NewChannelService(
 	channelRepo repository.ChannelRepository,
 	categoryRepo repository.CategoryRepository,
 	imageRepo repository.ImageRepository,
+	voiceRepo repository.VoiceRepository,
 ) ChannelService {
 	return &channelService{
 		channelRepo:  channelRepo,
 		categoryRepo: categoryRepo,
 		imageRepo:    imageRepo,
+		voiceRepo:    voiceRepo,
 	}
 }
 
@@ -118,6 +121,26 @@ func (s *channelService) CreateChannel(ctx context.Context, userID string, req r
 		artworkID = &aid
 	}
 
+	// キャラクターのバリデーションと構築
+	characters := make([]model.Character, len(req.Characters))
+	for i, charReq := range req.Characters {
+		voiceID, err := uuid.Parse(charReq.VoiceID)
+		if err != nil {
+			return nil, err
+		}
+
+		// ボイスの存在確認（アクティブなもののみ）
+		if _, err := s.voiceRepo.FindActiveByID(ctx, charReq.VoiceID); err != nil {
+			return nil, err
+		}
+
+		characters[i] = model.Character{
+			Name:    charReq.Name,
+			Persona: charReq.Persona,
+			VoiceID: voiceID,
+		}
+	}
+
 	// チャンネルモデルを作成
 	channel := &model.Channel{
 		UserID:       uid,
@@ -126,9 +149,10 @@ func (s *channelService) CreateChannel(ctx context.Context, userID string, req r
 		ScriptPrompt: req.ScriptPrompt,
 		CategoryID:   categoryID,
 		ArtworkID:    artworkID,
+		Characters:   characters,
 	}
 
-	// チャンネルを保存
+	// チャンネルを保存（キャラクターも一緒に保存される）
 	if err := s.channelRepo.Create(ctx, channel); err != nil {
 		return nil, err
 	}
@@ -198,6 +222,7 @@ func toChannelResponse(c *model.Channel, isOwner bool) response.ChannelResponse 
 			Slug: c.Category.Slug,
 			Name: c.Category.Name,
 		},
+		Characters:  toCharacterResponses(c.Characters),
 		PublishedAt: c.PublishedAt,
 		CreatedAt:   c.CreatedAt,
 		UpdatedAt:   c.UpdatedAt,
@@ -211,4 +236,22 @@ func toChannelResponse(c *model.Channel, isOwner bool) response.ChannelResponse 
 	}
 
 	return resp
+}
+
+// Character モデルのスライスをレスポンス DTO のスライスに変換する
+func toCharacterResponses(characters []model.Character) []response.CharacterResponse {
+	result := make([]response.CharacterResponse, len(characters))
+	for i, c := range characters {
+		result[i] = response.CharacterResponse{
+			ID:      c.ID,
+			Name:    c.Name,
+			Persona: c.Persona,
+			Voice: response.CharacterVoiceResponse{
+				ID:     c.Voice.ID,
+				Name:   c.Voice.Name,
+				Gender: string(c.Voice.Gender),
+			},
+		}
+	}
+	return result
 }

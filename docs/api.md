@@ -460,7 +460,14 @@ POST /channels
   "description": "説明",
   "scriptPrompt": "明るく楽しい雰囲気で...",
   "categoryId": "uuid",
-  "artworkImageId": "uuid"
+  "artworkImageId": "uuid",
+  "characters": [
+    {
+      "name": "太郎",
+      "persona": "明るく元気な性格",
+      "voiceId": "uuid"
+    }
+  ]
 }
 ```
 

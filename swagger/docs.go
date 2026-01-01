@@ -553,6 +553,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "categoryId",
+                "characters",
                 "description",
                 "name",
                 "scriptPrompt"
@@ -564,6 +565,14 @@ const docTemplate = `{
                 "categoryId": {
                     "type": "string"
                 },
+                "characters": {
+                    "type": "array",
+                    "maxItems": 2,
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/request.CreateCharacterRequest"
+                    }
+                },
                 "description": {
                     "type": "string"
                 },
@@ -572,6 +581,25 @@ const docTemplate = `{
                     "maxLength": 255
                 },
                 "scriptPrompt": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.CreateCharacterRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "voiceId"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "persona": {
+                    "type": "string"
+                },
+                "voiceId": {
                     "type": "string"
                 }
             }
@@ -751,6 +779,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "category",
+                "characters",
                 "createdAt",
                 "description",
                 "id",
@@ -764,6 +793,12 @@ const docTemplate = `{
                 },
                 "category": {
                     "$ref": "#/definitions/response.CategoryResponse"
+                },
+                "characters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.CharacterResponse"
+                    }
                 },
                 "createdAt": {
                     "type": "string"
@@ -784,6 +819,48 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.CharacterResponse": {
+            "type": "object",
+            "required": [
+                "id",
+                "name",
+                "persona",
+                "voice"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "persona": {
+                    "type": "string"
+                },
+                "voice": {
+                    "$ref": "#/definitions/response.CharacterVoiceResponse"
+                }
+            }
+        },
+        "response.CharacterVoiceResponse": {
+            "type": "object",
+            "required": [
+                "gender",
+                "id",
+                "name"
+            ],
+            "properties": {
+                "gender": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 }
             }

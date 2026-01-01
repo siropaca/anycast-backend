@@ -16,6 +16,8 @@ func TestToChannelResponse(t *testing.T) {
 	channelID := uuid.New()
 	userID := uuid.New()
 	artworkID := uuid.New()
+	voiceID := uuid.New()
+	characterID := uuid.New()
 
 	baseChannel := &model.Channel{
 		ID:           channelID,
@@ -32,6 +34,19 @@ func TestToChannelResponse(t *testing.T) {
 			Slug: "technology",
 			Name: "テクノロジー",
 		},
+		Characters: []model.Character{
+			{
+				ID:      characterID,
+				Name:    "太郎",
+				Persona: "明るい性格",
+				VoiceID: voiceID,
+				Voice: model.Voice{
+					ID:     voiceID,
+					Name:   "ja-JP-Wavenet-C",
+					Gender: model.GenderMale,
+				},
+			},
+		},
 	}
 
 	t.Run("isOwner が true の場合、scriptPrompt が含まれる", func(t *testing.T) {
@@ -45,6 +60,13 @@ func TestToChannelResponse(t *testing.T) {
 		assert.Equal(t, "technology", resp.Category.Slug)
 		assert.Equal(t, "テクノロジー", resp.Category.Name)
 		assert.NotNil(t, resp.PublishedAt)
+		assert.Len(t, resp.Characters, 1)
+		assert.Equal(t, characterID, resp.Characters[0].ID)
+		assert.Equal(t, "太郎", resp.Characters[0].Name)
+		assert.Equal(t, "明るい性格", resp.Characters[0].Persona)
+		assert.Equal(t, voiceID, resp.Characters[0].Voice.ID)
+		assert.Equal(t, "ja-JP-Wavenet-C", resp.Characters[0].Voice.Name)
+		assert.Equal(t, "male", resp.Characters[0].Voice.Gender)
 	})
 
 	t.Run("isOwner が false の場合、scriptPrompt が空文字になる", func(t *testing.T) {

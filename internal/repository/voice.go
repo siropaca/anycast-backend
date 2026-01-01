@@ -15,6 +15,7 @@ import (
 type VoiceRepository interface {
 	FindAll(ctx context.Context, filter VoiceFilter) ([]model.Voice, error)
 	FindByID(ctx context.Context, id string) (*model.Voice, error)
+	FindActiveByID(ctx context.Context, id string) (*model.Voice, error)
 }
 
 // ボイス検索のフィルタ条件
@@ -59,6 +60,19 @@ func (r *voiceRepository) FindByID(ctx context.Context, id string) (*model.Voice
 			return nil, apperror.ErrNotFound.WithMessage("Voice not found")
 		}
 		logger.FromContext(ctx).Error("failed to fetch voice", "error", err, "voice_id", id)
+		return nil, apperror.ErrInternal.WithMessage("Failed to fetch voice").WithError(err)
+	}
+	return &voice, nil
+}
+
+// 指定された ID のアクティブなボイスを取得する
+func (r *voiceRepository) FindActiveByID(ctx context.Context, id string) (*model.Voice, error) {
+	var voice model.Voice
+	if err := r.db.WithContext(ctx).Where("is_active = ?", true).First(&voice, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, apperror.ErrNotFound.WithMessage("Voice not found or inactive")
+		}
+		logger.FromContext(ctx).Error("failed to fetch active voice", "error", err, "voice_id", id)
 		return nil, apperror.ErrInternal.WithMessage("Failed to fetch voice").WithError(err)
 	}
 	return &voice, nil

@@ -6,16 +6,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// カテゴリ情報
-type Category struct {
-	ID        uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	Slug      string    `gorm:"type:varchar(50);not null;uniqueIndex"`
-	Name      string    `gorm:"type:varchar(100);not null"`
-	SortOrder int       `gorm:"not null;default:0;column:sort_order"`
-	CreatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP"`
-	UpdatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP"`
-}
-
 // チャンネル情報
 type Channel struct {
 	ID           uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
@@ -30,6 +20,7 @@ type Channel struct {
 	UpdatedAt    time.Time  `gorm:"not null;default:CURRENT_TIMESTAMP"`
 
 	// リレーション
-	Category Category `gorm:"foreignKey:CategoryID"`
-	Artwork  *Image   `gorm:"foreignKey:ArtworkID"`
+	Category   Category    `gorm:"foreignKey:CategoryID"`
+	Artwork    *Image      `gorm:"foreignKey:ArtworkID"`
+	Characters []Character `gorm:"foreignKey:ChannelID"`
 }
