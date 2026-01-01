@@ -14,9 +14,10 @@ import (
 
 // チャンネル関連のビジネスロジックインターフェース
 type ChannelService interface {
-	GetChannel(ctx context.Context, userID string, channelID string) (*response.ChannelDataResponse, error)
+	GetChannel(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error)
 	ListMyChannels(ctx context.Context, userID string, filter repository.ChannelFilter) (*response.ChannelListWithPaginationResponse, error)
 	CreateChannel(ctx context.Context, userID string, req request.CreateChannelRequest) (*response.ChannelDataResponse, error)
+	DeleteChannel(ctx context.Context, userID, channelID string) error
 }
 
 type channelService struct {
@@ -141,6 +142,32 @@ func (s *channelService) CreateChannel(ctx context.Context, userID string, req r
 	return &response.ChannelDataResponse{
 		Data: toChannelResponse(created, true),
 	}, nil
+}
+
+// チャンネルを削除する
+// オーナーのみ削除可能
+func (s *channelService) DeleteChannel(ctx context.Context, userID, channelID string) error {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return err
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return err
+	}
+
+	if channel.UserID != uid {
+		return apperror.ErrForbidden.WithMessage("You do not have permission to delete this channel")
+	}
+
+	return s.channelRepo.Delete(ctx, cid)
 }
 
 // Channel モデルのスライスをレスポンス DTO のスライスに変換する

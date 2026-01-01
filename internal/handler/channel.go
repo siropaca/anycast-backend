@@ -136,3 +136,36 @@ func (h *ChannelHandler) GetChannel(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+
+// DeleteChannel godoc
+// @Summary チャンネル削除
+// @Description チャンネルを削除します（オーナーのみ）
+// @Tags channels
+// @Param channelId path string true "チャンネル ID"
+// @Success 204 "No Content"
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId} [delete]
+func (h *ChannelHandler) DeleteChannel(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		return
+	}
+
+	if err := h.channelService.DeleteChannel(c.Request.Context(), userID, channelID); err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}

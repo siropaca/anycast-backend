@@ -43,3 +43,7 @@ Authorization: Bearer {{token}}
   "categoryId": "YOUR_CATEGORY_ID_HERE",
   "artworkImageId": "YOUR_IMAGE_ID_HERE"
 }
+
+### チャンネル削除
+DELETE {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE
+Authorization: Bearer {{token}}

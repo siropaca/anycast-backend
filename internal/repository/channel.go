@@ -18,6 +18,7 @@ type ChannelRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*model.Channel, error)
 	FindByUserID(ctx context.Context, userID uuid.UUID, filter ChannelFilter) ([]model.Channel, int64, error)
 	Create(ctx context.Context, channel *model.Channel) error
+	Delete(ctx context.Context, id uuid.UUID) error
 }
 
 // チャンネル検索のフィルタ条件
@@ -95,6 +96,19 @@ func (r *channelRepository) Create(ctx context.Context, channel *model.Channel) 
 	if err := r.db.WithContext(ctx).Create(channel).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to create channel", "error", err)
 		return apperror.ErrInternal.WithMessage("Failed to create channel").WithError(err)
+	}
+	return nil
+}
+
+// チャンネルを削除する
+func (r *channelRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	result := r.db.WithContext(ctx).Delete(&model.Channel{}, "id = ?", id)
+	if result.Error != nil {
+		logger.FromContext(ctx).Error("failed to delete channel", "error", result.Error, "channel_id", id)
+		return apperror.ErrInternal.WithMessage("Failed to delete channel").WithError(result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return apperror.ErrNotFound.WithMessage("Channel not found")
 	}
 	return nil
 }
