@@ -78,5 +78,8 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.GET("/voices", container.VoiceHandler.ListVoices)
 	authenticated.GET("/voices/:voiceId", container.VoiceHandler.GetVoice)
 
+	// Categories
+	authenticated.GET("/categories", container.CategoryHandler.ListCategories)
+
 	return r
 }

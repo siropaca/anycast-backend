@@ -86,7 +86,7 @@
 | GET | `/api/v1/voices` | ボイス一覧取得 | ✅ |
 | GET | `/api/v1/voices/:voiceId` | ボイス取得 | ✅ |
 | **Categories（カテゴリ）** | - | - | - |
-| GET | `/api/v1/categories` | カテゴリ一覧取得 | |
+| GET | `/api/v1/categories` | カテゴリ一覧取得 | ✅ |
 | **Sound Effects（効果音）** | - | - | - |
 | GET | `/api/v1/sound-effects` | 効果音一覧取得 | |
 | GET | `/api/v1/sound-effects/:sfxId` | 効果音取得 | |
@@ -1546,7 +1546,8 @@ GET /categories
       "id": "uuid",
       "slug": "technology",
       "name": "テクノロジー",
-      "sortOrder": 0
+      "sortOrder": 0,
+      "isActive": true
     }
   ]
 }

@@ -38,6 +38,7 @@ func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
 	}
+
 	return defaultValue
 }
 
@@ -55,5 +56,6 @@ func getEnvAsSlice(key string, defaultValue []string) []string {
 			result = append(result, trimmed)
 		}
 	}
+
 	return result
 }

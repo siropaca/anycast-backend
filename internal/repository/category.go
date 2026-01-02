@@ -14,6 +14,7 @@ import (
 
 // カテゴリデータへのアクセスインターフェース
 type CategoryRepository interface {
+	FindAllActive(ctx context.Context) ([]model.Category, error)
 	FindByID(ctx context.Context, id uuid.UUID) (*model.Category, error)
 }
 
@@ -24,6 +25,18 @@ type categoryRepository struct {
 // CategoryRepository の実装を返す
 func NewCategoryRepository(db *gorm.DB) CategoryRepository {
 	return &categoryRepository{db: db}
+}
+
+// アクティブなカテゴリを表示順で取得する
+func (r *categoryRepository) FindAllActive(ctx context.Context) ([]model.Category, error) {
+	var categories []model.Category
+
+	if err := r.db.WithContext(ctx).Where("is_active = ?", true).Order("sort_order ASC").Find(&categories).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to fetch categories", "error", err)
+		return nil, apperror.ErrInternal.WithMessage("Failed to fetch categories").WithError(err)
+	}
+
+	return categories, nil
 }
 
 // 指定された ID のカテゴリを取得する
