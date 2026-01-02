@@ -71,6 +71,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	// Channels
 	authenticated.GET("/channels/:channelId", container.ChannelHandler.GetChannel)
 	authenticated.POST("/channels", container.ChannelHandler.CreateChannel)
+	authenticated.PATCH("/channels/:channelId", container.ChannelHandler.UpdateChannel)
 	authenticated.DELETE("/channels/:channelId", container.ChannelHandler.DeleteChannel)
 
 	// Voices

@@ -18,6 +18,7 @@ type ChannelRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*model.Channel, error)
 	FindByUserID(ctx context.Context, userID uuid.UUID, filter ChannelFilter) ([]model.Channel, int64, error)
 	Create(ctx context.Context, channel *model.Channel) error
+	Update(ctx context.Context, channel *model.Channel) error
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
@@ -100,6 +101,15 @@ func (r *channelRepository) Create(ctx context.Context, channel *model.Channel) 
 	if err := r.db.WithContext(ctx).Create(channel).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to create channel", "error", err)
 		return apperror.ErrInternal.WithMessage("Failed to create channel").WithError(err)
+	}
+	return nil
+}
+
+// チャンネルを更新する
+func (r *channelRepository) Update(ctx context.Context, channel *model.Channel) error {
+	if err := r.db.WithContext(ctx).Save(channel).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to update channel", "error", err, "channel_id", channel.ID)
+		return apperror.ErrInternal.WithMessage("Failed to update channel").WithError(err)
 	}
 	return nil
 }

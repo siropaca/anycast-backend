@@ -137,6 +137,50 @@ func (h *ChannelHandler) GetChannel(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// UpdateChannel godoc
+// @Summary チャンネル更新
+// @Description チャンネルを更新します（オーナーのみ）
+// @Tags channels
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param request body request.UpdateChannelRequest true "チャンネル更新リクエスト"
+// @Success 200 {object} response.ChannelDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId} [patch]
+func (h *ChannelHandler) UpdateChannel(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		return
+	}
+
+	var req request.UpdateChannelRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		return
+	}
+
+	result, err := h.channelService.UpdateChannel(c.Request.Context(), userID, channelID, req)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
 // DeleteChannel godoc
 // @Summary チャンネル削除
 // @Description チャンネルを削除します（オーナーのみ）

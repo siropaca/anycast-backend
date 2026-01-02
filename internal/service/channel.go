@@ -17,6 +17,7 @@ type ChannelService interface {
 	GetChannel(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error)
 	ListMyChannels(ctx context.Context, userID string, filter repository.ChannelFilter) (*response.ChannelListWithPaginationResponse, error)
 	CreateChannel(ctx context.Context, userID string, req request.CreateChannelRequest) (*response.ChannelDataResponse, error)
+	UpdateChannel(ctx context.Context, userID, channelID string, req request.UpdateChannelRequest) (*response.ChannelDataResponse, error)
 	DeleteChannel(ctx context.Context, userID, channelID string) error
 }
 
@@ -165,6 +166,99 @@ func (s *channelService) CreateChannel(ctx context.Context, userID string, req r
 
 	return &response.ChannelDataResponse{
 		Data: toChannelResponse(created, true),
+	}, nil
+}
+
+// チャンネルを更新する
+// オーナーのみ更新可能
+func (s *channelService) UpdateChannel(ctx context.Context, userID, channelID string, req request.UpdateChannelRequest) (*response.ChannelDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to update this channel")
+	}
+
+	// 各フィールドを更新（指定されたもののみ）
+	if req.Name != nil {
+		channel.Name = *req.Name
+	}
+	if req.Description != nil {
+		channel.Description = *req.Description
+	}
+	if req.ScriptPrompt != nil {
+		channel.ScriptPrompt = *req.ScriptPrompt
+	}
+
+	// カテゴリの更新
+	if req.CategoryID != nil {
+		categoryID, err := uuid.Parse(*req.CategoryID)
+		if err != nil {
+			return nil, err
+		}
+		if _, err := s.categoryRepo.FindByID(ctx, categoryID); err != nil {
+			return nil, err
+		}
+		channel.CategoryID = categoryID
+	}
+
+	// アートワークの更新
+	if req.ArtworkImageID != nil {
+		if *req.ArtworkImageID == "" {
+			// 空文字の場合は null に設定
+			channel.ArtworkID = nil
+		} else {
+			artworkID, err := uuid.Parse(*req.ArtworkImageID)
+			if err != nil {
+				return nil, err
+			}
+			if _, err := s.imageRepo.FindByID(ctx, artworkID); err != nil {
+				return nil, err
+			}
+			channel.ArtworkID = &artworkID
+		}
+	}
+
+	// 公開日時の更新
+	if req.PublishedAt != nil {
+		if *req.PublishedAt == "" {
+			// 空文字の場合は null に設定（非公開化）
+			channel.PublishedAt = nil
+		} else {
+			publishedAt, err := time.Parse(time.RFC3339, *req.PublishedAt)
+			if err != nil {
+				return nil, apperror.ErrValidation.WithMessage("Invalid publishedAt format. Use RFC3339 format.")
+			}
+			channel.PublishedAt = &publishedAt
+		}
+	}
+
+	// チャンネルを更新
+	if err := s.channelRepo.Update(ctx, channel); err != nil {
+		return nil, err
+	}
+
+	// リレーションをプリロードして取得
+	updated, err := s.channelRepo.FindByID(ctx, channel.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.ChannelDataResponse{
+		Data: toChannelResponse(updated, true),
 	}, nil
 }
 

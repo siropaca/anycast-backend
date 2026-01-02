@@ -82,6 +82,44 @@ Authorization: Bearer {{token}}
   ]
 }
 
+### チャンネル更新（名前のみ）
+PATCH {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "新しいチャンネル名"
+}
+
+### チャンネル更新（複数フィールド）
+PATCH {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "新しいチャンネル名",
+  "description": "新しい説明",
+  "scriptPrompt": "新しいスクリプトプロンプト"
+}
+
+### チャンネル更新（公開）
+PATCH {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "publishedAt": "2025-01-01T00:00:00Z"
+}
+
+### チャンネル更新（非公開化）
+PATCH {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "publishedAt": ""
+}
+
 ### チャンネル削除
 DELETE {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE
 Authorization: Bearer {{token}}

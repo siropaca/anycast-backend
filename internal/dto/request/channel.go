@@ -22,3 +22,13 @@ type CreateCharacterRequest struct {
 	Persona string `json:"persona"`
 	VoiceID string `json:"voiceId" binding:"required,uuid"`
 }
+
+// チャンネル更新リクエスト
+type UpdateChannelRequest struct {
+	Name           *string `json:"name" binding:"omitempty,max=255"`
+	Description    *string `json:"description"`
+	ScriptPrompt   *string `json:"scriptPrompt"`
+	CategoryID     *string `json:"categoryId" binding:"omitempty,uuid"`
+	ArtworkImageID *string `json:"artworkImageId" binding:"omitempty,uuid"`
+	PublishedAt    *string `json:"publishedAt"`
+}
