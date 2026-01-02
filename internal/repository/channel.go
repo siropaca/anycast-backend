@@ -81,18 +81,22 @@ func (r *channelRepository) FindByUserID(ctx context.Context, userID uuid.UUID, 
 // 指定された ID のチャンネルを取得する
 func (r *channelRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Channel, error) {
 	var channel model.Channel
+
 	if err := r.db.WithContext(ctx).
 		Preload("Category").
 		Preload("Artwork").
 		Preload("Characters").
 		Preload("Characters.Voice").
 		First(&channel, "id = ?", id).Error; err != nil {
+
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperror.ErrNotFound.WithMessage("Channel not found")
 		}
+
 		logger.FromContext(ctx).Error("failed to fetch channel", "error", err, "channel_id", id)
 		return nil, apperror.ErrInternal.WithMessage("Failed to fetch channel").WithError(err)
 	}
+
 	return &channel, nil
 }
 
@@ -102,6 +106,7 @@ func (r *channelRepository) Create(ctx context.Context, channel *model.Channel) 
 		logger.FromContext(ctx).Error("failed to create channel", "error", err)
 		return apperror.ErrInternal.WithMessage("Failed to create channel").WithError(err)
 	}
+
 	return nil
 }
 
@@ -111,6 +116,7 @@ func (r *channelRepository) Update(ctx context.Context, channel *model.Channel) 
 		logger.FromContext(ctx).Error("failed to update channel", "error", err, "channel_id", channel.ID)
 		return apperror.ErrInternal.WithMessage("Failed to update channel").WithError(err)
 	}
+
 	return nil
 }
 
@@ -124,5 +130,6 @@ func (r *channelRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	if result.RowsAffected == 0 {
 		return apperror.ErrNotFound.WithMessage("Channel not found")
 	}
+
 	return nil
 }

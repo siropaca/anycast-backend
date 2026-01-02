@@ -19,6 +19,7 @@ func Parse(s string) (UUID, error) {
 	if err != nil {
 		return Nil, apperror.ErrValidation.WithMessage("Invalid UUID format")
 	}
+
 	return id, nil
 }
 

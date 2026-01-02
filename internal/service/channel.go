@@ -169,8 +169,7 @@ func (s *channelService) CreateChannel(ctx context.Context, userID string, req r
 	}, nil
 }
 
-// チャンネルを更新する
-// オーナーのみ更新可能
+// チャンネルを更新する（オーナーのみ更新可能）
 func (s *channelService) UpdateChannel(ctx context.Context, userID, channelID string, req request.UpdateChannelRequest) (*response.ChannelDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -262,8 +261,7 @@ func (s *channelService) UpdateChannel(ctx context.Context, userID, channelID st
 	}, nil
 }
 
-// チャンネルを削除する
-// オーナーのみ削除可能
+// チャンネルを削除する（オーナーのみ削除可能）
 func (s *channelService) DeleteChannel(ctx context.Context, userID, channelID string) error {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -292,9 +290,11 @@ func (s *channelService) DeleteChannel(ctx context.Context, userID, channelID st
 // ListMyChannels で使用するため、常にオーナーとして扱う
 func toChannelResponses(channels []model.Channel) []response.ChannelResponse {
 	result := make([]response.ChannelResponse, len(channels))
+
 	for i, c := range channels {
 		result[i] = toChannelResponse(&c, true)
 	}
+
 	return result
 }
 
@@ -335,6 +335,7 @@ func toChannelResponse(c *model.Channel, isOwner bool) response.ChannelResponse 
 // Character モデルのスライスをレスポンス DTO のスライスに変換する
 func toCharacterResponses(characters []model.Character) []response.CharacterResponse {
 	result := make([]response.CharacterResponse, len(characters))
+
 	for i, c := range characters {
 		result[i] = response.CharacterResponse{
 			ID:      c.ID,
@@ -347,5 +348,6 @@ func toCharacterResponses(characters []model.Character) []response.CharacterResp
 			},
 		}
 	}
+
 	return result
 }

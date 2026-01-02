@@ -29,6 +29,7 @@ func NewCategoryRepository(db *gorm.DB) CategoryRepository {
 // 指定された ID のカテゴリを取得する
 func (r *categoryRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Category, error) {
 	var category model.Category
+
 	if err := r.db.WithContext(ctx).First(&category, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperror.ErrNotFound.WithMessage("Category not found")
@@ -36,5 +37,6 @@ func (r *categoryRepository) FindByID(ctx context.Context, id uuid.UUID) (*model
 		logger.FromContext(ctx).Error("failed to fetch category", "error", err, "category_id", id)
 		return nil, apperror.ErrInternal.WithMessage("Failed to fetch category").WithError(err)
 	}
+
 	return &category, nil
 }

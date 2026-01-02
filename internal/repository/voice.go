@@ -49,12 +49,14 @@ func (r *voiceRepository) FindAll(ctx context.Context, filter VoiceFilter) ([]mo
 		logger.FromContext(ctx).Error("failed to fetch voices", "error", err)
 		return nil, apperror.ErrInternal.WithMessage("Failed to fetch voices").WithError(err)
 	}
+
 	return voices, nil
 }
 
 // 指定された ID のボイスを取得する
 func (r *voiceRepository) FindByID(ctx context.Context, id string) (*model.Voice, error) {
 	var voice model.Voice
+
 	if err := r.db.WithContext(ctx).First(&voice, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperror.ErrNotFound.WithMessage("Voice not found")
@@ -62,12 +64,14 @@ func (r *voiceRepository) FindByID(ctx context.Context, id string) (*model.Voice
 		logger.FromContext(ctx).Error("failed to fetch voice", "error", err, "voice_id", id)
 		return nil, apperror.ErrInternal.WithMessage("Failed to fetch voice").WithError(err)
 	}
+
 	return &voice, nil
 }
 
 // 指定された ID のアクティブなボイスを取得する
 func (r *voiceRepository) FindActiveByID(ctx context.Context, id string) (*model.Voice, error) {
 	var voice model.Voice
+
 	if err := r.db.WithContext(ctx).Where("is_active = ?", true).First(&voice, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperror.ErrNotFound.WithMessage("Voice not found or inactive")
@@ -75,5 +79,6 @@ func (r *voiceRepository) FindActiveByID(ctx context.Context, id string) (*model
 		logger.FromContext(ctx).Error("failed to fetch active voice", "error", err, "voice_id", id)
 		return nil, apperror.ErrInternal.WithMessage("Failed to fetch voice").WithError(err)
 	}
+
 	return &voice, nil
 }

@@ -33,12 +33,14 @@ func (r *credentialRepository) Create(ctx context.Context, credential *model.Cre
 		logger.FromContext(ctx).Error("failed to create credential", "error", err)
 		return apperror.ErrInternal.WithMessage("Failed to create credential").WithError(err)
 	}
+
 	return nil
 }
 
 // 指定されたユーザー ID のパスワード認証情報を取得する
 func (r *credentialRepository) FindByUserID(ctx context.Context, userID uuid.UUID) (*model.Credential, error) {
 	var credential model.Credential
+
 	if err := r.db.WithContext(ctx).First(&credential, "user_id = ?", userID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperror.ErrNotFound.WithMessage("Credential not found")
@@ -46,5 +48,6 @@ func (r *credentialRepository) FindByUserID(ctx context.Context, userID uuid.UUI
 		logger.FromContext(ctx).Error("failed to fetch credential", "error", err, "user_id", userID)
 		return nil, apperror.ErrInternal.WithMessage("Failed to fetch credential").WithError(err)
 	}
+
 	return &credential, nil
 }
