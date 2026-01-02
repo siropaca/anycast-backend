@@ -96,6 +96,7 @@ erDiagram
         varchar slug
         varchar name
         integer sort_order
+        boolean is_active
         timestamp created_at
         timestamp updated_at
     }
@@ -557,6 +558,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | slug | VARCHAR(50) | | - | 一意識別子（例: technology） |
 | name | VARCHAR(100) | | - | 表示名（例: テクノロジー） |
 | sort_order | INTEGER | | 0 | 表示順 |
+| is_active | BOOLEAN | | true | 有効フラグ（false で新規選択不可） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
 
@@ -564,6 +566,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 - PRIMARY KEY (id)
 - UNIQUE (slug)
 - INDEX (sort_order)
+- INDEX (is_active)
 
 ---
 
@@ -664,5 +667,7 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 - categories テーブルでポッドキャストのカテゴリマスタを管理（システム管理、ユーザーは参照のみ）
 - slug は一意で、API やフィルタリングで使用
 - sort_order で表示順を制御
+- is_active = false のカテゴリは新規チャンネル作成時に選択不可（既存チャンネルは継続利用可）
 - チャンネルは 1 つのカテゴリを持つ（任意）
 - 初期データとして Apple Podcasts 準拠のカテゴリをシードで投入
+- 物理削除は行わず、is_active フラグで無効化

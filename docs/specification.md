@@ -563,10 +563,14 @@ TTS ボイスの設定情報。
 | slug | String | ◯ | URL フレンドリーな識別子（例: technology） |
 | name | String | ◯ | 表示名（例: テクノロジー） |
 | sortOrder | Int | ◯ | 表示順 |
+| isActive | Boolean | ◯ | 有効フラグ |
 
 #### 制約
 
 - slug は一意
+- isActive = false のカテゴリは新規チャンネル作成時に選択不可
+- 既存チャンネルは isActive = false のカテゴリを継続利用可能
+- 物理削除は行わず、isActive フラグで無効化
 
 ### SoundEffect（効果音）
 

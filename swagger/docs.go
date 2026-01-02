@@ -171,6 +171,35 @@ const docTemplate = `{
                 }
             }
         },
+        "/categories": {
+            "get": {
+                "description": "カテゴリの一覧を取得します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "categories"
+                ],
+                "summary": "カテゴリ一覧取得",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.CategoryListResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/channels": {
             "post": {
                 "security": [
@@ -825,22 +854,44 @@ const docTemplate = `{
                 }
             }
         },
+        "response.CategoryListResponse": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.CategoryResponse"
+                    }
+                }
+            }
+        },
         "response.CategoryResponse": {
             "type": "object",
             "required": [
                 "id",
+                "isActive",
                 "name",
-                "slug"
+                "slug",
+                "sortOrder"
             ],
             "properties": {
                 "id": {
                     "type": "string"
+                },
+                "isActive": {
+                    "type": "boolean"
                 },
                 "name": {
                     "type": "string"
                 },
                 "slug": {
                     "type": "string"
+                },
+                "sortOrder": {
+                    "type": "integer"
                 }
             }
         },
