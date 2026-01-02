@@ -1,23 +1,23 @@
 package handler
 
 import (
-  "net/http"
+	"net/http"
 
-  "github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"
 
-  "github.com/siropaca/anycast-backend/internal/dto/response"
-  "github.com/siropaca/anycast-backend/internal/model"
-  "github.com/siropaca/anycast-backend/internal/service"
+	"github.com/siropaca/anycast-backend/internal/dto/response"
+	"github.com/siropaca/anycast-backend/internal/model"
+	"github.com/siropaca/anycast-backend/internal/service"
 )
 
 // カテゴリ関連のハンドラー
 type CategoryHandler struct {
-  categoryService service.CategoryService
+	categoryService service.CategoryService
 }
 
 // CategoryHandler を作成する
 func NewCategoryHandler(cs service.CategoryService) *CategoryHandler {
-  return &CategoryHandler{categoryService: cs}
+	return &CategoryHandler{categoryService: cs}
 }
 
 // ListCategories godoc
@@ -30,33 +30,33 @@ func NewCategoryHandler(cs service.CategoryService) *CategoryHandler {
 // @Failure 500 {object} response.ErrorResponse
 // @Router /categories [get]
 func (h *CategoryHandler) ListCategories(c *gin.Context) {
-  categories, err := h.categoryService.ListCategories(c.Request.Context())
-  if err != nil {
-    Error(c, err)
-    return
-  }
+	categories, err := h.categoryService.ListCategories(c.Request.Context())
+	if err != nil {
+		Error(c, err)
+		return
+	}
 
-  Success(c, http.StatusOK, toCategoryResponses(categories))
+	Success(c, http.StatusOK, toCategoryResponses(categories))
 }
 
 // Category モデルのスライスをレスポンス DTO のスライスに変換する
 func toCategoryResponses(categories []model.Category) []response.CategoryResponse {
-  result := make([]response.CategoryResponse, len(categories))
+	result := make([]response.CategoryResponse, len(categories))
 
-  for i, c := range categories {
-    result[i] = toCategoryResponse(&c)
-  }
+	for i, c := range categories {
+		result[i] = toCategoryResponse(&c)
+	}
 
-  return result
+	return result
 }
 
 // Category モデルをレスポンス DTO に変換する
 func toCategoryResponse(c *model.Category) response.CategoryResponse {
-  return response.CategoryResponse{
-    ID:        c.ID,
-    Slug:      c.Slug,
-    Name:      c.Name,
-    SortOrder: c.SortOrder,
-    IsActive:  c.IsActive,
-  }
+	return response.CategoryResponse{
+		ID:        c.ID,
+		Slug:      c.Slug,
+		Name:      c.Name,
+		SortOrder: c.SortOrder,
+		IsActive:  c.IsActive,
+	}
 }
