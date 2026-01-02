@@ -1,0 +1,125 @@
+@baseUrl = http://localhost:8081/api/v1
+
+# トークン生成: make token
+@token = YOUR_TOKEN_HERE
+
+### 自分のチャンネル一覧取得
+GET {{baseUrl}}/me/channels
+Authorization: Bearer {{token}}
+
+### 自分のチャンネル一覧取得（公開済みのみ）
+GET {{baseUrl}}/me/channels?status=published
+Authorization: Bearer {{token}}
+
+### 自分のチャンネル一覧取得（下書きのみ）
+GET {{baseUrl}}/me/channels?status=draft
+Authorization: Bearer {{token}}
+
+### チャンネル取得
+GET {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE
+Authorization: Bearer {{token}}
+
+### チャンネル作成（キャラクター1人）
+POST {{baseUrl}}/channels
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "テストチャンネル",
+  "description": "テスト用のチャンネルです",
+  "scriptPrompt": "明るく楽しい雰囲気で話してください",
+  "categoryId": "YOUR_CATEGORY_ID_HERE",
+  "characters": [
+    {
+      "name": "太郎",
+      "persona": "明るく元気な性格",
+      "voiceId": "YOUR_VOICE_ID_HERE"
+    }
+  ]
+}
+
+### チャンネル作成（キャラクター2人）
+POST {{baseUrl}}/channels
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "テストチャンネル",
+  "description": "テスト用のチャンネルです",
+  "scriptPrompt": "明るく楽しい雰囲気で話してください",
+  "categoryId": "YOUR_CATEGORY_ID_HERE",
+  "characters": [
+    {
+      "name": "太郎",
+      "persona": "明るく元気な性格",
+      "voiceId": "YOUR_VOICE_ID_HERE"
+    },
+    {
+      "name": "花子",
+      "persona": "落ち着いた性格",
+      "voiceId": "YOUR_VOICE_ID_HERE"
+    }
+  ]
+}
+
+### チャンネル作成（アートワーク付き）
+POST {{baseUrl}}/channels
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "テストチャンネル",
+  "description": "テスト用のチャンネルです",
+  "scriptPrompt": "明るく楽しい雰囲気で話してください",
+  "categoryId": "YOUR_CATEGORY_ID_HERE",
+  "artworkImageId": "YOUR_IMAGE_ID_HERE",
+  "characters": [
+    {
+      "name": "太郎",
+      "persona": "明るく元気な性格",
+      "voiceId": "YOUR_VOICE_ID_HERE"
+    }
+  ]
+}
+
+### チャンネル更新（名前のみ）
+PATCH {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "新しいチャンネル名"
+}
+
+### チャンネル更新（複数フィールド）
+PATCH {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "新しいチャンネル名",
+  "description": "新しい説明",
+  "scriptPrompt": "新しいスクリプトプロンプト"
+}
+
+### チャンネル更新（公開）
+PATCH {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "publishedAt": "2025-01-01T00:00:00Z"
+}
+
+### チャンネル更新（非公開化）
+PATCH {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "publishedAt": ""
+}
+
+### チャンネル削除
+DELETE {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE
+Authorization: Bearer {{token}}

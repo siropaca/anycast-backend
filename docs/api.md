@@ -24,10 +24,10 @@
 | GET | `/api/v1/users/:userId` | ユーザー取得 | |
 | **Channels** | - | - | - |
 | GET | `/api/v1/channels` | チャンネル一覧取得 | |
-| GET | `/api/v1/channels/:channelId` | チャンネル取得 | |
-| POST | `/api/v1/channels` | チャンネル作成 | |
-| PATCH | `/api/v1/channels/:channelId` | チャンネル更新 | |
-| DELETE | `/api/v1/channels/:channelId` | チャンネル削除 | |
+| GET | `/api/v1/channels/:channelId` | チャンネル取得 | ✅ |
+| POST | `/api/v1/channels` | チャンネル作成 | ✅ |
+| PATCH | `/api/v1/channels/:channelId` | チャンネル更新 | ✅ |
+| DELETE | `/api/v1/channels/:channelId` | チャンネル削除 | ✅ |
 | **Characters** | - | - | - |
 | GET | `/api/v1/channels/:channelId/characters` | キャラクター一覧取得 | |
 | POST | `/api/v1/channels/:channelId/characters` | キャラクター作成 | |
@@ -460,7 +460,14 @@ POST /channels
   "description": "説明",
   "scriptPrompt": "明るく楽しい雰囲気で...",
   "categoryId": "uuid",
-  "artworkImageId": "uuid"
+  "artworkImageId": "uuid",
+  "characters": [
+    {
+      "name": "太郎",
+      "persona": "明るく元気な性格",
+      "voiceId": "uuid"
+    }
+  ]
 }
 ```
 
