@@ -50,12 +50,18 @@ func (m *mockEpisodeService) UpdateEpisode(ctx context.Context, userID, channelI
 	return args.Get(0).(*response.EpisodeDataResponse), args.Error(1)
 }
 
+func (m *mockEpisodeService) DeleteEpisode(ctx context.Context, userID, channelID, episodeID string) error {
+	args := m.Called(ctx, userID, channelID, episodeID)
+	return args.Error(0)
+}
+
 // テスト用のルーターをセットアップする
 func setupEpisodeRouter(h *EpisodeHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	r.GET("/me/channels/:channelId/episodes", h.ListMyChannelEpisodes)
 	r.PATCH("/channels/:channelId/episodes/:episodeId", h.UpdateEpisode)
+	r.DELETE("/channels/:channelId/episodes/:episodeId", h.DeleteEpisode)
 	return r
 }
 
@@ -70,6 +76,7 @@ func setupAuthenticatedEpisodeRouter(h *EpisodeHandler, userID string) *gin.Engi
 	r.GET("/me/channels/:channelId/episodes", h.ListMyChannelEpisodes)
 	r.POST("/channels/:channelId/episodes", h.CreateEpisode)
 	r.PATCH("/channels/:channelId/episodes/:episodeId", h.UpdateEpisode)
+	r.DELETE("/channels/:channelId/episodes/:episodeId", h.DeleteEpisode)
 	return r
 }
 
@@ -498,6 +505,70 @@ func TestEpisodeHandler_UpdateEpisode(t *testing.T) {
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("PATCH", "/channels/"+channelID+"/episodes/"+episodeID, bytes.NewBufferString(body))
 		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
+}
+
+func TestEpisodeHandler_DeleteEpisode(t *testing.T) {
+	userID := uuid.New().String()
+	channelID := uuid.New().String()
+	episodeID := uuid.New().String()
+
+	t.Run("エピソードを削除できる", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		mockSvc.On("DeleteEpisode", mock.Anything, userID, channelID, episodeID).Return(nil)
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("DELETE", "/channels/"+channelID+"/episodes/"+episodeID, http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNoContent, w.Code)
+		assert.Empty(t, w.Body.String())
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("エピソードが見つからない場合は 404 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		mockSvc.On("DeleteEpisode", mock.Anything, userID, channelID, episodeID).Return(apperror.ErrNotFound.WithMessage("Episode not found"))
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("DELETE", "/channels/"+channelID+"/episodes/"+episodeID, http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("権限がない場合は 403 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		mockSvc.On("DeleteEpisode", mock.Anything, userID, channelID, episodeID).Return(apperror.ErrForbidden.WithMessage("You do not have permission"))
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("DELETE", "/channels/"+channelID+"/episodes/"+episodeID, http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("未認証の場合は 401 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupEpisodeRouter(handler)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("DELETE", "/channels/"+channelID+"/episodes/"+episodeID, http.NoBody)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)

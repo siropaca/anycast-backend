@@ -17,6 +17,7 @@ type EpisodeService interface {
 	ListMyChannelEpisodes(ctx context.Context, userID, channelID string, filter repository.EpisodeFilter) (*response.EpisodeListWithPaginationResponse, error)
 	CreateEpisode(ctx context.Context, userID, channelID, title string, description *string, scriptPrompt string, artworkImageID, bgmAudioID *string) (*response.EpisodeResponse, error)
 	UpdateEpisode(ctx context.Context, userID, channelID, episodeID string, req request.UpdateEpisodeRequest) (*response.EpisodeDataResponse, error)
+	DeleteEpisode(ctx context.Context, userID, channelID, episodeID string) error
 }
 
 type episodeService struct {
@@ -236,6 +237,47 @@ func (s *episodeService) UpdateEpisode(ctx context.Context, userID, channelID, e
 	return &response.EpisodeDataResponse{
 		Data: toEpisodeResponse(updated),
 	}, nil
+}
+
+// エピソードを削除する
+func (s *episodeService) DeleteEpisode(ctx context.Context, userID, channelID, episodeID string) error {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return err
+	}
+
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return err
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return err
+	}
+
+	if channel.UserID != uid {
+		return apperror.ErrForbidden.WithMessage("You do not have permission to delete this episode")
+	}
+
+	// エピソードの存在確認とチャンネルの一致チェック
+	episode, err := s.episodeRepo.FindByID(ctx, eid)
+	if err != nil {
+		return err
+	}
+
+	if episode.ChannelID != cid {
+		return apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+	}
+
+	// エピソードを削除
+	return s.episodeRepo.Delete(ctx, eid)
 }
 
 // Episode モデルのスライスをレスポンス DTO のスライスに変換する

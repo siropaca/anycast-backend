@@ -150,3 +150,7 @@ Authorization: Bearer {{token}}
 {
   "publishedAt": ""
 }
+
+### エピソード削除
+DELETE {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE
+Authorization: Bearer {{token}}
