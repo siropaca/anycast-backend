@@ -495,8 +495,8 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 
 **外部キー:**
 - episode_id → episodes(id) ON DELETE CASCADE
-- speaker_id → characters(id) ON DELETE RESTRICT
-- sfx_id → sound_effects(id) ON DELETE RESTRICT
+- speaker_id → characters(id) ON DELETE CASCADE
+- sfx_id → sound_effects(id) ON DELETE CASCADE
 - audio_id → audios(id) ON DELETE SET NULL
 
 **制約:**
@@ -639,10 +639,12 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 
 ### カスケード削除
 
-- Channel 削除時: 関連する Characters, Episodes が削除
+- Channel 削除時: 関連する Characters, Episodes, ScriptLines が削除
 - Episode 削除時: 関連する ScriptLines が削除
+- Character 削除時: 関連する ScriptLines（話者参照）が削除
+- SoundEffect 削除時: 関連する ScriptLines（効果音参照）が削除
 - Audio / Image 削除時: 参照元は SET NULL（ファイルが消えても親レコードは残る）
-- Voice / SoundEffect 削除時: 使用中の場合は RESTRICT（削除不可）
+- Voice 削除時: 使用中の場合は RESTRICT（削除不可）
 
 ### メディアファイルの管理
 
