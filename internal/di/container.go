@@ -17,6 +17,7 @@ type Container struct {
 	AuthHandler     *handler.AuthHandler
 	ChannelHandler  *handler.ChannelHandler
 	CategoryHandler *handler.CategoryHandler
+	EpisodeHandler  *handler.EpisodeHandler
 	TokenManager    jwt.TokenManager
 }
 
@@ -34,24 +35,28 @@ func NewContainer(db *gorm.DB, cfg *config.Config) *Container {
 	imageRepo := repository.NewImageRepository(db)
 	channelRepo := repository.NewChannelRepository(db)
 	categoryRepo := repository.NewCategoryRepository(db)
+	episodeRepo := repository.NewEpisodeRepository(db)
 
 	// Service 層
 	voiceService := service.NewVoiceService(voiceRepo)
 	authService := service.NewAuthService(userRepo, credentialRepo, oauthAccountRepo, imageRepo, passwordHasher)
 	channelService := service.NewChannelService(channelRepo, categoryRepo, imageRepo, voiceRepo)
 	categoryService := service.NewCategoryService(categoryRepo)
+	episodeService := service.NewEpisodeService(episodeRepo, channelRepo)
 
 	// Handler 層
 	voiceHandler := handler.NewVoiceHandler(voiceService)
 	authHandler := handler.NewAuthHandler(authService, tokenManager)
 	channelHandler := handler.NewChannelHandler(channelService)
 	categoryHandler := handler.NewCategoryHandler(categoryService)
+	episodeHandler := handler.NewEpisodeHandler(episodeService)
 
 	return &Container{
 		VoiceHandler:    voiceHandler,
 		AuthHandler:     authHandler,
 		ChannelHandler:  channelHandler,
 		CategoryHandler: categoryHandler,
+		EpisodeHandler:  episodeHandler,
 		TokenManager:    tokenManager,
 	}
 }

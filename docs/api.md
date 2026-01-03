@@ -56,6 +56,7 @@
 | GET | `/api/v1/me` | 現在のユーザー取得 | ✅ |
 | PATCH | `/api/v1/me` | ユーザー情報更新 | |
 | GET | `/api/v1/me/channels` | 自分のチャンネル一覧 | ✅ |
+| GET | `/api/v1/me/channels/:channelId/episodes` | 自分のチャンネルのエピソード一覧 | |
 | **Episodes** | - | - | - |
 | GET | `/api/v1/channels/:channelId/episodes` | エピソード一覧取得 | |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード取得 | |
@@ -172,11 +173,12 @@
 |---------------|----------|------------|
 | `GET /channels` | - | 公開中のみ |
 | `GET /channels/:channelId` | 全て | 公開中のみ |
-| `GET /channels/:channelId/episodes` | 全て | 公開中のみ |
+| `GET /channels/:channelId/episodes` | - | 公開中のみ |
 | `GET /channels/:channelId/episodes/:episodeId` | 全て | 公開中のみ |
 | `GET /search/channels` | - | 公開中のみ |
 | `GET /search/episodes` | - | 公開中のみ |
 | `GET /me/channels` | 全て | - |
+| `GET /me/channels/:channelId/episodes` | 全て | - |
 
 - **公開中**: `publishedAt IS NOT NULL AND publishedAt <= NOW()`
 - **非公開（下書き）**: `publishedAt IS NULL`
@@ -1068,17 +1070,82 @@ GET /me/channels
 }
 ```
 
+### 自分のチャンネルのエピソード一覧取得
+
+```
+GET /me/channels/:channelId/episodes
+```
+
+自分のチャンネルに紐付くエピソード一覧を取得（非公開含む）。編集画面での使用を想定。
+
+**パスパラメータ:**
+
+| パラメータ | 型 | 説明 |
+|------------|-----|------|
+| channelId | uuid | チャンネル ID |
+
+**クエリパラメータ:**
+
+| パラメータ | 型 | デフォルト | 説明 |
+|------------|-----|------------|------|
+| status | string | - | 公開状態でフィルタ: `published` / `draft` |
+| limit | int | 20 | 取得件数（最大 100） |
+| offset | int | 0 | オフセット |
+
+**レスポンス:**
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "title": "エピソードタイトル",
+      "description": "エピソードの説明",
+      "scriptPrompt": "今回のテーマについて詳しく解説する",
+      "fullAudio": { "id": "uuid", "url": "...", "durationMs": 180000 },
+      "publishedAt": "2025-01-01T00:00:00Z",
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "total": 100,
+    "limit": 20,
+    "offset": 0
+  }
+}
+```
+
+**エラー（403 Forbidden）:**
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "このチャンネルへのアクセス権限がありません"
+  }
+}
+```
+
+**エラー（404 Not Found）:**
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "チャンネルが見つかりません"
+  }
+}
+```
+
 ---
 
 ## Episodes
 
-### エピソード一覧取得
+### エピソード一覧取得（公開用）
 
 ```
 GET /channels/:channelId/episodes
 ```
 
-オーナーの場合は全エピソード（非公開含む）、それ以外は公開中のエピソードのみ取得可能。
+公開中のエピソードのみ取得可能。自分のチャンネルのエピソード（非公開含む）は `GET /me/channels/:channelId/episodes` を使用。
 
 **クエリパラメータ:**
 
