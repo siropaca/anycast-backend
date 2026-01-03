@@ -61,7 +61,7 @@
 | GET | `/api/v1/channels/:channelId/episodes` | [エピソード一覧取得](#エピソード一覧取得公開用) | |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId` | [エピソード取得](#エピソード取得) | |
 | POST | `/api/v1/channels/:channelId/episodes` | [エピソード作成](#エピソード作成) | ✅ |
-| PATCH | `/api/v1/channels/:channelId/episodes/:episodeId` | [エピソード更新](#エピソード更新) | |
+| PATCH | `/api/v1/channels/:channelId/episodes/:episodeId` | [エピソード更新](#エピソード更新) | ✅ |
 | DELETE | `/api/v1/channels/:channelId/episodes/:episodeId` | [エピソード削除](#エピソード削除) | |
 | **[Script（台本）](#script台本)** | - | - | - |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/import` | [台本テキスト取り込み](#台本テキスト取り込み) | |

@@ -77,6 +77,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 
 	// Episodes
 	authenticated.POST("/channels/:channelId/episodes", container.EpisodeHandler.CreateEpisode)
+	authenticated.PATCH("/channels/:channelId/episodes/:episodeId", container.EpisodeHandler.UpdateEpisode)
 
 	// Voices
 	authenticated.GET("/voices", container.VoiceHandler.ListVoices)

@@ -126,3 +126,54 @@ func (h *EpisodeHandler) CreateEpisode(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, map[string]any{"data": result})
 }
+
+// UpdateEpisode godoc
+// @Summary エピソード更新
+// @Description 指定したエピソードを更新します
+// @Tags episodes
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param episodeId path string true "エピソード ID"
+// @Param request body request.UpdateEpisodeRequest true "エピソード更新リクエスト"
+// @Success 200 {object} response.EpisodeDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/episodes/{episodeId} [patch]
+func (h *EpisodeHandler) UpdateEpisode(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		return
+	}
+
+	episodeID := c.Param("episodeId")
+	if episodeID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("episodeId is required"))
+		return
+	}
+
+	var req request.UpdateEpisodeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		return
+	}
+
+	result, err := h.episodeService.UpdateEpisode(c.Request.Context(), userID, channelID, episodeID, req)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}

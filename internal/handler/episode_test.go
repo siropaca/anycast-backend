@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
+	"github.com/siropaca/anycast-backend/internal/dto/request"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/middleware"
 	"github.com/siropaca/anycast-backend/internal/repository"
@@ -41,11 +42,20 @@ func (m *mockEpisodeService) CreateEpisode(ctx context.Context, userID, channelI
 	return args.Get(0).(*response.EpisodeResponse), args.Error(1)
 }
 
+func (m *mockEpisodeService) UpdateEpisode(ctx context.Context, userID, channelID, episodeID string, req request.UpdateEpisodeRequest) (*response.EpisodeDataResponse, error) {
+	args := m.Called(ctx, userID, channelID, episodeID, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.EpisodeDataResponse), args.Error(1)
+}
+
 // テスト用のルーターをセットアップする
 func setupEpisodeRouter(h *EpisodeHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	r.GET("/me/channels/:channelId/episodes", h.ListMyChannelEpisodes)
+	r.PATCH("/channels/:channelId/episodes/:episodeId", h.UpdateEpisode)
 	return r
 }
 
@@ -59,6 +69,7 @@ func setupAuthenticatedEpisodeRouter(h *EpisodeHandler, userID string) *gin.Engi
 	})
 	r.GET("/me/channels/:channelId/episodes", h.ListMyChannelEpisodes)
 	r.POST("/channels/:channelId/episodes", h.CreateEpisode)
+	r.PATCH("/channels/:channelId/episodes/:episodeId", h.UpdateEpisode)
 	return r
 }
 
@@ -333,5 +344,162 @@ func TestEpisodeHandler_CreateEpisode(t *testing.T) {
 
 		assert.Equal(t, http.StatusForbidden, w.Code)
 		mockSvc.AssertExpectations(t)
+	})
+}
+
+func TestEpisodeHandler_UpdateEpisode(t *testing.T) {
+	userID := uuid.New().String()
+	channelID := uuid.New().String()
+	episodeID := uuid.New().String()
+
+	t.Run("エピソードを更新できる", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		title := "Updated Title"
+		description := "Updated Description"
+		result := &response.EpisodeDataResponse{
+			Data: response.EpisodeResponse{
+				ID:           uuid.MustParse(episodeID),
+				Title:        title,
+				Description:  &description,
+				ScriptPrompt: "Test Script Prompt",
+				CreatedAt:    time.Now(),
+				UpdatedAt:    time.Now(),
+			},
+		}
+		mockSvc.On("UpdateEpisode", mock.Anything, userID, channelID, episodeID, mock.AnythingOfType("request.UpdateEpisodeRequest")).Return(result, nil)
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		body := `{"title":"Updated Title","description":"Updated Description"}`
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("PATCH", "/channels/"+channelID+"/episodes/"+episodeID, bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var resp response.EpisodeDataResponse
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+		assert.Equal(t, "Updated Title", resp.Data.Title)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("title のみを更新できる", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		title := "Updated Title"
+		result := &response.EpisodeDataResponse{
+			Data: response.EpisodeResponse{
+				ID:           uuid.MustParse(episodeID),
+				Title:        title,
+				ScriptPrompt: "Test Script Prompt",
+				CreatedAt:    time.Now(),
+				UpdatedAt:    time.Now(),
+			},
+		}
+		mockSvc.On("UpdateEpisode", mock.Anything, userID, channelID, episodeID, mock.AnythingOfType("request.UpdateEpisodeRequest")).Return(result, nil)
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		body := `{"title":"Updated Title"}`
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("PATCH", "/channels/"+channelID+"/episodes/"+episodeID, bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("publishedAt を更新できる", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		now := time.Now()
+		result := &response.EpisodeDataResponse{
+			Data: response.EpisodeResponse{
+				ID:           uuid.MustParse(episodeID),
+				Title:        "Test Episode",
+				ScriptPrompt: "Test Script Prompt",
+				PublishedAt:  &now,
+				CreatedAt:    time.Now(),
+				UpdatedAt:    time.Now(),
+			},
+		}
+		mockSvc.On("UpdateEpisode", mock.Anything, userID, channelID, episodeID, mock.AnythingOfType("request.UpdateEpisodeRequest")).Return(result, nil)
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		body := `{"publishedAt":"2024-01-01T00:00:00Z"}`
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("PATCH", "/channels/"+channelID+"/episodes/"+episodeID, bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("エピソードが見つからない場合は 404 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		mockSvc.On("UpdateEpisode", mock.Anything, userID, channelID, episodeID, mock.AnythingOfType("request.UpdateEpisodeRequest")).Return(nil, apperror.ErrNotFound.WithMessage("Episode not found"))
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		body := `{"title":"Updated Title"}`
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("PATCH", "/channels/"+channelID+"/episodes/"+episodeID, bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("権限がない場合は 403 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		mockSvc.On("UpdateEpisode", mock.Anything, userID, channelID, episodeID, mock.AnythingOfType("request.UpdateEpisodeRequest")).Return(nil, apperror.ErrForbidden.WithMessage("You do not have permission"))
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		body := `{"title":"Updated Title"}`
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("PATCH", "/channels/"+channelID+"/episodes/"+episodeID, bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("不正な JSON の場合は 400 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		body := `{"title":}`
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("PATCH", "/channels/"+channelID+"/episodes/"+episodeID, bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("未認証の場合は 401 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupEpisodeRouter(handler)
+
+		body := `{"title":"Updated Title"}`
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("PATCH", "/channels/"+channelID+"/episodes/"+episodeID, bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
 }

@@ -14,3 +14,13 @@ type CreateEpisodeRequest struct {
 	ArtworkImageID *string `json:"artworkImageId" binding:"omitempty,uuid"`
 	BgmAudioID     *string `json:"bgmAudioId" binding:"omitempty,uuid"`
 }
+
+// エピソード更新リクエスト
+type UpdateEpisodeRequest struct {
+	Title          *string `json:"title" binding:"omitempty,max=255"`
+	Description    *string `json:"description"`
+	ScriptPrompt   *string `json:"scriptPrompt"`
+	ArtworkImageID *string `json:"artworkImageId" binding:"omitempty,uuid"`
+	BgmAudioID     *string `json:"bgmAudioId" binding:"omitempty,uuid"`
+	PublishedAt    *string `json:"publishedAt"`
+}
