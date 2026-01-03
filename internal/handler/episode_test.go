@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -32,6 +33,14 @@ func (m *mockEpisodeService) ListMyChannelEpisodes(ctx context.Context, userID, 
 	return args.Get(0).(*response.EpisodeListWithPaginationResponse), args.Error(1)
 }
 
+func (m *mockEpisodeService) CreateEpisode(ctx context.Context, userID, channelID, title string, description *string, scriptPrompt string, artworkImageID, bgmAudioID *string) (*response.EpisodeResponse, error) {
+	args := m.Called(ctx, userID, channelID, title, description, scriptPrompt, artworkImageID, bgmAudioID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.EpisodeResponse), args.Error(1)
+}
+
 // テスト用のルーターをセットアップする
 func setupEpisodeRouter(h *EpisodeHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)
@@ -49,6 +58,7 @@ func setupAuthenticatedEpisodeRouter(h *EpisodeHandler, userID string) *gin.Engi
 		c.Next()
 	})
 	r.GET("/me/channels/:channelId/episodes", h.ListMyChannelEpisodes)
+	r.POST("/channels/:channelId/episodes", h.CreateEpisode)
 	return r
 }
 
@@ -201,5 +211,127 @@ func TestEpisodeHandler_ListMyChannelEpisodes(t *testing.T) {
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
+}
+
+func TestEpisodeHandler_CreateEpisode(t *testing.T) {
+	userID := uuid.New().String()
+	channelID := uuid.New().String()
+
+	t.Run("エピソードを作成できる", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		description := "Test Description"
+		result := &response.EpisodeResponse{
+			ID:           uuid.New(),
+			Title:        "Test Episode",
+			Description:  &description,
+			ScriptPrompt: "Test Script Prompt",
+			CreatedAt:    time.Now(),
+			UpdatedAt:    time.Now(),
+		}
+		mockSvc.On("CreateEpisode", mock.Anything, userID, channelID, "Test Episode", &description, "Test Script Prompt", (*string)(nil), (*string)(nil)).Return(result, nil)
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		body := `{"title":"Test Episode","description":"Test Description","scriptPrompt":"Test Script Prompt"}`
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusCreated, w.Code)
+
+		var resp response.EpisodeDataResponse
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+		assert.Equal(t, "Test Episode", resp.Data.Title)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("description なしでエピソードを作成できる", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		result := &response.EpisodeResponse{
+			ID:           uuid.New(),
+			Title:        "Test Episode",
+			ScriptPrompt: "Test Script Prompt",
+			CreatedAt:    time.Now(),
+			UpdatedAt:    time.Now(),
+		}
+		mockSvc.On("CreateEpisode", mock.Anything, userID, channelID, "Test Episode", (*string)(nil), "Test Script Prompt", (*string)(nil), (*string)(nil)).Return(result, nil)
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		body := `{"title":"Test Episode","scriptPrompt":"Test Script Prompt"}`
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusCreated, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("title が空の場合は 400 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		body := `{"scriptPrompt":"Test Script Prompt"}`
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("scriptPrompt が空の場合は 400 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		body := `{"title":"Test Episode"}`
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("チャンネルが見つからない場合は 404 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		mockSvc.On("CreateEpisode", mock.Anything, userID, channelID, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, apperror.ErrNotFound.WithMessage("Channel not found"))
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		body := `{"title":"Test Episode","scriptPrompt":"Test Script Prompt"}`
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("権限がない場合は 403 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		mockSvc.On("CreateEpisode", mock.Anything, userID, channelID, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, apperror.ErrForbidden.WithMessage("You do not have permission"))
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		body := `{"title":"Test Episode","scriptPrompt":"Test Script Prompt"}`
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code)
+		mockSvc.AssertExpectations(t)
 	})
 }

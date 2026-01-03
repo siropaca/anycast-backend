@@ -13,6 +13,7 @@ type Episode struct {
 	Title        string     `gorm:"type:varchar(255);not null"`
 	Description  *string    `gorm:"type:text"`
 	ScriptPrompt string     `gorm:"type:text;not null;column:script_prompt"`
+	ArtworkID    *uuid.UUID `gorm:"type:uuid;column:artwork_id"`
 	BgmID        *uuid.UUID `gorm:"type:uuid;column:bgm_id"`
 	FullAudioID  *uuid.UUID `gorm:"type:uuid;column:full_audio_id"`
 	PublishedAt  *time.Time `gorm:"column:published_at"`
@@ -21,6 +22,7 @@ type Episode struct {
 
 	// リレーション
 	Channel   Channel `gorm:"foreignKey:ChannelID"`
+	Artwork   *Image  `gorm:"foreignKey:ArtworkID"`
 	Bgm       *Audio  `gorm:"foreignKey:BgmID"`
 	FullAudio *Audio  `gorm:"foreignKey:FullAudioID"`
 }

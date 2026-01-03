@@ -15,6 +15,7 @@ import (
 // エピソードデータへのアクセスインターフェース
 type EpisodeRepository interface {
 	FindByChannelID(ctx context.Context, channelID uuid.UUID, filter EpisodeFilter) ([]model.Episode, int64, error)
+	Create(ctx context.Context, episode *model.Episode) error
 }
 
 // エピソード検索のフィルタ条件
@@ -58,6 +59,7 @@ func (r *episodeRepository) FindByChannelID(ctx context.Context, channelID uuid.
 
 	// ページネーションとリレーションのプリロード
 	if err := tx.
+		Preload("Artwork").
 		Preload("FullAudio").
 		Order("created_at DESC").
 		Limit(filter.Limit).
@@ -68,4 +70,14 @@ func (r *episodeRepository) FindByChannelID(ctx context.Context, channelID uuid.
 	}
 
 	return episodes, total, nil
+}
+
+// エピソードを作成する
+func (r *episodeRepository) Create(ctx context.Context, episode *model.Episode) error {
+	if err := r.db.WithContext(ctx).Create(episode).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to create episode", "error", err)
+		return apperror.ErrInternal.WithMessage("Failed to create episode").WithError(err)
+	}
+
+	return nil
 }

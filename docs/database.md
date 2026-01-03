@@ -22,6 +22,7 @@ erDiagram
     episodes ||--o{ bookmarks : has
     episodes ||--o{ playback_histories : has
     episodes ||--o{ follows : has
+    episodes ||--o| images : artwork
     episodes ||--o| audios : bgm
     episodes ||--o| audios : full_audio
     script_lines ||--o| characters : speaker
@@ -141,6 +142,7 @@ erDiagram
         varchar title
         text description
         text script_prompt
+        uuid artwork_id FK
         uuid bgm_id FK
         uuid full_audio_id FK
         timestamp published_at
@@ -346,6 +348,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | title | VARCHAR(255) | | - | エピソードタイトル |
 | description | TEXT | | - | エピソードの説明（公開情報） |
 | script_prompt | TEXT | | - | エピソード固有の台本生成設定（内部管理用） |
+| artwork_id | UUID | ◯ | - | カバー画像（images 参照） |
 | bgm_id | UUID | ◯ | - | BGM（audios 参照） |
 | full_audio_id | UUID | ◯ | - | 結合済み音声（audios 参照） |
 | published_at | TIMESTAMP | ◯ | - | 公開日時（NULL = 下書き） |
@@ -359,6 +362,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 
 **外部キー:**
 - channel_id → channels(id) ON DELETE CASCADE
+- artwork_id → images(id) ON DELETE SET NULL
 - bgm_id → audios(id) ON DELETE SET NULL
 - full_audio_id → audios(id) ON DELETE SET NULL
 

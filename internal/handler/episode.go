@@ -73,3 +73,56 @@ func (h *EpisodeHandler) ListMyChannelEpisodes(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+
+// CreateEpisode godoc
+// @Summary エピソード作成
+// @Description 指定したチャンネルにエピソードを作成します
+// @Tags episodes
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param request body request.CreateEpisodeRequest true "エピソード作成リクエスト"
+// @Success 201 {object} response.EpisodeDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/episodes [post]
+func (h *EpisodeHandler) CreateEpisode(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		return
+	}
+
+	var req request.CreateEpisodeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		return
+	}
+
+	result, err := h.episodeService.CreateEpisode(
+		c.Request.Context(),
+		userID,
+		channelID,
+		req.Title,
+		req.Description,
+		req.ScriptPrompt,
+		req.ArtworkImageID,
+		req.BgmAudioID,
+	)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, map[string]any{"data": result})
+}

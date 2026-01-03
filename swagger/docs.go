@@ -448,6 +448,82 @@ const docTemplate = `{
                 }
             }
         },
+        "/channels/{channelId}/episodes": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したチャンネルにエピソードを作成します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "episodes"
+                ],
+                "summary": "エピソード作成",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "チャンネル ID",
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "エピソード作成リクエスト",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreateEpisodeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.EpisodeDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/me": {
             "get": {
                 "security": [
@@ -792,6 +868,31 @@ const docTemplate = `{
                 }
             }
         },
+        "request.CreateEpisodeRequest": {
+            "type": "object",
+            "required": [
+                "scriptPrompt",
+                "title"
+            ],
+            "properties": {
+                "artworkImageId": {
+                    "type": "string"
+                },
+                "bgmAudioId": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "scriptPrompt": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 255
+                }
+            }
+        },
         "request.LoginRequest": {
             "type": "object",
             "required": [
@@ -1118,6 +1219,17 @@ const docTemplate = `{
                 }
             }
         },
+        "response.EpisodeDataResponse": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.EpisodeResponse"
+                }
+            }
+        },
         "response.EpisodeListWithPaginationResponse": {
             "type": "object",
             "required": [
@@ -1146,6 +1258,9 @@ const docTemplate = `{
                 "updatedAt"
             ],
             "properties": {
+                "artwork": {
+                    "$ref": "#/definitions/response.ArtworkResponse"
+                },
                 "createdAt": {
                     "type": "string"
                 },

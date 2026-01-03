@@ -18,3 +18,61 @@ Authorization: Bearer {{token}}
 ### 自分のチャンネルのエピソード一覧取得（ページネーション）
 GET {{baseUrl}}/me/channels/YOUR_CHANNEL_ID_HERE/episodes?limit=10&offset=0
 Authorization: Bearer {{token}}
+
+### エピソード作成
+POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "テストエピソード",
+  "description": "テスト用のエピソードです",
+  "scriptPrompt": "明るく楽しい雰囲気で話してください"
+}
+
+### エピソード作成（アートワーク付き）
+POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "テストエピソード",
+  "description": "テスト用のエピソードです",
+  "scriptPrompt": "明るく楽しい雰囲気で話してください",
+  "artworkImageId": "YOUR_IMAGE_ID_HERE"
+}
+
+### エピソード作成（BGM 付き）
+POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "テストエピソード",
+  "description": "テスト用のエピソードです",
+  "scriptPrompt": "明るく楽しい雰囲気で話してください",
+  "bgmAudioId": "YOUR_AUDIO_ID_HERE"
+}
+
+### エピソード作成（アートワーク + BGM 付き）
+POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "テストエピソード",
+  "description": "テスト用のエピソードです",
+  "scriptPrompt": "明るく楽しい雰囲気で話してください",
+  "artworkImageId": "YOUR_IMAGE_ID_HERE",
+  "bgmAudioId": "YOUR_AUDIO_ID_HERE"
+}
+
+### エピソード作成（description なし）
+POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "テストエピソード",
+  "scriptPrompt": "明るく楽しい雰囲気で話してください"
+}
