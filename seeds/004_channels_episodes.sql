@@ -18,13 +18,13 @@ DELETE FROM channels WHERE user_id IN ('8def69af-dae9-4641-a0e5-100107626933', '
 -- ===========================================
 
 -- test_user のチャンネル
-INSERT INTO channels (id, user_id, name, description, category_id, artwork_id) VALUES
-	('ea9a266e-f532-417c-8916-709d0233941c', '8def69af-dae9-4641-a0e5-100107626933', 'テックトーク', '最新のテクノロジーニュースを2人のパーソナリティが楽しく解説するポッドキャスト', (SELECT id FROM categories WHERE slug = 'technology'), '4946f33c-3c66-40ca-8b35-3bbdfe65b20c'),
-	('efa53d40-2f7b-4abe-a1b0-ba4f7905dbad', '8def69af-dae9-4641-a0e5-100107626933', 'ゆるふわ雑談ラジオ', '日常のあれこれをゆるく語る雑談番組', (SELECT id FROM categories WHERE slug = 'society-culture'), '9ee172c8-6deb-4598-a379-d7fdf502db9a');
+INSERT INTO channels (id, user_id, name, description, script_prompt, category_id, artwork_id) VALUES
+	('ea9a266e-f532-417c-8916-709d0233941c', '8def69af-dae9-4641-a0e5-100107626933', 'テックトーク', '最新のテクノロジーニュースを2人のパーソナリティが楽しく解説するポッドキャスト', '最新のテクノロジーニュースについて、分かりやすく楽しく解説してください。専門用語は避け、具体例を交えて説明してください。', (SELECT id FROM categories WHERE slug = 'technology'), '4946f33c-3c66-40ca-8b35-3bbdfe65b20c'),
+	('efa53d40-2f7b-4abe-a1b0-ba4f7905dbad', '8def69af-dae9-4641-a0e5-100107626933', 'ゆるふわ雑談ラジオ', '日常のあれこれをゆるく語る雑談番組', 'ゆるい雰囲気で日常の話題について雑談してください。リラックスした会話を心がけてください。', (SELECT id FROM categories WHERE slug = 'society-culture'), '9ee172c8-6deb-4598-a379-d7fdf502db9a');
 
 -- test_user2 のチャンネル
-INSERT INTO channels (id, user_id, name, description, category_id, artwork_id) VALUES
-	('e5a50bd3-8990-4344-b470-56fa7329d75c', '8eada3a5-f413-4eeb-9cd5-12def60d4596', 'ビジネス最前線', '起業やキャリアについて実践的なアドバイスを届けるビジネス番組', (SELECT id FROM categories WHERE slug = 'business'), NULL);
+INSERT INTO channels (id, user_id, name, description, script_prompt, category_id, artwork_id) VALUES
+	('e5a50bd3-8990-4344-b470-56fa7329d75c', '8eada3a5-f413-4eeb-9cd5-12def60d4596', 'ビジネス最前線', '起業やキャリアについて実践的なアドバイスを届けるビジネス番組', '起業やキャリアについて、実践的で具体的なアドバイスを提供してください。成功事例や失敗談を交えて説明してください。', (SELECT id FROM categories WHERE slug = 'business'), NULL);
 
 -- ===========================================
 -- キャラクター
@@ -50,15 +50,15 @@ INSERT INTO characters (id, channel_id, name, persona, voice_id) VALUES
 -- ===========================================
 
 -- test_user のエピソード
-INSERT INTO episodes (id, channel_id, title, description, status, full_audio_id) VALUES
-	('eb960304-f86e-4364-be5d-d3d5126c9601', 'ea9a266e-f532-417c-8916-709d0233941c', 'AI の未来を語る', 'ChatGPT から始まった AI ブームの今後について', 'published', '4b33e6ee-c81b-4795-a843-74fd82fa4fd2'),
-	('67e8e26d-20c8-492a-ac2c-5c79d8050aa3', 'ea9a266e-f532-417c-8916-709d0233941c', 'スマートホームのすすめ', '自宅を便利にするガジェット紹介', 'published', '4b33e6ee-c81b-4795-a843-74fd82fa4fd2'),
-	('198d7e19-7d40-4299-95bf-a641f5c83911', 'efa53d40-2f7b-4abe-a1b0-ba4f7905dbad', '最近ハマってること', 'お互いの趣味について語り合う回', 'draft', '4b33e6ee-c81b-4795-a843-74fd82fa4fd2');
+INSERT INTO episodes (id, channel_id, title, description, script_prompt, full_audio_id, published_at) VALUES
+	('eb960304-f86e-4364-be5d-d3d5126c9601', 'ea9a266e-f532-417c-8916-709d0233941c', 'AI の未来を語る', 'ChatGPT から始まった AI ブームの今後について', 'AIの未来について、最新のトレンドを踏まえて議論してください。', '4b33e6ee-c81b-4795-a843-74fd82fa4fd2', NOW()),
+	('67e8e26d-20c8-492a-ac2c-5c79d8050aa3', 'ea9a266e-f532-417c-8916-709d0233941c', 'スマートホームのすすめ', '自宅を便利にするガジェット紹介', 'スマートホームガジェットについて、初心者向けに分かりやすく紹介してください。', '4b33e6ee-c81b-4795-a843-74fd82fa4fd2', NOW()),
+	('198d7e19-7d40-4299-95bf-a641f5c83911', 'efa53d40-2f7b-4abe-a1b0-ba4f7905dbad', '最近ハマってること', 'お互いの趣味について語り合う回', '最近の趣味について、リラックスした雰囲気で語り合ってください。', '4b33e6ee-c81b-4795-a843-74fd82fa4fd2', NULL);
 
 -- test_user2 のエピソード
-INSERT INTO episodes (id, channel_id, title, description, status, full_audio_id) VALUES
-	('fcb16526-951a-4ff1-a456-ab1dba96f699', 'e5a50bd3-8990-4344-b470-56fa7329d75c', '副業から始める起業入門', 'リスクを抑えながら起業にチャレンジする方法', 'published', '4b33e6ee-c81b-4795-a843-74fd82fa4fd2'),
-	('9cde2abb-30e8-447b-bc8b-bb799b0f6f06', 'e5a50bd3-8990-4344-b470-56fa7329d75c', '失敗しない資金調達の秘訣', 'スタートアップの資金調達で気をつけるべきポイント', 'published', '4b33e6ee-c81b-4795-a843-74fd82fa4fd2');
+INSERT INTO episodes (id, channel_id, title, description, script_prompt, full_audio_id, published_at) VALUES
+	('fcb16526-951a-4ff1-a456-ab1dba96f699', 'e5a50bd3-8990-4344-b470-56fa7329d75c', '副業から始める起業入門', 'リスクを抑えながら起業にチャレンジする方法', '副業から起業を始める方法について、実践的なアドバイスを提供してください。', '4b33e6ee-c81b-4795-a843-74fd82fa4fd2', NOW()),
+	('9cde2abb-30e8-447b-bc8b-bb799b0f6f06', 'e5a50bd3-8990-4344-b470-56fa7329d75c', '失敗しない資金調達の秘訣', 'スタートアップの資金調達で気をつけるべきポイント', '資金調達のコツについて、経験に基づいたアドバイスを提供してください。', '4b33e6ee-c81b-4795-a843-74fd82fa4fd2', NOW());
 
 -- ===========================================
 -- 台本（ScriptLines）
