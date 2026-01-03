@@ -16,81 +16,81 @@
 | **システム** | - | - | - |
 | GET | `/health` | ヘルスチェック | ✅ |
 | GET | `/swagger/*` | Swagger UI（開発環境のみ） | ✅ |
-| **Auth（認証）** | - | - | - |
-| POST | `/api/v1/auth/register` | ユーザー登録 | ✅ |
-| POST | `/api/v1/auth/login` | メール/パスワード認証 | ✅ |
-| POST | `/api/v1/auth/oauth/google` | Google OAuth 認証 | ✅ |
-| **Users（ユーザー）** | - | - | - |
-| GET | `/api/v1/users/:userId` | ユーザー取得 | |
-| **Channels** | - | - | - |
-| GET | `/api/v1/channels` | チャンネル一覧取得 | |
-| GET | `/api/v1/channels/:channelId` | チャンネル取得 | ✅ |
-| POST | `/api/v1/channels` | チャンネル作成 | ✅ |
-| PATCH | `/api/v1/channels/:channelId` | チャンネル更新 | ✅ |
-| DELETE | `/api/v1/channels/:channelId` | チャンネル削除 | ✅ |
-| **Characters** | - | - | - |
-| GET | `/api/v1/channels/:channelId/characters` | キャラクター一覧取得 | |
-| POST | `/api/v1/channels/:channelId/characters` | キャラクター作成 | |
-| PATCH | `/api/v1/channels/:channelId/characters/:characterId` | キャラクター更新 | |
-| DELETE | `/api/v1/channels/:channelId/characters/:characterId` | キャラクター削除 | |
-| **Search（検索）** | - | - | - |
-| GET | `/api/v1/search/channels` | チャンネル検索 | |
-| GET | `/api/v1/search/episodes` | エピソード検索 | |
-| **Likes（お気に入り）** | - | - | - |
-| POST | `/api/v1/episodes/:episodeId/like` | お気に入り登録 | |
-| DELETE | `/api/v1/episodes/:episodeId/like` | お気に入り解除 | |
-| GET | `/api/v1/me/likes` | お気に入りしたエピソード一覧 | |
-| **Bookmarks（後で見る）** | - | - | - |
-| POST | `/api/v1/episodes/:episodeId/bookmark` | ブックマーク登録 | |
-| DELETE | `/api/v1/episodes/:episodeId/bookmark` | ブックマーク解除 | |
-| GET | `/api/v1/me/bookmarks` | ブックマークしたエピソード一覧 | |
-| **Playback History（再生履歴）** | - | - | - |
-| PUT | `/api/v1/episodes/:episodeId/playback` | 再生履歴を更新 | |
-| DELETE | `/api/v1/episodes/:episodeId/playback` | 再生履歴を削除 | |
-| GET | `/api/v1/me/playback-history` | 再生履歴一覧を取得 | |
-| **Follows（フォロー）** | - | - | - |
-| POST | `/api/v1/episodes/:episodeId/follow` | フォロー登録 | |
-| DELETE | `/api/v1/episodes/:episodeId/follow` | フォロー解除 | |
-| GET | `/api/v1/me/follows` | フォロー中のエピソード一覧 | |
-| **Me（自分のリソース）** | - | - | - |
-| GET | `/api/v1/me` | 現在のユーザー取得 | ✅ |
-| PATCH | `/api/v1/me` | ユーザー情報更新 | |
-| GET | `/api/v1/me/channels` | 自分のチャンネル一覧 | ✅ |
-| GET | `/api/v1/me/channels/:channelId/episodes` | 自分のチャンネルのエピソード一覧 | |
-| **Episodes** | - | - | - |
-| GET | `/api/v1/channels/:channelId/episodes` | エピソード一覧取得 | |
-| GET | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード取得 | |
-| POST | `/api/v1/channels/:channelId/episodes` | エピソード作成 | |
-| PATCH | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード更新 | |
-| DELETE | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード削除 | |
-| **Script（台本）** | - | - | - |
-| POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/import` | 台本テキスト取り込み | |
-| GET | `/api/v1/channels/:channelId/episodes/:episodeId/script/export` | 台本テキスト出力 | |
-| POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/generate` | 台本を AI で生成 | |
-| **ScriptLines（台本行）** | - | - | - |
-| POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines` | 行追加 | |
-| PATCH | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | 行更新 | |
-| DELETE | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | 行削除 | |
-| POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/reorder` | 行並び替え | |
-| **Audio（音声生成）** | - | - | - |
-| POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId/audio/generate` | 行単位音声生成 | |
-| POST | `/api/v1/channels/:channelId/episodes/:episodeId/audio/generate` | エピソード全体音声生成 | |
-| **Audios（音声ファイル）** | - | - | - |
-| POST | `/api/v1/audios` | 音声アップロード | |
-| GET | `/api/v1/audios/:audioId` | 音声取得 | |
-| DELETE | `/api/v1/audios/:audioId` | 音声削除 | |
-| **Images（画像ファイル）** | - | - | - |
-| POST | `/api/v1/images` | 画像アップロード | |
-| GET | `/api/v1/images/:imageId` | 画像取得 | |
-| DELETE | `/api/v1/images/:imageId` | 画像削除 | |
-| **Voices（ボイス）** | - | - | - |
-| GET | `/api/v1/voices` | ボイス一覧取得 | ✅ |
-| GET | `/api/v1/voices/:voiceId` | ボイス取得 | ✅ |
-| **Categories（カテゴリ）** | - | - | - |
-| GET | `/api/v1/categories` | カテゴリ一覧取得 | ✅ |
-| **Sound Effects（効果音）** | - | - | - |
-| GET | `/api/v1/sound-effects` | 効果音一覧取得 | |
-| GET | `/api/v1/sound-effects/:sfxId` | 効果音取得 | |
+| **[Auth（認証）](#auth認証)** | - | - | - |
+| POST | `/api/v1/auth/register` | [ユーザー登録](#ユーザー登録) | ✅ |
+| POST | `/api/v1/auth/login` | [メール/パスワード認証](#メールパスワード認証) | ✅ |
+| POST | `/api/v1/auth/oauth/google` | [Google OAuth 認証](#google-oauth-認証) | ✅ |
+| **[Users（ユーザー）](#usersユーザー)** | - | - | - |
+| GET | `/api/v1/users/:userId` | [ユーザー取得](#ユーザー取得) | |
+| **[Channels](#channels)** | - | - | - |
+| GET | `/api/v1/channels` | [チャンネル一覧取得](#チャンネル一覧取得) | |
+| GET | `/api/v1/channels/:channelId` | [チャンネル取得](#チャンネル取得) | ✅ |
+| POST | `/api/v1/channels` | [チャンネル作成](#チャンネル作成) | ✅ |
+| PATCH | `/api/v1/channels/:channelId` | [チャンネル更新](#チャンネル更新) | ✅ |
+| DELETE | `/api/v1/channels/:channelId` | [チャンネル削除](#チャンネル削除) | ✅ |
+| **[Characters](#characters)** | - | - | - |
+| GET | `/api/v1/channels/:channelId/characters` | [キャラクター一覧取得](#キャラクター一覧取得) | |
+| POST | `/api/v1/channels/:channelId/characters` | [キャラクター作成](#キャラクター作成) | |
+| PATCH | `/api/v1/channels/:channelId/characters/:characterId` | [キャラクター更新](#キャラクター更新) | |
+| DELETE | `/api/v1/channels/:channelId/characters/:characterId` | [キャラクター削除](#キャラクター削除) | |
+| **[Search（検索）](#search検索)** | - | - | - |
+| GET | `/api/v1/search/channels` | [チャンネル検索](#チャンネル検索) | |
+| GET | `/api/v1/search/episodes` | [エピソード検索](#エピソード検索) | |
+| **[Likes（お気に入り）](#likesお気に入り)** | - | - | - |
+| POST | `/api/v1/episodes/:episodeId/like` | [お気に入り登録](#お気に入り登録) | |
+| DELETE | `/api/v1/episodes/:episodeId/like` | [お気に入り解除](#お気に入り解除) | |
+| GET | `/api/v1/me/likes` | [お気に入りしたエピソード一覧](#お気に入りしたエピソード一覧) | |
+| **[Bookmarks（後で見る）](#bookmarks後で見る)** | - | - | - |
+| POST | `/api/v1/episodes/:episodeId/bookmark` | [ブックマーク登録](#ブックマーク登録) | |
+| DELETE | `/api/v1/episodes/:episodeId/bookmark` | [ブックマーク解除](#ブックマーク解除) | |
+| GET | `/api/v1/me/bookmarks` | [ブックマークしたエピソード一覧](#ブックマークしたエピソード一覧) | |
+| **[Playback History（再生履歴）](#playback-history再生履歴)** | - | - | - |
+| PUT | `/api/v1/episodes/:episodeId/playback` | [再生履歴を更新](#再生履歴を更新) | |
+| DELETE | `/api/v1/episodes/:episodeId/playback` | [再生履歴を削除](#再生履歴を削除) | |
+| GET | `/api/v1/me/playback-history` | [再生履歴一覧を取得](#再生履歴一覧を取得) | |
+| **[Follows（フォロー）](#followsフォロー)** | - | - | - |
+| POST | `/api/v1/episodes/:episodeId/follow` | [フォロー登録](#フォロー登録) | |
+| DELETE | `/api/v1/episodes/:episodeId/follow` | [フォロー解除](#フォロー解除) | |
+| GET | `/api/v1/me/follows` | [フォロー中のエピソード一覧](#フォロー中のエピソード一覧) | |
+| **[Me（自分のリソース）](#me自分のリソース)** | - | - | - |
+| GET | `/api/v1/me` | [現在のユーザー取得](#現在のユーザー取得) | ✅ |
+| PATCH | `/api/v1/me` | [ユーザー情報更新](#ユーザー情報更新) | |
+| GET | `/api/v1/me/channels` | [自分のチャンネル一覧](#自分のチャンネル一覧取得) | ✅ |
+| GET | `/api/v1/me/channels/:channelId/episodes` | [自分のチャンネルのエピソード一覧](#自分のチャンネルのエピソード一覧取得) | ✅ |
+| **[Episodes](#episodes)** | - | - | - |
+| GET | `/api/v1/channels/:channelId/episodes` | [エピソード一覧取得](#エピソード一覧取得公開用) | |
+| GET | `/api/v1/channels/:channelId/episodes/:episodeId` | [エピソード取得](#エピソード取得) | |
+| POST | `/api/v1/channels/:channelId/episodes` | [エピソード作成](#エピソード作成) | ✅ |
+| PATCH | `/api/v1/channels/:channelId/episodes/:episodeId` | [エピソード更新](#エピソード更新) | ✅ |
+| DELETE | `/api/v1/channels/:channelId/episodes/:episodeId` | [エピソード削除](#エピソード削除) | ✅ |
+| **[Script（台本）](#script台本)** | - | - | - |
+| POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/import` | [台本テキスト取り込み](#台本テキスト取り込み) | |
+| GET | `/api/v1/channels/:channelId/episodes/:episodeId/script/export` | [台本テキスト出力](#台本テキスト出力) | |
+| POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/generate` | [台本を AI で生成](#台本を-ai-で生成) | |
+| **[ScriptLines（台本行）](#scriptlines台本行)** | - | - | - |
+| POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines` | [行追加](#行追加) | |
+| PATCH | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | [行更新](#行更新) | |
+| DELETE | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | [行削除](#行削除) | |
+| POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/reorder` | [行並び替え](#行並び替え) | |
+| **[Audio（音声生成）](#audio音声生成)** | - | - | - |
+| POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId/audio/generate` | [行単位音声生成](#行単位音声生成) | |
+| POST | `/api/v1/channels/:channelId/episodes/:episodeId/audio/generate` | [エピソード全体音声生成](#エピソード全体音声生成) | |
+| **[Audios（音声ファイル）](#audios音声ファイル)** | - | - | - |
+| POST | `/api/v1/audios` | [音声アップロード](#音声アップロード) | |
+| GET | `/api/v1/audios/:audioId` | [音声取得](#音声取得) | |
+| DELETE | `/api/v1/audios/:audioId` | [音声削除](#音声削除) | |
+| **[Images（画像ファイル）](#images画像ファイル)** | - | - | - |
+| POST | `/api/v1/images` | [画像アップロード](#画像アップロード) | |
+| GET | `/api/v1/images/:imageId` | [画像取得](#画像取得) | |
+| DELETE | `/api/v1/images/:imageId` | [画像削除](#画像削除) | |
+| **[Voices（ボイス）](#voicesボイス)** | - | - | - |
+| GET | `/api/v1/voices` | [ボイス一覧取得](#ボイス一覧取得) | ✅ |
+| GET | `/api/v1/voices/:voiceId` | [ボイス取得](#ボイス取得) | ✅ |
+| **[Categories（カテゴリ）](#categoriesカテゴリ)** | - | - | - |
+| GET | `/api/v1/categories` | [カテゴリ一覧取得](#カテゴリ一覧取得) | ✅ |
+| **[Sound Effects（効果音）](#sound-effects効果音)** | - | - | - |
+| GET | `/api/v1/sound-effects` | [効果音一覧取得](#効果音一覧取得) | |
+| GET | `/api/v1/sound-effects/:sfxId` | [効果音取得](#効果音取得) | |
 
 ---
 
@@ -1239,6 +1239,7 @@ POST /channels/:channelId/episodes
   "title": "エピソードタイトル",
   "description": "エピソードの説明",
   "scriptPrompt": "今回のテーマについて詳しく解説する",
+  "artworkImageId": "uuid",
   "bgmAudioId": "uuid"
 }
 ```
@@ -1255,6 +1256,7 @@ PATCH /channels/:channelId/episodes/:episodeId
   "title": "新しいタイトル",
   "description": "新しい説明",
   "scriptPrompt": "今回のテーマについて詳しく解説する",
+  "artworkImageId": "uuid",
   "bgmAudioId": "uuid",
   "publishedAt": "2025-01-01T00:00:00Z"
 }

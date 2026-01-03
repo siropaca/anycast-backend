@@ -22,6 +22,7 @@ erDiagram
     episodes ||--o{ bookmarks : has
     episodes ||--o{ playback_histories : has
     episodes ||--o{ follows : has
+    episodes ||--o| images : artwork
     episodes ||--o| audios : bgm
     episodes ||--o| audios : full_audio
     script_lines ||--o| characters : speaker
@@ -141,6 +142,7 @@ erDiagram
         varchar title
         text description
         text script_prompt
+        uuid artwork_id FK
         uuid bgm_id FK
         uuid full_audio_id FK
         timestamp published_at
@@ -346,6 +348,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | title | VARCHAR(255) | | - | エピソードタイトル |
 | description | TEXT | | - | エピソードの説明（公開情報） |
 | script_prompt | TEXT | | - | エピソード固有の台本生成設定（内部管理用） |
+| artwork_id | UUID | ◯ | - | カバー画像（images 参照） |
 | bgm_id | UUID | ◯ | - | BGM（audios 参照） |
 | full_audio_id | UUID | ◯ | - | 結合済み音声（audios 参照） |
 | published_at | TIMESTAMP | ◯ | - | 公開日時（NULL = 下書き） |
@@ -359,6 +362,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 
 **外部キー:**
 - channel_id → channels(id) ON DELETE CASCADE
+- artwork_id → images(id) ON DELETE SET NULL
 - bgm_id → audios(id) ON DELETE SET NULL
 - full_audio_id → audios(id) ON DELETE SET NULL
 
@@ -491,8 +495,8 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 
 **外部キー:**
 - episode_id → episodes(id) ON DELETE CASCADE
-- speaker_id → characters(id) ON DELETE RESTRICT
-- sfx_id → sound_effects(id) ON DELETE RESTRICT
+- speaker_id → characters(id) ON DELETE CASCADE
+- sfx_id → sound_effects(id) ON DELETE CASCADE
 - audio_id → audios(id) ON DELETE SET NULL
 
 **制約:**
@@ -635,10 +639,12 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 
 ### カスケード削除
 
-- Channel 削除時: 関連する Characters, Episodes が削除
+- Channel 削除時: 関連する Characters, Episodes, ScriptLines が削除
 - Episode 削除時: 関連する ScriptLines が削除
+- Character 削除時: 関連する ScriptLines（話者参照）が削除
+- SoundEffect 削除時: 関連する ScriptLines（効果音参照）が削除
 - Audio / Image 削除時: 参照元は SET NULL（ファイルが消えても親レコードは残る）
-- Voice / SoundEffect 削除時: 使用中の場合は RESTRICT（削除不可）
+- Voice 削除時: 使用中の場合は RESTRICT（削除不可）
 
 ### メディアファイルの管理
 

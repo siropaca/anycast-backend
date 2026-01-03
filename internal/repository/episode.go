@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,7 +15,11 @@ import (
 
 // エピソードデータへのアクセスインターフェース
 type EpisodeRepository interface {
+	FindByID(ctx context.Context, id uuid.UUID) (*model.Episode, error)
 	FindByChannelID(ctx context.Context, channelID uuid.UUID, filter EpisodeFilter) ([]model.Episode, int64, error)
+	Create(ctx context.Context, episode *model.Episode) error
+	Update(ctx context.Context, episode *model.Episode) error
+	Delete(ctx context.Context, id uuid.UUID) error
 }
 
 // エピソード検索のフィルタ条件
@@ -58,6 +63,7 @@ func (r *episodeRepository) FindByChannelID(ctx context.Context, channelID uuid.
 
 	// ページネーションとリレーションのプリロード
 	if err := tx.
+		Preload("Artwork").
 		Preload("FullAudio").
 		Order("created_at DESC").
 		Limit(filter.Limit).
@@ -68,4 +74,60 @@ func (r *episodeRepository) FindByChannelID(ctx context.Context, channelID uuid.
 	}
 
 	return episodes, total, nil
+}
+
+// エピソードを作成する
+func (r *episodeRepository) Create(ctx context.Context, episode *model.Episode) error {
+	if err := r.db.WithContext(ctx).Create(episode).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to create episode", "error", err)
+		return apperror.ErrInternal.WithMessage("Failed to create episode").WithError(err)
+	}
+
+	return nil
+}
+
+// 指定された ID のエピソードを取得する
+func (r *episodeRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Episode, error) {
+	var episode model.Episode
+
+	if err := r.db.WithContext(ctx).
+		Preload("Channel").
+		Preload("Artwork").
+		Preload("FullAudio").
+		First(&episode, "id = ?", id).Error; err != nil {
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, apperror.ErrNotFound.WithMessage("Episode not found")
+		}
+
+		logger.FromContext(ctx).Error("failed to fetch episode", "error", err, "episode_id", id)
+		return nil, apperror.ErrInternal.WithMessage("Failed to fetch episode").WithError(err)
+	}
+
+	return &episode, nil
+}
+
+// エピソードを更新する
+func (r *episodeRepository) Update(ctx context.Context, episode *model.Episode) error {
+	if err := r.db.WithContext(ctx).Save(episode).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to update episode", "error", err, "episode_id", episode.ID)
+		return apperror.ErrInternal.WithMessage("Failed to update episode").WithError(err)
+	}
+
+	return nil
+}
+
+// エピソードを削除する
+func (r *episodeRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	result := r.db.WithContext(ctx).Delete(&model.Episode{}, "id = ?", id)
+	if result.Error != nil {
+		logger.FromContext(ctx).Error("failed to delete episode", "error", result.Error, "episode_id", id)
+		return apperror.ErrInternal.WithMessage("Failed to delete episode").WithError(result.Error)
+	}
+
+	if result.RowsAffected == 0 {
+		return apperror.ErrNotFound.WithMessage("Episode not found")
+	}
+
+	return nil
 }
