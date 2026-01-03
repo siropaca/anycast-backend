@@ -1,0 +1,75 @@
+package handler
+
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+
+	"github.com/siropaca/anycast-backend/internal/apperror"
+	"github.com/siropaca/anycast-backend/internal/dto/request"
+	"github.com/siropaca/anycast-backend/internal/middleware"
+	"github.com/siropaca/anycast-backend/internal/repository"
+	"github.com/siropaca/anycast-backend/internal/service"
+)
+
+// エピソード関連のハンドラー
+type EpisodeHandler struct {
+	episodeService service.EpisodeService
+}
+
+// EpisodeHandler を作成する
+func NewEpisodeHandler(es service.EpisodeService) *EpisodeHandler {
+	return &EpisodeHandler{episodeService: es}
+}
+
+// ListMyChannelEpisodes godoc
+// @Summary 自分のチャンネルのエピソード一覧取得
+// @Description 自分のチャンネルに紐付くエピソード一覧を取得します（非公開含む）
+// @Tags me
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param status query string false "公開状態でフィルタ（published / draft）"
+// @Param limit query int false "取得件数（デフォルト: 20、最大: 100）"
+// @Param offset query int false "オフセット（デフォルト: 0）"
+// @Success 200 {object} response.EpisodeListWithPaginationResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /me/channels/{channelId}/episodes [get]
+func (h *EpisodeHandler) ListMyChannelEpisodes(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		return
+	}
+
+	var req request.ListMyChannelEpisodesRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		return
+	}
+
+	filter := repository.EpisodeFilter{
+		Status: req.Status,
+		Limit:  req.Limit,
+		Offset: req.Offset,
+	}
+
+	result, err := h.episodeService.ListMyChannelEpisodes(c.Request.Context(), userID, channelID, filter)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}

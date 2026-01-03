@@ -551,6 +551,91 @@ const docTemplate = `{
                 }
             }
         },
+        "/me/channels/{channelId}/episodes": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "自分のチャンネルに紐付くエピソード一覧を取得します（非公開含む）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "me"
+                ],
+                "summary": "自分のチャンネルのエピソード一覧取得",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "チャンネル ID",
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "公開状態でフィルタ（published / draft）",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "取得件数（デフォルト: 20、最大: 100）",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "オフセット（デフォルト: 0）",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.EpisodeListWithPaginationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/voices": {
             "get": {
                 "description": "利用可能なボイスの一覧を取得します",
@@ -813,6 +898,25 @@ const docTemplate = `{
                 }
             }
         },
+        "response.AudioResponse": {
+            "type": "object",
+            "required": [
+                "durationMs",
+                "id",
+                "url"
+            ],
+            "properties": {
+                "durationMs": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "response.AuthDataResponse": {
             "type": "object",
             "required": [
@@ -1010,6 +1114,60 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.EpisodeListWithPaginationResponse": {
+            "type": "object",
+            "required": [
+                "data",
+                "pagination"
+            ],
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.EpisodeResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/response.PaginationResponse"
+                }
+            }
+        },
+        "response.EpisodeResponse": {
+            "type": "object",
+            "required": [
+                "createdAt",
+                "id",
+                "scriptPrompt",
+                "title",
+                "updatedAt"
+            ],
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "fullAudio": {
+                    "$ref": "#/definitions/response.AudioResponse"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "publishedAt": {
+                    "type": "string"
+                },
+                "scriptPrompt": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updatedAt": {
                     "type": "string"
                 }
             }
