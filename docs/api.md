@@ -64,9 +64,9 @@
 | PATCH | `/api/v1/channels/:channelId/episodes/:episodeId` | [エピソード更新](#エピソード更新) | ✅ |
 | DELETE | `/api/v1/channels/:channelId/episodes/:episodeId` | [エピソード削除](#エピソード削除) | ✅ |
 | **[Script（台本）](#script台本)** | - | - | - |
+| POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/generate` | [台本を AI で生成](#台本を-ai-で生成) | |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/import` | [台本テキスト取り込み](#台本テキスト取り込み) | |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId/script/export` | [台本テキスト出力](#台本テキスト出力) | |
-| POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/generate` | [台本を AI で生成](#台本を-ai-で生成) | |
 | **[ScriptLines（台本行）](#scriptlines台本行)** | - | - | - |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines` | [行追加](#行追加) | |
 | PATCH | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | [行更新](#行更新) | |
@@ -1274,6 +1274,34 @@ DELETE /channels/:channelId/episodes/:episodeId
 
 ## Script（台本）
 
+### 台本を AI で生成
+
+```
+POST /channels/:channelId/episodes/:episodeId/script/generate
+```
+
+**リクエスト:**
+```json
+{
+  "prompt": "今日の天気について楽しく話す"
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| prompt | string | ◯ | テーマやシナリオ。URL が含まれていれば RAG で内容を取得して台本生成に利用 |
+
+> **Note:** `prompt` はエピソードの `scriptPrompt` として自動保存されます。
+
+**レスポンス:**
+```json
+{
+  "data": {
+    "lines": [ ... ]
+  }
+}
+```
+
 ### 台本テキスト取り込み
 
 ```
@@ -1323,34 +1351,6 @@ GET /channels/:channelId/episodes/:episodeId/script/export
 {
   "data": {
     "text": "太郎: こんにちは\n花子: やあ\n__SILENCE__: 800"
-  }
-}
-```
-
-### 台本を AI で生成
-
-```
-POST /channels/:channelId/episodes/:episodeId/script/generate
-```
-
-**リクエスト:**
-```json
-{
-  "prompt": "今日の天気について楽しく話す"
-}
-```
-
-| フィールド | 型 | 必須 | 説明 |
-|------------|-----|:----:|------|
-| prompt | string | ◯ | テーマやシナリオ。URL が含まれていれば RAG で内容を取得して台本生成に利用 |
-
-> **Note:** `prompt` はエピソードの `scriptPrompt` として自動保存されます。
-
-**レスポンス:**
-```json
-{
-  "data": {
-    "lines": [ ... ]
   }
 }
 ```
