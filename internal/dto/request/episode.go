@@ -9,7 +9,7 @@ type ListMyChannelEpisodesRequest struct {
 // エピソード作成リクエスト
 type CreateEpisodeRequest struct {
 	Title          string  `json:"title" binding:"required,max=255"`
-	Description    *string `json:"description"`
+	Description    *string `json:"description" binding:"omitempty,max=2000"`
 	ArtworkImageID *string `json:"artworkImageId" binding:"omitempty,uuid"`
 	BgmAudioID     *string `json:"bgmAudioId" binding:"omitempty,uuid"`
 }
@@ -17,8 +17,8 @@ type CreateEpisodeRequest struct {
 // エピソード更新リクエスト
 type UpdateEpisodeRequest struct {
 	Title          *string `json:"title" binding:"omitempty,max=255"`
-	Description    *string `json:"description"`
-	UserPrompt     *string `json:"userPrompt"`
+	Description    *string `json:"description" binding:"omitempty,max=2000"`
+	UserPrompt     *string `json:"userPrompt" binding:"omitempty,max=1000"`
 	ArtworkImageID *string `json:"artworkImageId" binding:"omitempty,uuid"`
 	BgmAudioID     *string `json:"bgmAudioId" binding:"omitempty,uuid"`
 }
