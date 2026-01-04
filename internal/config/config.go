@@ -20,6 +20,7 @@ type Config struct {
 	AppEnv             Env
 	AuthSecret         string
 	CORSAllowedOrigins []string
+	OpenAIAPIKey       string
 }
 
 // 環境変数から設定を読み込む
@@ -30,6 +31,7 @@ func Load() *Config {
 		AppEnv:             Env(getEnv("APP_ENV", string(EnvDevelopment))),
 		AuthSecret:         getEnv("AUTH_SECRET", ""),
 		CORSAllowedOrigins: getEnvAsSlice("CORS_ALLOWED_ORIGINS", []string{"http://localhost:3210"}),
+		OpenAIAPIKey:       getEnv("OPENAI_API_KEY", ""),
 	}
 }
 
