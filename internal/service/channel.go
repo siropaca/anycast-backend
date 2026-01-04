@@ -20,6 +20,8 @@ type ChannelService interface {
 	CreateChannel(ctx context.Context, userID string, req request.CreateChannelRequest) (*response.ChannelDataResponse, error)
 	UpdateChannel(ctx context.Context, userID, channelID string, req request.UpdateChannelRequest) (*response.ChannelDataResponse, error)
 	DeleteChannel(ctx context.Context, userID, channelID string) error
+	PublishChannel(ctx context.Context, userID, channelID string, publishedAt *string) (*response.ChannelDataResponse, error)
+	UnpublishChannel(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error)
 }
 
 type channelService struct {
@@ -219,28 +221,20 @@ func (s *channelService) UpdateChannel(ctx context.Context, userID, channelID st
 		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to update this channel")
 	}
 
-	// 各フィールドを更新（指定されたもののみ）
-	if req.Name != nil {
-		channel.Name = *req.Name
-	}
-	if req.Description != nil {
-		channel.Description = *req.Description
-	}
-	if req.UserPrompt != nil {
-		channel.UserPrompt = *req.UserPrompt
-	}
+	// 各フィールドを更新
+	channel.Name = req.Name
+	channel.Description = req.Description
+	channel.UserPrompt = req.UserPrompt
 
 	// カテゴリの更新
-	if req.CategoryID != nil {
-		categoryID, err := uuid.Parse(*req.CategoryID)
-		if err != nil {
-			return nil, err
-		}
-		if _, err := s.categoryRepo.FindByID(ctx, categoryID); err != nil {
-			return nil, err
-		}
-		channel.CategoryID = categoryID
+	categoryID, err := uuid.Parse(req.CategoryID)
+	if err != nil {
+		return nil, err
 	}
+	if _, err := s.categoryRepo.FindByID(ctx, categoryID); err != nil {
+		return nil, err
+	}
+	channel.CategoryID = categoryID
 
 	// アートワークの更新
 	if req.ArtworkImageID != nil {
@@ -256,20 +250,6 @@ func (s *channelService) UpdateChannel(ctx context.Context, userID, channelID st
 				return nil, err
 			}
 			channel.ArtworkID = &artworkID
-		}
-	}
-
-	// 公開日時の更新
-	if req.PublishedAt != nil {
-		if *req.PublishedAt == "" {
-			// 空文字の場合は null に設定（非公開化）
-			channel.PublishedAt = nil
-		} else {
-			publishedAt, err := time.Parse(time.RFC3339, *req.PublishedAt)
-			if err != nil {
-				return nil, apperror.ErrValidation.WithMessage("Invalid publishedAt format. Use RFC3339 format.")
-			}
-			channel.PublishedAt = &publishedAt
 		}
 	}
 
@@ -312,6 +292,99 @@ func (s *channelService) DeleteChannel(ctx context.Context, userID, channelID st
 	}
 
 	return s.channelRepo.Delete(ctx, cid)
+}
+
+// チャンネルを公開する
+func (s *channelService) PublishChannel(ctx context.Context, userID, channelID string, publishedAt *string) (*response.ChannelDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to publish this channel")
+	}
+
+	// 公開日時を設定
+	if publishedAt == nil || *publishedAt == "" {
+		// 省略時は現在時刻で即時公開
+		now := time.Now()
+		channel.PublishedAt = &now
+	} else {
+		// 指定された日時でパース
+		parsedTime, err := time.Parse(time.RFC3339, *publishedAt)
+		if err != nil {
+			return nil, apperror.ErrValidation.WithMessage("Invalid publishedAt format. Use RFC3339 format.")
+		}
+		channel.PublishedAt = &parsedTime
+	}
+
+	// チャンネルを更新
+	if err := s.channelRepo.Update(ctx, channel); err != nil {
+		return nil, err
+	}
+
+	// リレーションをプリロードして取得
+	updated, err := s.channelRepo.FindByID(ctx, channel.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.ChannelDataResponse{
+		Data: toChannelResponse(updated, true),
+	}, nil
+}
+
+// チャンネルを非公開にする
+func (s *channelService) UnpublishChannel(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to unpublish this channel")
+	}
+
+	// 公開日時を null に設定（非公開化）
+	channel.PublishedAt = nil
+
+	// チャンネルを更新
+	if err := s.channelRepo.Update(ctx, channel); err != nil {
+		return nil, err
+	}
+
+	// リレーションをプリロードして取得
+	updated, err := s.channelRepo.FindByID(ctx, channel.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.ChannelDataResponse{
+		Data: toChannelResponse(updated, true),
+	}, nil
 }
 
 // Channel モデルのスライスをレスポンス DTO のスライスに変換する

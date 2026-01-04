@@ -971,6 +971,142 @@ const docTemplate = `{
                 }
             }
         },
+        "/channels/{channelId}/publish": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したチャンネルを公開します。publishedAt を省略すると現在時刻で即時公開、指定すると予約公開になります。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "channels"
+                ],
+                "summary": "チャンネル公開",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "チャンネル ID",
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "公開リクエスト",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/request.PublishChannelRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ChannelDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/channels/{channelId}/unpublish": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したチャンネルを非公開（下書き）状態に戻します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "channels"
+                ],
+                "summary": "チャンネル非公開",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "チャンネル ID",
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ChannelDataResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/me": {
             "get": {
                 "security": [
@@ -1426,14 +1562,16 @@ const docTemplate = `{
                     }
                 },
                 "description": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 2000
                 },
                 "name": {
                     "type": "string",
                     "maxLength": 255
                 },
                 "userPrompt": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 2000
                 }
             }
         },
@@ -1449,7 +1587,8 @@ const docTemplate = `{
                     "maxLength": 255
                 },
                 "persona": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 2000
                 },
                 "voiceId": {
                     "type": "string"
@@ -1459,6 +1598,7 @@ const docTemplate = `{
         "request.CreateEpisodeRequest": {
             "type": "object",
             "required": [
+                "description",
                 "title"
             ],
             "properties": {
@@ -1469,7 +1609,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "description": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 2000
                 },
                 "title": {
                     "type": "string",
@@ -1489,7 +1630,8 @@ const docTemplate = `{
                     "minimum": 3
                 },
                 "prompt": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 2000
                 }
             }
         },
@@ -1538,6 +1680,15 @@ const docTemplate = `{
                 }
             }
         },
+        "request.PublishChannelRequest": {
+            "type": "object",
+            "properties": {
+                "publishedAt": {
+                    "description": "RFC3339 形式。省略時は現在時刻",
+                    "type": "string"
+                }
+            }
+        },
         "request.PublishEpisodeRequest": {
             "type": "object",
             "properties": {
@@ -1571,6 +1722,12 @@ const docTemplate = `{
         },
         "request.UpdateChannelRequest": {
             "type": "object",
+            "required": [
+                "categoryId",
+                "description",
+                "name",
+                "userPrompt"
+            ],
             "properties": {
                 "artworkImageId": {
                     "type": "string"
@@ -1579,22 +1736,25 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "description": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 2000
                 },
                 "name": {
                     "type": "string",
                     "maxLength": 255
                 },
-                "publishedAt": {
-                    "type": "string"
-                },
                 "userPrompt": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 2000
                 }
             }
         },
         "request.UpdateEpisodeRequest": {
             "type": "object",
+            "required": [
+                "description",
+                "title"
+            ],
             "properties": {
                 "artworkImageId": {
                     "type": "string"
@@ -1603,14 +1763,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "description": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 2000
                 },
                 "title": {
                     "type": "string",
                     "maxLength": 255
-                },
-                "userPrompt": {
-                    "type": "string"
                 }
             }
         },

@@ -19,16 +19,20 @@ type CreateChannelRequest struct {
 // キャラクター作成リクエスト
 type CreateCharacterRequest struct {
 	Name    string `json:"name" binding:"required,max=255"`
-	Persona string `json:"persona" binding:"max=500"`
+	Persona string `json:"persona" binding:"max=2000"`
 	VoiceID string `json:"voiceId" binding:"required,uuid"`
 }
 
 // チャンネル更新リクエスト
 type UpdateChannelRequest struct {
-	Name           *string `json:"name" binding:"omitempty,max=255"`
-	Description    *string `json:"description" binding:"omitempty,max=2000"`
-	UserPrompt     *string `json:"userPrompt" binding:"omitempty,max=2000"`
-	CategoryID     *string `json:"categoryId" binding:"omitempty,uuid"`
+	Name           string  `json:"name" binding:"required,max=255"`
+	Description    string  `json:"description" binding:"required,max=2000"`
+	UserPrompt     string  `json:"userPrompt" binding:"required,max=2000"`
+	CategoryID     string  `json:"categoryId" binding:"required,uuid"`
 	ArtworkImageID *string `json:"artworkImageId" binding:"omitempty,uuid"`
-	PublishedAt    *string `json:"publishedAt"`
+}
+
+// チャンネル公開リクエスト
+type PublishChannelRequest struct {
+	PublishedAt *string `json:"publishedAt"` // RFC3339 形式。省略時は現在時刻
 }

@@ -76,6 +76,8 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.POST("/channels", container.ChannelHandler.CreateChannel)
 	authenticated.PATCH("/channels/:channelId", container.ChannelHandler.UpdateChannel)
 	authenticated.DELETE("/channels/:channelId", container.ChannelHandler.DeleteChannel)
+	authenticated.POST("/channels/:channelId/publish", container.ChannelHandler.PublishChannel)
+	authenticated.POST("/channels/:channelId/unpublish", container.ChannelHandler.UnpublishChannel)
 
 	// Episodes
 	authenticated.POST("/channels/:channelId/episodes", container.EpisodeHandler.CreateEpisode)

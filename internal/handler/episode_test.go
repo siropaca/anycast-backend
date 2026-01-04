@@ -42,7 +42,7 @@ func (m *mockEpisodeService) GetMyChannelEpisode(ctx context.Context, userID, ch
 	return args.Get(0).(*response.EpisodeDataResponse), args.Error(1)
 }
 
-func (m *mockEpisodeService) CreateEpisode(ctx context.Context, userID, channelID, title string, description, artworkImageID, bgmAudioID *string) (*response.EpisodeResponse, error) {
+func (m *mockEpisodeService) CreateEpisode(ctx context.Context, userID, channelID, title, description string, artworkImageID, bgmAudioID *string) (*response.EpisodeResponse, error) {
 	args := m.Called(ctx, userID, channelID, title, description, artworkImageID, bgmAudioID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -377,7 +377,7 @@ func TestEpisodeHandler_CreateEpisode(t *testing.T) {
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-		mockSvc.On("CreateEpisode", mock.Anything, userID, channelID, "Test Episode", &description, (*string)(nil), (*string)(nil)).Return(result, nil)
+		mockSvc.On("CreateEpisode", mock.Anything, userID, channelID, "Test Episode", "Test Description", (*string)(nil), (*string)(nil)).Return(result, nil)
 
 		handler := NewEpisodeHandler(mockSvc)
 		router := setupAuthenticatedEpisodeRouter(handler, userID)
@@ -397,30 +397,22 @@ func TestEpisodeHandler_CreateEpisode(t *testing.T) {
 		mockSvc.AssertExpectations(t)
 	})
 
-	t.Run("description なしでエピソードを作成できる", func(t *testing.T) {
+	t.Run("必須フィールドが欠けているとバリデーションエラーを返す", func(t *testing.T) {
 		mockSvc := new(mockEpisodeService)
-		result := &response.EpisodeResponse{
-			ID:        uuid.New(),
-			Title:     "Test Episode",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		}
-		mockSvc.On("CreateEpisode", mock.Anything, userID, channelID, "Test Episode", (*string)(nil), (*string)(nil), (*string)(nil)).Return(result, nil)
-
 		handler := NewEpisodeHandler(mockSvc)
 		router := setupAuthenticatedEpisodeRouter(handler, userID)
 
+		// title のみで description が欠けている
 		body := `{"title":"Test Episode"}`
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes", bytes.NewBufferString(body))
 		req.Header.Set("Content-Type", "application/json")
 		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusCreated, w.Code)
-		mockSvc.AssertExpectations(t)
+		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
-	t.Run("title が空の場合は 400 を返す", func(t *testing.T) {
+	t.Run("title と description が空の場合は 400 を返す", func(t *testing.T) {
 		mockSvc := new(mockEpisodeService)
 		handler := NewEpisodeHandler(mockSvc)
 		router := setupAuthenticatedEpisodeRouter(handler, userID)
@@ -441,7 +433,7 @@ func TestEpisodeHandler_CreateEpisode(t *testing.T) {
 		handler := NewEpisodeHandler(mockSvc)
 		router := setupAuthenticatedEpisodeRouter(handler, userID)
 
-		body := `{"title":"Test Episode"}`
+		body := `{"title":"Test Episode","description":"Test Description"}`
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes", bytes.NewBufferString(body))
 		req.Header.Set("Content-Type", "application/json")
@@ -458,7 +450,7 @@ func TestEpisodeHandler_CreateEpisode(t *testing.T) {
 		handler := NewEpisodeHandler(mockSvc)
 		router := setupAuthenticatedEpisodeRouter(handler, userID)
 
-		body := `{"title":"Test Episode"}`
+		body := `{"title":"Test Episode","description":"Test Description"}`
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes", bytes.NewBufferString(body))
 		req.Header.Set("Content-Type", "application/json")
@@ -509,32 +501,19 @@ func TestEpisodeHandler_UpdateEpisode(t *testing.T) {
 		mockSvc.AssertExpectations(t)
 	})
 
-	t.Run("title のみを更新できる", func(t *testing.T) {
+	t.Run("必須フィールドが欠けているとバリデーションエラーを返す", func(t *testing.T) {
 		mockSvc := new(mockEpisodeService)
-		title := "Updated Title"
-		userPrompt := "Test User Prompt"
-		result := &response.EpisodeDataResponse{
-			Data: response.EpisodeResponse{
-				ID:         uuid.MustParse(episodeID),
-				Title:      title,
-				UserPrompt: &userPrompt,
-				CreatedAt:  time.Now(),
-				UpdatedAt:  time.Now(),
-			},
-		}
-		mockSvc.On("UpdateEpisode", mock.Anything, userID, channelID, episodeID, mock.AnythingOfType("request.UpdateEpisodeRequest")).Return(result, nil)
-
 		handler := NewEpisodeHandler(mockSvc)
 		router := setupAuthenticatedEpisodeRouter(handler, userID)
 
+		// title のみで description が欠けている
 		body := `{"title":"Updated Title"}`
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("PATCH", "/channels/"+channelID+"/episodes/"+episodeID, bytes.NewBufferString(body))
 		req.Header.Set("Content-Type", "application/json")
 		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusOK, w.Code)
-		mockSvc.AssertExpectations(t)
+		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
 	t.Run("エピソードが見つからない場合は 404 を返す", func(t *testing.T) {
@@ -544,7 +523,7 @@ func TestEpisodeHandler_UpdateEpisode(t *testing.T) {
 		handler := NewEpisodeHandler(mockSvc)
 		router := setupAuthenticatedEpisodeRouter(handler, userID)
 
-		body := `{"title":"Updated Title"}`
+		body := `{"title":"Updated Title","description":"Updated Description"}`
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("PATCH", "/channels/"+channelID+"/episodes/"+episodeID, bytes.NewBufferString(body))
 		req.Header.Set("Content-Type", "application/json")
@@ -561,7 +540,7 @@ func TestEpisodeHandler_UpdateEpisode(t *testing.T) {
 		handler := NewEpisodeHandler(mockSvc)
 		router := setupAuthenticatedEpisodeRouter(handler, userID)
 
-		body := `{"title":"Updated Title"}`
+		body := `{"title":"Updated Title","description":"Updated Description"}`
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("PATCH", "/channels/"+channelID+"/episodes/"+episodeID, bytes.NewBufferString(body))
 		req.Header.Set("Content-Type", "application/json")
@@ -590,7 +569,7 @@ func TestEpisodeHandler_UpdateEpisode(t *testing.T) {
 		handler := NewEpisodeHandler(mockSvc)
 		router := setupEpisodeRouter(handler)
 
-		body := `{"title":"Updated Title"}`
+		body := `{"title":"Updated Title","description":"Updated Description"}`
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("PATCH", "/channels/"+channelID+"/episodes/"+episodeID, bytes.NewBufferString(body))
 		req.Header.Set("Content-Type", "application/json")
