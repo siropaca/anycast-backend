@@ -221,9 +221,6 @@ func (s *episodeService) UpdateEpisode(ctx context.Context, userID, channelID, e
 	if req.Description != nil {
 		episode.Description = req.Description
 	}
-	if req.UserPrompt != nil {
-		episode.UserPrompt = req.UserPrompt
-	}
 
 	// アートワークの更新
 	if req.ArtworkImageID != nil {

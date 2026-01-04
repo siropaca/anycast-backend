@@ -1426,14 +1426,16 @@ const docTemplate = `{
                     }
                 },
                 "description": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 2000
                 },
                 "name": {
                     "type": "string",
                     "maxLength": 255
                 },
                 "userPrompt": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 2000
                 }
             }
         },
@@ -1449,7 +1451,8 @@ const docTemplate = `{
                     "maxLength": 255
                 },
                 "persona": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 2000
                 },
                 "voiceId": {
                     "type": "string"
@@ -1469,7 +1472,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "description": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 2000
                 },
                 "title": {
                     "type": "string",
@@ -1489,7 +1493,8 @@ const docTemplate = `{
                     "minimum": 3
                 },
                 "prompt": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 2000
                 }
             }
         },
@@ -1579,7 +1584,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "description": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 2000
                 },
                 "name": {
                     "type": "string",
@@ -1589,7 +1595,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "userPrompt": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 2000
                 }
             }
         },
@@ -1603,14 +1610,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "description": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 2000
                 },
                 "title": {
                     "type": "string",
                     "maxLength": 255
-                },
-                "userPrompt": {
-                    "type": "string"
                 }
             }
         },
