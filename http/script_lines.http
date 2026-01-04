@@ -14,7 +14,7 @@ Content-Type: application/json
 
 {
   "prompt": "今日の天気について楽しく話す",
-  "durationMinutes": 10
+  "durationMinutes": 3
 }
 
 ### 台本を AI で生成（durationMinutes 省略）
