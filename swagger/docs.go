@@ -1017,7 +1017,6 @@ const docTemplate = `{
         "request.CreateEpisodeRequest": {
             "type": "object",
             "required": [
-                "scriptPrompt",
                 "title"
             ],
             "properties": {
@@ -1028,9 +1027,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "description": {
-                    "type": "string"
-                },
-                "scriptPrompt": {
                     "type": "string"
                 },
                 "title": {
@@ -1423,7 +1419,6 @@ const docTemplate = `{
             "required": [
                 "createdAt",
                 "id",
-                "scriptPrompt",
                 "title",
                 "updatedAt"
             ],

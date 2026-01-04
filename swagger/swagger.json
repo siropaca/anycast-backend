@@ -1011,7 +1011,6 @@
         "request.CreateEpisodeRequest": {
             "type": "object",
             "required": [
-                "scriptPrompt",
                 "title"
             ],
             "properties": {
@@ -1022,9 +1021,6 @@
                     "type": "string"
                 },
                 "description": {
-                    "type": "string"
-                },
-                "scriptPrompt": {
                     "type": "string"
                 },
                 "title": {
@@ -1417,7 +1413,6 @@
             "required": [
                 "createdAt",
                 "id",
-                "scriptPrompt",
                 "title",
                 "updatedAt"
             ],
