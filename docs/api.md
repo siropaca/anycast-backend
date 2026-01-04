@@ -68,6 +68,7 @@
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId/script/export` | [台本テキスト出力](#台本テキスト出力) | |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/generate` | [台本を AI で生成](#台本を-ai-で生成) | |
 | **[ScriptLines（台本行）](#scriptlines台本行)** | - | - | - |
+| GET | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines` | [台本行一覧取得](#台本行一覧取得) | ✅ |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines` | [行追加](#行追加) | |
 | PATCH | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | [行更新](#行更新) | |
 | DELETE | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | [行削除](#行削除) | |
@@ -1358,6 +1359,50 @@ POST /channels/:channelId/episodes/:episodeId/script/generate
 ---
 
 ## ScriptLines（台本行）
+
+### 台本行一覧取得
+
+```
+GET /channels/:channelId/episodes/:episodeId/script/lines
+```
+
+指定したエピソードの台本行一覧を `lineOrder` 順で取得する。
+
+**レスポンス:**
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "lineOrder": 0,
+      "lineType": "speech",
+      "speaker": { "id": "uuid", "name": "太郎" },
+      "text": "こんにちは",
+      "emotion": null,
+      "audio": { "id": "uuid", "url": "...", "durationMs": 2500 },
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": "uuid",
+      "lineOrder": 1,
+      "lineType": "silence",
+      "durationMs": 800,
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": "uuid",
+      "lineOrder": 2,
+      "lineType": "sfx",
+      "sfx": { "id": "uuid", "name": "chime" },
+      "volume": 0.8,
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
+    }
+  ]
+}
+```
 
 ### 行追加
 

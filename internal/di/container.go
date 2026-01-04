@@ -13,12 +13,13 @@ import (
 
 // DI コンテナ
 type Container struct {
-	VoiceHandler    *handler.VoiceHandler
-	AuthHandler     *handler.AuthHandler
-	ChannelHandler  *handler.ChannelHandler
-	CategoryHandler *handler.CategoryHandler
-	EpisodeHandler  *handler.EpisodeHandler
-	TokenManager    jwt.TokenManager
+	VoiceHandler      *handler.VoiceHandler
+	AuthHandler       *handler.AuthHandler
+	ChannelHandler    *handler.ChannelHandler
+	CategoryHandler   *handler.CategoryHandler
+	EpisodeHandler    *handler.EpisodeHandler
+	ScriptLineHandler *handler.ScriptLineHandler
+	TokenManager      jwt.TokenManager
 }
 
 // 依存関係を構築して Container を返す
@@ -36,6 +37,7 @@ func NewContainer(db *gorm.DB, cfg *config.Config) *Container {
 	channelRepo := repository.NewChannelRepository(db)
 	categoryRepo := repository.NewCategoryRepository(db)
 	episodeRepo := repository.NewEpisodeRepository(db)
+	scriptLineRepo := repository.NewScriptLineRepository(db)
 
 	// Service 層
 	voiceService := service.NewVoiceService(voiceRepo)
@@ -43,6 +45,7 @@ func NewContainer(db *gorm.DB, cfg *config.Config) *Container {
 	channelService := service.NewChannelService(channelRepo, categoryRepo, imageRepo, voiceRepo)
 	categoryService := service.NewCategoryService(categoryRepo)
 	episodeService := service.NewEpisodeService(episodeRepo, channelRepo)
+	scriptLineService := service.NewScriptLineService(scriptLineRepo, episodeRepo, channelRepo)
 
 	// Handler 層
 	voiceHandler := handler.NewVoiceHandler(voiceService)
@@ -50,13 +53,15 @@ func NewContainer(db *gorm.DB, cfg *config.Config) *Container {
 	channelHandler := handler.NewChannelHandler(channelService)
 	categoryHandler := handler.NewCategoryHandler(categoryService)
 	episodeHandler := handler.NewEpisodeHandler(episodeService)
+	scriptLineHandler := handler.NewScriptLineHandler(scriptLineService)
 
 	return &Container{
-		VoiceHandler:    voiceHandler,
-		AuthHandler:     authHandler,
-		ChannelHandler:  channelHandler,
-		CategoryHandler: categoryHandler,
-		EpisodeHandler:  episodeHandler,
-		TokenManager:    tokenManager,
+		VoiceHandler:      voiceHandler,
+		AuthHandler:       authHandler,
+		ChannelHandler:    channelHandler,
+		CategoryHandler:   categoryHandler,
+		EpisodeHandler:    episodeHandler,
+		ScriptLineHandler: scriptLineHandler,
+		TokenManager:      tokenManager,
 	}
 }
