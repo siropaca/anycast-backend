@@ -80,25 +80,6 @@ func (m *mockEpisodeRepository) Delete(ctx context.Context, id uuid.UUID) error 
 	return args.Error(0)
 }
 
-type mockScriptLineRepository struct {
-	mock.Mock
-}
-
-func (m *mockScriptLineRepository) FindByEpisodeID(ctx context.Context, episodeID uuid.UUID) ([]model.ScriptLine, error) {
-	args := m.Called(ctx, episodeID)
-	return args.Get(0).([]model.ScriptLine), args.Error(1)
-}
-
-func (m *mockScriptLineRepository) DeleteByEpisodeID(ctx context.Context, episodeID uuid.UUID) error {
-	args := m.Called(ctx, episodeID)
-	return args.Error(0)
-}
-
-func (m *mockScriptLineRepository) CreateBatch(ctx context.Context, scriptLines []model.ScriptLine) ([]model.ScriptLine, error) {
-	args := m.Called(ctx, scriptLines)
-	return args.Get(0).([]model.ScriptLine), args.Error(1)
-}
-
 type mockLLMClient struct {
 	mock.Mock
 }
