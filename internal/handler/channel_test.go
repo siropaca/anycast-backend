@@ -34,6 +34,14 @@ func (m *mockChannelService) GetChannel(ctx context.Context, userID, channelID s
 	return args.Get(0).(*response.ChannelDataResponse), args.Error(1)
 }
 
+func (m *mockChannelService) GetMyChannel(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error) {
+	args := m.Called(ctx, userID, channelID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.ChannelDataResponse), args.Error(1)
+}
+
 func (m *mockChannelService) ListMyChannels(ctx context.Context, userID string, filter repository.ChannelFilter) (*response.ChannelListWithPaginationResponse, error) {
 	args := m.Called(ctx, userID, filter)
 	if args.Get(0) == nil {
@@ -68,6 +76,7 @@ func setupChannelRouter(h *ChannelHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	r.GET("/me/channels", h.ListMyChannels)
+	r.GET("/me/channels/:channelId", h.GetMyChannel)
 	r.POST("/channels", h.CreateChannel)
 	r.GET("/channels/:channelId", h.GetChannel)
 	r.PATCH("/channels/:channelId", h.UpdateChannel)
@@ -89,6 +98,7 @@ func setupAuthenticatedChannelRouter(h *ChannelHandler, userID string) *gin.Engi
 	r := gin.New()
 	r.Use(withUserID(userID))
 	r.GET("/me/channels", h.ListMyChannels)
+	r.GET("/me/channels/:channelId", h.GetMyChannel)
 	r.POST("/channels", h.CreateChannel)
 	r.GET("/channels/:channelId", h.GetChannel)
 	r.PATCH("/channels/:channelId", h.UpdateChannel)
@@ -223,6 +233,90 @@ func TestChannelHandler_ListMyChannels(t *testing.T) {
 
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", "/me/channels", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
+}
+
+func TestChannelHandler_GetMyChannel(t *testing.T) {
+	userID := uuid.New().String()
+	channelID := uuid.New().String()
+
+	t.Run("自分のチャンネルを取得できる", func(t *testing.T) {
+		mockSvc := new(mockChannelService)
+		channelResp := createTestChannelResponse()
+		result := &response.ChannelDataResponse{Data: channelResp}
+		mockSvc.On("GetMyChannel", mock.Anything, userID, channelID).Return(result, nil)
+
+		handler := NewChannelHandler(mockSvc)
+		router := setupAuthenticatedChannelRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/me/channels/"+channelID, http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var resp response.ChannelDataResponse
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, resp.Data.ID)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("チャンネルが見つからない場合は 404 を返す", func(t *testing.T) {
+		mockSvc := new(mockChannelService)
+		mockSvc.On("GetMyChannel", mock.Anything, userID, channelID).Return(nil, apperror.ErrNotFound.WithMessage("Channel not found"))
+
+		handler := NewChannelHandler(mockSvc)
+		router := setupAuthenticatedChannelRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/me/channels/"+channelID, http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("権限がない場合は 403 を返す", func(t *testing.T) {
+		mockSvc := new(mockChannelService)
+		mockSvc.On("GetMyChannel", mock.Anything, userID, channelID).Return(nil, apperror.ErrForbidden.WithMessage("You do not have permission"))
+
+		handler := NewChannelHandler(mockSvc)
+		router := setupAuthenticatedChannelRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/me/channels/"+channelID, http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("サービスがエラーを返すとエラーレスポンスを返す", func(t *testing.T) {
+		mockSvc := new(mockChannelService)
+		mockSvc.On("GetMyChannel", mock.Anything, userID, channelID).Return(nil, apperror.ErrInternal)
+
+		handler := NewChannelHandler(mockSvc)
+		router := setupAuthenticatedChannelRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/me/channels/"+channelID, http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("未認証の場合は 401 を返す", func(t *testing.T) {
+		mockSvc := new(mockChannelService)
+		handler := NewChannelHandler(mockSvc)
+		router := setupChannelRouter(handler)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/me/channels/"+channelID, http.NoBody)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)

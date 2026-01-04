@@ -56,7 +56,9 @@
 | GET | `/api/v1/me` | [現在のユーザー取得](#現在のユーザー取得) | ✅ |
 | PATCH | `/api/v1/me` | [ユーザー情報更新](#ユーザー情報更新) | |
 | GET | `/api/v1/me/channels` | [自分のチャンネル一覧](#自分のチャンネル一覧取得) | ✅ |
+| GET | `/api/v1/me/channels/:channelId` | [自分のチャンネル取得](#自分のチャンネル取得) | ✅ |
 | GET | `/api/v1/me/channels/:channelId/episodes` | [自分のチャンネルのエピソード一覧](#自分のチャンネルのエピソード一覧取得) | ✅ |
+| GET | `/api/v1/me/channels/:channelId/episodes/:episodeId` | [自分のチャンネルのエピソード取得](#自分のチャンネルのエピソード取得) | ✅ |
 | **[Episodes](#episodes)** | - | - | - |
 | GET | `/api/v1/channels/:channelId/episodes` | [エピソード一覧取得](#エピソード一覧取得公開用) | |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId` | [エピソード取得](#エピソード取得) | |
@@ -1073,6 +1075,69 @@ GET /me/channels
 }
 ```
 
+### 自分のチャンネル取得
+
+```
+GET /me/channels/:channelId
+```
+
+自分のチャンネルを取得（非公開含む）。編集画面での使用を想定。
+
+**パスパラメータ:**
+
+| パラメータ | 型 | 説明 |
+|------------|-----|------|
+| channelId | uuid | チャンネル ID |
+
+**レスポンス:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "name": "チャンネル名",
+    "description": "説明",
+    "scriptPrompt": "明るく楽しい雰囲気で...",
+    "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
+    "artwork": { "id": "uuid", "url": "..." },
+    "characters": [
+      {
+        "id": "uuid",
+        "name": "太郎",
+        "persona": "明るい性格",
+        "voice": {
+          "id": "uuid",
+          "name": "ja-JP-Wavenet-C",
+          "gender": "male"
+        }
+      }
+    ],
+    "publishedAt": "2025-01-01T00:00:00Z",
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+**エラー（403 Forbidden）:**
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "このチャンネルへのアクセス権限がありません"
+  }
+}
+```
+
+**エラー（404 Not Found）:**
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "チャンネルが見つかりません"
+  }
+}
+```
+
 ### 自分のチャンネルのエピソード一覧取得
 
 ```
@@ -1134,6 +1199,58 @@ GET /me/channels/:channelId/episodes
   "error": {
     "code": "NOT_FOUND",
     "message": "チャンネルが見つかりません"
+  }
+}
+```
+
+### 自分のチャンネルのエピソード取得
+
+```
+GET /me/channels/:channelId/episodes/:episodeId
+```
+
+自分のチャンネルに紐付くエピソードを取得（非公開含む）。編集画面での使用を想定。
+
+**パスパラメータ:**
+
+| パラメータ | 型 | 説明 |
+|------------|-----|------|
+| channelId | uuid | チャンネル ID |
+| episodeId | uuid | エピソード ID |
+
+**レスポンス:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "title": "エピソードタイトル",
+    "description": "エピソードの説明",
+    "scriptPrompt": "今回のテーマについて詳しく解説する",
+    "artwork": { "id": "uuid", "url": "..." },
+    "fullAudio": { "id": "uuid", "url": "...", "durationMs": 180000 },
+    "publishedAt": "2025-01-01T00:00:00Z",
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+**エラー（403 Forbidden）:**
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "このチャンネルへのアクセス権限がありません"
+  }
+}
+```
+
+**エラー（404 Not Found）:**
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "エピソードが見つかりません"
   }
 }
 ```
