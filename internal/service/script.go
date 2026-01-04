@@ -129,7 +129,7 @@ func (s *scriptService) GenerateScript(ctx context.Context, userID, channelID, e
 	userPrompt := s.buildUserPrompt(channel, prompt, duration)
 
 	// LLM で台本生成
-	generatedText, err := s.llmClient.GenerateScript(ctx, strings.TrimSpace(systemPrompt), userPrompt)
+	generatedText, err := s.llmClient.GenerateScript(ctx, systemPrompt, userPrompt)
 	if err != nil {
 		return nil, err
 	}
