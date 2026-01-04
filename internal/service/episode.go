@@ -167,13 +167,13 @@ func (s *episodeService) CreateEpisode(ctx context.Context, userID, channelID, t
 	}
 
 	return &response.EpisodeResponse{
-		ID:           episode.ID,
-		Title:        episode.Title,
-		Description:  episode.Description,
-		ScriptPrompt: episode.ScriptPrompt,
-		PublishedAt:  episode.PublishedAt,
-		CreatedAt:    episode.CreatedAt,
-		UpdatedAt:    episode.UpdatedAt,
+		ID:          episode.ID,
+		Title:       episode.Title,
+		Description: episode.Description,
+		UserPrompt:  episode.UserPrompt,
+		PublishedAt: episode.PublishedAt,
+		CreatedAt:   episode.CreatedAt,
+		UpdatedAt:   episode.UpdatedAt,
 	}, nil
 }
 
@@ -221,8 +221,8 @@ func (s *episodeService) UpdateEpisode(ctx context.Context, userID, channelID, e
 	if req.Description != nil {
 		episode.Description = req.Description
 	}
-	if req.ScriptPrompt != nil {
-		episode.ScriptPrompt = req.ScriptPrompt
+	if req.UserPrompt != nil {
+		episode.UserPrompt = req.UserPrompt
 	}
 
 	// アートワークの更新
@@ -447,13 +447,13 @@ func toEpisodeResponses(episodes []model.Episode) []response.EpisodeResponse {
 // Episode モデルをレスポンス DTO に変換する
 func toEpisodeResponse(e *model.Episode) response.EpisodeResponse {
 	resp := response.EpisodeResponse{
-		ID:           e.ID,
-		Title:        e.Title,
-		Description:  e.Description,
-		ScriptPrompt: e.ScriptPrompt,
-		PublishedAt:  e.PublishedAt,
-		CreatedAt:    e.CreatedAt,
-		UpdatedAt:    e.UpdatedAt,
+		ID:          e.ID,
+		Title:       e.Title,
+		Description: e.Description,
+		UserPrompt:  e.UserPrompt,
+		PublishedAt: e.PublishedAt,
+		CreatedAt:   e.CreatedAt,
+		UpdatedAt:   e.UpdatedAt,
 	}
 
 	if e.Artwork != nil {

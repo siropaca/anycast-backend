@@ -110,10 +110,10 @@ func setupAuthenticatedChannelRouter(h *ChannelHandler, userID string) *gin.Engi
 func createTestChannelResponse() response.ChannelResponse {
 	now := time.Now()
 	return response.ChannelResponse{
-		ID:           uuid.New(),
-		Name:         "Test Channel",
-		Description:  "Test Description",
-		ScriptPrompt: "Test Script Prompt",
+		ID:          uuid.New(),
+		Name:        "Test Channel",
+		Description: "Test Description",
+		UserPrompt:  "Test User Prompt",
 		Category: response.CategoryResponse{
 			ID:        uuid.New(),
 			Slug:      "technology",
@@ -339,10 +339,10 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 		router := setupAuthenticatedChannelRouter(handler, userID)
 
 		reqBody := request.CreateChannelRequest{
-			Name:         "New Channel",
-			Description:  "Description",
-			ScriptPrompt: "Script prompt",
-			CategoryID:   categoryID,
+			Name:        "New Channel",
+			Description: "Description",
+			UserPrompt:  "User prompt",
+			CategoryID:  categoryID,
 			Characters: []request.CreateCharacterRequest{
 				{Name: "Host", Persona: "Friendly", VoiceID: voiceID},
 			},
@@ -390,10 +390,10 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 		router := setupAuthenticatedChannelRouter(handler, userID)
 
 		reqBody := request.CreateChannelRequest{
-			Name:         "New Channel",
-			Description:  "Description",
-			ScriptPrompt: "Script prompt",
-			CategoryID:   categoryID,
+			Name:        "New Channel",
+			Description: "Description",
+			UserPrompt:  "User prompt",
+			CategoryID:  categoryID,
 			Characters: []request.CreateCharacterRequest{
 				{Name: "Host", Persona: "Friendly", VoiceID: voiceID},
 			},
@@ -415,10 +415,10 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 		router := setupChannelRouter(handler)
 
 		reqBody := request.CreateChannelRequest{
-			Name:         "New Channel",
-			Description:  "Description",
-			ScriptPrompt: "Script prompt",
-			CategoryID:   categoryID,
+			Name:        "New Channel",
+			Description: "Description",
+			UserPrompt:  "User prompt",
+			CategoryID:  categoryID,
 			Characters: []request.CreateCharacterRequest{
 				{Name: "Host", Persona: "Friendly", VoiceID: voiceID},
 			},

@@ -8,16 +8,16 @@ import (
 
 // チャンネル情報のレスポンス
 type ChannelResponse struct {
-	ID           uuid.UUID           `json:"id" validate:"required"`
-	Name         string              `json:"name" validate:"required"`
-	Description  string              `json:"description" validate:"required"`
-	ScriptPrompt string              `json:"scriptPrompt" validate:"required"`
-	Category     CategoryResponse    `json:"category" validate:"required"`
-	Artwork      *ArtworkResponse    `json:"artwork" extensions:"x-nullable"`
-	Characters   []CharacterResponse `json:"characters" validate:"required"`
-	PublishedAt  *time.Time          `json:"publishedAt" extensions:"x-nullable"`
-	CreatedAt    time.Time           `json:"createdAt" validate:"required"`
-	UpdatedAt    time.Time           `json:"updatedAt" validate:"required"`
+	ID          uuid.UUID           `json:"id" validate:"required"`
+	Name        string              `json:"name" validate:"required"`
+	Description string              `json:"description" validate:"required"`
+	UserPrompt  string              `json:"userPrompt" validate:"required"`
+	Category    CategoryResponse    `json:"category" validate:"required"`
+	Artwork     *ArtworkResponse    `json:"artwork" extensions:"x-nullable"`
+	Characters  []CharacterResponse `json:"characters" validate:"required"`
+	PublishedAt *time.Time          `json:"publishedAt" extensions:"x-nullable"`
+	CreatedAt   time.Time           `json:"createdAt" validate:"required"`
+	UpdatedAt   time.Time           `json:"updatedAt" validate:"required"`
 }
 
 // キャラクター情報のレスポンス

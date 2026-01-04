@@ -230,7 +230,7 @@ OAuth プロバイダとの連携情報。
 | userId | UUID | ◯ | オーナー |
 | name | String | ◯ | チャンネル名 |
 | description | String | | チャンネルの概要・説明（公開情報） |
-| scriptPrompt | String | | 台本生成の全体方針（AI への指示、内部管理用） |
+| userPrompt | String | | 台本生成の全体方針（AI への指示、内部管理用） |
 | category | Category | ◯ | カテゴリ |
 | artwork | Image | | カバー画像（ポッドキャストのアートワーク） |
 | characters | Character[] | ◯ | 登場人物（1〜2 人） |
@@ -273,7 +273,7 @@ OAuth プロバイダとの連携情報。
 | channelId | UUID | ◯ | 所属する Channel |
 | title | String | ◯ | エピソードタイトル |
 | description | String | | エピソードの説明（公開情報） |
-| scriptPrompt | String | | エピソード固有の台本生成設定（台本生成時に自動保存、内部管理用） |
+| userPrompt | String | | エピソード固有の台本生成設定（台本生成時に自動保存、内部管理用） |
 | script | ScriptLine[] | | 台本（順序付きの ScriptLine 配列） |
 | bgm | Audio | | BGM 音声ファイル |
 | fullAudio | Audio | | 結合済み音声（全 ScriptLine + BGM） |
