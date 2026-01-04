@@ -518,9 +518,11 @@ func TestChannelHandler_UpdateChannel(t *testing.T) {
 		handler := NewChannelHandler(mockSvc)
 		router := setupAuthenticatedChannelRouter(handler, userID)
 
-		newName := "Updated Channel"
 		reqBody := request.UpdateChannelRequest{
-			Name: &newName,
+			Name:        "Updated Channel",
+			Description: "Updated Description",
+			UserPrompt:  "Updated User Prompt",
+			CategoryID:  uuid.New().String(),
 		}
 		body, _ := json.Marshal(reqBody)
 
@@ -538,16 +540,15 @@ func TestChannelHandler_UpdateChannel(t *testing.T) {
 		mockSvc.AssertExpectations(t)
 	})
 
-	t.Run("空のリクエストボディでも更新できる", func(t *testing.T) {
+	t.Run("必須フィールドが欠けているとバリデーションエラーを返す", func(t *testing.T) {
 		mockSvc := new(mockChannelService)
-		channelResp := createTestChannelResponse()
-		result := &response.ChannelDataResponse{Data: channelResp}
-		mockSvc.On("UpdateChannel", mock.Anything, userID, channelID, mock.AnythingOfType("request.UpdateChannelRequest")).Return(result, nil)
-
 		handler := NewChannelHandler(mockSvc)
 		router := setupAuthenticatedChannelRouter(handler, userID)
 
-		reqBody := request.UpdateChannelRequest{}
+		// 必須フィールドが欠けているリクエスト
+		reqBody := map[string]any{
+			"name": "Channel without required fields",
+		}
 		body, _ := json.Marshal(reqBody)
 
 		w := httptest.NewRecorder()
@@ -555,8 +556,7 @@ func TestChannelHandler_UpdateChannel(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusOK, w.Code)
-		mockSvc.AssertExpectations(t)
+		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
 	t.Run("権限がない場合は 403 を返す", func(t *testing.T) {
@@ -566,9 +566,11 @@ func TestChannelHandler_UpdateChannel(t *testing.T) {
 		handler := NewChannelHandler(mockSvc)
 		router := setupAuthenticatedChannelRouter(handler, userID)
 
-		newName := "Updated Channel"
 		reqBody := request.UpdateChannelRequest{
-			Name: &newName,
+			Name:        "Updated Channel",
+			Description: "Updated Description",
+			UserPrompt:  "Updated User Prompt",
+			CategoryID:  uuid.New().String(),
 		}
 		body, _ := json.Marshal(reqBody)
 
@@ -588,9 +590,11 @@ func TestChannelHandler_UpdateChannel(t *testing.T) {
 		handler := NewChannelHandler(mockSvc)
 		router := setupAuthenticatedChannelRouter(handler, userID)
 
-		newName := "Updated Channel"
 		reqBody := request.UpdateChannelRequest{
-			Name: &newName,
+			Name:        "Updated Channel",
+			Description: "Updated Description",
+			UserPrompt:  "Updated User Prompt",
+			CategoryID:  uuid.New().String(),
 		}
 		body, _ := json.Marshal(reqBody)
 
@@ -608,9 +612,11 @@ func TestChannelHandler_UpdateChannel(t *testing.T) {
 		handler := NewChannelHandler(mockSvc)
 		router := setupChannelRouter(handler)
 
-		newName := "Updated Channel"
 		reqBody := request.UpdateChannelRequest{
-			Name: &newName,
+			Name:        "Updated Channel",
+			Description: "Updated Description",
+			UserPrompt:  "Updated User Prompt",
+			CategoryID:  uuid.New().String(),
 		}
 		body, _ := json.Marshal(reqBody)
 

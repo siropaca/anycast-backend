@@ -25,10 +25,10 @@ type CreateCharacterRequest struct {
 
 // チャンネル更新リクエスト
 type UpdateChannelRequest struct {
-	Name           *string `json:"name" binding:"omitempty,max=255"`
-	Description    *string `json:"description" binding:"omitempty,max=2000"`
-	UserPrompt     *string `json:"userPrompt" binding:"omitempty,max=2000"`
-	CategoryID     *string `json:"categoryId" binding:"omitempty,uuid"`
+	Name           string  `json:"name" binding:"required,max=255"`
+	Description    string  `json:"description" binding:"required,max=2000"`
+	UserPrompt     string  `json:"userPrompt" binding:"required,max=2000"`
+	CategoryID     string  `json:"categoryId" binding:"required,uuid"`
 	ArtworkImageID *string `json:"artworkImageId" binding:"omitempty,uuid"`
 }
 

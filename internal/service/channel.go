@@ -221,28 +221,20 @@ func (s *channelService) UpdateChannel(ctx context.Context, userID, channelID st
 		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to update this channel")
 	}
 
-	// 各フィールドを更新（指定されたもののみ）
-	if req.Name != nil {
-		channel.Name = *req.Name
-	}
-	if req.Description != nil {
-		channel.Description = *req.Description
-	}
-	if req.UserPrompt != nil {
-		channel.UserPrompt = *req.UserPrompt
-	}
+	// 各フィールドを更新
+	channel.Name = req.Name
+	channel.Description = req.Description
+	channel.UserPrompt = req.UserPrompt
 
 	// カテゴリの更新
-	if req.CategoryID != nil {
-		categoryID, err := uuid.Parse(*req.CategoryID)
-		if err != nil {
-			return nil, err
-		}
-		if _, err := s.categoryRepo.FindByID(ctx, categoryID); err != nil {
-			return nil, err
-		}
-		channel.CategoryID = categoryID
+	categoryID, err := uuid.Parse(req.CategoryID)
+	if err != nil {
+		return nil, err
 	}
+	if _, err := s.categoryRepo.FindByID(ctx, categoryID); err != nil {
+		return nil, err
+	}
+	channel.CategoryID = categoryID
 
 	// アートワークの更新
 	if req.ArtworkImageID != nil {

@@ -136,10 +136,10 @@ PATCH /channels/:channelId
 **バリデーション:**
 | フィールド | ルール |
 |------------|--------|
-| name | 255文字以内 |
-| description | 2000文字以内 |
-| userPrompt | 2000文字以内 |
-| categoryId | UUID 形式 |
+| name | 必須、255文字以内 |
+| description | 必須、2000文字以内 |
+| userPrompt | 必須、2000文字以内 |
+| categoryId | 必須、UUID 形式 |
 
 > **Note:** 公開状態の変更は専用エンドポイント（[チャンネル公開](#チャンネル公開) / [チャンネル非公開](#チャンネル非公開)）を使用してください。
 

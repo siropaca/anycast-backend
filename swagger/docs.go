@@ -1721,6 +1721,12 @@ const docTemplate = `{
         },
         "request.UpdateChannelRequest": {
             "type": "object",
+            "required": [
+                "categoryId",
+                "description",
+                "name",
+                "userPrompt"
+            ],
             "properties": {
                 "artworkImageId": {
                     "type": "string"
