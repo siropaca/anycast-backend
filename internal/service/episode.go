@@ -15,7 +15,7 @@ import (
 // エピソード関連のビジネスロジックインターフェース
 type EpisodeService interface {
 	ListMyChannelEpisodes(ctx context.Context, userID, channelID string, filter repository.EpisodeFilter) (*response.EpisodeListWithPaginationResponse, error)
-	CreateEpisode(ctx context.Context, userID, channelID, title string, description *string, scriptPrompt string, artworkImageID, bgmAudioID *string) (*response.EpisodeResponse, error)
+	CreateEpisode(ctx context.Context, userID, channelID, title string, description, artworkImageID, bgmAudioID *string) (*response.EpisodeResponse, error)
 	UpdateEpisode(ctx context.Context, userID, channelID, episodeID string, req request.UpdateEpisodeRequest) (*response.EpisodeDataResponse, error)
 	DeleteEpisode(ctx context.Context, userID, channelID, episodeID string) error
 }
@@ -71,7 +71,7 @@ func (s *episodeService) ListMyChannelEpisodes(ctx context.Context, userID, chan
 }
 
 // エピソードを作成する
-func (s *episodeService) CreateEpisode(ctx context.Context, userID, channelID, title string, description *string, scriptPrompt string, artworkImageID, bgmAudioID *string) (*response.EpisodeResponse, error) {
+func (s *episodeService) CreateEpisode(ctx context.Context, userID, channelID, title string, description, artworkImageID, bgmAudioID *string) (*response.EpisodeResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
 		return nil, err
@@ -94,10 +94,9 @@ func (s *episodeService) CreateEpisode(ctx context.Context, userID, channelID, t
 
 	// エピソードを作成
 	episode := &model.Episode{
-		ChannelID:    cid,
-		Title:        title,
-		Description:  description,
-		ScriptPrompt: scriptPrompt,
+		ChannelID:   cid,
+		Title:       title,
+		Description: description,
 	}
 
 	// アートワークが指定されている場合
@@ -178,7 +177,7 @@ func (s *episodeService) UpdateEpisode(ctx context.Context, userID, channelID, e
 		episode.Description = req.Description
 	}
 	if req.ScriptPrompt != nil {
-		episode.ScriptPrompt = *req.ScriptPrompt
+		episode.ScriptPrompt = req.ScriptPrompt
 	}
 
 	// アートワークの更新

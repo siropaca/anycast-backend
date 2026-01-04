@@ -16,13 +16,14 @@ func TestToEpisodeResponse(t *testing.T) {
 	channelID := uuid.New()
 	audioID := uuid.New()
 	description := "Test Description"
+	scriptPrompt := "Test Script Prompt"
 
 	baseEpisode := &model.Episode{
 		ID:           episodeID,
 		ChannelID:    channelID,
 		Title:        "Test Episode",
 		Description:  &description,
-		ScriptPrompt: "Test Script Prompt",
+		ScriptPrompt: &scriptPrompt,
 		PublishedAt:  &now,
 		CreatedAt:    now,
 		UpdatedAt:    now,
@@ -34,7 +35,7 @@ func TestToEpisodeResponse(t *testing.T) {
 		assert.Equal(t, episodeID, resp.ID)
 		assert.Equal(t, "Test Episode", resp.Title)
 		assert.Equal(t, &description, resp.Description)
-		assert.Equal(t, "Test Script Prompt", resp.ScriptPrompt)
+		assert.Equal(t, &scriptPrompt, resp.ScriptPrompt)
 		assert.NotNil(t, resp.PublishedAt)
 		assert.Equal(t, now, resp.CreatedAt)
 		assert.Equal(t, now, resp.UpdatedAt)
@@ -90,6 +91,8 @@ func TestToEpisodeResponses(t *testing.T) {
 	channelID := uuid.New()
 	desc1 := "Description 1"
 	desc2 := "Description 2"
+	prompt1 := "Prompt 1"
+	prompt2 := "Prompt 2"
 
 	episodes := []model.Episode{
 		{
@@ -97,7 +100,7 @@ func TestToEpisodeResponses(t *testing.T) {
 			ChannelID:    channelID,
 			Title:        "Episode 1",
 			Description:  &desc1,
-			ScriptPrompt: "Prompt 1",
+			ScriptPrompt: &prompt1,
 			CreatedAt:    now,
 			UpdatedAt:    now,
 		},
@@ -106,7 +109,7 @@ func TestToEpisodeResponses(t *testing.T) {
 			ChannelID:    channelID,
 			Title:        "Episode 2",
 			Description:  &desc2,
-			ScriptPrompt: "Prompt 2",
+			ScriptPrompt: &prompt2,
 			CreatedAt:    now,
 			UpdatedAt:    now,
 		},
@@ -123,8 +126,8 @@ func TestToEpisodeResponses(t *testing.T) {
 	t.Run("scriptPrompt が含まれる", func(t *testing.T) {
 		result := toEpisodeResponses(episodes)
 
-		assert.Equal(t, "Prompt 1", result[0].ScriptPrompt)
-		assert.Equal(t, "Prompt 2", result[1].ScriptPrompt)
+		assert.Equal(t, &prompt1, result[0].ScriptPrompt)
+		assert.Equal(t, &prompt2, result[1].ScriptPrompt)
 	})
 
 	t.Run("空のスライスの場合、空のスライスを返す", func(t *testing.T) {

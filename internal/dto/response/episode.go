@@ -11,7 +11,7 @@ type EpisodeResponse struct {
 	ID           uuid.UUID        `json:"id" validate:"required"`
 	Title        string           `json:"title" validate:"required"`
 	Description  *string          `json:"description"`
-	ScriptPrompt string           `json:"scriptPrompt" validate:"required"`
+	ScriptPrompt *string          `json:"scriptPrompt,omitempty"`
 	Artwork      *ArtworkResponse `json:"artwork"`
 	FullAudio    *AudioResponse   `json:"fullAudio"`
 	PublishedAt  *time.Time       `json:"publishedAt"`
