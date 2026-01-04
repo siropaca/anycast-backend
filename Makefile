@@ -30,11 +30,11 @@ fmt:
 
 # 静的解析を実行
 lint:
-	golangci-lint run ./...
+	mise exec -- golangci-lint run ./...
 
 # 静的解析を実行（自動修正あり）
 lint-fix:
-	golangci-lint run --fix ./...
+	mise exec -- golangci-lint run --fix ./...
 
 # 依存関係を整理
 tidy:
@@ -46,20 +46,20 @@ clean:
 
 # Swagger ドキュメント生成
 swagger:
-	swag init -g main.go -o swagger --outputTypes go,json
+	mise exec -- swag init -g main.go -o swagger --outputTypes go,json
 
 # マイグレーション実行
 migrate-up:
-	migrate -path migrations -database "$(DATABASE_URL)" up
+	mise exec -- migrate -path migrations -database "$(DATABASE_URL)" up
 
 # マイグレーションロールバック
 migrate-down:
-	migrate -path migrations -database "$(DATABASE_URL)" down
+	mise exec -- migrate -path migrations -database "$(DATABASE_URL)" down
 
 # マイグレーションリセット（テーブル全削除 → 再マイグレーション）
 migrate-reset:
 	docker exec -i anycast-db psql -U postgres -d anycast -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
-	migrate -path migrations -database "$(DATABASE_URL)" up
+	mise exec -- migrate -path migrations -database "$(DATABASE_URL)" up
 
 # シードデータを投入（開発環境用）
 seed:
