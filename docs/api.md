@@ -478,6 +478,18 @@ POST /channels
 }
 ```
 
+**バリデーション:**
+| フィールド | ルール |
+|------------|--------|
+| name | 必須、255文字以内 |
+| description | 必須、2000文字以内 |
+| userPrompt | 必須、2000文字以内 |
+| categoryId | 必須、UUID 形式 |
+| characters | 必須、1〜2人 |
+| characters[].name | 必須、255文字以内 |
+| characters[].persona | 2000文字以内 |
+| characters[].voiceId | 必須、UUID 形式 |
+
 ### チャンネル更新
 
 ```
@@ -497,6 +509,14 @@ PATCH /channels/:channelId
 ```
 
 - `publishedAt`: 公開日時を設定（`null` で非公開化）
+
+**バリデーション:**
+| フィールド | ルール |
+|------------|--------|
+| name | 255文字以内 |
+| description | 2000文字以内 |
+| userPrompt | 2000文字以内 |
+| categoryId | UUID 形式 |
 
 ### チャンネル削除
 
@@ -1363,6 +1383,12 @@ POST /channels/:channelId/episodes
 }
 ```
 
+**バリデーション:**
+| フィールド | ルール |
+|------------|--------|
+| title | 必須、255文字以内 |
+| description | 2000文字以内 |
+
 ### エピソード更新
 
 ```
@@ -1378,6 +1404,13 @@ PATCH /channels/:channelId/episodes/:episodeId
   "bgmAudioId": "uuid"
 }
 ```
+
+**バリデーション:**
+| フィールド | ルール |
+|------------|--------|
+| title | 255文字以内 |
+| description | 2000文字以内 |
+| userPrompt | 2000文字以内 |
 
 > **Note:** `userPrompt` は台本生成時に自動で保存されます。直接編集する場合は API から設定可能ですが、通常は台本生成 API 経由で更新されます。
 >
@@ -1464,7 +1497,7 @@ POST /channels/:channelId/episodes/:episodeId/script/generate
 
 | フィールド | 型 | 必須 | 説明 |
 |------------|-----|:----:|------|
-| prompt | string | ◯ | テーマやシナリオ。URL が含まれていれば RAG で内容を取得して台本生成に利用 |
+| prompt | string | ◯ | テーマやシナリオ（2000文字以内）。URL が含まれていれば RAG で内容を取得して台本生成に利用 |
 | durationMinutes | int | | エピソードの長さ（分）。3〜30の範囲で指定。デフォルト: 10 |
 
 > **Note:** `prompt` はエピソードの `userPrompt` として自動保存されます。

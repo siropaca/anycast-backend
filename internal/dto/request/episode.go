@@ -18,7 +18,7 @@ type CreateEpisodeRequest struct {
 type UpdateEpisodeRequest struct {
 	Title          *string `json:"title" binding:"omitempty,max=255"`
 	Description    *string `json:"description" binding:"omitempty,max=2000"`
-	UserPrompt     *string `json:"userPrompt" binding:"omitempty,max=1000"`
+	UserPrompt     *string `json:"userPrompt" binding:"omitempty,max=2000"`
 	ArtworkImageID *string `json:"artworkImageId" binding:"omitempty,uuid"`
 	BgmAudioID     *string `json:"bgmAudioId" binding:"omitempty,uuid"`
 }

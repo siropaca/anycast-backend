@@ -19,7 +19,7 @@ type CreateChannelRequest struct {
 // キャラクター作成リクエスト
 type CreateCharacterRequest struct {
 	Name    string `json:"name" binding:"required,max=255"`
-	Persona string `json:"persona" binding:"max=500"`
+	Persona string `json:"persona" binding:"max=2000"`
 	VoiceID string `json:"voiceId" binding:"required,uuid"`
 }
 
