@@ -1,7 +1,9 @@
 package main
 
 import (
+	"net/http"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 
@@ -10,6 +12,13 @@ import (
 	"github.com/siropaca/anycast-backend/internal/di"
 	"github.com/siropaca/anycast-backend/internal/logger"
 	"github.com/siropaca/anycast-backend/internal/router"
+)
+
+const (
+	// HTTP サーバーのタイムアウト設定
+	readTimeout  = 10 * time.Second
+	writeTimeout = 180 * time.Second // LLM 生成を考慮して長めに設定
+	idleTimeout  = 60 * time.Second
 )
 
 // @title Anycast API
@@ -46,7 +55,15 @@ func main() {
 		logger.Default().Info("Swagger UI: http://localhost:" + cfg.Port + "/swagger/index.html")
 	}
 
-	if err := r.Run(":" + cfg.Port); err != nil {
+	srv := &http.Server{
+		Addr:         ":" + cfg.Port,
+		Handler:      r,
+		ReadTimeout:  readTimeout,
+		WriteTimeout: writeTimeout,
+		IdleTimeout:  idleTimeout,
+	}
+
+	if err := srv.ListenAndServe(); err != nil {
 		logger.Default().Error("Failed to start server", "error", err)
 		os.Exit(1)
 	}

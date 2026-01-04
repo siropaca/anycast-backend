@@ -752,6 +752,89 @@ const docTemplate = `{
                 }
             }
         },
+        "/channels/{channelId}/episodes/{episodeId}/script/generate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したエピソードの台本を AI を使って生成します。既存の台本がある場合は全て削除されます。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "script"
+                ],
+                "summary": "台本を AI で生成",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "チャンネル ID",
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "エピソード ID",
+                        "name": "episodeId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "台本生成リクエスト",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.GenerateScriptRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ScriptLineListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/channels/{channelId}/episodes/{episodeId}/script/lines": {
             "get": {
                 "security": [
@@ -1391,6 +1474,22 @@ const docTemplate = `{
                 "title": {
                     "type": "string",
                     "maxLength": 255
+                }
+            }
+        },
+        "request.GenerateScriptRequest": {
+            "type": "object",
+            "required": [
+                "prompt"
+            ],
+            "properties": {
+                "durationMinutes": {
+                    "type": "integer",
+                    "maximum": 30,
+                    "minimum": 3
+                },
+                "prompt": {
+                    "type": "string"
                 }
             }
         },

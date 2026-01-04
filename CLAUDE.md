@@ -7,6 +7,7 @@
 | [docs/specification.md](docs/specification.md) | 仕様書（DDD ベースのドメインモデル定義） |
 | [docs/database.md](docs/database.md) | データベース設計 |
 | [docs/api.md](docs/api.md) | API 設計 |
+| [docs/system.md](docs/system.md) | システム設定（タイムアウト、外部サービス連携など） |
 | [docs/adr/](docs/adr/) | Architecture Decision Records |
 
 ### 設計アプローチ
@@ -26,6 +27,7 @@
 | サービス | リンク |
 |----------|--------|
 | Google Cloud Text-to-Speech | https://cloud.google.com/text-to-speech/docs |
+| OpenAI API | https://platform.openai.com/docs |
 
 ## ドキュメント管理ルール
 

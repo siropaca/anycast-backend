@@ -23,6 +23,7 @@ ADR（Architecture Decision Record）は、アーキテクチャ上の重要な�
 | [010](010-linter-golangci-lint.md) | 静的解析: golangci-lint | Accepted |
 | [011](011-testing-testify.md) | テストライブラリ: testify | Accepted |
 | [012](012-jwt-golang-jwt.md) | JWT ライブラリ: golang-jwt/jwt | Accepted |
+| [013](013-transaction-in-service-layer.md) | トランザクション管理は Service 層で行う | Accepted |
 
 ## ステータス
 

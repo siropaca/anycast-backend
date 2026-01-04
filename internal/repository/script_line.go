@@ -14,6 +14,8 @@ import (
 // 台本行データへのアクセスインターフェース
 type ScriptLineRepository interface {
 	FindByEpisodeID(ctx context.Context, episodeID uuid.UUID) ([]model.ScriptLine, error)
+	DeleteByEpisodeID(ctx context.Context, episodeID uuid.UUID) error
+	CreateBatch(ctx context.Context, scriptLines []model.ScriptLine) ([]model.ScriptLine, error)
 }
 
 type scriptLineRepository struct {
@@ -41,4 +43,43 @@ func (r *scriptLineRepository) FindByEpisodeID(ctx context.Context, episodeID uu
 	}
 
 	return scriptLines, nil
+}
+
+// 指定されたエピソードの台本行を全て削除する
+func (r *scriptLineRepository) DeleteByEpisodeID(ctx context.Context, episodeID uuid.UUID) error {
+	if err := r.db.WithContext(ctx).
+		Where("episode_id = ?", episodeID).
+		Delete(&model.ScriptLine{}).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to delete script lines", "error", err, "episode_id", episodeID)
+		return apperror.ErrInternal.WithMessage("Failed to delete script lines").WithError(err)
+	}
+
+	return nil
+}
+
+// 複数の台本行を一括作成する
+func (r *scriptLineRepository) CreateBatch(ctx context.Context, scriptLines []model.ScriptLine) ([]model.ScriptLine, error) {
+	if len(scriptLines) == 0 {
+		return []model.ScriptLine{}, nil
+	}
+
+	if err := r.db.WithContext(ctx).Create(&scriptLines).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to create script lines", "error", err)
+		return nil, apperror.ErrInternal.WithMessage("Failed to create script lines").WithError(err)
+	}
+
+	// 作成した行を再取得して Speaker 情報を含める
+	var created []model.ScriptLine
+	if err := r.db.WithContext(ctx).
+		Preload("Speaker").
+		Preload("Sfx").
+		Preload("Audio").
+		Where("episode_id = ?", scriptLines[0].EpisodeID).
+		Order("line_order ASC").
+		Find(&created).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to fetch created script lines", "error", err)
+		return nil, apperror.ErrInternal.WithMessage("Failed to fetch created script lines").WithError(err)
+	}
+
+	return created, nil
 }
