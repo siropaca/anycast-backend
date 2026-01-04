@@ -156,9 +156,9 @@
 |----------|:----:|:----:|:----:|:----:|
 | Users | Owner | - | Owner | Owner |
 | Channels | Public | Owner | Owner | Owner |
-| Characters | Public | Owner | Owner | Owner |
+| Characters | Owner | Owner | Owner | Owner |
 | Episodes | Public | Owner | Owner | Owner |
-| Script / ScriptLines | Public | Owner | Owner | Owner |
+| Script / ScriptLines | Owner | Owner | Owner | Owner |
 | Likes | Owner | Owner | - | Owner |
 | Bookmarks | Owner | Owner | - | Owner |
 | Playback History | Owner | Owner | Owner | Owner |
@@ -1457,13 +1457,15 @@ POST /channels/:channelId/episodes/:episodeId/script/generate
 **リクエスト:**
 ```json
 {
-  "prompt": "今日の天気について楽しく話す"
+  "prompt": "今日の天気について楽しく話す",
+  "durationMinutes": 10
 }
 ```
 
 | フィールド | 型 | 必須 | 説明 |
 |------------|-----|:----:|------|
 | prompt | string | ◯ | テーマやシナリオ。URL が含まれていれば RAG で内容を取得して台本生成に利用 |
+| durationMinutes | int | | エピソードの長さ（分）。3〜30の範囲で指定。デフォルト: 10 |
 
 > **Note:** `prompt` はエピソードの `userPrompt` として自動保存されます。
 
