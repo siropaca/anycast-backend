@@ -10,7 +10,7 @@ bs: bootstrap
 
 # 開発サーバーを起動（ホットリロード）
 dev:
-	air
+	mise exec -- air
 
 # サーバーを起動
 run:
