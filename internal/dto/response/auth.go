@@ -12,7 +12,7 @@ type UserResponse struct {
 	Email       string    `json:"email" validate:"required"`
 	Username    string    `json:"username" validate:"required"`
 	DisplayName string    `json:"displayName" validate:"required"`
-	AvatarURL   *string   `json:"avatarUrl"`
+	AvatarURL   *string   `json:"avatarUrl" extensions:"x-nullable"`
 }
 
 // アバター情報
@@ -27,7 +27,7 @@ type MeResponse struct {
 	Email          string          `json:"email" validate:"required"`
 	Username       string          `json:"username" validate:"required"`
 	DisplayName    string          `json:"displayName" validate:"required"`
-	Avatar         *AvatarResponse `json:"avatar"`
+	Avatar         *AvatarResponse `json:"avatar" extensions:"x-nullable"`
 	HasPassword    bool            `json:"hasPassword" validate:"required"`
 	OAuthProviders []string        `json:"oauthProviders" validate:"required"`
 	CreatedAt      time.Time       `json:"createdAt" validate:"required"`

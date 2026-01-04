@@ -13,9 +13,9 @@ type ChannelResponse struct {
 	Description  string              `json:"description" validate:"required"`
 	ScriptPrompt string              `json:"scriptPrompt" validate:"required"`
 	Category     CategoryResponse    `json:"category" validate:"required"`
-	Artwork      *ArtworkResponse    `json:"artwork"`
+	Artwork      *ArtworkResponse    `json:"artwork" extensions:"x-nullable"`
 	Characters   []CharacterResponse `json:"characters" validate:"required"`
-	PublishedAt  *time.Time          `json:"publishedAt"`
+	PublishedAt  *time.Time          `json:"publishedAt" extensions:"x-nullable"`
 	CreatedAt    time.Time           `json:"createdAt" validate:"required"`
 	UpdatedAt    time.Time           `json:"updatedAt" validate:"required"`
 }

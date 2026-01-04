@@ -10,11 +10,11 @@ import (
 type EpisodeResponse struct {
 	ID           uuid.UUID        `json:"id" validate:"required"`
 	Title        string           `json:"title" validate:"required"`
-	Description  *string          `json:"description"`
+	Description  *string          `json:"description" extensions:"x-nullable"`
 	ScriptPrompt *string          `json:"scriptPrompt,omitempty"`
-	Artwork      *ArtworkResponse `json:"artwork"`
-	FullAudio    *AudioResponse   `json:"fullAudio"`
-	PublishedAt  *time.Time       `json:"publishedAt"`
+	Artwork      *ArtworkResponse `json:"artwork" extensions:"x-nullable"`
+	FullAudio    *AudioResponse   `json:"fullAudio" extensions:"x-nullable"`
+	PublishedAt  *time.Time       `json:"publishedAt" extensions:"x-nullable"`
 	CreatedAt    time.Time        `json:"createdAt" validate:"required"`
 	UpdatedAt    time.Time        `json:"updatedAt" validate:"required"`
 }

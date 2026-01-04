@@ -1674,7 +1674,12 @@ const docTemplate = `{
             ],
             "properties": {
                 "artwork": {
-                    "$ref": "#/definitions/response.ArtworkResponse"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.ArtworkResponse"
+                        }
+                    ],
+                    "x-nullable": true
                 },
                 "category": {
                     "$ref": "#/definitions/response.CategoryResponse"
@@ -1698,7 +1703,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "publishedAt": {
-                    "type": "string"
+                    "type": "string",
+                    "x-nullable": true
                 },
                 "scriptPrompt": {
                     "type": "string"
@@ -1789,22 +1795,34 @@ const docTemplate = `{
             ],
             "properties": {
                 "artwork": {
-                    "$ref": "#/definitions/response.ArtworkResponse"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.ArtworkResponse"
+                        }
+                    ],
+                    "x-nullable": true
                 },
                 "createdAt": {
                     "type": "string"
                 },
                 "description": {
-                    "type": "string"
+                    "type": "string",
+                    "x-nullable": true
                 },
                 "fullAudio": {
-                    "$ref": "#/definitions/response.AudioResponse"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.AudioResponse"
+                        }
+                    ],
+                    "x-nullable": true
                 },
                 "id": {
                     "type": "string"
                 },
                 "publishedAt": {
-                    "type": "string"
+                    "type": "string",
+                    "x-nullable": true
                 },
                 "scriptPrompt": {
                     "type": "string"
@@ -1870,7 +1888,12 @@ const docTemplate = `{
             ],
             "properties": {
                 "avatar": {
-                    "$ref": "#/definitions/response.AvatarResponse"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.AvatarResponse"
+                        }
+                    ],
+                    "x-nullable": true
                 },
                 "createdAt": {
                     "type": "string"
@@ -2019,7 +2042,8 @@ const docTemplate = `{
             ],
             "properties": {
                 "avatarUrl": {
-                    "type": "string"
+                    "type": "string",
+                    "x-nullable": true
                 },
                 "displayName": {
                     "type": "string"

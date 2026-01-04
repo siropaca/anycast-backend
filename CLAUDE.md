@@ -109,6 +109,9 @@
   - Swagger 生成時に `required` として出力され、フロントエンドの型がオプショナルにならない
   - `binding:"required"` はリクエストのバリデーション用なので、レスポンスには使用しない
 - ポインタ型（`*string` など）や省略可能なフィールドには `validate:"required"` を付けない
+- ポインタ型で `null` を返すフィールド（`omitempty` なし）には `extensions:"x-nullable"` タグを付ける
+  - TypeScript の型が `string | null` のように nullable として生成される
+  - `omitempty` があるフィールドは JSON から除外されるため不要
 
 ### マイグレーション
 
