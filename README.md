@@ -17,6 +17,7 @@ AI 専用のポッドキャストを作成・配信できるプラットフォ�
 - **DB**: PostgreSQL
 - **ストレージ**: GCS（Google Cloud Storage）
 - **TTS**: Google Cloud Text-to-Speech
+- **LLM**: OpenAI (GPT-4o)
 - **バージョン管理**: mise
 - **静的解析**: golangci-lint
 - **ローカル環境**: Docker Compose
@@ -81,6 +82,7 @@ cp .env.example .env        # 環境変数ファイルの作成
 | `APP_ENV` | 環境（development / production） | development |
 | `AUTH_SECRET` | JWT 検証用シークレットキー（フロントエンドの AUTH_SECRET と同じ値） | - |
 | `CORS_ALLOWED_ORIGINS` | CORS 許可オリジン（カンマ区切りで複数指定可能） | http://localhost:3210 |
+| `OPENAI_API_KEY` | OpenAI API キー（台本生成に使用） | - |
 
 ### DB の起動
 
@@ -178,12 +180,15 @@ make swagger
 │   ├── di/              # DI コンテナ
 │   ├── dto/             # Data Transfer Objects
 │   ├── handler/         # ハンドラー
+│   ├── infrastructure/  # 外部サービス連携
+│   │   └── llm/         # LLM クライアント（OpenAI）
 │   ├── logger/          # 構造化ログ
 │   ├── middleware/      # ミドルウェア
 │   ├── model/           # ドメインモデル
 │   ├── pkg/             # 共通ユーティリティ
 │   │   ├── crypto/      # パスワードハッシュ
-│   │   └── jwt/         # JWT トークン管理
+│   │   ├── jwt/         # JWT トークン管理
+│   │   └── script/      # 台本パーサー
 │   ├── repository/      # データアクセス層
 │   ├── router/          # ルーティング
 │   └── service/         # ビジネスロジック層

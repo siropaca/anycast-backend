@@ -26,6 +26,7 @@
 | サービス | リンク |
 |----------|--------|
 | Google Cloud Text-to-Speech | https://cloud.google.com/text-to-speech/docs |
+| OpenAI API | https://platform.openai.com/docs |
 
 ## ドキュメント管理ルール
 
