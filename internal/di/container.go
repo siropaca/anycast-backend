@@ -5,6 +5,7 @@ import (
 
 	"github.com/siropaca/anycast-backend/internal/config"
 	"github.com/siropaca/anycast-backend/internal/handler"
+	"github.com/siropaca/anycast-backend/internal/infrastructure/llm"
 	"github.com/siropaca/anycast-backend/internal/pkg/crypto"
 	"github.com/siropaca/anycast-backend/internal/pkg/jwt"
 	"github.com/siropaca/anycast-backend/internal/repository"
@@ -19,6 +20,7 @@ type Container struct {
 	CategoryHandler   *handler.CategoryHandler
 	EpisodeHandler    *handler.EpisodeHandler
 	ScriptLineHandler *handler.ScriptLineHandler
+	ScriptHandler     *handler.ScriptHandler
 	TokenManager      jwt.TokenManager
 }
 
@@ -27,6 +29,9 @@ func NewContainer(db *gorm.DB, cfg *config.Config) *Container {
 	// Pkg
 	passwordHasher := crypto.NewPasswordHasher()
 	tokenManager := jwt.NewTokenManager(cfg.AuthSecret)
+
+	// Infrastructure
+	llmClient := llm.NewOpenAIClient(cfg.OpenAIAPIKey)
 
 	// Repository 層
 	voiceRepo := repository.NewVoiceRepository(db)
@@ -46,6 +51,7 @@ func NewContainer(db *gorm.DB, cfg *config.Config) *Container {
 	categoryService := service.NewCategoryService(categoryRepo)
 	episodeService := service.NewEpisodeService(episodeRepo, channelRepo)
 	scriptLineService := service.NewScriptLineService(scriptLineRepo, episodeRepo, channelRepo)
+	scriptService := service.NewScriptService(db, channelRepo, episodeRepo, scriptLineRepo, llmClient)
 
 	// Handler 層
 	voiceHandler := handler.NewVoiceHandler(voiceService)
@@ -54,6 +60,7 @@ func NewContainer(db *gorm.DB, cfg *config.Config) *Container {
 	categoryHandler := handler.NewCategoryHandler(categoryService)
 	episodeHandler := handler.NewEpisodeHandler(episodeService)
 	scriptLineHandler := handler.NewScriptLineHandler(scriptLineService)
+	scriptHandler := handler.NewScriptHandler(scriptService)
 
 	return &Container{
 		VoiceHandler:      voiceHandler,
@@ -62,6 +69,7 @@ func NewContainer(db *gorm.DB, cfg *config.Config) *Container {
 		CategoryHandler:   categoryHandler,
 		EpisodeHandler:    episodeHandler,
 		ScriptLineHandler: scriptLineHandler,
+		ScriptHandler:     scriptHandler,
 		TokenManager:      tokenManager,
 	}
 }
