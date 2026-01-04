@@ -15,6 +15,10 @@ Authorization: Bearer {{token}}
 GET {{baseUrl}}/me/channels?status=draft
 Authorization: Bearer {{token}}
 
+### 自分のチャンネル取得
+GET {{baseUrl}}/me/channels/YOUR_CHANNEL_ID_HERE
+Authorization: Bearer {{token}}
+
 ### チャンネル取得
 GET {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE
 Authorization: Bearer {{token}}

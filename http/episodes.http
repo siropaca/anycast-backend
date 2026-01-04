@@ -19,6 +19,10 @@ Authorization: Bearer {{token}}
 GET {{baseUrl}}/me/channels/YOUR_CHANNEL_ID_HERE/episodes?limit=10&offset=0
 Authorization: Bearer {{token}}
 
+### 自分のチャンネルのエピソード取得
+GET {{baseUrl}}/me/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE
+Authorization: Bearer {{token}}
+
 ### エピソード作成
 POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes
 Content-Type: application/json

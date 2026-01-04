@@ -15,6 +15,7 @@ import (
 // チャンネル関連のビジネスロジックインターフェース
 type ChannelService interface {
 	GetChannel(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error)
+	GetMyChannel(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error)
 	ListMyChannels(ctx context.Context, userID string, filter repository.ChannelFilter) (*response.ChannelListWithPaginationResponse, error)
 	CreateChannel(ctx context.Context, userID string, req request.CreateChannelRequest) (*response.ChannelDataResponse, error)
 	UpdateChannel(ctx context.Context, userID, channelID string, req request.UpdateChannelRequest) (*response.ChannelDataResponse, error)
@@ -71,6 +72,33 @@ func (s *channelService) GetChannel(ctx context.Context, userID, channelID strin
 
 	return &response.ChannelDataResponse{
 		Data: toChannelResponse(channel, isOwner),
+	}, nil
+}
+
+// 自分のチャンネルを取得する（オーナーのみ取得可能）
+func (s *channelService) GetMyChannel(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	// オーナーでない場合は 403
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
+	}
+
+	return &response.ChannelDataResponse{
+		Data: toChannelResponse(channel, true),
 	}, nil
 }
 
