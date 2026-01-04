@@ -10,6 +10,7 @@ import (
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/logger"
+	"github.com/siropaca/anycast-backend/internal/pkg/prompt"
 )
 
 const (
@@ -53,8 +54,8 @@ func (c *openAIClient) GenerateScript(ctx context.Context, systemPrompt, userPro
 		resp, err := c.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
 			Model: openai.ChatModelGPT4o,
 			Messages: []openai.ChatCompletionMessageParamUnion{
-				openai.SystemMessage(systemPrompt),
-				openai.UserMessage(userPrompt),
+				openai.SystemMessage(prompt.Compress(systemPrompt)),
+				openai.UserMessage(prompt.Compress(userPrompt)),
 			},
 			Temperature: openai.Float(defaultTemperature),
 		})
