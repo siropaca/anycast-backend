@@ -21,5 +21,9 @@ type UpdateEpisodeRequest struct {
 	ScriptPrompt   *string `json:"scriptPrompt"`
 	ArtworkImageID *string `json:"artworkImageId" binding:"omitempty,uuid"`
 	BgmAudioID     *string `json:"bgmAudioId" binding:"omitempty,uuid"`
-	PublishedAt    *string `json:"publishedAt"`
+}
+
+// エピソード公開リクエスト
+type PublishEpisodeRequest struct {
+	PublishedAt *string `json:"publishedAt"` // RFC3339 形式。省略時は現在時刻
 }

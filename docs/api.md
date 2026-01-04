@@ -63,11 +63,14 @@
 | POST | `/api/v1/channels/:channelId/episodes` | [エピソード作成](#エピソード作成) | ✅ |
 | PATCH | `/api/v1/channels/:channelId/episodes/:episodeId` | [エピソード更新](#エピソード更新) | ✅ |
 | DELETE | `/api/v1/channels/:channelId/episodes/:episodeId` | [エピソード削除](#エピソード削除) | ✅ |
+| POST | `/api/v1/channels/:channelId/episodes/:episodeId/publish` | [エピソード公開](#エピソード公開) | ✅ |
+| POST | `/api/v1/channels/:channelId/episodes/:episodeId/unpublish` | [エピソード非公開](#エピソード非公開) | ✅ |
 | **[Script（台本）](#script台本)** | - | - | - |
+| POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/generate` | [台本を AI で生成](#台本を-ai-で生成) | |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/import` | [台本テキスト取り込み](#台本テキスト取り込み) | |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId/script/export` | [台本テキスト出力](#台本テキスト出力) | |
-| POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/generate` | [台本を AI で生成](#台本を-ai-で生成) | |
 | **[ScriptLines（台本行）](#scriptlines台本行)** | - | - | - |
+| GET | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines` | [台本行一覧取得](#台本行一覧取得) | ✅ |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines` | [行追加](#行追加) | |
 | PATCH | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | [行更新](#行更新) | |
 | DELETE | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | [行削除](#行削除) | |
@@ -1255,14 +1258,13 @@ PATCH /channels/:channelId/episodes/:episodeId
   "title": "新しいタイトル",
   "description": "新しい説明",
   "artworkImageId": "uuid",
-  "bgmAudioId": "uuid",
-  "publishedAt": "2025-01-01T00:00:00Z"
+  "bgmAudioId": "uuid"
 }
 ```
 
-- `publishedAt`: 公開日時を設定（`null` で非公開化）
-
 > **Note:** `scriptPrompt` は台本生成時に自動で保存されます。直接編集する場合は API から設定可能ですが、通常は台本生成 API 経由で更新されます。
+>
+> **Note:** 公開状態の変更は専用エンドポイント（[エピソード公開](#エピソード公開) / [エピソード非公開](#エピソード非公開)）を使用してください。
 
 ### エピソード削除
 
@@ -1270,9 +1272,92 @@ PATCH /channels/:channelId/episodes/:episodeId
 DELETE /channels/:channelId/episodes/:episodeId
 ```
 
+### エピソード公開
+
+```
+POST /channels/:channelId/episodes/:episodeId/publish
+```
+
+エピソードを公開状態にする。`publishedAt` を省略すると現在時刻で即時公開、指定すると予約公開になる。
+
+**リクエスト:**
+```json
+{
+  "publishedAt": "2025-01-01T00:00:00Z"
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| publishedAt | string | | 公開日時（RFC3339 形式）。省略時は現在時刻で即時公開 |
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "title": "エピソードタイトル",
+    "description": "エピソードの説明",
+    "publishedAt": "2025-01-01T00:00:00Z",
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+### エピソード非公開
+
+```
+POST /channels/:channelId/episodes/:episodeId/unpublish
+```
+
+エピソードを非公開（下書き）状態に戻す。
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "title": "エピソードタイトル",
+    "description": "エピソードの説明",
+    "publishedAt": null,
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
 ---
 
 ## Script（台本）
+
+### 台本を AI で生成
+
+```
+POST /channels/:channelId/episodes/:episodeId/script/generate
+```
+
+**リクエスト:**
+```json
+{
+  "prompt": "今日の天気について楽しく話す"
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| prompt | string | ◯ | テーマやシナリオ。URL が含まれていれば RAG で内容を取得して台本生成に利用 |
+
+> **Note:** `prompt` はエピソードの `scriptPrompt` として自動保存されます。
+
+**レスポンス:**
+```json
+{
+  "data": {
+    "lines": [ ... ]
+  }
+}
+```
 
 ### 台本テキスト取り込み
 
@@ -1327,37 +1412,53 @@ GET /channels/:channelId/episodes/:episodeId/script/export
 }
 ```
 
-### 台本を AI で生成
+---
+
+## ScriptLines（台本行）
+
+### 台本行一覧取得
 
 ```
-POST /channels/:channelId/episodes/:episodeId/script/generate
+GET /channels/:channelId/episodes/:episodeId/script/lines
 ```
 
-**リクエスト:**
-```json
-{
-  "prompt": "今日の天気について楽しく話す"
-}
-```
-
-| フィールド | 型 | 必須 | 説明 |
-|------------|-----|:----:|------|
-| prompt | string | ◯ | テーマやシナリオ。URL が含まれていれば RAG で内容を取得して台本生成に利用 |
-
-> **Note:** `prompt` はエピソードの `scriptPrompt` として自動保存されます。
+指定したエピソードの台本行一覧を `lineOrder` 順で取得する。
 
 **レスポンス:**
 ```json
 {
-  "data": {
-    "lines": [ ... ]
-  }
+  "data": [
+    {
+      "id": "uuid",
+      "lineOrder": 0,
+      "lineType": "speech",
+      "speaker": { "id": "uuid", "name": "太郎" },
+      "text": "こんにちは",
+      "emotion": null,
+      "audio": { "id": "uuid", "url": "...", "durationMs": 2500 },
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": "uuid",
+      "lineOrder": 1,
+      "lineType": "silence",
+      "durationMs": 800,
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": "uuid",
+      "lineOrder": 2,
+      "lineType": "sfx",
+      "sfx": { "id": "uuid", "name": "chime" },
+      "volume": 0.8,
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
+    }
+  ]
 }
 ```
-
----
-
-## ScriptLines（台本行）
 
 ### 行追加
 

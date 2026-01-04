@@ -218,3 +218,98 @@ func (h *EpisodeHandler) DeleteEpisode(c *gin.Context) {
 
 	c.Status(http.StatusNoContent)
 }
+
+// PublishEpisode godoc
+// @Summary エピソード公開
+// @Description 指定したエピソードを公開します。publishedAt を省略すると現在時刻で即時公開、指定すると予約公開になります。
+// @Tags episodes
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param episodeId path string true "エピソード ID"
+// @Param request body request.PublishEpisodeRequest false "公開リクエスト"
+// @Success 200 {object} response.EpisodeDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/episodes/{episodeId}/publish [post]
+func (h *EpisodeHandler) PublishEpisode(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		return
+	}
+
+	episodeID := c.Param("episodeId")
+	if episodeID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("episodeId is required"))
+		return
+	}
+
+	var req request.PublishEpisodeRequest
+	// ボディが空でもエラーにならないよう ShouldBindJSON を使用
+	if err := c.ShouldBindJSON(&req); err != nil && err.Error() != "EOF" {
+		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		return
+	}
+
+	result, err := h.episodeService.PublishEpisode(c.Request.Context(), userID, channelID, episodeID, req.PublishedAt)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+// UnpublishEpisode godoc
+// @Summary エピソード非公開
+// @Description 指定したエピソードを非公開（下書き）状態に戻します
+// @Tags episodes
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param episodeId path string true "エピソード ID"
+// @Success 200 {object} response.EpisodeDataResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/episodes/{episodeId}/unpublish [post]
+func (h *EpisodeHandler) UnpublishEpisode(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		return
+	}
+
+	episodeID := c.Param("episodeId")
+	if episodeID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("episodeId is required"))
+		return
+	}
+
+	result, err := h.episodeService.UnpublishEpisode(c.Request.Context(), userID, channelID, episodeID)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}

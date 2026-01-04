@@ -55,6 +55,22 @@ func (m *mockEpisodeService) DeleteEpisode(ctx context.Context, userID, channelI
 	return args.Error(0)
 }
 
+func (m *mockEpisodeService) PublishEpisode(ctx context.Context, userID, channelID, episodeID string, publishedAt *string) (*response.EpisodeDataResponse, error) {
+	args := m.Called(ctx, userID, channelID, episodeID, publishedAt)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.EpisodeDataResponse), args.Error(1)
+}
+
+func (m *mockEpisodeService) UnpublishEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error) {
+	args := m.Called(ctx, userID, channelID, episodeID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.EpisodeDataResponse), args.Error(1)
+}
+
 // テスト用のルーターをセットアップする
 func setupEpisodeRouter(h *EpisodeHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)
@@ -62,6 +78,8 @@ func setupEpisodeRouter(h *EpisodeHandler) *gin.Engine {
 	r.GET("/me/channels/:channelId/episodes", h.ListMyChannelEpisodes)
 	r.PATCH("/channels/:channelId/episodes/:episodeId", h.UpdateEpisode)
 	r.DELETE("/channels/:channelId/episodes/:episodeId", h.DeleteEpisode)
+	r.POST("/channels/:channelId/episodes/:episodeId/publish", h.PublishEpisode)
+	r.POST("/channels/:channelId/episodes/:episodeId/unpublish", h.UnpublishEpisode)
 	return r
 }
 
@@ -77,6 +95,8 @@ func setupAuthenticatedEpisodeRouter(h *EpisodeHandler, userID string) *gin.Engi
 	r.POST("/channels/:channelId/episodes", h.CreateEpisode)
 	r.PATCH("/channels/:channelId/episodes/:episodeId", h.UpdateEpisode)
 	r.DELETE("/channels/:channelId/episodes/:episodeId", h.DeleteEpisode)
+	r.POST("/channels/:channelId/episodes/:episodeId/publish", h.PublishEpisode)
+	r.POST("/channels/:channelId/episodes/:episodeId/unpublish", h.UnpublishEpisode)
 	return r
 }
 
@@ -407,35 +427,6 @@ func TestEpisodeHandler_UpdateEpisode(t *testing.T) {
 		mockSvc.AssertExpectations(t)
 	})
 
-	t.Run("publishedAt を更新できる", func(t *testing.T) {
-		mockSvc := new(mockEpisodeService)
-		now := time.Now()
-		scriptPrompt := "Test Script Prompt"
-		result := &response.EpisodeDataResponse{
-			Data: response.EpisodeResponse{
-				ID:           uuid.MustParse(episodeID),
-				Title:        "Test Episode",
-				ScriptPrompt: &scriptPrompt,
-				PublishedAt:  &now,
-				CreatedAt:    time.Now(),
-				UpdatedAt:    time.Now(),
-			},
-		}
-		mockSvc.On("UpdateEpisode", mock.Anything, userID, channelID, episodeID, mock.AnythingOfType("request.UpdateEpisodeRequest")).Return(result, nil)
-
-		handler := NewEpisodeHandler(mockSvc)
-		router := setupAuthenticatedEpisodeRouter(handler, userID)
-
-		body := `{"publishedAt":"2024-01-01T00:00:00Z"}`
-		w := httptest.NewRecorder()
-		req := httptest.NewRequest("PATCH", "/channels/"+channelID+"/episodes/"+episodeID, bytes.NewBufferString(body))
-		req.Header.Set("Content-Type", "application/json")
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusOK, w.Code)
-		mockSvc.AssertExpectations(t)
-	})
-
 	t.Run("エピソードが見つからない場合は 404 を返す", func(t *testing.T) {
 		mockSvc := new(mockEpisodeService)
 		mockSvc.On("UpdateEpisode", mock.Anything, userID, channelID, episodeID, mock.AnythingOfType("request.UpdateEpisodeRequest")).Return(nil, apperror.ErrNotFound.WithMessage("Episode not found"))
@@ -557,6 +548,192 @@ func TestEpisodeHandler_DeleteEpisode(t *testing.T) {
 
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("DELETE", "/channels/"+channelID+"/episodes/"+episodeID, http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
+}
+
+func TestEpisodeHandler_PublishEpisode(t *testing.T) {
+	userID := uuid.New().String()
+	channelID := uuid.New().String()
+	episodeID := uuid.New().String()
+
+	t.Run("publishedAt を省略するとエピソードを即時公開できる", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		now := time.Now()
+		result := &response.EpisodeDataResponse{
+			Data: response.EpisodeResponse{
+				ID:          uuid.MustParse(episodeID),
+				Title:       "Test Episode",
+				PublishedAt: &now,
+				CreatedAt:   now,
+				UpdatedAt:   now,
+			},
+		}
+		mockSvc.On("PublishEpisode", mock.Anything, userID, channelID, episodeID, (*string)(nil)).Return(result, nil)
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes/"+episodeID+"/publish", bytes.NewBufferString("{}"))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var resp response.EpisodeDataResponse
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+		assert.NotNil(t, resp.Data.PublishedAt)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("publishedAt を指定するとその日時で公開できる", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		publishedAt := "2025-12-31T23:59:59Z"
+		parsedTime, _ := time.Parse(time.RFC3339, publishedAt)
+		result := &response.EpisodeDataResponse{
+			Data: response.EpisodeResponse{
+				ID:          uuid.MustParse(episodeID),
+				Title:       "Test Episode",
+				PublishedAt: &parsedTime,
+				CreatedAt:   time.Now(),
+				UpdatedAt:   time.Now(),
+			},
+		}
+		mockSvc.On("PublishEpisode", mock.Anything, userID, channelID, episodeID, &publishedAt).Return(result, nil)
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		body := `{"publishedAt":"2025-12-31T23:59:59Z"}`
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes/"+episodeID+"/publish", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("エピソードが見つからない場合は 404 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		mockSvc.On("PublishEpisode", mock.Anything, userID, channelID, episodeID, (*string)(nil)).Return(nil, apperror.ErrNotFound.WithMessage("Episode not found"))
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes/"+episodeID+"/publish", bytes.NewBufferString("{}"))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("権限がない場合は 403 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		mockSvc.On("PublishEpisode", mock.Anything, userID, channelID, episodeID, (*string)(nil)).Return(nil, apperror.ErrForbidden.WithMessage("You do not have permission"))
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes/"+episodeID+"/publish", bytes.NewBufferString("{}"))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("未認証の場合は 401 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupEpisodeRouter(handler)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes/"+episodeID+"/publish", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
+}
+
+func TestEpisodeHandler_UnpublishEpisode(t *testing.T) {
+	userID := uuid.New().String()
+	channelID := uuid.New().String()
+	episodeID := uuid.New().String()
+
+	t.Run("エピソードを非公開にできる", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		result := &response.EpisodeDataResponse{
+			Data: response.EpisodeResponse{
+				ID:          uuid.MustParse(episodeID),
+				Title:       "Test Episode",
+				PublishedAt: nil,
+				CreatedAt:   time.Now(),
+				UpdatedAt:   time.Now(),
+			},
+		}
+		mockSvc.On("UnpublishEpisode", mock.Anything, userID, channelID, episodeID).Return(result, nil)
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes/"+episodeID+"/unpublish", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var resp response.EpisodeDataResponse
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+		assert.Nil(t, resp.Data.PublishedAt)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("エピソードが見つからない場合は 404 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		mockSvc.On("UnpublishEpisode", mock.Anything, userID, channelID, episodeID).Return(nil, apperror.ErrNotFound.WithMessage("Episode not found"))
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes/"+episodeID+"/unpublish", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("権限がない場合は 403 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		mockSvc.On("UnpublishEpisode", mock.Anything, userID, channelID, episodeID).Return(nil, apperror.ErrForbidden.WithMessage("You do not have permission"))
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes/"+episodeID+"/unpublish", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("未認証の場合は 401 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupEpisodeRouter(handler)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes/"+episodeID+"/unpublish", http.NoBody)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
