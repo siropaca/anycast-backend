@@ -30,6 +30,8 @@
 | POST | `/api/v1/channels` | チャンネル作成 | ✅ | [詳細](./channels.md#チャンネル作成) |
 | PATCH | `/api/v1/channels/:channelId` | チャンネル更新 | ✅ | [詳細](./channels.md#チャンネル更新) |
 | DELETE | `/api/v1/channels/:channelId` | チャンネル削除 | ✅ | [詳細](./channels.md#チャンネル削除) |
+| POST | `/api/v1/channels/:channelId/publish` | チャンネル公開 | ✅ | [詳細](./channels.md#チャンネル公開) |
+| POST | `/api/v1/channels/:channelId/unpublish` | チャンネル非公開 | ✅ | [詳細](./channels.md#チャンネル非公開) |
 | GET | `/api/v1/me/channels` | 自分のチャンネル一覧 | ✅ | [詳細](./channels.md#自分のチャンネル一覧取得) |
 | GET | `/api/v1/me/channels/:channelId` | 自分のチャンネル取得 | ✅ | [詳細](./channels.md#自分のチャンネル取得) |
 | **Characters** | - | - | - | [channels.md](./channels.md#charactersキャラクター) |

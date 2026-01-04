@@ -71,6 +71,22 @@ func (m *mockChannelService) DeleteChannel(ctx context.Context, userID, channelI
 	return args.Error(0)
 }
 
+func (m *mockChannelService) PublishChannel(ctx context.Context, userID, channelID string, publishedAt *string) (*response.ChannelDataResponse, error) {
+	args := m.Called(ctx, userID, channelID, publishedAt)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.ChannelDataResponse), args.Error(1)
+}
+
+func (m *mockChannelService) UnpublishChannel(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error) {
+	args := m.Called(ctx, userID, channelID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.ChannelDataResponse), args.Error(1)
+}
+
 // テスト用のルーターをセットアップする
 func setupChannelRouter(h *ChannelHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)

@@ -250,3 +250,84 @@ func (h *ChannelHandler) DeleteChannel(c *gin.Context) {
 
 	c.Status(http.StatusNoContent)
 }
+
+// PublishChannel godoc
+// @Summary チャンネル公開
+// @Description 指定したチャンネルを公開します。publishedAt を省略すると現在時刻で即時公開、指定すると予約公開になります。
+// @Tags channels
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param request body request.PublishChannelRequest false "公開リクエスト"
+// @Success 200 {object} response.ChannelDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/publish [post]
+func (h *ChannelHandler) PublishChannel(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		return
+	}
+
+	var req request.PublishChannelRequest
+	// ボディが空でもエラーにならないよう ShouldBindJSON を使用
+	if err := c.ShouldBindJSON(&req); err != nil && err.Error() != "EOF" {
+		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		return
+	}
+
+	result, err := h.channelService.PublishChannel(c.Request.Context(), userID, channelID, req.PublishedAt)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+// UnpublishChannel godoc
+// @Summary チャンネル非公開
+// @Description 指定したチャンネルを非公開（下書き）状態に戻します
+// @Tags channels
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Success 200 {object} response.ChannelDataResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/unpublish [post]
+func (h *ChannelHandler) UnpublishChannel(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		return
+	}
+
+	result, err := h.channelService.UnpublishChannel(c.Request.Context(), userID, channelID)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}

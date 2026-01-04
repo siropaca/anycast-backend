@@ -129,12 +129,9 @@ PATCH /channels/:channelId
   "description": "新しい説明",
   "userPrompt": "明るく楽しい雰囲気で...",
   "categoryId": "uuid",
-  "artworkImageId": "uuid",
-  "publishedAt": "2025-01-01T00:00:00Z"
+  "artworkImageId": "uuid"
 }
 ```
-
-- `publishedAt`: 公開日時を設定（`null` で非公開化）
 
 **バリデーション:**
 | フィールド | ルール |
@@ -144,12 +141,73 @@ PATCH /channels/:channelId
 | userPrompt | 2000文字以内 |
 | categoryId | UUID 形式 |
 
+> **Note:** 公開状態の変更は専用エンドポイント（[チャンネル公開](#チャンネル公開) / [チャンネル非公開](#チャンネル非公開)）を使用してください。
+
 ---
 
 ## チャンネル削除
 
 ```
 DELETE /channels/:channelId
+```
+
+---
+
+## チャンネル公開
+
+```
+POST /channels/:channelId/publish
+```
+
+チャンネルを公開状態にする。`publishedAt` を省略すると現在時刻で即時公開、指定すると予約公開になる。
+
+**リクエスト:**
+```json
+{
+  "publishedAt": "2025-01-01T00:00:00Z"
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| publishedAt | string | | 公開日時（RFC3339 形式）。省略時は現在時刻で即時公開 |
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "name": "チャンネル名",
+    "description": "説明",
+    "publishedAt": "2025-01-01T00:00:00Z",
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+---
+
+## チャンネル非公開
+
+```
+POST /channels/:channelId/unpublish
+```
+
+チャンネルを非公開（下書き）状態に戻す。
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "name": "チャンネル名",
+    "description": "説明",
+    "publishedAt": null,
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
 ```
 
 ---

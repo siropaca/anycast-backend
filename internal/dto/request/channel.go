@@ -30,5 +30,9 @@ type UpdateChannelRequest struct {
 	UserPrompt     *string `json:"userPrompt" binding:"omitempty,max=2000"`
 	CategoryID     *string `json:"categoryId" binding:"omitempty,uuid"`
 	ArtworkImageID *string `json:"artworkImageId" binding:"omitempty,uuid"`
-	PublishedAt    *string `json:"publishedAt"`
+}
+
+// チャンネル公開リクエスト
+type PublishChannelRequest struct {
+	PublishedAt *string `json:"publishedAt"` // RFC3339 形式。省略時は現在時刻
 }
