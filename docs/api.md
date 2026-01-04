@@ -429,7 +429,7 @@ GET /channels/:channelId
     "id": "uuid",
     "name": "チャンネル名",
     "description": "説明",
-    "scriptPrompt": "明るく楽しい雰囲気で...",
+    "userPrompt": "明るく楽しい雰囲気で...",
     "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
     "artwork": { "id": "uuid", "url": "..." },
     "characters": [
@@ -452,7 +452,7 @@ GET /channels/:channelId
 }
 ```
 
-> **Note:** `scriptPrompt` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
+> **Note:** `userPrompt` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
 
 ### チャンネル作成
 
@@ -465,7 +465,7 @@ POST /channels
 {
   "name": "チャンネル名",
   "description": "説明",
-  "scriptPrompt": "明るく楽しい雰囲気で...",
+  "userPrompt": "明るく楽しい雰囲気で...",
   "categoryId": "uuid",
   "artworkImageId": "uuid",
   "characters": [
@@ -489,7 +489,7 @@ PATCH /channels/:channelId
 {
   "name": "新しいチャンネル名",
   "description": "新しい説明",
-  "scriptPrompt": "明るく楽しい雰囲気で...",
+  "userPrompt": "明るく楽しい雰囲気で...",
   "categoryId": "uuid",
   "artworkImageId": "uuid",
   "publishedAt": "2025-01-01T00:00:00Z"
@@ -1059,7 +1059,7 @@ GET /me/channels
       "id": "uuid",
       "name": "チャンネル名",
       "description": "説明",
-      "scriptPrompt": "明るく楽しい雰囲気で...",
+      "userPrompt": "明るく楽しい雰囲気で...",
       "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
       "artwork": { "id": "uuid", "url": "..." },
       "publishedAt": "2025-01-01T00:00:00Z",
@@ -1096,7 +1096,7 @@ GET /me/channels/:channelId
     "id": "uuid",
     "name": "チャンネル名",
     "description": "説明",
-    "scriptPrompt": "明るく楽しい雰囲気で...",
+    "userPrompt": "明るく楽しい雰囲気で...",
     "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
     "artwork": { "id": "uuid", "url": "..." },
     "characters": [
@@ -1168,7 +1168,7 @@ GET /me/channels/:channelId/episodes
       "id": "uuid",
       "title": "エピソードタイトル",
       "description": "エピソードの説明",
-      "scriptPrompt": "今回のテーマについて詳しく解説する",
+      "userPrompt": "今回のテーマについて詳しく解説する",
       "fullAudio": { "id": "uuid", "url": "...", "durationMs": 180000 },
       "publishedAt": "2025-01-01T00:00:00Z",
       "createdAt": "2025-01-01T00:00:00Z",
@@ -1225,7 +1225,7 @@ GET /me/channels/:channelId/episodes/:episodeId
     "id": "uuid",
     "title": "エピソードタイトル",
     "description": "エピソードの説明",
-    "scriptPrompt": "今回のテーマについて詳しく解説する",
+    "userPrompt": "今回のテーマについて詳しく解説する",
     "artwork": { "id": "uuid", "url": "..." },
     "fullAudio": { "id": "uuid", "url": "...", "durationMs": 180000 },
     "publishedAt": "2025-01-01T00:00:00Z",
@@ -1311,7 +1311,7 @@ GET /channels/:channelId/episodes/:episodeId
     "id": "uuid",
     "title": "エピソードタイトル",
     "description": "エピソードの説明",
-    "scriptPrompt": "今回のテーマについて詳しく解説する",
+    "userPrompt": "今回のテーマについて詳しく解説する",
     "bgm": { "id": "uuid", "url": "..." },
     "fullAudio": { "id": "uuid", "url": "..." },
     "script": [
@@ -1345,7 +1345,7 @@ GET /channels/:channelId/episodes/:episodeId
 }
 ```
 
-> **Note:** `scriptPrompt` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
+> **Note:** `userPrompt` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
 
 ### エピソード作成
 
@@ -1379,7 +1379,7 @@ PATCH /channels/:channelId/episodes/:episodeId
 }
 ```
 
-> **Note:** `scriptPrompt` は台本生成時に自動で保存されます。直接編集する場合は API から設定可能ですが、通常は台本生成 API 経由で更新されます。
+> **Note:** `userPrompt` は台本生成時に自動で保存されます。直接編集する場合は API から設定可能ですが、通常は台本生成 API 経由で更新されます。
 >
 > **Note:** 公開状態の変更は専用エンドポイント（[エピソード公開](#エピソード公開) / [エピソード非公開](#エピソード非公開)）を使用してください。
 
@@ -1465,7 +1465,7 @@ POST /channels/:channelId/episodes/:episodeId/script/generate
 |------------|-----|:----:|------|
 | prompt | string | ◯ | テーマやシナリオ。URL が含まれていれば RAG で内容を取得して台本生成に利用 |
 
-> **Note:** `prompt` はエピソードの `scriptPrompt` として自動保存されます。
+> **Note:** `prompt` はエピソードの `userPrompt` として自動保存されます。
 
 **レスポンス:**
 ```json

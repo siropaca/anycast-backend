@@ -31,7 +31,7 @@ Authorization: Bearer {{token}}
 {
   "name": "テストチャンネル",
   "description": "テスト用のチャンネルです",
-  "scriptPrompt": "明るく楽しい雰囲気で話してください",
+  "userPrompt": "明るく楽しい雰囲気で話してください",
   "categoryId": "YOUR_CATEGORY_ID_HERE",
   "characters": [
     {
@@ -50,7 +50,7 @@ Authorization: Bearer {{token}}
 {
   "name": "テストチャンネル",
   "description": "テスト用のチャンネルです",
-  "scriptPrompt": "明るく楽しい雰囲気で話してください",
+  "userPrompt": "明るく楽しい雰囲気で話してください",
   "categoryId": "YOUR_CATEGORY_ID_HERE",
   "characters": [
     {
@@ -74,7 +74,7 @@ Authorization: Bearer {{token}}
 {
   "name": "テストチャンネル",
   "description": "テスト用のチャンネルです",
-  "scriptPrompt": "明るく楽しい雰囲気で話してください",
+  "userPrompt": "明るく楽しい雰囲気で話してください",
   "categoryId": "YOUR_CATEGORY_ID_HERE",
   "artworkImageId": "YOUR_IMAGE_ID_HERE",
   "characters": [
@@ -103,7 +103,7 @@ Authorization: Bearer {{token}}
 {
   "name": "新しいチャンネル名",
   "description": "新しい説明",
-  "scriptPrompt": "新しいスクリプトプロンプト"
+  "userPrompt": "新しいスクリプトプロンプト"
 }
 
 ### チャンネル更新（公開）

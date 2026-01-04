@@ -172,13 +172,13 @@ func (s *channelService) CreateChannel(ctx context.Context, userID string, req r
 
 	// チャンネルモデルを作成
 	channel := &model.Channel{
-		UserID:       uid,
-		Name:         req.Name,
-		Description:  req.Description,
-		ScriptPrompt: req.ScriptPrompt,
-		CategoryID:   categoryID,
-		ArtworkID:    artworkID,
-		Characters:   characters,
+		UserID:      uid,
+		Name:        req.Name,
+		Description: req.Description,
+		UserPrompt:  req.UserPrompt,
+		CategoryID:  categoryID,
+		ArtworkID:   artworkID,
+		Characters:  characters,
 	}
 
 	// チャンネルを保存（キャラクターも一緒に保存される）
@@ -226,8 +226,8 @@ func (s *channelService) UpdateChannel(ctx context.Context, userID, channelID st
 	if req.Description != nil {
 		channel.Description = *req.Description
 	}
-	if req.ScriptPrompt != nil {
-		channel.ScriptPrompt = *req.ScriptPrompt
+	if req.UserPrompt != nil {
+		channel.UserPrompt = *req.UserPrompt
 	}
 
 	// カテゴリの更新
@@ -327,18 +327,18 @@ func toChannelResponses(channels []model.Channel) []response.ChannelResponse {
 }
 
 // Channel モデルをレスポンス DTO に変換する
-// isOwner が false の場合、scriptPrompt は空文字になる
+// isOwner が false の場合、userPrompt は空文字になる
 func toChannelResponse(c *model.Channel, isOwner bool) response.ChannelResponse {
-	scriptPrompt := ""
+	userPrompt := ""
 	if isOwner {
-		scriptPrompt = c.ScriptPrompt
+		userPrompt = c.UserPrompt
 	}
 
 	resp := response.ChannelResponse{
-		ID:           c.ID,
-		Name:         c.Name,
-		Description:  c.Description,
-		ScriptPrompt: scriptPrompt,
+		ID:          c.ID,
+		Name:        c.Name,
+		Description: c.Description,
+		UserPrompt:  userPrompt,
 		Category: response.CategoryResponse{
 			ID:        c.Category.ID,
 			Slug:      c.Category.Slug,

@@ -1319,7 +1319,7 @@
                 "characters",
                 "description",
                 "name",
-                "scriptPrompt"
+                "userPrompt"
             ],
             "properties": {
                 "artworkImageId": {
@@ -1343,7 +1343,7 @@
                     "type": "string",
                     "maxLength": 255
                 },
-                "scriptPrompt": {
+                "userPrompt": {
                     "type": "string"
                 }
             }
@@ -1483,7 +1483,7 @@
                 "publishedAt": {
                     "type": "string"
                 },
-                "scriptPrompt": {
+                "userPrompt": {
                     "type": "string"
                 }
             }
@@ -1500,12 +1500,12 @@
                 "description": {
                     "type": "string"
                 },
-                "scriptPrompt": {
-                    "type": "string"
-                },
                 "title": {
                     "type": "string",
                     "maxLength": 255
+                },
+                "userPrompt": {
+                    "type": "string"
                 }
             }
         },
@@ -1663,8 +1663,8 @@
                 "description",
                 "id",
                 "name",
-                "scriptPrompt",
-                "updatedAt"
+                "updatedAt",
+                "userPrompt"
             ],
             "properties": {
                 "artwork": {
@@ -1700,10 +1700,10 @@
                     "type": "string",
                     "x-nullable": true
                 },
-                "scriptPrompt": {
+                "updatedAt": {
                     "type": "string"
                 },
-                "updatedAt": {
+                "userPrompt": {
                     "type": "string"
                 }
             }
@@ -1818,13 +1818,13 @@
                     "type": "string",
                     "x-nullable": true
                 },
-                "scriptPrompt": {
-                    "type": "string"
-                },
                 "title": {
                     "type": "string"
                 },
                 "updatedAt": {
+                    "type": "string"
+                },
+                "userPrompt": {
                     "type": "string"
                 }
             }

@@ -10,7 +10,7 @@ type ListMyChannelsRequest struct {
 type CreateChannelRequest struct {
 	Name           string                   `json:"name" binding:"required,max=255"`
 	Description    string                   `json:"description" binding:"required"`
-	ScriptPrompt   string                   `json:"scriptPrompt" binding:"required"`
+	UserPrompt     string                   `json:"userPrompt" binding:"required"`
 	CategoryID     string                   `json:"categoryId" binding:"required,uuid"`
 	ArtworkImageID *string                  `json:"artworkImageId" binding:"omitempty,uuid"`
 	Characters     []CreateCharacterRequest `json:"characters" binding:"required,min=1,max=2,dive"`
@@ -27,7 +27,7 @@ type CreateCharacterRequest struct {
 type UpdateChannelRequest struct {
 	Name           *string `json:"name" binding:"omitempty,max=255"`
 	Description    *string `json:"description"`
-	ScriptPrompt   *string `json:"scriptPrompt"`
+	UserPrompt     *string `json:"userPrompt"`
 	CategoryID     *string `json:"categoryId" binding:"omitempty,uuid"`
 	ArtworkImageID *string `json:"artworkImageId" binding:"omitempty,uuid"`
 	PublishedAt    *string `json:"publishedAt"`

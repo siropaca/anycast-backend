@@ -114,12 +114,12 @@ func setupAuthenticatedEpisodeRouter(h *EpisodeHandler, userID string) *gin.Engi
 func createTestEpisodeResponse() response.EpisodeResponse {
 	now := time.Now()
 	description := "Test Description"
-	scriptPrompt := "Test Script Prompt"
+	userPrompt := "Test User Prompt"
 	return response.EpisodeResponse{
-		ID:           uuid.New(),
-		Title:        "Test Episode",
-		Description:  &description,
-		ScriptPrompt: &scriptPrompt,
+		ID:          uuid.New(),
+		Title:       "Test Episode",
+		Description: &description,
+		UserPrompt:  &userPrompt,
 		FullAudio: &response.AudioResponse{
 			ID:         uuid.New(),
 			URL:        "https://example.com/audio.mp3",
@@ -478,15 +478,15 @@ func TestEpisodeHandler_UpdateEpisode(t *testing.T) {
 		mockSvc := new(mockEpisodeService)
 		title := "Updated Title"
 		description := "Updated Description"
-		scriptPrompt := "Test Script Prompt"
+		userPrompt := "Test User Prompt"
 		result := &response.EpisodeDataResponse{
 			Data: response.EpisodeResponse{
-				ID:           uuid.MustParse(episodeID),
-				Title:        title,
-				Description:  &description,
-				ScriptPrompt: &scriptPrompt,
-				CreatedAt:    time.Now(),
-				UpdatedAt:    time.Now(),
+				ID:          uuid.MustParse(episodeID),
+				Title:       title,
+				Description: &description,
+				UserPrompt:  &userPrompt,
+				CreatedAt:   time.Now(),
+				UpdatedAt:   time.Now(),
 			},
 		}
 		mockSvc.On("UpdateEpisode", mock.Anything, userID, channelID, episodeID, mock.AnythingOfType("request.UpdateEpisodeRequest")).Return(result, nil)
@@ -512,14 +512,14 @@ func TestEpisodeHandler_UpdateEpisode(t *testing.T) {
 	t.Run("title のみを更新できる", func(t *testing.T) {
 		mockSvc := new(mockEpisodeService)
 		title := "Updated Title"
-		scriptPrompt := "Test Script Prompt"
+		userPrompt := "Test User Prompt"
 		result := &response.EpisodeDataResponse{
 			Data: response.EpisodeResponse{
-				ID:           uuid.MustParse(episodeID),
-				Title:        title,
-				ScriptPrompt: &scriptPrompt,
-				CreatedAt:    time.Now(),
-				UpdatedAt:    time.Now(),
+				ID:         uuid.MustParse(episodeID),
+				Title:      title,
+				UserPrompt: &userPrompt,
+				CreatedAt:  time.Now(),
+				UpdatedAt:  time.Now(),
 			},
 		}
 		mockSvc.On("UpdateEpisode", mock.Anything, userID, channelID, episodeID, mock.AnythingOfType("request.UpdateEpisodeRequest")).Return(result, nil)

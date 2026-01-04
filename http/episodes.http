@@ -31,7 +31,7 @@ Authorization: Bearer {{token}}
 {
   "title": "テストエピソード",
   "description": "テスト用のエピソードです",
-  "scriptPrompt": "明るく楽しい雰囲気で話してください"
+  "userPrompt": "明るく楽しい雰囲気で話してください"
 }
 
 ### エピソード作成（アートワーク付き）
@@ -42,7 +42,7 @@ Authorization: Bearer {{token}}
 {
   "title": "テストエピソード",
   "description": "テスト用のエピソードです",
-  "scriptPrompt": "明るく楽しい雰囲気で話してください",
+  "userPrompt": "明るく楽しい雰囲気で話してください",
   "artworkImageId": "YOUR_IMAGE_ID_HERE"
 }
 
@@ -54,7 +54,7 @@ Authorization: Bearer {{token}}
 {
   "title": "テストエピソード",
   "description": "テスト用のエピソードです",
-  "scriptPrompt": "明るく楽しい雰囲気で話してください",
+  "userPrompt": "明るく楽しい雰囲気で話してください",
   "bgmAudioId": "YOUR_AUDIO_ID_HERE"
 }
 
@@ -66,7 +66,7 @@ Authorization: Bearer {{token}}
 {
   "title": "テストエピソード",
   "description": "テスト用のエピソードです",
-  "scriptPrompt": "明るく楽しい雰囲気で話してください",
+  "userPrompt": "明るく楽しい雰囲気で話してください",
   "artworkImageId": "YOUR_IMAGE_ID_HERE",
   "bgmAudioId": "YOUR_AUDIO_ID_HERE"
 }
@@ -78,7 +78,7 @@ Authorization: Bearer {{token}}
 
 {
   "title": "テストエピソード",
-  "scriptPrompt": "明るく楽しい雰囲気で話してください"
+  "userPrompt": "明るく楽しい雰囲気で話してください"
 }
 
 ### エピソード更新（タイトルのみ）
@@ -98,7 +98,7 @@ Authorization: Bearer {{token}}
 {
   "title": "更新されたタイトル",
   "description": "更新された説明文",
-  "scriptPrompt": "更新された台本プロンプト"
+  "userPrompt": "更新された台本プロンプト"
 }
 
 ### エピソード更新（アートワーク設定）

@@ -16,17 +16,17 @@ func TestToEpisodeResponse(t *testing.T) {
 	channelID := uuid.New()
 	audioID := uuid.New()
 	description := "Test Description"
-	scriptPrompt := "Test Script Prompt"
+	userPrompt := "Test User Prompt"
 
 	baseEpisode := &model.Episode{
-		ID:           episodeID,
-		ChannelID:    channelID,
-		Title:        "Test Episode",
-		Description:  &description,
-		ScriptPrompt: &scriptPrompt,
-		PublishedAt:  &now,
-		CreatedAt:    now,
-		UpdatedAt:    now,
+		ID:          episodeID,
+		ChannelID:   channelID,
+		Title:       "Test Episode",
+		Description: &description,
+		UserPrompt:  &userPrompt,
+		PublishedAt: &now,
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}
 
 	t.Run("基本的な変換が正しく行われる", func(t *testing.T) {
@@ -35,7 +35,7 @@ func TestToEpisodeResponse(t *testing.T) {
 		assert.Equal(t, episodeID, resp.ID)
 		assert.Equal(t, "Test Episode", resp.Title)
 		assert.Equal(t, &description, resp.Description)
-		assert.Equal(t, &scriptPrompt, resp.ScriptPrompt)
+		assert.Equal(t, &userPrompt, resp.UserPrompt)
 		assert.NotNil(t, resp.PublishedAt)
 		assert.Equal(t, now, resp.CreatedAt)
 		assert.Equal(t, now, resp.UpdatedAt)
@@ -96,22 +96,22 @@ func TestToEpisodeResponses(t *testing.T) {
 
 	episodes := []model.Episode{
 		{
-			ID:           uuid.New(),
-			ChannelID:    channelID,
-			Title:        "Episode 1",
-			Description:  &desc1,
-			ScriptPrompt: &prompt1,
-			CreatedAt:    now,
-			UpdatedAt:    now,
+			ID:          uuid.New(),
+			ChannelID:   channelID,
+			Title:       "Episode 1",
+			Description: &desc1,
+			UserPrompt:  &prompt1,
+			CreatedAt:   now,
+			UpdatedAt:   now,
 		},
 		{
-			ID:           uuid.New(),
-			ChannelID:    channelID,
-			Title:        "Episode 2",
-			Description:  &desc2,
-			ScriptPrompt: &prompt2,
-			CreatedAt:    now,
-			UpdatedAt:    now,
+			ID:          uuid.New(),
+			ChannelID:   channelID,
+			Title:       "Episode 2",
+			Description: &desc2,
+			UserPrompt:  &prompt2,
+			CreatedAt:   now,
+			UpdatedAt:   now,
 		},
 	}
 
@@ -123,11 +123,11 @@ func TestToEpisodeResponses(t *testing.T) {
 		assert.Equal(t, "Episode 2", result[1].Title)
 	})
 
-	t.Run("scriptPrompt が含まれる", func(t *testing.T) {
+	t.Run("userPrompt が含まれる", func(t *testing.T) {
 		result := toEpisodeResponses(episodes)
 
-		assert.Equal(t, &prompt1, result[0].ScriptPrompt)
-		assert.Equal(t, &prompt2, result[1].ScriptPrompt)
+		assert.Equal(t, &prompt1, result[0].UserPrompt)
+		assert.Equal(t, &prompt2, result[1].UserPrompt)
 	})
 
 	t.Run("空のスライスの場合、空のスライスを返す", func(t *testing.T) {

@@ -1325,7 +1325,7 @@ const docTemplate = `{
                 "characters",
                 "description",
                 "name",
-                "scriptPrompt"
+                "userPrompt"
             ],
             "properties": {
                 "artworkImageId": {
@@ -1349,7 +1349,7 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 255
                 },
-                "scriptPrompt": {
+                "userPrompt": {
                     "type": "string"
                 }
             }
@@ -1489,7 +1489,7 @@ const docTemplate = `{
                 "publishedAt": {
                     "type": "string"
                 },
-                "scriptPrompt": {
+                "userPrompt": {
                     "type": "string"
                 }
             }
@@ -1506,12 +1506,12 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
-                "scriptPrompt": {
-                    "type": "string"
-                },
                 "title": {
                     "type": "string",
                     "maxLength": 255
+                },
+                "userPrompt": {
+                    "type": "string"
                 }
             }
         },
@@ -1669,8 +1669,8 @@ const docTemplate = `{
                 "description",
                 "id",
                 "name",
-                "scriptPrompt",
-                "updatedAt"
+                "updatedAt",
+                "userPrompt"
             ],
             "properties": {
                 "artwork": {
@@ -1706,10 +1706,10 @@ const docTemplate = `{
                     "type": "string",
                     "x-nullable": true
                 },
-                "scriptPrompt": {
+                "updatedAt": {
                     "type": "string"
                 },
-                "updatedAt": {
+                "userPrompt": {
                     "type": "string"
                 }
             }
@@ -1824,13 +1824,13 @@ const docTemplate = `{
                     "type": "string",
                     "x-nullable": true
                 },
-                "scriptPrompt": {
-                    "type": "string"
-                },
                 "title": {
                     "type": "string"
                 },
                 "updatedAt": {
+                    "type": "string"
+                },
+                "userPrompt": {
                     "type": "string"
                 }
             }
