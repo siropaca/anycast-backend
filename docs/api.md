@@ -1238,7 +1238,6 @@ POST /channels/:channelId/episodes
 {
   "title": "エピソードタイトル",
   "description": "エピソードの説明",
-  "scriptPrompt": "今回のテーマについて詳しく解説する",
   "artworkImageId": "uuid",
   "bgmAudioId": "uuid"
 }
@@ -1255,7 +1254,6 @@ PATCH /channels/:channelId/episodes/:episodeId
 {
   "title": "新しいタイトル",
   "description": "新しい説明",
-  "scriptPrompt": "今回のテーマについて詳しく解説する",
   "artworkImageId": "uuid",
   "bgmAudioId": "uuid",
   "publishedAt": "2025-01-01T00:00:00Z"
@@ -1263,6 +1261,8 @@ PATCH /channels/:channelId/episodes/:episodeId
 ```
 
 - `publishedAt`: 公開日時を設定（`null` で非公開化）
+
+> **Note:** `scriptPrompt` は台本生成時に自動で保存されます。直接編集する場合は API から設定可能ですが、通常は台本生成 API 経由で更新されます。
 
 ### エピソード削除
 
@@ -1340,7 +1340,11 @@ POST /channels/:channelId/episodes/:episodeId/script/generate
 }
 ```
 
-- `prompt`: テーマやシナリオを入力。URL が含まれていれば RAG で内容を取得して台本生成に利用
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| prompt | string | ◯ | テーマやシナリオ。URL が含まれていれば RAG で内容を取得して台本生成に利用 |
+
+> **Note:** `prompt` はエピソードの `scriptPrompt` として自動保存されます。
 
 **レスポンス:**
 ```json

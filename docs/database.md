@@ -347,7 +347,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | channel_id | UUID | | - | 所属チャンネル |
 | title | VARCHAR(255) | | - | エピソードタイトル |
 | description | TEXT | | - | エピソードの説明（公開情報） |
-| script_prompt | TEXT | | - | エピソード固有の台本生成設定（内部管理用） |
+| script_prompt | TEXT | ◯ | - | エピソード固有の台本生成設定（台本生成時に自動保存、内部管理用） |
 | artwork_id | UUID | ◯ | - | カバー画像（images 参照） |
 | bgm_id | UUID | ◯ | - | BGM（audios 参照） |
 | full_audio_id | UUID | ◯ | - | 結合済み音声（audios 参照） |

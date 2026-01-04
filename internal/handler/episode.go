@@ -115,7 +115,6 @@ func (h *EpisodeHandler) CreateEpisode(c *gin.Context) {
 		channelID,
 		req.Title,
 		req.Description,
-		req.ScriptPrompt,
 		req.ArtworkImageID,
 		req.BgmAudioID,
 	)

@@ -34,8 +34,8 @@ func (m *mockEpisodeService) ListMyChannelEpisodes(ctx context.Context, userID, 
 	return args.Get(0).(*response.EpisodeListWithPaginationResponse), args.Error(1)
 }
 
-func (m *mockEpisodeService) CreateEpisode(ctx context.Context, userID, channelID, title string, description *string, scriptPrompt string, artworkImageID, bgmAudioID *string) (*response.EpisodeResponse, error) {
-	args := m.Called(ctx, userID, channelID, title, description, scriptPrompt, artworkImageID, bgmAudioID)
+func (m *mockEpisodeService) CreateEpisode(ctx context.Context, userID, channelID, title string, description, artworkImageID, bgmAudioID *string) (*response.EpisodeResponse, error) {
+	args := m.Called(ctx, userID, channelID, title, description, artworkImageID, bgmAudioID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -84,11 +84,12 @@ func setupAuthenticatedEpisodeRouter(h *EpisodeHandler, userID string) *gin.Engi
 func createTestEpisodeResponse() response.EpisodeResponse {
 	now := time.Now()
 	description := "Test Description"
+	scriptPrompt := "Test Script Prompt"
 	return response.EpisodeResponse{
 		ID:           uuid.New(),
 		Title:        "Test Episode",
 		Description:  &description,
-		ScriptPrompt: "Test Script Prompt",
+		ScriptPrompt: &scriptPrompt,
 		FullAudio: &response.AudioResponse{
 			ID:         uuid.New(),
 			URL:        "https://example.com/audio.mp3",
@@ -240,19 +241,18 @@ func TestEpisodeHandler_CreateEpisode(t *testing.T) {
 		mockSvc := new(mockEpisodeService)
 		description := "Test Description"
 		result := &response.EpisodeResponse{
-			ID:           uuid.New(),
-			Title:        "Test Episode",
-			Description:  &description,
-			ScriptPrompt: "Test Script Prompt",
-			CreatedAt:    time.Now(),
-			UpdatedAt:    time.Now(),
+			ID:          uuid.New(),
+			Title:       "Test Episode",
+			Description: &description,
+			CreatedAt:   time.Now(),
+			UpdatedAt:   time.Now(),
 		}
-		mockSvc.On("CreateEpisode", mock.Anything, userID, channelID, "Test Episode", &description, "Test Script Prompt", (*string)(nil), (*string)(nil)).Return(result, nil)
+		mockSvc.On("CreateEpisode", mock.Anything, userID, channelID, "Test Episode", &description, (*string)(nil), (*string)(nil)).Return(result, nil)
 
 		handler := NewEpisodeHandler(mockSvc)
 		router := setupAuthenticatedEpisodeRouter(handler, userID)
 
-		body := `{"title":"Test Episode","description":"Test Description","scriptPrompt":"Test Script Prompt"}`
+		body := `{"title":"Test Episode","description":"Test Description"}`
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes", bytes.NewBufferString(body))
 		req.Header.Set("Content-Type", "application/json")
@@ -270,18 +270,17 @@ func TestEpisodeHandler_CreateEpisode(t *testing.T) {
 	t.Run("description なしでエピソードを作成できる", func(t *testing.T) {
 		mockSvc := new(mockEpisodeService)
 		result := &response.EpisodeResponse{
-			ID:           uuid.New(),
-			Title:        "Test Episode",
-			ScriptPrompt: "Test Script Prompt",
-			CreatedAt:    time.Now(),
-			UpdatedAt:    time.Now(),
+			ID:        uuid.New(),
+			Title:     "Test Episode",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		}
-		mockSvc.On("CreateEpisode", mock.Anything, userID, channelID, "Test Episode", (*string)(nil), "Test Script Prompt", (*string)(nil), (*string)(nil)).Return(result, nil)
+		mockSvc.On("CreateEpisode", mock.Anything, userID, channelID, "Test Episode", (*string)(nil), (*string)(nil), (*string)(nil)).Return(result, nil)
 
 		handler := NewEpisodeHandler(mockSvc)
 		router := setupAuthenticatedEpisodeRouter(handler, userID)
 
-		body := `{"title":"Test Episode","scriptPrompt":"Test Script Prompt"}`
+		body := `{"title":"Test Episode"}`
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes", bytes.NewBufferString(body))
 		req.Header.Set("Content-Type", "application/json")
@@ -296,21 +295,7 @@ func TestEpisodeHandler_CreateEpisode(t *testing.T) {
 		handler := NewEpisodeHandler(mockSvc)
 		router := setupAuthenticatedEpisodeRouter(handler, userID)
 
-		body := `{"scriptPrompt":"Test Script Prompt"}`
-		w := httptest.NewRecorder()
-		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes", bytes.NewBufferString(body))
-		req.Header.Set("Content-Type", "application/json")
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-	})
-
-	t.Run("scriptPrompt が空の場合は 400 を返す", func(t *testing.T) {
-		mockSvc := new(mockEpisodeService)
-		handler := NewEpisodeHandler(mockSvc)
-		router := setupAuthenticatedEpisodeRouter(handler, userID)
-
-		body := `{"title":"Test Episode"}`
+		body := `{}`
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes", bytes.NewBufferString(body))
 		req.Header.Set("Content-Type", "application/json")
@@ -321,12 +306,12 @@ func TestEpisodeHandler_CreateEpisode(t *testing.T) {
 
 	t.Run("チャンネルが見つからない場合は 404 を返す", func(t *testing.T) {
 		mockSvc := new(mockEpisodeService)
-		mockSvc.On("CreateEpisode", mock.Anything, userID, channelID, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, apperror.ErrNotFound.WithMessage("Channel not found"))
+		mockSvc.On("CreateEpisode", mock.Anything, userID, channelID, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, apperror.ErrNotFound.WithMessage("Channel not found"))
 
 		handler := NewEpisodeHandler(mockSvc)
 		router := setupAuthenticatedEpisodeRouter(handler, userID)
 
-		body := `{"title":"Test Episode","scriptPrompt":"Test Script Prompt"}`
+		body := `{"title":"Test Episode"}`
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes", bytes.NewBufferString(body))
 		req.Header.Set("Content-Type", "application/json")
@@ -338,12 +323,12 @@ func TestEpisodeHandler_CreateEpisode(t *testing.T) {
 
 	t.Run("権限がない場合は 403 を返す", func(t *testing.T) {
 		mockSvc := new(mockEpisodeService)
-		mockSvc.On("CreateEpisode", mock.Anything, userID, channelID, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, apperror.ErrForbidden.WithMessage("You do not have permission"))
+		mockSvc.On("CreateEpisode", mock.Anything, userID, channelID, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, apperror.ErrForbidden.WithMessage("You do not have permission"))
 
 		handler := NewEpisodeHandler(mockSvc)
 		router := setupAuthenticatedEpisodeRouter(handler, userID)
 
-		body := `{"title":"Test Episode","scriptPrompt":"Test Script Prompt"}`
+		body := `{"title":"Test Episode"}`
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes", bytes.NewBufferString(body))
 		req.Header.Set("Content-Type", "application/json")
@@ -363,12 +348,13 @@ func TestEpisodeHandler_UpdateEpisode(t *testing.T) {
 		mockSvc := new(mockEpisodeService)
 		title := "Updated Title"
 		description := "Updated Description"
+		scriptPrompt := "Test Script Prompt"
 		result := &response.EpisodeDataResponse{
 			Data: response.EpisodeResponse{
 				ID:           uuid.MustParse(episodeID),
 				Title:        title,
 				Description:  &description,
-				ScriptPrompt: "Test Script Prompt",
+				ScriptPrompt: &scriptPrompt,
 				CreatedAt:    time.Now(),
 				UpdatedAt:    time.Now(),
 			},
@@ -396,11 +382,12 @@ func TestEpisodeHandler_UpdateEpisode(t *testing.T) {
 	t.Run("title のみを更新できる", func(t *testing.T) {
 		mockSvc := new(mockEpisodeService)
 		title := "Updated Title"
+		scriptPrompt := "Test Script Prompt"
 		result := &response.EpisodeDataResponse{
 			Data: response.EpisodeResponse{
 				ID:           uuid.MustParse(episodeID),
 				Title:        title,
-				ScriptPrompt: "Test Script Prompt",
+				ScriptPrompt: &scriptPrompt,
 				CreatedAt:    time.Now(),
 				UpdatedAt:    time.Now(),
 			},
@@ -423,11 +410,12 @@ func TestEpisodeHandler_UpdateEpisode(t *testing.T) {
 	t.Run("publishedAt を更新できる", func(t *testing.T) {
 		mockSvc := new(mockEpisodeService)
 		now := time.Now()
+		scriptPrompt := "Test Script Prompt"
 		result := &response.EpisodeDataResponse{
 			Data: response.EpisodeResponse{
 				ID:           uuid.MustParse(episodeID),
 				Title:        "Test Episode",
-				ScriptPrompt: "Test Script Prompt",
+				ScriptPrompt: &scriptPrompt,
 				PublishedAt:  &now,
 				CreatedAt:    time.Now(),
 				UpdatedAt:    time.Now(),
