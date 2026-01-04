@@ -1598,6 +1598,7 @@ const docTemplate = `{
         "request.CreateEpisodeRequest": {
             "type": "object",
             "required": [
+                "description",
                 "title"
             ],
             "properties": {
@@ -1750,6 +1751,10 @@ const docTemplate = `{
         },
         "request.UpdateEpisodeRequest": {
             "type": "object",
+            "required": [
+                "description",
+                "title"
+            ],
             "properties": {
                 "artworkImageId": {
                     "type": "string"

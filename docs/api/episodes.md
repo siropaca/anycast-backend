@@ -112,7 +112,7 @@ POST /channels/:channelId/episodes
 | フィールド | ルール |
 |------------|--------|
 | title | 必須、255文字以内 |
-| description | 2000文字以内 |
+| description | 必須、2000文字以内 |
 
 ---
 
@@ -135,8 +135,8 @@ PATCH /channels/:channelId/episodes/:episodeId
 **バリデーション:**
 | フィールド | ルール |
 |------------|--------|
-| title | 255文字以内 |
-| description | 2000文字以内 |
+| title | 必須、255文字以内 |
+| description | 必須、2000文字以内 |
 
 > **Note:** `userPrompt` は台本生成時に自動で保存されます。エピソード更新 API からは編集できません。
 >
