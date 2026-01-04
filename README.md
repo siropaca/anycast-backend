@@ -126,7 +126,7 @@ make swagger
 
 ### API エンドポイント
 
-詳細は [docs/api.md](docs/api.md) を参照。
+詳細は [docs/api/index.md](docs/api/index.md) を参照。
 
 ## コマンド一覧
 
@@ -168,9 +168,10 @@ make swagger
 ├── seeds/               # シードデータ（開発環境用）
 ├── docs/                # ドキュメント
 │   ├── adr/             # Architecture Decision Records
+│   ├── api/             # API 設計
 │   ├── specification.md # 仕様書
 │   ├── database.md      # DB 設計
-│   └── api.md           # API 設計
+│   └── system.md        # システム設定
 ├── swagger/             # Swagger ドキュメント（自動生成）
 ├── http/                # HTTP リクエストファイル
 ├── internal/            # 内部パッケージ
