@@ -79,6 +79,8 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.POST("/channels/:channelId/episodes", container.EpisodeHandler.CreateEpisode)
 	authenticated.PATCH("/channels/:channelId/episodes/:episodeId", container.EpisodeHandler.UpdateEpisode)
 	authenticated.DELETE("/channels/:channelId/episodes/:episodeId", container.EpisodeHandler.DeleteEpisode)
+	authenticated.POST("/channels/:channelId/episodes/:episodeId/publish", container.EpisodeHandler.PublishEpisode)
+	authenticated.POST("/channels/:channelId/episodes/:episodeId/unpublish", container.EpisodeHandler.UnpublishEpisode)
 
 	// Script Lines
 	authenticated.GET("/channels/:channelId/episodes/:episodeId/script/lines", container.ScriptLineHandler.ListScriptLines)

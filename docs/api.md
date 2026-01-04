@@ -63,6 +63,8 @@
 | POST | `/api/v1/channels/:channelId/episodes` | [エピソード作成](#エピソード作成) | ✅ |
 | PATCH | `/api/v1/channels/:channelId/episodes/:episodeId` | [エピソード更新](#エピソード更新) | ✅ |
 | DELETE | `/api/v1/channels/:channelId/episodes/:episodeId` | [エピソード削除](#エピソード削除) | ✅ |
+| POST | `/api/v1/channels/:channelId/episodes/:episodeId/publish` | [エピソード公開](#エピソード公開) | ✅ |
+| POST | `/api/v1/channels/:channelId/episodes/:episodeId/unpublish` | [エピソード非公開](#エピソード非公開) | ✅ |
 | **[Script（台本）](#script台本)** | - | - | - |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/import` | [台本テキスト取り込み](#台本テキスト取り込み) | |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId/script/export` | [台本テキスト出力](#台本テキスト出力) | |
@@ -1256,19 +1258,73 @@ PATCH /channels/:channelId/episodes/:episodeId
   "title": "新しいタイトル",
   "description": "新しい説明",
   "artworkImageId": "uuid",
-  "bgmAudioId": "uuid",
-  "publishedAt": "2025-01-01T00:00:00Z"
+  "bgmAudioId": "uuid"
 }
 ```
 
-- `publishedAt`: 公開日時を設定（`null` で非公開化）
-
 > **Note:** `scriptPrompt` は台本生成時に自動で保存されます。直接編集する場合は API から設定可能ですが、通常は台本生成 API 経由で更新されます。
+>
+> **Note:** 公開状態の変更は専用エンドポイント（[エピソード公開](#エピソード公開) / [エピソード非公開](#エピソード非公開)）を使用してください。
 
 ### エピソード削除
 
 ```
 DELETE /channels/:channelId/episodes/:episodeId
+```
+
+### エピソード公開
+
+```
+POST /channels/:channelId/episodes/:episodeId/publish
+```
+
+エピソードを公開状態にする。`publishedAt` を省略すると現在時刻で即時公開、指定すると予約公開になる。
+
+**リクエスト:**
+```json
+{
+  "publishedAt": "2025-01-01T00:00:00Z"
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| publishedAt | string | | 公開日時（RFC3339 形式）。省略時は現在時刻で即時公開 |
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "title": "エピソードタイトル",
+    "description": "エピソードの説明",
+    "publishedAt": "2025-01-01T00:00:00Z",
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+### エピソード非公開
+
+```
+POST /channels/:channelId/episodes/:episodeId/unpublish
+```
+
+エピソードを非公開（下書き）状態に戻す。
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "title": "エピソードタイトル",
+    "description": "エピソードの説明",
+    "publishedAt": null,
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
 ```
 
 ---
