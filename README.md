@@ -188,6 +188,7 @@ make swagger
 │   ├── pkg/             # 共通ユーティリティ
 │   │   ├── crypto/      # パスワードハッシュ
 │   │   ├── jwt/         # JWT トークン管理
+│   │   ├── prompt/      # プロンプト圧縮
 │   │   └── script/      # 台本パーサー
 │   ├── repository/      # データアクセス層
 │   ├── router/          # ルーティング
