@@ -1873,14 +1873,22 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "durationMs",
+                "fileSize",
                 "id",
+                "mimeType",
                 "url"
             ],
             "properties": {
                 "durationMs": {
                     "type": "integer"
                 },
+                "fileSize": {
+                    "type": "integer"
+                },
                 "id": {
+                    "type": "string"
+                },
+                "mimeType": {
                     "type": "string"
                 },
                 "url": {

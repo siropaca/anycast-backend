@@ -272,6 +272,8 @@ func (s *scriptService) toScriptLineResponse(ctx context.Context, sl *model.Scri
 		resp.Audio = &response.AudioResponse{
 			ID:         sl.Audio.ID,
 			URL:        signedURL,
+			MimeType:   sl.Audio.MimeType,
+			FileSize:   sl.Audio.FileSize,
 			DurationMs: sl.Audio.DurationMs,
 		}
 	}
