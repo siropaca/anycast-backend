@@ -903,6 +903,87 @@ const docTemplate = `{
                 }
             }
         },
+        "/channels/{channelId}/episodes/{episodeId}/script/lines/{lineId}/audio/generate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定した台本行の音声を TTS で生成します。speech 行のみ対応しています。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "script"
+                ],
+                "summary": "台本行の音声を生成",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "チャンネル ID",
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "エピソード ID",
+                        "name": "episodeId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "台本行 ID",
+                        "name": "lineId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.GenerateAudioResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/channels/{channelId}/episodes/{episodeId}/unpublish": {
             "post": {
                 "security": [
@@ -1630,6 +1711,7 @@ const docTemplate = `{
                     "minimum": 3
                 },
                 "prompt": {
+                    "description": "Episode の UserPrompt になる",
                     "type": "string",
                     "maxLength": 2000
                 }
@@ -2118,6 +2200,17 @@ const docTemplate = `{
             "properties": {
                 "error": {
                     "$ref": "#/definitions/response.ErrorDetail"
+                }
+            }
+        },
+        "response.GenerateAudioResponse": {
+            "type": "object",
+            "required": [
+                "audio"
+            ],
+            "properties": {
+                "audio": {
+                    "$ref": "#/definitions/response.AudioResponse"
                 }
             }
         },
