@@ -20,7 +20,7 @@ type Container struct {
     VoiceHandler *handler.VoiceHandler
 }
 
-func NewContainer(db *gorm.DB) *Container {
+func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Container {
     voiceRepo := repository.NewVoiceRepository(db)
     voiceService := service.NewVoiceService(voiceRepo)
     voiceHandler := handler.NewVoiceHandler(voiceService)

@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/llm"
+	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/model"
 	"github.com/siropaca/anycast-backend/internal/pkg/script"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
@@ -19,6 +21,8 @@ import (
 const (
 	// デフォルトのエピソード長さ（分）
 	defaultDurationMinutes = 10
+	// 署名 URL の有効期限（1時間）
+	signedURLExpirationScript = 1 * time.Hour
 )
 
 // 台本生成のシステムプロンプト
@@ -64,6 +68,7 @@ type scriptService struct {
 	episodeRepo    repository.EpisodeRepository
 	scriptLineRepo repository.ScriptLineRepository
 	llmClient      llm.Client
+	storageClient  storage.Client
 }
 
 // ScriptService の実装を返す
@@ -73,6 +78,7 @@ func NewScriptService(
 	episodeRepo repository.EpisodeRepository,
 	scriptLineRepo repository.ScriptLineRepository,
 	llmClient llm.Client,
+	storageClient storage.Client,
 ) ScriptService {
 	return &scriptService{
 		db:             db,
@@ -80,6 +86,7 @@ func NewScriptService(
 		episodeRepo:    episodeRepo,
 		scriptLineRepo: scriptLineRepo,
 		llmClient:      llmClient,
+		storageClient:  storageClient,
 	}
 }
 
@@ -197,10 +204,79 @@ func (s *scriptService) GenerateScript(ctx context.Context, userID, channelID, e
 		return nil, err
 	}
 
-	// レスポンス DTO に変換
+	// レスポンス DTO に変換（署名 URL を生成）
+	responses, err := s.toScriptLineResponses(ctx, createdLines)
+	if err != nil {
+		return nil, err
+	}
+
 	return &response.ScriptLineListResponse{
-		Data: toScriptLineResponses(createdLines),
+		Data: responses,
 	}, nil
+}
+
+// ScriptLine モデルのスライスをレスポンス DTO のスライスに変換する
+func (s *scriptService) toScriptLineResponses(ctx context.Context, scriptLines []model.ScriptLine) ([]response.ScriptLineResponse, error) {
+	result := make([]response.ScriptLineResponse, len(scriptLines))
+
+	for i, sl := range scriptLines {
+		resp, err := s.toScriptLineResponse(ctx, &sl)
+		if err != nil {
+			return nil, err
+		}
+		result[i] = resp
+	}
+
+	return result, nil
+}
+
+// ScriptLine モデルをレスポンス DTO に変換する
+func (s *scriptService) toScriptLineResponse(ctx context.Context, sl *model.ScriptLine) (response.ScriptLineResponse, error) {
+	resp := response.ScriptLineResponse{
+		ID:         sl.ID,
+		LineOrder:  sl.LineOrder,
+		LineType:   string(sl.LineType),
+		Text:       sl.Text,
+		Emotion:    sl.Emotion,
+		DurationMs: sl.DurationMs,
+		CreatedAt:  sl.CreatedAt,
+		UpdatedAt:  sl.UpdatedAt,
+	}
+
+	// decimal.Decimal から float64 に変換
+	if sl.Volume != nil {
+		v, _ := sl.Volume.Float64()
+		resp.Volume = &v
+	}
+
+	if sl.Speaker != nil {
+		resp.Speaker = &response.SpeakerResponse{
+			ID:   sl.Speaker.ID,
+			Name: sl.Speaker.Name,
+		}
+	}
+
+	if sl.Sfx != nil {
+		resp.Sfx = &response.SfxResponse{
+			ID:   sl.Sfx.ID,
+			Name: sl.Sfx.Name,
+		}
+	}
+
+	if sl.Audio != nil {
+		// 署名付き URL を生成
+		signedURL, err := s.storageClient.GenerateSignedURL(ctx, sl.Audio.Path, signedURLExpirationScript)
+		if err != nil {
+			return response.ScriptLineResponse{}, err
+		}
+		resp.Audio = &response.AudioResponse{
+			ID:         sl.Audio.ID,
+			URL:        signedURL,
+			DurationMs: sl.Audio.DurationMs,
+		}
+	}
+
+	return resp, nil
 }
 
 // LLM 用のユーザープロンプトを構築する
