@@ -460,6 +460,8 @@ func toEpisodeResponse(e *model.Episode) response.EpisodeResponse {
 		resp.FullAudio = &response.AudioResponse{
 			ID:         e.FullAudio.ID,
 			URL:        e.FullAudio.Path,
+			MimeType:   e.FullAudio.MimeType,
+			FileSize:   e.FullAudio.FileSize,
 			DurationMs: e.FullAudio.DurationMs,
 		}
 	}

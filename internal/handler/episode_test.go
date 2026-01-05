@@ -122,6 +122,8 @@ func createTestEpisodeResponse() response.EpisodeResponse {
 		FullAudio: &response.AudioResponse{
 			ID:         uuid.New(),
 			URL:        "https://example.com/audio.mp3",
+			MimeType:   "audio/mpeg",
+			FileSize:   1024000,
 			DurationMs: 180000,
 		},
 		PublishedAt: &now,

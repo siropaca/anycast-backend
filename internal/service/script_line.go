@@ -167,6 +167,8 @@ func (s *scriptLineService) toScriptLineResponse(ctx context.Context, sl *model.
 		resp.Audio = &response.AudioResponse{
 			ID:         sl.Audio.ID,
 			URL:        signedURL,
+			MimeType:   sl.Audio.MimeType,
+			FileSize:   sl.Audio.FileSize,
 			DurationMs: sl.Audio.DurationMs,
 		}
 	}
@@ -304,6 +306,8 @@ func (s *scriptLineService) GenerateAudio(ctx context.Context, userID, channelID
 		Audio: response.AudioResponse{
 			ID:         audio.ID,
 			URL:        signedURL,
+			MimeType:   audio.MimeType,
+			FileSize:   audio.FileSize,
 			DurationMs: audio.DurationMs,
 		},
 	}, nil

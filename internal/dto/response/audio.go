@@ -6,6 +6,8 @@ import "github.com/google/uuid"
 type AudioResponse struct {
 	ID         uuid.UUID `json:"id" validate:"required"`
 	URL        string    `json:"url" validate:"required"`
+	MimeType   string    `json:"mimeType" validate:"required"`
+	FileSize   int       `json:"fileSize" validate:"required"`
 	DurationMs int       `json:"durationMs" validate:"required"`
 }
 
