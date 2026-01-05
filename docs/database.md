@@ -178,7 +178,7 @@ erDiagram
     audios {
         uuid id PK
         varchar mime_type
-        varchar url
+        varchar path
         varchar filename
         integer file_size
         integer duration_ms
@@ -517,7 +517,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 |----------|-----|:--------:|------------|------|
 | id | UUID | | gen_random_uuid() | 主キー |
 | mime_type | VARCHAR(100) | | - | MIME タイプ（audio/mpeg など） |
-| url | VARCHAR(1024) | | - | ストレージ URL |
+| path | VARCHAR(1024) | | - | GCS 上のパス（例: audios/xxx.mp3） |
 | filename | VARCHAR(255) | | - | 元ファイル名 |
 | file_size | INTEGER | | - | ファイルサイズ（バイト） |
 | duration_ms | INTEGER | | - | 再生時間（ms） |
@@ -649,7 +649,8 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 ### メディアファイルの管理
 
 - audios テーブルで音声ファイル、images テーブルで画像ファイルを管理
-- url には GCS（Google Cloud Storage）の URL を保存
+- audios.path には GCS（Google Cloud Storage）上のパスを保存（例: `audios/xxx.mp3`）
+- API レスポンス時に署名付き URL を動的生成してクライアントに返す
 - 同一ファイルを複数箇所から参照可能（BGM の使い回しなど）
 - 未使用ファイルのクリーンアップはアプリケーション層で実施
 
