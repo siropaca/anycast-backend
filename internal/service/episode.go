@@ -459,7 +459,7 @@ func toEpisodeResponse(e *model.Episode) response.EpisodeResponse {
 	if e.FullAudio != nil {
 		resp.FullAudio = &response.AudioResponse{
 			ID:         e.FullAudio.ID,
-			URL:        e.FullAudio.URL,
+			URL:        e.FullAudio.Path,
 			DurationMs: e.FullAudio.DurationMs,
 		}
 	}

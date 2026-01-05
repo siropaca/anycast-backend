@@ -55,7 +55,7 @@ func TestToEpisodeResponse(t *testing.T) {
 		episode.FullAudioID = &audioID
 		episode.FullAudio = &model.Audio{
 			ID:         audioID,
-			URL:        "https://example.com/audio.mp3",
+			Path:       "audios/full-audio.mp3",
 			DurationMs: 180000,
 		}
 
@@ -63,7 +63,7 @@ func TestToEpisodeResponse(t *testing.T) {
 
 		assert.NotNil(t, resp.FullAudio)
 		assert.Equal(t, audioID, resp.FullAudio.ID)
-		assert.Equal(t, "https://example.com/audio.mp3", resp.FullAudio.URL)
+		assert.Equal(t, "audios/full-audio.mp3", resp.FullAudio.URL)
 		assert.Equal(t, 180000, resp.FullAudio.DurationMs)
 	})
 
