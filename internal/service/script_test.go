@@ -96,20 +96,28 @@ func TestBuildUserPrompt(t *testing.T) {
 
 	t.Run("チャンネル設定とキャラクターが正しく含まれる", func(t *testing.T) {
 		channel := &model.Channel{
+			Name:       "テックラジオ",
 			UserPrompt: "テック系ポッドキャスト",
 			Characters: []model.Character{
-				{Name: "太郎", Persona: "明るいホスト"},
-				{Name: "花子", Persona: "知識豊富なゲスト"},
+				{Name: "太郎", Persona: "明るいホスト", Voice: model.Voice{Gender: model.GenderMale}},
+				{Name: "花子", Persona: "知識豊富なゲスト", Voice: model.Voice{Gender: model.GenderFemale}},
 			},
 		}
+		episode := &model.Episode{
+			Title: "AI の未来",
+		}
 
-		result := svc.buildUserPrompt(channel, "AI について語る", 10)
+		result := svc.buildUserPrompt(channel, episode, "AI について語る", 10)
 
+		assert.Contains(t, result, "## チャンネル情報")
+		assert.Contains(t, result, "チャンネル名: テックラジオ")
 		assert.Contains(t, result, "## チャンネル設定")
 		assert.Contains(t, result, "テック系ポッドキャスト")
 		assert.Contains(t, result, "## 登場人物")
-		assert.Contains(t, result, "太郎: 明るいホスト")
-		assert.Contains(t, result, "花子: 知識豊富なゲスト")
+		assert.Contains(t, result, "太郎（male）: 明るいホスト")
+		assert.Contains(t, result, "花子（female）: 知識豊富なゲスト")
+		assert.Contains(t, result, "## エピソード情報")
+		assert.Contains(t, result, "タイトル: AI の未来")
 		assert.Contains(t, result, "## エピソードの長さ")
 		assert.Contains(t, result, "10分")
 		assert.Contains(t, result, "## 今回のテーマ")
@@ -118,31 +126,39 @@ func TestBuildUserPrompt(t *testing.T) {
 
 	t.Run("チャンネル設定が空の場合は省略される", func(t *testing.T) {
 		channel := &model.Channel{
+			Name:       "テストチャンネル",
 			UserPrompt: "",
 			Characters: []model.Character{
-				{Name: "太郎"},
+				{Name: "太郎", Voice: model.Voice{Gender: model.GenderMale}},
 			},
 		}
+		episode := &model.Episode{
+			Title: "テストエピソード",
+		}
 
-		result := svc.buildUserPrompt(channel, "テスト", 5)
+		result := svc.buildUserPrompt(channel, episode, "テスト", 5)
 
 		assert.NotContains(t, result, "## チャンネル設定")
 		assert.Contains(t, result, "## 登場人物")
-		assert.Contains(t, result, "- 太郎")
+		assert.Contains(t, result, "- 太郎（male）")
 	})
 
 	t.Run("キャラクターのペルソナが空の場合は名前のみ", func(t *testing.T) {
 		channel := &model.Channel{
+			Name: "テストチャンネル",
 			Characters: []model.Character{
-				{Name: "太郎", Persona: ""},
-				{Name: "花子", Persona: "ゲスト"},
+				{Name: "太郎", Persona: "", Voice: model.Voice{Gender: model.GenderMale}},
+				{Name: "花子", Persona: "ゲスト", Voice: model.Voice{Gender: model.GenderFemale}},
 			},
 		}
+		episode := &model.Episode{
+			Title: "テストエピソード",
+		}
 
-		result := svc.buildUserPrompt(channel, "テスト", 10)
+		result := svc.buildUserPrompt(channel, episode, "テスト", 10)
 
-		assert.Contains(t, result, "- 太郎\n")
-		assert.Contains(t, result, "- 花子: ゲスト")
+		assert.Contains(t, result, "- 太郎（male）\n")
+		assert.Contains(t, result, "- 花子（female）: ゲスト")
 	})
 }
 

@@ -30,6 +30,7 @@ const systemPrompt = `
 - 登場人物それぞれの個性（ペルソナ）を反映したセリフにする
 - 長すぎるセリフは避け、1つのセリフは50〜100文字程度を目安にする
 - 聞き手が理解しやすいよう、適度に相槌や確認を入れる
+- 人間らしい自然な会話感を出すために、適度にフィラー（「えーと」「あのー」「まあ」「なんか」「うーん」など）を入れる
 - 指定されたエピソードの長さ（分）に合わせた台本を作成する
   - 目安として、1分あたり約300文字程度のセリフ量になるよう調整する
   - 10分のエピソードなら約3000文字、30分なら約9000文字が目安
@@ -126,7 +127,7 @@ func (s *scriptService) GenerateScript(ctx context.Context, userID, channelID, e
 	}
 
 	// LLM 用ユーザープロンプトを構築
-	userPrompt := s.buildUserPrompt(channel, prompt, duration)
+	userPrompt := s.buildUserPrompt(channel, episode, prompt, duration)
 
 	// LLM で台本生成
 	generatedText, err := s.llmClient.GenerateScript(ctx, systemPrompt, userPrompt)
@@ -203,8 +204,16 @@ func (s *scriptService) GenerateScript(ctx context.Context, userID, channelID, e
 }
 
 // LLM 用のユーザープロンプトを構築する
-func (s *scriptService) buildUserPrompt(channel *model.Channel, prompt string, durationMinutes int) string {
+func (s *scriptService) buildUserPrompt(channel *model.Channel, episode *model.Episode, prompt string, durationMinutes int) string {
 	var sb strings.Builder
+
+	// チャンネル情報
+	sb.WriteString("## チャンネル情報\n")
+	sb.WriteString(fmt.Sprintf("チャンネル名: %s\n", channel.Name))
+	if channel.Description != "" {
+		sb.WriteString(fmt.Sprintf("説明: %s\n", channel.Description))
+	}
+	sb.WriteString("\n")
 
 	// チャンネル設定
 	if channel.UserPrompt != "" {
@@ -217,10 +226,18 @@ func (s *scriptService) buildUserPrompt(channel *model.Channel, prompt string, d
 	sb.WriteString("## 登場人物\n")
 	for _, c := range channel.Characters {
 		if c.Persona != "" {
-			sb.WriteString(fmt.Sprintf("- %s: %s\n", c.Name, c.Persona))
+			sb.WriteString(fmt.Sprintf("- %s（%s）: %s\n", c.Name, c.Voice.Gender, c.Persona))
 		} else {
-			sb.WriteString(fmt.Sprintf("- %s\n", c.Name))
+			sb.WriteString(fmt.Sprintf("- %s（%s）\n", c.Name, c.Voice.Gender))
 		}
+	}
+	sb.WriteString("\n")
+
+	// エピソード情報
+	sb.WriteString("## エピソード情報\n")
+	sb.WriteString(fmt.Sprintf("タイトル: %s\n", episode.Title))
+	if episode.Description != nil && *episode.Description != "" {
+		sb.WriteString(fmt.Sprintf("説明: %s\n", *episode.Description))
 	}
 	sb.WriteString("\n")
 
