@@ -15,23 +15,27 @@ const (
 
 // アプリケーション設定
 type Config struct {
-	Port               string
-	DatabaseURL        string
-	AppEnv             Env
-	AuthSecret         string
-	CORSAllowedOrigins []string
-	OpenAIAPIKey       string
+	Port                  string
+	DatabaseURL           string
+	AppEnv                Env
+	AuthSecret            string
+	CORSAllowedOrigins    []string
+	OpenAIAPIKey          string
+	GCSBucketName         string
+	GoogleCredentialsJSON string
 }
 
 // 環境変数から設定を読み込む
 func Load() *Config {
 	return &Config{
-		Port:               getEnv("PORT", "8081"),
-		DatabaseURL:        getEnv("DATABASE_URL", ""),
-		AppEnv:             Env(getEnv("APP_ENV", string(EnvDevelopment))),
-		AuthSecret:         getEnv("AUTH_SECRET", ""),
-		CORSAllowedOrigins: getEnvAsSlice("CORS_ALLOWED_ORIGINS", []string{"http://localhost:3210"}),
-		OpenAIAPIKey:       getEnv("OPENAI_API_KEY", ""),
+		Port:                  getEnv("PORT", "8081"),
+		DatabaseURL:           getEnv("DATABASE_URL", ""),
+		AppEnv:                Env(getEnv("APP_ENV", string(EnvDevelopment))),
+		AuthSecret:            getEnv("AUTH_SECRET", ""),
+		CORSAllowedOrigins:    getEnvAsSlice("CORS_ALLOWED_ORIGINS", []string{"http://localhost:3210"}),
+		OpenAIAPIKey:          getEnv("OPENAI_API_KEY", ""),
+		GCSBucketName:         getEnv("GCS_BUCKET_NAME", ""),
+		GoogleCredentialsJSON: getEnv("GOOGLE_CREDENTIALS_JSON", ""),
 	}
 }
 
