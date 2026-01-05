@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/option"
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/option"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/logger"
@@ -15,7 +15,7 @@ import (
 
 const (
 	// 使用するモデル
-	defaultModel = openai.ChatModelGPT4o
+	defaultModel = openai.ChatModelGPT5_2
 	// 生成時の Temperature（0.0〜2.0）
 	defaultTemperature = 0.7
 	// API タイムアウト
