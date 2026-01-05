@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -11,7 +12,29 @@ import (
 	"github.com/siropaca/anycast-backend/internal/model"
 )
 
+// テスト用のモック storage クライアント
+type mockStorageClient struct {
+	signedURL string
+	err       error
+}
+
+func (m *mockStorageClient) Upload(_ context.Context, _ []byte, path, _ string) (string, error) {
+	return path, nil
+}
+
+func (m *mockStorageClient) GenerateSignedURL(_ context.Context, _ string, _ time.Duration) (string, error) {
+	if m.err != nil {
+		return "", m.err
+	}
+	return m.signedURL, nil
+}
+
+func (m *mockStorageClient) Delete(_ context.Context, _ string) error {
+	return nil
+}
+
 func TestToScriptLineResponse(t *testing.T) {
+	ctx := context.Background()
 	now := time.Now()
 	lineID := uuid.New()
 	episodeID := uuid.New()
@@ -22,6 +45,12 @@ func TestToScriptLineResponse(t *testing.T) {
 	emotion := "happy"
 	durationMs := 3000
 	volume := decimal.NewFromFloat(0.75)
+
+	// テスト用のサービスインスタンスを作成
+	mockStorage := &mockStorageClient{signedURL: "https://signed-url.example.com/audio.mp3"}
+	svc := &scriptLineService{
+		storageClient: mockStorage,
+	}
 
 	baseScriptLine := &model.ScriptLine{
 		ID:         lineID,
@@ -45,8 +74,9 @@ func TestToScriptLineResponse(t *testing.T) {
 		sl.Sfx = nil
 		sl.Audio = nil
 
-		resp := toScriptLineResponse(&sl)
+		resp, err := svc.toScriptLineResponse(ctx, &sl)
 
+		assert.NoError(t, err)
 		assert.Equal(t, lineID, resp.ID)
 		assert.Equal(t, 1, resp.LineOrder)
 		assert.Equal(t, "speech", resp.LineType)
@@ -63,8 +93,9 @@ func TestToScriptLineResponse(t *testing.T) {
 		sl.Sfx = nil
 		sl.Audio = nil
 
-		resp := toScriptLineResponse(&sl)
+		resp, err := svc.toScriptLineResponse(ctx, &sl)
 
+		assert.NoError(t, err)
 		assert.NotNil(t, resp.Volume)
 		assert.Equal(t, 0.75, *resp.Volume)
 	})
@@ -76,8 +107,9 @@ func TestToScriptLineResponse(t *testing.T) {
 		sl.Sfx = nil
 		sl.Audio = nil
 
-		resp := toScriptLineResponse(&sl)
+		resp, err := svc.toScriptLineResponse(ctx, &sl)
 
+		assert.NoError(t, err)
 		assert.Nil(t, resp.Volume)
 	})
 
@@ -90,8 +122,9 @@ func TestToScriptLineResponse(t *testing.T) {
 		sl.Sfx = nil
 		sl.Audio = nil
 
-		resp := toScriptLineResponse(&sl)
+		resp, err := svc.toScriptLineResponse(ctx, &sl)
 
+		assert.NoError(t, err)
 		assert.NotNil(t, resp.Speaker)
 		assert.Equal(t, speakerID, resp.Speaker.ID)
 		assert.Equal(t, "テストスピーカー", resp.Speaker.Name)
@@ -103,8 +136,9 @@ func TestToScriptLineResponse(t *testing.T) {
 		sl.Sfx = nil
 		sl.Audio = nil
 
-		resp := toScriptLineResponse(&sl)
+		resp, err := svc.toScriptLineResponse(ctx, &sl)
 
+		assert.NoError(t, err)
 		assert.Nil(t, resp.Speaker)
 	})
 
@@ -117,8 +151,9 @@ func TestToScriptLineResponse(t *testing.T) {
 		}
 		sl.Audio = nil
 
-		resp := toScriptLineResponse(&sl)
+		resp, err := svc.toScriptLineResponse(ctx, &sl)
 
+		assert.NoError(t, err)
 		assert.NotNil(t, resp.Sfx)
 		assert.Equal(t, sfxID, resp.Sfx.ID)
 		assert.Equal(t, "テスト効果音", resp.Sfx.Name)
@@ -130,26 +165,28 @@ func TestToScriptLineResponse(t *testing.T) {
 		sl.Sfx = nil
 		sl.Audio = nil
 
-		resp := toScriptLineResponse(&sl)
+		resp, err := svc.toScriptLineResponse(ctx, &sl)
 
+		assert.NoError(t, err)
 		assert.Nil(t, resp.Sfx)
 	})
 
-	t.Run("Audio がある場合、正しく変換される", func(t *testing.T) {
+	t.Run("Audio がある場合、署名 URL が生成される", func(t *testing.T) {
 		sl := *baseScriptLine
 		sl.Speaker = nil
 		sl.Sfx = nil
 		sl.Audio = &model.Audio{
 			ID:         audioID,
-			URL:        "https://example.com/audio.mp3",
+			Path:       "audios/test.mp3",
 			DurationMs: 5000,
 		}
 
-		resp := toScriptLineResponse(&sl)
+		resp, err := svc.toScriptLineResponse(ctx, &sl)
 
+		assert.NoError(t, err)
 		assert.NotNil(t, resp.Audio)
 		assert.Equal(t, audioID, resp.Audio.ID)
-		assert.Equal(t, "https://example.com/audio.mp3", resp.Audio.URL)
+		assert.Equal(t, "https://signed-url.example.com/audio.mp3", resp.Audio.URL)
 		assert.Equal(t, 5000, resp.Audio.DurationMs)
 	})
 
@@ -159,8 +196,9 @@ func TestToScriptLineResponse(t *testing.T) {
 		sl.Sfx = nil
 		sl.Audio = nil
 
-		resp := toScriptLineResponse(&sl)
+		resp, err := svc.toScriptLineResponse(ctx, &sl)
 
+		assert.NoError(t, err)
 		assert.Nil(t, resp.Audio)
 	})
 
@@ -171,8 +209,9 @@ func TestToScriptLineResponse(t *testing.T) {
 		sl.Sfx = nil
 		sl.Audio = nil
 
-		resp := toScriptLineResponse(&sl)
+		resp, err := svc.toScriptLineResponse(ctx, &sl)
 
+		assert.NoError(t, err)
 		assert.Nil(t, resp.Text)
 	})
 
@@ -183,8 +222,9 @@ func TestToScriptLineResponse(t *testing.T) {
 		sl.Sfx = nil
 		sl.Audio = nil
 
-		resp := toScriptLineResponse(&sl)
+		resp, err := svc.toScriptLineResponse(ctx, &sl)
 
+		assert.NoError(t, err)
 		assert.Nil(t, resp.Emotion)
 	})
 
@@ -195,17 +235,25 @@ func TestToScriptLineResponse(t *testing.T) {
 		sl.Sfx = nil
 		sl.Audio = nil
 
-		resp := toScriptLineResponse(&sl)
+		resp, err := svc.toScriptLineResponse(ctx, &sl)
 
+		assert.NoError(t, err)
 		assert.Nil(t, resp.DurationMs)
 	})
 }
 
 func TestToScriptLineResponses(t *testing.T) {
+	ctx := context.Background()
 	now := time.Now()
 	episodeID := uuid.New()
 	text1 := "テキスト1"
 	text2 := "テキスト2"
+
+	// テスト用のサービスインスタンスを作成
+	mockStorage := &mockStorageClient{signedURL: "https://signed-url.example.com/audio.mp3"}
+	svc := &scriptLineService{
+		storageClient: mockStorage,
+	}
 
 	scriptLines := []model.ScriptLine{
 		{
@@ -229,8 +277,9 @@ func TestToScriptLineResponses(t *testing.T) {
 	}
 
 	t.Run("複数の台本行を正しく変換する", func(t *testing.T) {
-		result := toScriptLineResponses(scriptLines)
+		result, err := svc.toScriptLineResponses(ctx, scriptLines)
 
+		assert.NoError(t, err)
 		assert.Len(t, result, 2)
 		assert.Equal(t, 1, result[0].LineOrder)
 		assert.Equal(t, 2, result[1].LineOrder)
@@ -239,8 +288,9 @@ func TestToScriptLineResponses(t *testing.T) {
 	})
 
 	t.Run("空のスライスの場合、空のスライスを返す", func(t *testing.T) {
-		result := toScriptLineResponses([]model.ScriptLine{})
+		result, err := svc.toScriptLineResponses(ctx, []model.ScriptLine{})
 
+		assert.NoError(t, err)
 		assert.Len(t, result, 0)
 		assert.NotNil(t, result)
 	})
