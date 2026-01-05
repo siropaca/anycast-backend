@@ -25,3 +25,7 @@ Content-Type: application/json
 {
   "prompt": "プログラミングの楽しさについて初心者にわかりやすく解説する"
 }
+
+### 台本行の音声を生成
+POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/lines/YOUR_LINE_ID_HERE/audio/generate
+Authorization: Bearer {{token}}
