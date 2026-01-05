@@ -9,6 +9,22 @@ import (
 	"github.com/siropaca/anycast-backend/internal/apperror"
 )
 
+func TestNew(t *testing.T) {
+	t.Run("新しい UUID を生成できる", func(t *testing.T) {
+		id := New()
+
+		assert.NotEqual(t, Nil, id)
+		assert.Len(t, id.String(), 36)
+	})
+
+	t.Run("生成される UUID は毎回異なる", func(t *testing.T) {
+		id1 := New()
+		id2 := New()
+
+		assert.NotEqual(t, id1, id2)
+	})
+}
+
 func TestParse(t *testing.T) {
 	t.Run("有効な UUID をパースできる", func(t *testing.T) {
 		validUUID := "550e8400-e29b-41d4-a716-446655440000"

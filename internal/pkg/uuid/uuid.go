@@ -12,6 +12,11 @@ type UUID = googleuuid.UUID
 // Nil UUID
 var Nil = googleuuid.Nil
 
+// 新しい UUID を生成する
+func New() UUID {
+	return googleuuid.New()
+}
+
 // 文字列を UUID に変換する
 // 無効な形式の場合は apperror.ErrValidation を返す
 func Parse(s string) (UUID, error) {

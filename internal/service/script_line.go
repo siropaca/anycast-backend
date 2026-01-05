@@ -257,20 +257,21 @@ func (s *scriptLineService) GenerateAudio(ctx context.Context, userID, channelID
 		return nil, apperror.ErrGenerationFailed.WithMessage("Failed to get audio duration").WithError(err)
 	}
 
-	// GCS にアップロード
-	gcsPath := fmt.Sprintf("audios/%s.mp3", lid.String())
-	_, err = s.storageClient.Upload(ctx, audioData, gcsPath, "audio/mpeg")
-	if err != nil {
-		return nil, err
-	}
-
-	// Audio モデルを作成
+	// Audio モデルを作成（ID を先に生成して GCS パスに使用）
 	audio := &model.Audio{
 		MimeType:   "audio/mpeg",
-		Path:       gcsPath,
 		Filename:   fmt.Sprintf("%s.mp3", lid.String()),
 		FileSize:   len(audioData),
 		DurationMs: durationMs,
+	}
+	// GORM の BeforeCreate で ID が生成されるため、ここで明示的に生成
+	audio.ID = uuid.New()
+	audio.Path = fmt.Sprintf("audios/%s.mp3", audio.ID.String())
+
+	// GCS にアップロード
+	_, err = s.storageClient.Upload(ctx, audioData, audio.Path, "audio/mpeg")
+	if err != nil {
+		return nil, err
 	}
 
 	// トランザクションで Audio 作成と ScriptLine 更新
