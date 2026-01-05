@@ -66,6 +66,7 @@
 │ User Prompt                                           │
 │ ├─ channel.name（チャンネル名）                       │
 │ ├─ channel.description（チャンネル説明）              │
+│ ├─ channel.category（チャンネルカテゴリー）           │
 │ ├─ channel.userPrompt（チャンネル全体方針）           │
 │ ├─ channel.characters（登場人物リスト）               │
 │ ├─ episode.title（エピソードタイトル）                │
@@ -82,6 +83,7 @@
 | システムプロンプト | サーバー側固定 | ポッドキャスト台本生成の基本ルール（ユーザー閲覧/変更不可） |
 | name | channel.name | チャンネル名 |
 | description | channel.description | チャンネルの説明 |
+| category | channel.category | チャンネルのカテゴリー（コメディ、教育、ニュースなど） |
 | userPrompt | channel.userPrompt | チャンネル全体の方針（「明るく楽しい雰囲気で」など） |
 | characters | channel.characters | 登場人物リスト（名前、性別、ペルソナ） |
 | title | episode.title | エピソードのタイトル |
@@ -156,6 +158,7 @@
 ## チャンネル情報
 チャンネル名: {channel.name}
 説明: {channel.description}
+カテゴリー: {channel.category}
 
 ## チャンネル設定
 {channel.userPrompt}

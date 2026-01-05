@@ -213,6 +213,7 @@ func (s *scriptService) buildUserPrompt(channel *model.Channel, episode *model.E
 	if channel.Description != "" {
 		sb.WriteString(fmt.Sprintf("説明: %s\n", channel.Description))
 	}
+	sb.WriteString(fmt.Sprintf("カテゴリー: %s\n", channel.Category.Name))
 	sb.WriteString("\n")
 
 	// チャンネル設定

@@ -98,6 +98,7 @@ func TestBuildUserPrompt(t *testing.T) {
 		channel := &model.Channel{
 			Name:       "テックラジオ",
 			UserPrompt: "テック系ポッドキャスト",
+			Category:   model.Category{Name: "テクノロジー"},
 			Characters: []model.Character{
 				{Name: "太郎", Persona: "明るいホスト", Voice: model.Voice{Gender: model.GenderMale}},
 				{Name: "花子", Persona: "知識豊富なゲスト", Voice: model.Voice{Gender: model.GenderFemale}},
@@ -111,6 +112,7 @@ func TestBuildUserPrompt(t *testing.T) {
 
 		assert.Contains(t, result, "## チャンネル情報")
 		assert.Contains(t, result, "チャンネル名: テックラジオ")
+		assert.Contains(t, result, "カテゴリー: テクノロジー")
 		assert.Contains(t, result, "## チャンネル設定")
 		assert.Contains(t, result, "テック系ポッドキャスト")
 		assert.Contains(t, result, "## 登場人物")
@@ -128,6 +130,7 @@ func TestBuildUserPrompt(t *testing.T) {
 		channel := &model.Channel{
 			Name:       "テストチャンネル",
 			UserPrompt: "",
+			Category:   model.Category{Name: "コメディ"},
 			Characters: []model.Character{
 				{Name: "太郎", Voice: model.Voice{Gender: model.GenderMale}},
 			},
@@ -145,7 +148,8 @@ func TestBuildUserPrompt(t *testing.T) {
 
 	t.Run("キャラクターのペルソナが空の場合は名前のみ", func(t *testing.T) {
 		channel := &model.Channel{
-			Name: "テストチャンネル",
+			Name:     "テストチャンネル",
+			Category: model.Category{Name: "教育"},
 			Characters: []model.Character{
 				{Name: "太郎", Persona: "", Voice: model.Voice{Gender: model.GenderMale}},
 				{Name: "花子", Persona: "ゲスト", Voice: model.Voice{Gender: model.GenderFemale}},
