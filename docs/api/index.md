@@ -96,6 +96,8 @@
 | **Sound Effects（効果音）** | - | - | - | [master.md](./master.md#sound-effects効果音) |
 | GET | `/api/v1/sound-effects` | 効果音一覧取得 | | [詳細](./master.md#効果音一覧取得) |
 | GET | `/api/v1/sound-effects/:sfxId` | 効果音取得 | | [詳細](./master.md#効果音取得) |
+| **Admin（管理者）** | - | - | - | [admin.md](./admin.md) |
+| POST | `/admin/cleanup/orphaned-media` | 孤児メディアファイル削除 | | [詳細](./admin.md#孤児メディアファイル削除) |
 
 ---
 
