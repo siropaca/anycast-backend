@@ -313,8 +313,8 @@ func (s *scriptService) buildUserPrompt(channel *model.Channel, episode *model.E
 	// エピソード情報
 	sb.WriteString("## エピソード情報\n")
 	sb.WriteString(fmt.Sprintf("タイトル: %s\n", episode.Title))
-	if episode.Description != nil && *episode.Description != "" {
-		sb.WriteString(fmt.Sprintf("説明: %s\n", *episode.Description))
+	if episode.Description != "" {
+		sb.WriteString(fmt.Sprintf("説明: %s\n", episode.Description))
 	}
 	sb.WriteString("\n")
 

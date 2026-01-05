@@ -141,7 +141,7 @@ func (s *episodeService) CreateEpisode(ctx context.Context, userID, channelID, t
 	episode := &model.Episode{
 		ChannelID:   cid,
 		Title:       title,
-		Description: &description,
+		Description: description,
 	}
 
 	// アートワークが指定されている場合
@@ -216,7 +216,7 @@ func (s *episodeService) UpdateEpisode(ctx context.Context, userID, channelID, e
 
 	// 各フィールドを更新
 	episode.Title = req.Title
-	episode.Description = &req.Description
+	episode.Description = req.Description
 
 	// アートワークの更新
 	if req.ArtworkImageID != nil {

@@ -2122,6 +2122,7 @@
             "type": "object",
             "required": [
                 "createdAt",
+                "description",
                 "id",
                 "title",
                 "updatedAt"
@@ -2139,8 +2140,7 @@
                     "type": "string"
                 },
                 "description": {
-                    "type": "string",
-                    "x-nullable": true
+                    "type": "string"
                 },
                 "fullAudio": {
                     "allOf": [

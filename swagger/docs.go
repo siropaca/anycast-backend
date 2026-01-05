@@ -2128,6 +2128,7 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "createdAt",
+                "description",
                 "id",
                 "title",
                 "updatedAt"
@@ -2145,8 +2146,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "description": {
-                    "type": "string",
-                    "x-nullable": true
+                    "type": "string"
                 },
                 "fullAudio": {
                     "allOf": [

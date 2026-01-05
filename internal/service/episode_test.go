@@ -22,7 +22,7 @@ func TestToEpisodeResponse(t *testing.T) {
 		ID:          episodeID,
 		ChannelID:   channelID,
 		Title:       "Test Episode",
-		Description: &description,
+		Description: description,
 		UserPrompt:  &userPrompt,
 		PublishedAt: &now,
 		CreatedAt:   now,
@@ -34,7 +34,7 @@ func TestToEpisodeResponse(t *testing.T) {
 
 		assert.Equal(t, episodeID, resp.ID)
 		assert.Equal(t, "Test Episode", resp.Title)
-		assert.Equal(t, &description, resp.Description)
+		assert.Equal(t, description, resp.Description)
 		assert.Equal(t, &userPrompt, resp.UserPrompt)
 		assert.NotNil(t, resp.PublishedAt)
 		assert.Equal(t, now, resp.CreatedAt)
@@ -67,15 +67,6 @@ func TestToEpisodeResponse(t *testing.T) {
 		assert.Equal(t, 180000, resp.FullAudio.DurationMs)
 	})
 
-	t.Run("Description が nil の場合、レスポンスの Description も nil", func(t *testing.T) {
-		episode := *baseEpisode
-		episode.Description = nil
-
-		resp := toEpisodeResponse(&episode)
-
-		assert.Nil(t, resp.Description)
-	})
-
 	t.Run("PublishedAt が nil の場合、レスポンスの PublishedAt も nil", func(t *testing.T) {
 		episode := *baseEpisode
 		episode.PublishedAt = nil
@@ -89,8 +80,6 @@ func TestToEpisodeResponse(t *testing.T) {
 func TestToEpisodeResponses(t *testing.T) {
 	now := time.Now()
 	channelID := uuid.New()
-	desc1 := "Description 1"
-	desc2 := "Description 2"
 	prompt1 := "Prompt 1"
 	prompt2 := "Prompt 2"
 
@@ -99,7 +88,7 @@ func TestToEpisodeResponses(t *testing.T) {
 			ID:          uuid.New(),
 			ChannelID:   channelID,
 			Title:       "Episode 1",
-			Description: &desc1,
+			Description: "Description 1",
 			UserPrompt:  &prompt1,
 			CreatedAt:   now,
 			UpdatedAt:   now,
@@ -108,7 +97,7 @@ func TestToEpisodeResponses(t *testing.T) {
 			ID:          uuid.New(),
 			ChannelID:   channelID,
 			Title:       "Episode 2",
-			Description: &desc2,
+			Description: "Description 2",
 			UserPrompt:  &prompt2,
 			CreatedAt:   now,
 			UpdatedAt:   now,

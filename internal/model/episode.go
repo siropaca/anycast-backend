@@ -11,7 +11,7 @@ type Episode struct {
 	ID          uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	ChannelID   uuid.UUID  `gorm:"type:uuid;not null;column:channel_id"`
 	Title       string     `gorm:"type:varchar(255);not null"`
-	Description *string    `gorm:"type:text"`
+	Description string     `gorm:"type:text;not null"`
 	UserPrompt  *string    `gorm:"type:text;column:user_prompt"`
 	ArtworkID   *uuid.UUID `gorm:"type:uuid;column:artwork_id"`
 	BgmID       *uuid.UUID `gorm:"type:uuid;column:bgm_id"`

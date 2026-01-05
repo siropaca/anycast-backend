@@ -10,7 +10,7 @@ import (
 type EpisodeResponse struct {
 	ID          uuid.UUID        `json:"id" validate:"required"`
 	Title       string           `json:"title" validate:"required"`
-	Description *string          `json:"description" extensions:"x-nullable"`
+	Description string           `json:"description" validate:"required"`
 	UserPrompt  *string          `json:"userPrompt,omitempty"`
 	Artwork     *ArtworkResponse `json:"artwork" extensions:"x-nullable"`
 	FullAudio   *AudioResponse   `json:"fullAudio" extensions:"x-nullable"`
