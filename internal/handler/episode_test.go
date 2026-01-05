@@ -113,12 +113,11 @@ func setupAuthenticatedEpisodeRouter(h *EpisodeHandler, userID string) *gin.Engi
 // テスト用のエピソードレスポンスを生成する
 func createTestEpisodeResponse() response.EpisodeResponse {
 	now := time.Now()
-	description := "Test Description"
 	userPrompt := "Test User Prompt"
 	return response.EpisodeResponse{
 		ID:          uuid.New(),
 		Title:       "Test Episode",
-		Description: &description,
+		Description: "Test Description",
 		UserPrompt:  &userPrompt,
 		FullAudio: &response.AudioResponse{
 			ID:         uuid.New(),
@@ -369,11 +368,10 @@ func TestEpisodeHandler_CreateEpisode(t *testing.T) {
 
 	t.Run("エピソードを作成できる", func(t *testing.T) {
 		mockSvc := new(mockEpisodeService)
-		description := "Test Description"
 		result := &response.EpisodeResponse{
 			ID:          uuid.New(),
 			Title:       "Test Episode",
-			Description: &description,
+			Description: "Test Description",
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
@@ -469,13 +467,12 @@ func TestEpisodeHandler_UpdateEpisode(t *testing.T) {
 	t.Run("エピソードを更新できる", func(t *testing.T) {
 		mockSvc := new(mockEpisodeService)
 		title := "Updated Title"
-		description := "Updated Description"
 		userPrompt := "Test User Prompt"
 		result := &response.EpisodeDataResponse{
 			Data: response.EpisodeResponse{
 				ID:          uuid.MustParse(episodeID),
 				Title:       title,
-				Description: &description,
+				Description: "Updated Description",
 				UserPrompt:  &userPrompt,
 				CreatedAt:   time.Now(),
 				UpdatedAt:   time.Now(),

@@ -14,12 +14,14 @@ import (
 )
 
 const (
+	// 使用するモデル
+	defaultModel = openai.ChatModelGPT4o
+	// 生成時の Temperature（0.0〜2.0）
+	defaultTemperature = 0.7
 	// API タイムアウト
 	defaultTimeout = 120 * time.Second
 	// リトライ回数
 	maxRetries = 3
-	// 生成時の Temperature（0.0〜2.0）
-	defaultTemperature = 0.7
 )
 
 // LLM クライアントのインターフェース
@@ -52,7 +54,7 @@ func (c *openAIClient) GenerateScript(ctx context.Context, systemPrompt, userPro
 		log.Debug("generating script", "attempt", attempt)
 
 		resp, err := c.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
-			Model: openai.ChatModelGPT4o,
+			Model: defaultModel,
 			Messages: []openai.ChatCompletionMessageParamUnion{
 				openai.SystemMessage(prompt.Compress(systemPrompt)),
 				openai.UserMessage(prompt.Compress(userPrompt)),

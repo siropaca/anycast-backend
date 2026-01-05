@@ -10,7 +10,7 @@ import (
 type Audio struct {
 	ID         uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	MimeType   string    `gorm:"type:varchar(100);not null;column:mime_type"`
-	URL        string    `gorm:"type:varchar(1024);not null"`
+	Path       string    `gorm:"type:varchar(1024);not null"`
 	Filename   string    `gorm:"type:varchar(255);not null"`
 	FileSize   int       `gorm:"not null;column:file_size"`
 	DurationMs int       `gorm:"not null;column:duration_ms"`

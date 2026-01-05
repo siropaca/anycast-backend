@@ -272,7 +272,7 @@ OAuth プロバイダとの連携情報。
 | id | UUID | ◯ | 識別子 |
 | channelId | UUID | ◯ | 所属する Channel |
 | title | String | ◯ | エピソードタイトル |
-| description | String | | エピソードの説明（公開情報） |
+| description | String | ◯ | エピソードの説明（公開情報） |
 | userPrompt | String | | エピソード固有の台本生成設定（台本生成時に自動保存、内部管理用） |
 | script | ScriptLine[] | | 台本（順序付きの ScriptLine 配列） |
 | bgm | Audio | | BGM 音声ファイル |
@@ -601,7 +601,7 @@ TTS ボイスの設定情報。
 |------|-----|:----:|------|
 | id | UUID | ◯ | 識別子 |
 | mimeType | String | ◯ | MIME タイプ（audio/mpeg など） |
-| url | String | ◯ | ストレージ URL（GCS） |
+| path | String | ◯ | GCS 上のパス（例: audios/xxx.mp3） |
 | filename | String | ◯ | 元ファイル名 |
 | fileSize | Int | ◯ | ファイルサイズ（バイト） |
 | durationMs | Int | ◯ | 再生時間（ミリ秒） |
@@ -643,7 +643,8 @@ TTS ボイスの設定情報。
 
 ### メディア管理
 
-- url には GCS（Google Cloud Storage）の URL を保存
+- Audio.path には GCS（Google Cloud Storage）上のパスを保存（例: `audios/xxx.mp3`）
+- API レスポンス時に署名付き URL を動的生成してクライアントに返す
 - 同一ファイルを複数箇所から参照可能（BGM の使い回しなど）
 - 参照元が削除されてもメディアファイルは残る（SET NULL）
 - 未使用ファイルのクリーンアップはバッチ処理で実施

@@ -88,6 +88,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 
 	// Script Lines
 	authenticated.GET("/channels/:channelId/episodes/:episodeId/script/lines", container.ScriptLineHandler.ListScriptLines)
+	authenticated.POST("/channels/:channelId/episodes/:episodeId/script/lines/:lineId/audio/generate", container.ScriptLineHandler.GenerateAudio)
 
 	// Script（台本生成）
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/script/generate", container.ScriptHandler.GenerateScript)

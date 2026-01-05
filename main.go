@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"time"
@@ -44,7 +45,8 @@ func main() {
 	}
 
 	// DI コンテナ構築
-	container := di.NewContainer(database, cfg)
+	ctx := context.Background()
+	container := di.NewContainer(ctx, database, cfg)
 
 	// ルーター設定
 	r := router.Setup(container, cfg)

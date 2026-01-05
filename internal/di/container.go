@@ -1,11 +1,16 @@
 package di
 
 import (
+	"context"
+	"log"
+
 	"gorm.io/gorm"
 
 	"github.com/siropaca/anycast-backend/internal/config"
 	"github.com/siropaca/anycast-backend/internal/handler"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/llm"
+	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
+	"github.com/siropaca/anycast-backend/internal/infrastructure/tts"
 	"github.com/siropaca/anycast-backend/internal/pkg/crypto"
 	"github.com/siropaca/anycast-backend/internal/pkg/jwt"
 	"github.com/siropaca/anycast-backend/internal/repository"
@@ -25,13 +30,28 @@ type Container struct {
 }
 
 // 依存関係を構築して Container を返す
-func NewContainer(db *gorm.DB, cfg *config.Config) *Container {
+func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Container {
 	// Pkg
 	passwordHasher := crypto.NewPasswordHasher()
 	tokenManager := jwt.NewTokenManager(cfg.AuthSecret)
 
 	// Infrastructure
 	llmClient := llm.NewOpenAIClient(cfg.OpenAIAPIKey)
+
+	// TTS クライアント（音声生成用）
+	ttsClient, err := tts.NewGoogleTTSClient(ctx, cfg.GoogleCredentialsJSON)
+	if err != nil {
+		log.Printf("Warning: failed to create TTS client: %v", err)
+	}
+
+	// Storage クライアント（GCS）
+	var storageClient storage.Client
+	if cfg.GCSBucketName != "" {
+		storageClient, err = storage.NewGCSClient(ctx, cfg.GCSBucketName, cfg.GoogleCredentialsJSON)
+		if err != nil {
+			log.Printf("Warning: failed to create storage client: %v", err)
+		}
+	}
 
 	// Repository 層
 	voiceRepo := repository.NewVoiceRepository(db)
@@ -43,6 +63,7 @@ func NewContainer(db *gorm.DB, cfg *config.Config) *Container {
 	categoryRepo := repository.NewCategoryRepository(db)
 	episodeRepo := repository.NewEpisodeRepository(db)
 	scriptLineRepo := repository.NewScriptLineRepository(db)
+	audioRepo := repository.NewAudioRepository(db)
 
 	// Service 層
 	voiceService := service.NewVoiceService(voiceRepo)
@@ -50,8 +71,8 @@ func NewContainer(db *gorm.DB, cfg *config.Config) *Container {
 	channelService := service.NewChannelService(channelRepo, categoryRepo, imageRepo, voiceRepo)
 	categoryService := service.NewCategoryService(categoryRepo)
 	episodeService := service.NewEpisodeService(episodeRepo, channelRepo)
-	scriptLineService := service.NewScriptLineService(scriptLineRepo, episodeRepo, channelRepo)
-	scriptService := service.NewScriptService(db, channelRepo, episodeRepo, scriptLineRepo, llmClient)
+	scriptLineService := service.NewScriptLineService(db, scriptLineRepo, episodeRepo, channelRepo, audioRepo, ttsClient, storageClient)
+	scriptService := service.NewScriptService(db, channelRepo, episodeRepo, scriptLineRepo, llmClient, storageClient)
 
 	// Handler 層
 	voiceHandler := handler.NewVoiceHandler(voiceService)
