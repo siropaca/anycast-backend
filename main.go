@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"errors"
+	"net"
 	"net/http"
 	"os"
+	"syscall"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -66,6 +69,15 @@ func main() {
 	}
 
 	if err := srv.ListenAndServe(); err != nil {
+		var opErr *net.OpError
+		if errors.As(err, &opErr) {
+			var syscallErr *os.SyscallError
+			if errors.As(opErr.Err, &syscallErr) && errors.Is(syscallErr.Err, syscall.EADDRINUSE) {
+				logger.Default().Error("Port "+cfg.Port+" is already in use. Please stop the existing process or use a different port.", "error", err)
+				os.Exit(1)
+			}
+		}
+
 		logger.Default().Error("Failed to start server", "error", err)
 		os.Exit(1)
 	}
