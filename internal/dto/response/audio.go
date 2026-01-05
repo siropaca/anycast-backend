@@ -8,3 +8,8 @@ type AudioResponse struct {
 	URL        string    `json:"url" validate:"required"`
 	DurationMs int       `json:"durationMs" validate:"required"`
 }
+
+// 音声生成レスポンス
+type GenerateAudioResponse struct {
+	Audio AudioResponse `json:"audio" validate:"required"`
+}
