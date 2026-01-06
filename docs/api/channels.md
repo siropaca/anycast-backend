@@ -93,8 +93,9 @@ POST /channels
   "categoryId": "uuid",
   "artworkImageId": "uuid",
   "characters": [
+    { "id": "uuid" },
     {
-      "name": "太郎",
+      "name": "新しいキャラ",
       "persona": "明るく元気な性格",
       "voiceId": "uuid"
     }
@@ -102,17 +103,25 @@ POST /channels
 }
 ```
 
+`characters` 配列の各要素は、以下のいずれかの形式で指定:
+- **既存キャラクター**: `{ "id": "uuid" }` - 自分が所有するキャラクターの ID を指定
+- **新規キャラクター**: `{ "name": "...", "persona": "...", "voiceId": "..." }` - その場で作成
+
 **バリデーション:**
+
 | フィールド | ルール |
 |------------|--------|
 | name | 必須、255文字以内 |
 | description | 必須、2000文字以内 |
 | userPrompt | 必須、2000文字以内 |
 | categoryId | 必須、UUID 形式 |
-| characters | 必須、1〜2人 |
-| characters[].name | 必須、255文字以内 |
+| characters | 必須、1〜2件 |
+| characters[].id | UUID 形式、自分が所有するキャラクターのみ |
+| characters[].name | 新規作成時は必須、255文字以内、同一ユーザー内で一意、`__` 始まり禁止 |
 | characters[].persona | 2000文字以内 |
-| characters[].voiceId | 必須、UUID 形式 |
+| characters[].voiceId | 新規作成時は必須、UUID 形式、is_active = true のボイスのみ |
+
+> **Note:** `id` と `name`/`voiceId` を同時に指定した場合はエラー
 
 ---
 
@@ -319,60 +328,87 @@ GET /me/channels/:channelId
 
 ---
 
-# Characters（キャラクター）
+# チャンネルへのキャラクター紐づけ
 
-## キャラクター一覧取得
+チャンネルに登場させるキャラクターを管理する。キャラクター自体の CRUD は [Characters API](./characters.md) を参照。
 
-```
-GET /channels/:channelId/characters
-```
-
----
-
-## キャラクター作成
+## チャンネルのキャラクター紐づけ更新
 
 ```
-POST /channels/:channelId/characters
+PUT /channels/:channelId/characters
 ```
+
+チャンネルに紐づけるキャラクターを設定する。既存の紐づけは全て置き換えられる。
 
 **リクエスト:**
 ```json
 {
-  "name": "太郎",
-  "persona": "明るく元気な性格。語尾に「だよね」をつける。",
-  "voiceId": "uuid"
+  "characters": [
+    { "id": "uuid" },
+    {
+      "name": "新しいキャラ",
+      "persona": "明るく元気な性格",
+      "voiceId": "uuid"
+    }
+  ]
 }
 ```
 
+`characters` 配列の各要素は、以下のいずれかの形式で指定:
+- **既存キャラクター**: `{ "id": "uuid" }` - 自分が所有するキャラクターの ID を指定
+- **新規キャラクター**: `{ "name": "...", "persona": "...", "voiceId": "..." }` - その場で作成
+
 **バリデーション:**
-- name: 必須、同一チャンネル内で一意、`__` で始まる名前は禁止
-- voiceId: 必須、is_active = true のボイスのみ指定可能
-- チャンネルのキャラクター数が 2 人を超える場合はエラー
 
----
+| フィールド | ルール |
+|------------|--------|
+| characters | 必須、1〜2件 |
+| characters[].id | UUID 形式、自分が所有するキャラクターのみ |
+| characters[].name | 新規作成時は必須、255文字以内、同一ユーザー内で一意、`__` 始まり禁止 |
+| characters[].persona | 2000文字以内 |
+| characters[].voiceId | 新規作成時は必須、UUID 形式、is_active = true のボイスのみ |
 
-## キャラクター更新
+> **Note:** `id` と `name`/`voiceId` を同時に指定した場合はエラー
 
-```
-PATCH /channels/:channelId/characters/:characterId
-```
-
-**リクエスト:**
+**レスポンス（200 OK）:**
 ```json
 {
-  "name": "新しい名前",
-  "persona": "新しいペルソナ",
-  "voiceId": "uuid"
+  "data": {
+    "id": "uuid",
+    "name": "チャンネル名",
+    "characters": [
+      {
+        "id": "uuid",
+        "name": "太郎",
+        "persona": "明るい性格",
+        "voice": {
+          "id": "uuid",
+          "name": "ja-JP-Wavenet-C",
+          "provider": "google",
+          "gender": "male"
+        }
+      }
+    ]
+  }
 }
 ```
 
----
-
-## キャラクター削除
-
+**エラー（400 Bad Request）:**
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "キャラクターは1〜2人必要です"
+  }
+}
 ```
-DELETE /channels/:channelId/characters/:characterId
-```
 
-**バリデーション:**
-- チャンネルのキャラクター数が 1 人の場合は削除不可（最低 1 人必要）
+**エラー（404 Not Found）:**
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "指定されたキャラクターが見つかりません"
+  }
+}
+```
