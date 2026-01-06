@@ -3,8 +3,6 @@ package storage
 import "testing"
 
 func TestGenerateAudioPath(t *testing.T) {
-	client := &gcsClient{}
-
 	tests := []struct {
 		name    string
 		audioID string
@@ -29,7 +27,7 @@ func TestGenerateAudioPath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := client.GenerateAudioPath(tt.audioID)
+			got := GenerateAudioPath(tt.audioID)
 			if got != tt.want {
 				t.Errorf("GenerateAudioPath() = %v, want %v", got, tt.want)
 			}

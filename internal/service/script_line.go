@@ -267,7 +267,7 @@ func (s *scriptLineService) GenerateAudio(ctx context.Context, userID, channelID
 	}
 	// GORM の BeforeCreate で ID が生成されるため、ここで明示的に生成
 	newAudio.ID = uuid.New()
-	newAudio.Path = s.storageClient.GenerateAudioPath(newAudio.ID.String())
+	newAudio.Path = storage.GenerateAudioPath(newAudio.ID.String())
 
 	// GCS にアップロード
 	_, err = s.storageClient.Upload(ctx, audioData, newAudio.Path, "audio/mpeg")

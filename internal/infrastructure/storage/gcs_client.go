@@ -18,7 +18,11 @@ type Client interface {
 	Upload(ctx context.Context, data []byte, path, contentType string) (string, error)
 	GenerateSignedURL(ctx context.Context, path string, expiration time.Duration) (string, error)
 	Delete(ctx context.Context, path string) error
-	GenerateAudioPath(audioID string) string
+}
+
+// 音声ファイルの GCS パスを生成する
+func GenerateAudioPath(audioID string) string {
+	return fmt.Sprintf("audios/%s.mp3", audioID)
 }
 
 type gcsClient struct {
@@ -149,9 +153,4 @@ func (c *gcsClient) Download(ctx context.Context, path string) ([]byte, error) {
 // クライアントを閉じる
 func (c *gcsClient) Close() error {
 	return c.client.Close()
-}
-
-// 音声ファイルの GCS パスを生成する
-func (c *gcsClient) GenerateAudioPath(audioID string) string {
-	return fmt.Sprintf("audios/%s.mp3", audioID)
 }
