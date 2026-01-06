@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
-	"github.com/siropaca/anycast-backend/internal/logger"
 	"github.com/siropaca/anycast-backend/internal/pkg/jwt"
+	"github.com/siropaca/anycast-backend/internal/pkg/logger"
 )
 
 // コンテキストキー
