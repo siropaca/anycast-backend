@@ -20,6 +20,7 @@ type ChannelRepository interface {
 	Create(ctx context.Context, channel *model.Channel) error
 	Update(ctx context.Context, channel *model.Channel) error
 	Delete(ctx context.Context, id uuid.UUID) error
+	ReplaceChannelCharacters(ctx context.Context, channelID uuid.UUID, characterIDs []uuid.UUID) error
 }
 
 // チャンネル検索のフィルタ条件
@@ -65,8 +66,9 @@ func (r *channelRepository) FindByUserID(ctx context.Context, userID uuid.UUID, 
 	if err := tx.
 		Preload("Category").
 		Preload("Artwork").
-		Preload("Characters").
-		Preload("Characters.Voice").
+		Preload("ChannelCharacters").
+		Preload("ChannelCharacters.Character").
+		Preload("ChannelCharacters.Character.Voice").
 		Order("created_at DESC").
 		Limit(filter.Limit).
 		Offset(filter.Offset).
@@ -85,8 +87,9 @@ func (r *channelRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.
 	if err := r.db.WithContext(ctx).
 		Preload("Category").
 		Preload("Artwork").
-		Preload("Characters").
-		Preload("Characters.Voice").
+		Preload("ChannelCharacters").
+		Preload("ChannelCharacters.Character").
+		Preload("ChannelCharacters.Character.Voice").
 		First(&channel, "id = ?", id).Error; err != nil {
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -132,4 +135,29 @@ func (r *channelRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	}
 
 	return nil
+}
+
+// チャンネルに紐づくキャラクターを置き換える
+func (r *channelRepository) ReplaceChannelCharacters(ctx context.Context, channelID uuid.UUID, characterIDs []uuid.UUID) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 既存の紐づけを削除
+		if err := tx.Where("channel_id = ?", channelID).Delete(&model.ChannelCharacter{}).Error; err != nil {
+			logger.FromContext(ctx).Error("failed to delete channel characters", "error", err, "channel_id", channelID)
+			return apperror.ErrInternal.WithMessage("Failed to update channel characters").WithError(err)
+		}
+
+		// 新しい紐づけを作成
+		for _, characterID := range characterIDs {
+			channelCharacter := model.ChannelCharacter{
+				ChannelID:   channelID,
+				CharacterID: characterID,
+			}
+			if err := tx.Create(&channelCharacter).Error; err != nil {
+				logger.FromContext(ctx).Error("failed to create channel character", "error", err, "channel_id", channelID, "character_id", characterID)
+				return apperror.ErrInternal.WithMessage("Failed to update channel characters").WithError(err)
+			}
+		}
+
+		return nil
+	})
 }

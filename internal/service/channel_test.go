@@ -57,16 +57,20 @@ func TestToChannelResponse(t *testing.T) {
 			Slug: "technology",
 			Name: "テクノロジー",
 		},
-		Characters: []model.Character{
+		ChannelCharacters: []model.ChannelCharacter{
 			{
-				ID:      characterID,
-				Name:    "太郎",
-				Persona: "明るい性格",
-				VoiceID: voiceID,
-				Voice: model.Voice{
-					ID:     voiceID,
-					Name:   "ja-JP-Wavenet-C",
-					Gender: model.GenderMale,
+				ChannelID:   channelID,
+				CharacterID: characterID,
+				Character: model.Character{
+					ID:      characterID,
+					Name:    "太郎",
+					Persona: "明るい性格",
+					VoiceID: voiceID,
+					Voice: model.Voice{
+						ID:     voiceID,
+						Name:   "ja-JP-Wavenet-C",
+						Gender: model.GenderMale,
+					},
 				},
 			},
 		},
@@ -237,39 +241,49 @@ func TestToChannelResponses(t *testing.T) {
 	})
 }
 
-func TestToCharacterResponses(t *testing.T) {
+func TestToCharacterResponsesFromChannelCharacters(t *testing.T) {
 	voiceID1 := uuid.New()
 	voiceID2 := uuid.New()
 	charID1 := uuid.New()
 	charID2 := uuid.New()
+	channelID := uuid.New()
 
-	characters := []model.Character{
+	channelCharacters := []model.ChannelCharacter{
 		{
-			ID:      charID1,
-			Name:    "太郎",
-			Persona: "明るい性格",
-			VoiceID: voiceID1,
-			Voice: model.Voice{
-				ID:     voiceID1,
-				Name:   "ja-JP-Wavenet-C",
-				Gender: model.GenderMale,
+			ChannelID:   channelID,
+			CharacterID: charID1,
+			Character: model.Character{
+				ID:      charID1,
+				Name:    "太郎",
+				Persona: "明るい性格",
+				VoiceID: voiceID1,
+				Voice: model.Voice{
+					ID:     voiceID1,
+					Name:   "ja-JP-Wavenet-C",
+					Gender: model.GenderMale,
+				},
 			},
 		},
 		{
-			ID:      charID2,
-			Name:    "花子",
-			Persona: "落ち着いた性格",
-			VoiceID: voiceID2,
-			Voice: model.Voice{
-				ID:     voiceID2,
-				Name:   "ja-JP-Wavenet-B",
-				Gender: model.GenderFemale,
+			ChannelID:   channelID,
+			CharacterID: charID2,
+			Character: model.Character{
+				ID:      charID2,
+				Name:    "花子",
+				Persona: "落ち着いた性格",
+				VoiceID: voiceID2,
+				Voice: model.Voice{
+					ID:     voiceID2,
+					Name:   "ja-JP-Wavenet-B",
+					Gender: model.GenderFemale,
+				},
 			},
 		},
 	}
 
 	t.Run("複数キャラクターを正しく変換する", func(t *testing.T) {
-		result := toCharacterResponses(characters)
+		svc := &channelService{}
+		result := svc.toCharacterResponsesFromChannelCharacters(channelCharacters)
 
 		assert.Len(t, result, 2)
 		assert.Equal(t, charID1, result[0].ID)
@@ -288,7 +302,8 @@ func TestToCharacterResponses(t *testing.T) {
 	})
 
 	t.Run("空のスライスの場合、空のスライスを返す", func(t *testing.T) {
-		result := toCharacterResponses([]model.Character{})
+		svc := &channelService{}
+		result := svc.toCharacterResponsesFromChannelCharacters([]model.ChannelCharacter{})
 
 		assert.Len(t, result, 0)
 		assert.NotNil(t, result)

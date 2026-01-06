@@ -22,17 +22,20 @@ type ChannelResponse struct {
 
 // キャラクター情報のレスポンス
 type CharacterResponse struct {
-	ID      uuid.UUID              `json:"id" validate:"required"`
-	Name    string                 `json:"name" validate:"required"`
-	Persona string                 `json:"persona" validate:"required"`
-	Voice   CharacterVoiceResponse `json:"voice" validate:"required"`
+	ID        uuid.UUID              `json:"id" validate:"required"`
+	Name      string                 `json:"name" validate:"required"`
+	Persona   string                 `json:"persona" validate:"required"`
+	Voice     CharacterVoiceResponse `json:"voice" validate:"required"`
+	CreatedAt time.Time              `json:"createdAt" validate:"required"`
+	UpdatedAt time.Time              `json:"updatedAt" validate:"required"`
 }
 
 // キャラクターに紐づくボイス情報のレスポンス
 type CharacterVoiceResponse struct {
-	ID     uuid.UUID `json:"id" validate:"required"`
-	Name   string    `json:"name" validate:"required"`
-	Gender string    `json:"gender" validate:"required"`
+	ID       uuid.UUID `json:"id" validate:"required"`
+	Name     string    `json:"name" validate:"required"`
+	Provider string    `json:"provider" validate:"required"`
+	Gender   string    `json:"gender" validate:"required"`
 }
 
 // チャンネル一覧（ページネーション付き）のレスポンス

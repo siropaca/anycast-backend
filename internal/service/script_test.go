@@ -48,6 +48,11 @@ func (m *mockChannelRepository) Delete(ctx context.Context, id uuid.UUID) error 
 	return args.Error(0)
 }
 
+func (m *mockChannelRepository) ReplaceChannelCharacters(ctx context.Context, channelID uuid.UUID, characterIDs []uuid.UUID) error {
+	args := m.Called(ctx, channelID, characterIDs)
+	return args.Error(0)
+}
+
 type mockEpisodeRepository struct {
 	mock.Mock
 }
@@ -99,9 +104,9 @@ func TestBuildUserPrompt(t *testing.T) {
 			Name:       "テックラジオ",
 			UserPrompt: "テック系ポッドキャスト",
 			Category:   model.Category{Name: "テクノロジー"},
-			Characters: []model.Character{
-				{Name: "太郎", Persona: "明るいホスト", Voice: model.Voice{Gender: model.GenderMale}},
-				{Name: "花子", Persona: "知識豊富なゲスト", Voice: model.Voice{Gender: model.GenderFemale}},
+			ChannelCharacters: []model.ChannelCharacter{
+				{Character: model.Character{Name: "太郎", Persona: "明るいホスト", Voice: model.Voice{Gender: model.GenderMale}}},
+				{Character: model.Character{Name: "花子", Persona: "知識豊富なゲスト", Voice: model.Voice{Gender: model.GenderFemale}}},
 			},
 		}
 		episode := &model.Episode{
@@ -131,8 +136,8 @@ func TestBuildUserPrompt(t *testing.T) {
 			Name:       "テストチャンネル",
 			UserPrompt: "",
 			Category:   model.Category{Name: "コメディ"},
-			Characters: []model.Character{
-				{Name: "太郎", Voice: model.Voice{Gender: model.GenderMale}},
+			ChannelCharacters: []model.ChannelCharacter{
+				{Character: model.Character{Name: "太郎", Voice: model.Voice{Gender: model.GenderMale}}},
 			},
 		}
 		episode := &model.Episode{
@@ -150,9 +155,9 @@ func TestBuildUserPrompt(t *testing.T) {
 		channel := &model.Channel{
 			Name:     "テストチャンネル",
 			Category: model.Category{Name: "教育"},
-			Characters: []model.Character{
-				{Name: "太郎", Persona: "", Voice: model.Voice{Gender: model.GenderMale}},
-				{Name: "花子", Persona: "ゲスト", Voice: model.Voice{Gender: model.GenderFemale}},
+			ChannelCharacters: []model.ChannelCharacter{
+				{Character: model.Character{Name: "太郎", Persona: "", Voice: model.Voice{Gender: model.GenderMale}}},
+				{Character: model.Character{Name: "花子", Persona: "ゲスト", Voice: model.Voice{Gender: model.GenderFemale}}},
 			},
 		}
 		episode := &model.Episode{
@@ -313,8 +318,8 @@ func TestGenerateScript_LLMError(t *testing.T) {
 	mockChannelRepo.On("FindByID", ctx, channelID).Return(&model.Channel{
 		ID:     channelID,
 		UserID: userID,
-		Characters: []model.Character{
-			{ID: characterID, Name: "太郎"},
+		ChannelCharacters: []model.ChannelCharacter{
+			{CharacterID: characterID, Character: model.Character{ID: characterID, Name: "太郎"}},
 		},
 	}, nil)
 
@@ -352,8 +357,8 @@ func TestGenerateScript_ParseError(t *testing.T) {
 	mockChannelRepo.On("FindByID", ctx, channelID).Return(&model.Channel{
 		ID:     channelID,
 		UserID: userID,
-		Characters: []model.Character{
-			{ID: characterID, Name: "太郎"},
+		ChannelCharacters: []model.ChannelCharacter{
+			{CharacterID: characterID, Character: model.Character{ID: characterID, Name: "太郎"}},
 		},
 	}, nil)
 
@@ -395,8 +400,8 @@ func TestGenerateScript_DurationMinutesDefault(t *testing.T) {
 	mockChannelRepo.On("FindByID", ctx, channelID).Return(&model.Channel{
 		ID:     channelID,
 		UserID: userID,
-		Characters: []model.Character{
-			{ID: characterID, Name: "太郎"},
+		ChannelCharacters: []model.ChannelCharacter{
+			{CharacterID: characterID, Character: model.Character{ID: characterID, Name: "太郎"}},
 		},
 	}, nil)
 
@@ -437,8 +442,8 @@ func TestGenerateScript_DurationMinutesCustom(t *testing.T) {
 	mockChannelRepo.On("FindByID", ctx, channelID).Return(&model.Channel{
 		ID:     channelID,
 		UserID: userID,
-		Characters: []model.Character{
-			{ID: characterID, Name: "太郎"},
+		ChannelCharacters: []model.ChannelCharacter{
+			{CharacterID: characterID, Character: model.Character{ID: characterID, Name: "太郎"}},
 		},
 	}, nil)
 
