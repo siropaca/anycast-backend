@@ -1,5 +1,9 @@
--- Drop tables in reverse order of dependencies
+-- テーブルを依存関係の逆順で削除
 
+DROP TABLE IF EXISTS follows;
+DROP TABLE IF EXISTS playback_histories;
+DROP TABLE IF EXISTS bookmarks;
+DROP TABLE IF EXISTS likes;
 DROP TABLE IF EXISTS script_lines;
 DROP TABLE IF EXISTS episodes;
 DROP TABLE IF EXISTS characters;
@@ -7,7 +11,13 @@ DROP TABLE IF EXISTS channels;
 DROP TABLE IF EXISTS oauth_accounts;
 DROP TABLE IF EXISTS credentials;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS categories;
 DROP TABLE IF EXISTS sound_effects;
 DROP TABLE IF EXISTS voices;
 DROP TABLE IF EXISTS audios;
 DROP TABLE IF EXISTS images;
+
+-- ENUM 型を削除
+DROP TYPE IF EXISTS gender;
+DROP TYPE IF EXISTS line_type;
+DROP TYPE IF EXISTS oauth_provider;
