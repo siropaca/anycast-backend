@@ -70,6 +70,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.GET("/me/channels/:channelId", container.ChannelHandler.GetMyChannel)
 	authenticated.GET("/me/channels/:channelId/episodes", container.EpisodeHandler.ListMyChannelEpisodes)
 	authenticated.GET("/me/channels/:channelId/episodes/:episodeId", container.EpisodeHandler.GetMyChannelEpisode)
+	authenticated.GET("/me/characters", container.CharacterHandler.ListMyCharacters)
 
 	// Channels
 	authenticated.GET("/channels/:channelId", container.ChannelHandler.GetChannel)

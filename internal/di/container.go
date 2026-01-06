@@ -22,6 +22,7 @@ type Container struct {
 	VoiceHandler      *handler.VoiceHandler
 	AuthHandler       *handler.AuthHandler
 	ChannelHandler    *handler.ChannelHandler
+	CharacterHandler  *handler.CharacterHandler
 	CategoryHandler   *handler.CategoryHandler
 	EpisodeHandler    *handler.EpisodeHandler
 	ScriptLineHandler *handler.ScriptLineHandler
@@ -72,6 +73,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	voiceService := service.NewVoiceService(voiceRepo)
 	authService := service.NewAuthService(userRepo, credentialRepo, oauthAccountRepo, imageRepo, passwordHasher, storageClient)
 	channelService := service.NewChannelService(channelRepo, characterRepo, categoryRepo, imageRepo, voiceRepo, storageClient)
+	characterService := service.NewCharacterService(characterRepo)
 	categoryService := service.NewCategoryService(categoryRepo)
 	episodeService := service.NewEpisodeService(episodeRepo, channelRepo, storageClient)
 	scriptLineService := service.NewScriptLineService(db, scriptLineRepo, episodeRepo, channelRepo, audioRepo, ttsClient, storageClient)
@@ -82,6 +84,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	voiceHandler := handler.NewVoiceHandler(voiceService)
 	authHandler := handler.NewAuthHandler(authService, tokenManager)
 	channelHandler := handler.NewChannelHandler(channelService)
+	characterHandler := handler.NewCharacterHandler(characterService)
 	categoryHandler := handler.NewCategoryHandler(categoryService)
 	episodeHandler := handler.NewEpisodeHandler(episodeService)
 	scriptLineHandler := handler.NewScriptLineHandler(scriptLineService)
@@ -92,6 +95,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		VoiceHandler:      voiceHandler,
 		AuthHandler:       authHandler,
 		ChannelHandler:    channelHandler,
+		CharacterHandler:  characterHandler,
 		CategoryHandler:   categoryHandler,
 		EpisodeHandler:    episodeHandler,
 		ScriptLineHandler: scriptLineHandler,
