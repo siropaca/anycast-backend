@@ -243,11 +243,14 @@ func (s *scriptLineService) GenerateAudio(ctx context.Context, userID, channelID
 		return nil, apperror.ErrValidation.WithMessage("Script line has no text")
 	}
 
-	// TTS 入力テキストを構築（emotion がある場合は先頭に付与）
-	ttsText := s.buildTTSText(*scriptLine.Text, scriptLine.Emotion)
-
-	// TTS で音声生成
-	audioData, err := s.ttsClient.Synthesize(ctx, ttsText, scriptLine.Speaker.Voice.ProviderVoiceID, scriptLine.Speaker.Voice.Gender)
+	// TTS で音声生成（emotion は Prompt として別途渡す）
+	audioData, err := s.ttsClient.Synthesize(
+		ctx,
+		*scriptLine.Text,
+		scriptLine.Emotion,
+		scriptLine.Speaker.Voice.ProviderVoiceID,
+		scriptLine.Speaker.Voice.Gender,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -310,13 +313,4 @@ func (s *scriptLineService) GenerateAudio(ctx context.Context, userID, channelID
 			DurationMs: newAudio.DurationMs,
 		},
 	}, nil
-}
-
-// TTS 入力テキストを構築する
-func (s *scriptLineService) buildTTSText(text string, emotion *string) string {
-	if emotion != nil && *emotion != "" {
-		return fmt.Sprintf("[%s] %s", *emotion, text)
-	}
-
-	return text
 }

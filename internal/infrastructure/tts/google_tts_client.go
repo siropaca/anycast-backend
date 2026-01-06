@@ -15,15 +15,17 @@ import (
 )
 
 const (
-	// リトライ回数
-	maxRetries = 3
+	// Gemini TTS モデル名
+	geminiTTSModelName = "gemini-2.5-pro-tts"
 	// デフォルト言語コード
 	defaultLanguageCode = "ja-JP"
+	// リトライ回数
+	maxRetries = 3
 )
 
 // TTS クライアントのインターフェース
 type Client interface {
-	Synthesize(ctx context.Context, text, voiceID string, gender model.Gender) ([]byte, error)
+	Synthesize(ctx context.Context, text string, emotion *string, voiceID string, gender model.Gender) ([]byte, error)
 }
 
 type googleTTSClient struct {
@@ -48,30 +50,31 @@ func NewGoogleTTSClient(ctx context.Context, credentialsJSON string) (Client, er
 }
 
 // テキストから音声を合成する
-func (c *googleTTSClient) Synthesize(ctx context.Context, text, voiceID string, gender model.Gender) ([]byte, error) {
+// Gemini-TTS を使用し、emotion を Prompt フィールドでスタイル指示として渡す
+func (c *googleTTSClient) Synthesize(ctx context.Context, text string, emotion *string, voiceID string, gender model.Gender) ([]byte, error) {
 	log := logger.FromContext(ctx)
 
-	// 自然な発声を促すためのSSMLラップ
-	// <speak>タグで囲み、わずかな「間」や「ピッチ」の調整を加える土台を作ります
-	ssml := fmt.Sprintf("<speak>%s</speak>", text)
+	input := &texttospeechpb.SynthesisInput{
+		InputSource: &texttospeechpb.SynthesisInput_Text{
+			Text: text,
+		},
+	}
+
+	// emotion がある場合は Prompt フィールドに設定
+	if emotion != nil && *emotion != "" {
+		input.Prompt = emotion
+	}
 
 	req := &texttospeechpb.SynthesizeSpeechRequest{
-		Input: &texttospeechpb.SynthesisInput{
-			InputSource: &texttospeechpb.SynthesisInput_Ssml{
-				Ssml: ssml,
-			},
-		},
+		Input: input,
 		Voice: &texttospeechpb.VoiceSelectionParams{
+			ModelName:    geminiTTSModelName,
 			LanguageCode: defaultLanguageCode,
 			Name:         voiceID,
 			SsmlGender:   toSsmlVoiceGender(gender),
 		},
 		AudioConfig: &texttospeechpb.AudioConfig{
-			AudioEncoding:    texttospeechpb.AudioEncoding_MP3,
-			SampleRateHertz:  24000, // MP3 の最大サポート値（ポッドキャスト品質として十分）
-			Pitch:            0.0,
-			SpeakingRate:     1.05,                               // 日本語の場合、やや速めにすると自然に聞こえる
-			EffectsProfileId: []string{"headphone-class-device"}, // ヘッドホン/イヤホン向けに最適化
+			AudioEncoding: texttospeechpb.AudioEncoding_MP3,
 		},
 	}
 
