@@ -1667,6 +1667,27 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "request.ChannelCharacterInputRequest": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "既存キャラクターを指定する場合",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "新規キャラクターを作成する場合",
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "persona": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "voiceId": {
+                    "type": "string"
+                }
+            }
+        },
         "request.CreateChannelRequest": {
             "type": "object",
             "required": [
@@ -1688,7 +1709,7 @@ const docTemplate = `{
                     "maxItems": 2,
                     "minItems": 1,
                     "items": {
-                        "$ref": "#/definitions/request.CreateCharacterRequest"
+                        "$ref": "#/definitions/request.ChannelCharacterInputRequest"
                     }
                 },
                 "description": {
@@ -1702,26 +1723,6 @@ const docTemplate = `{
                 "userPrompt": {
                     "type": "string",
                     "maxLength": 2000
-                }
-            }
-        },
-        "request.CreateCharacterRequest": {
-            "type": "object",
-            "required": [
-                "name",
-                "voiceId"
-            ],
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "maxLength": 255
-                },
-                "persona": {
-                    "type": "string",
-                    "maxLength": 2000
-                },
-                "voiceId": {
-                    "type": "string"
                 }
             }
         },
@@ -2113,12 +2114,17 @@ const docTemplate = `{
         "response.CharacterResponse": {
             "type": "object",
             "required": [
+                "createdAt",
                 "id",
                 "name",
                 "persona",
+                "updatedAt",
                 "voice"
             ],
             "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -2126,6 +2132,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "persona": {
+                    "type": "string"
+                },
+                "updatedAt": {
                     "type": "string"
                 },
                 "voice": {
@@ -2138,7 +2147,8 @@ const docTemplate = `{
             "required": [
                 "gender",
                 "id",
-                "name"
+                "name",
+                "provider"
             ],
             "properties": {
                 "gender": {
@@ -2148,6 +2158,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "provider": {
                     "type": "string"
                 }
             }

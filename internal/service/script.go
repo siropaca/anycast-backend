@@ -143,11 +143,11 @@ func (s *scriptService) GenerateScript(ctx context.Context, userID, channelID, e
 	}
 
 	// 許可された話者名のリストを作成
-	allowedSpeakers := make([]string, len(channel.Characters))
-	speakerMap := make(map[string]*model.Character, len(channel.Characters))
-	for i, c := range channel.Characters {
-		allowedSpeakers[i] = c.Name
-		speakerMap[c.Name] = &channel.Characters[i]
+	allowedSpeakers := make([]string, len(channel.ChannelCharacters))
+	speakerMap := make(map[string]*model.Character, len(channel.ChannelCharacters))
+	for i, cc := range channel.ChannelCharacters {
+		allowedSpeakers[i] = cc.Character.Name
+		speakerMap[cc.Character.Name] = &channel.ChannelCharacters[i].Character
 	}
 
 	// 生成されたテキストをパース
@@ -303,11 +303,11 @@ func (s *scriptService) buildUserPrompt(channel *model.Channel, episode *model.E
 
 	// 登場人物
 	sb.WriteString("## 登場人物\n")
-	for _, c := range channel.Characters {
-		if c.Persona != "" {
-			sb.WriteString(fmt.Sprintf("- %s（%s）: %s\n", c.Name, c.Voice.Gender, c.Persona))
+	for _, cc := range channel.ChannelCharacters {
+		if cc.Character.Persona != "" {
+			sb.WriteString(fmt.Sprintf("- %s（%s）: %s\n", cc.Character.Name, cc.Character.Voice.Gender, cc.Character.Persona))
 		} else {
-			sb.WriteString(fmt.Sprintf("- %s（%s）\n", c.Name, c.Voice.Gender))
+			sb.WriteString(fmt.Sprintf("- %s（%s）\n", cc.Character.Name, cc.Character.Voice.Gender))
 		}
 	}
 	sb.WriteString("\n")

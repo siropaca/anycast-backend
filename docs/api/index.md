@@ -34,11 +34,13 @@
 | POST | `/api/v1/channels/:channelId/unpublish` | チャンネル非公開 | ✅ | [詳細](./channels.md#チャンネル非公開) |
 | GET | `/api/v1/me/channels` | 自分のチャンネル一覧 | ✅ | [詳細](./channels.md#自分のチャンネル一覧取得) |
 | GET | `/api/v1/me/channels/:channelId` | 自分のチャンネル取得 | ✅ | [詳細](./channels.md#自分のチャンネル取得) |
-| **Characters** | - | - | - | [channels.md](./channels.md#charactersキャラクター) |
-| GET | `/api/v1/channels/:channelId/characters` | キャラクター一覧取得 | | [詳細](./channels.md#キャラクター一覧取得) |
-| POST | `/api/v1/channels/:channelId/characters` | キャラクター作成 | | [詳細](./channels.md#キャラクター作成) |
-| PATCH | `/api/v1/channels/:channelId/characters/:characterId` | キャラクター更新 | | [詳細](./channels.md#キャラクター更新) |
-| DELETE | `/api/v1/channels/:channelId/characters/:characterId` | キャラクター削除 | | [詳細](./channels.md#キャラクター削除) |
+| **Characters** | - | - | - | [characters.md](./characters.md) |
+| GET | `/api/v1/me/characters` | キャラクター一覧取得 | | [詳細](./characters.md#キャラクター一覧取得) |
+| GET | `/api/v1/me/characters/:characterId` | キャラクター取得 | | [詳細](./characters.md#キャラクター取得) |
+| POST | `/api/v1/me/characters` | キャラクター作成 | | [詳細](./characters.md#キャラクター作成) |
+| PATCH | `/api/v1/me/characters/:characterId` | キャラクター更新 | | [詳細](./characters.md#キャラクター更新) |
+| DELETE | `/api/v1/me/characters/:characterId` | キャラクター削除 | | [詳細](./characters.md#キャラクター削除) |
+| PUT | `/api/v1/channels/:channelId/characters` | チャンネルのキャラクター紐づけ更新 | | [詳細](./channels.md#チャンネルのキャラクター紐づけ更新) |
 | **Episodes** | - | - | - | [episodes.md](./episodes.md) |
 | GET | `/api/v1/channels/:channelId/episodes` | エピソード一覧取得 | | [詳細](./episodes.md#エピソード一覧取得公開用) |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード取得 | | [詳細](./episodes.md#エピソード取得) |
@@ -207,6 +209,7 @@
 | ALREADY_FOLLOWED | 409 | 既にフォロー済み |
 | SELF_FOLLOW_NOT_ALLOWED | 400 | 自分のエピソードはフォロー不可 |
 | SFX_IN_USE | 409 | 効果音が使用中のため削除不可 |
+| CHARACTER_IN_USE | 409 | キャラクターが使用中のため削除不可 |
 | INTERNAL_ERROR | 500 | サーバー内部エラー |
 | GENERATION_FAILED | 500 | 音声/台本の生成に失敗 |
 | MEDIA_UPLOAD_FAILED | 500 | メディアアップロードに失敗 |

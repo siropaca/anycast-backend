@@ -7,10 +7,15 @@ DELETE FROM script_lines WHERE episode_id IN (
 	JOIN channels c ON e.channel_id = c.id
 	WHERE c.user_id IN ('8def69af-dae9-4641-a0e5-100107626933', '8eada3a5-f413-4eeb-9cd5-12def60d4596')
 );
+-- channel_characters は channels 削除時に CASCADE で消えるが、characters より先に削除する
+DELETE FROM channel_characters WHERE channel_id IN (
+	SELECT id FROM channels WHERE user_id IN ('8def69af-dae9-4641-a0e5-100107626933', '8eada3a5-f413-4eeb-9cd5-12def60d4596')
+);
 -- likes, bookmarks, follows はテストユーザーのものを削除
 DELETE FROM likes WHERE user_id IN ('8def69af-dae9-4641-a0e5-100107626933', '8eada3a5-f413-4eeb-9cd5-12def60d4596');
 DELETE FROM bookmarks WHERE user_id IN ('8def69af-dae9-4641-a0e5-100107626933', '8eada3a5-f413-4eeb-9cd5-12def60d4596');
 DELETE FROM follows WHERE user_id IN ('8def69af-dae9-4641-a0e5-100107626933', '8eada3a5-f413-4eeb-9cd5-12def60d4596');
+DELETE FROM characters WHERE user_id IN ('8def69af-dae9-4641-a0e5-100107626933', '8eada3a5-f413-4eeb-9cd5-12def60d4596');
 DELETE FROM channels WHERE user_id IN ('8def69af-dae9-4641-a0e5-100107626933', '8eada3a5-f413-4eeb-9cd5-12def60d4596');
 
 -- ===========================================
@@ -27,23 +32,39 @@ INSERT INTO channels (id, user_id, name, description, user_prompt, category_id, 
 	('e5a50bd3-8990-4344-b470-56fa7329d75c', '8eada3a5-f413-4eeb-9cd5-12def60d4596', 'ビジネス最前線', '起業やキャリアについて実践的なアドバイスを届けるビジネス番組', '起業やキャリアについて、実践的で具体的なアドバイスを提供してください。成功事例や失敗談を交えて説明してください。', (SELECT id FROM categories WHERE slug = 'business'), NULL);
 
 -- ===========================================
--- キャラクター
+-- キャラクター（user_id で所有）
 -- ===========================================
 
--- テックトークのキャラクター
-INSERT INTO characters (id, channel_id, name, persona, voice_id) VALUES
-	('d1f7e3e3-d2e9-4a8f-a155-99b1e3ccf007', 'ea9a266e-f532-417c-8916-709d0233941c', 'ユウキ', 'テクノロジーに詳しいエンジニア。論理的だが親しみやすい話し方をする。', (SELECT id FROM voices WHERE name = 'Achird')),
-	('4cee85f3-adec-4333-84e6-d6aaefb63408', 'ea9a266e-f532-417c-8916-709d0233941c', 'ミサキ', '好奇心旺盛なライター。素朴な疑問を投げかけてくれる。', (SELECT id FROM voices WHERE name = 'Achernar'));
+-- test_user のキャラクター
+INSERT INTO characters (id, user_id, name, persona, voice_id) VALUES
+	('d1f7e3e3-d2e9-4a8f-a155-99b1e3ccf007', '8def69af-dae9-4641-a0e5-100107626933', 'ユウキ', 'テクノロジーに詳しいエンジニア。論理的だが親しみやすい話し方をする。', (SELECT id FROM voices WHERE name = 'Achird')),
+	('4cee85f3-adec-4333-84e6-d6aaefb63408', '8def69af-dae9-4641-a0e5-100107626933', 'ミサキ', '好奇心旺盛なライター。素朴な疑問を投げかけてくれる。', (SELECT id FROM voices WHERE name = 'Achernar')),
+	('b0b67254-ff3b-4b5e-96fa-073ce5c8a6a4', '8def69af-dae9-4641-a0e5-100107626933', 'ハルカ', 'のんびり屋でマイペース。ゆるい雰囲気で話を進める。', (SELECT id FROM voices WHERE name = 'Aoede')),
+	('41977119-13d8-4d26-bfe4-694eb2cf2167', '8def69af-dae9-4641-a0e5-100107626933', 'ソウタ', 'ツッコミ担当。ハルカのボケに的確に反応する。', (SELECT id FROM voices WHERE name = 'Charon'));
 
--- ゆるふわ雑談ラジオのキャラクター
-INSERT INTO characters (id, channel_id, name, persona, voice_id) VALUES
-	('b0b67254-ff3b-4b5e-96fa-073ce5c8a6a4', 'efa53d40-2f7b-4abe-a1b0-ba4f7905dbad', 'ハルカ', 'のんびり屋でマイペース。ゆるい雰囲気で話を進める。', (SELECT id FROM voices WHERE name = 'Aoede')),
-	('41977119-13d8-4d26-bfe4-694eb2cf2167', 'efa53d40-2f7b-4abe-a1b0-ba4f7905dbad', 'ソウタ', 'ツッコミ担当。ハルカのボケに的確に反応する。', (SELECT id FROM voices WHERE name = 'Charon'));
+-- test_user2 のキャラクター
+INSERT INTO characters (id, user_id, name, persona, voice_id) VALUES
+	('a4e0f973-f91a-4103-b758-fed371622046', '8eada3a5-f413-4eeb-9cd5-12def60d4596', 'ケンジ', '元外資系コンサルタント。論理的で鋭い視点を持つ。', (SELECT id FROM voices WHERE name = 'Fenrir')),
+	('b7efbbae-0655-46f1-afb7-a42d2646f0c1', '8eada3a5-f413-4eeb-9cd5-12def60d4596', 'アヤカ', 'スタートアップ経営者。実体験に基づいたアドバイスが得意。', (SELECT id FROM voices WHERE name = 'Kore'));
 
--- ビジネス最前線のキャラクター
-INSERT INTO characters (id, channel_id, name, persona, voice_id) VALUES
-	('a4e0f973-f91a-4103-b758-fed371622046', 'e5a50bd3-8990-4344-b470-56fa7329d75c', 'ケンジ', '元外資系コンサルタント。論理的で鋭い視点を持つ。', (SELECT id FROM voices WHERE name = 'Fenrir')),
-	('b7efbbae-0655-46f1-afb7-a42d2646f0c1', 'e5a50bd3-8990-4344-b470-56fa7329d75c', 'アヤカ', 'スタートアップ経営者。実体験に基づいたアドバイスが得意。', (SELECT id FROM voices WHERE name = 'Kore'));
+-- ===========================================
+-- チャンネルとキャラクターの紐づけ
+-- ===========================================
+
+-- テックトーク（ユウキ、ミサキ）
+INSERT INTO channel_characters (channel_id, character_id) VALUES
+	('ea9a266e-f532-417c-8916-709d0233941c', 'd1f7e3e3-d2e9-4a8f-a155-99b1e3ccf007'),
+	('ea9a266e-f532-417c-8916-709d0233941c', '4cee85f3-adec-4333-84e6-d6aaefb63408');
+
+-- ゆるふわ雑談ラジオ（ハルカ、ソウタ）
+INSERT INTO channel_characters (channel_id, character_id) VALUES
+	('efa53d40-2f7b-4abe-a1b0-ba4f7905dbad', 'b0b67254-ff3b-4b5e-96fa-073ce5c8a6a4'),
+	('efa53d40-2f7b-4abe-a1b0-ba4f7905dbad', '41977119-13d8-4d26-bfe4-694eb2cf2167');
+
+-- ビジネス最前線（ケンジ、アヤカ）
+INSERT INTO channel_characters (channel_id, character_id) VALUES
+	('e5a50bd3-8990-4344-b470-56fa7329d75c', 'a4e0f973-f91a-4103-b758-fed371622046'),
+	('e5a50bd3-8990-4344-b470-56fa7329d75c', 'b7efbbae-0655-46f1-afb7-a42d2646f0c1');
 
 -- ===========================================
 -- エピソード

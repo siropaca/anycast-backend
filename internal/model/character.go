@@ -9,7 +9,7 @@ import (
 // キャラクター情報
 type Character struct {
 	ID        uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	ChannelID uuid.UUID `gorm:"type:uuid;not null;column:channel_id"`
+	UserID    uuid.UUID `gorm:"type:uuid;not null;column:user_id"`
 	Name      string    `gorm:"type:varchar(255);not null"`
 	Persona   string    `gorm:"type:text;not null"`
 	VoiceID   uuid.UUID `gorm:"type:uuid;not null;column:voice_id"`

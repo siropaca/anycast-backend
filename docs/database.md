@@ -7,15 +7,17 @@ erDiagram
     users ||--o| credentials : has
     users ||--o{ oauth_accounts : has
     users ||--o{ channels : owns
+    users ||--o{ characters : owns
     users ||--o{ likes : has
     users ||--o{ bookmarks : has
     users ||--o{ playback_histories : has
     users ||--o{ follows : has
     users ||--o| images : avatar
     categories ||--o{ channels : has
-    channels ||--o{ characters : has
+    channels ||--o{ channel_characters : has
     channels ||--o{ episodes : has
     channels ||--o| images : artwork
+    characters ||--o{ channel_characters : assigned_to
     characters ||--|| voices : uses
     episodes ||--o{ script_lines : has
     episodes ||--o{ likes : has
@@ -118,12 +120,19 @@ erDiagram
 
     characters {
         uuid id PK
-        uuid channel_id FK
+        uuid user_id FK
         varchar name
         text persona
         uuid voice_id FK
         timestamp created_at
         timestamp updated_at
+    }
+
+    channel_characters {
+        uuid id PK
+        uuid channel_id FK
+        uuid character_id FK
+        timestamp created_at
     }
 
     voices {
@@ -316,12 +325,12 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 
 #### characters
 
-チャンネルに登場するキャラクター情報を管理する。
+ユーザーが所有するキャラクター情報を管理する。複数のチャンネルで使い回すことができる。
 
 | カラム名 | 型 | NULLABLE | デフォルト | 説明 |
 |----------|-----|:--------:|------------|------|
 | id | UUID | | gen_random_uuid() | 主キー |
-| channel_id | UUID | | - | 所属チャンネル |
+| user_id | UUID | | - | 所有ユーザー（users 参照） |
 | name | VARCHAR(255) | | - | キャラクター名 |
 | persona | TEXT | | - | キャラクター設定 |
 | voice_id | UUID | | - | ボイス（voices 参照） |
@@ -330,12 +339,39 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 
 **インデックス:**
 - PRIMARY KEY (id)
-- UNIQUE (channel_id, name)
+- UNIQUE (user_id, name)
+- INDEX (user_id)
+
+**外部キー:**
+- user_id → users(id) ON DELETE CASCADE
+- voice_id → voices(id) ON DELETE RESTRICT
+
+---
+
+#### channel_characters
+
+チャンネルとキャラクターの紐づけを管理する中間テーブル。
+
+| カラム名 | 型 | NULLABLE | デフォルト | 説明 |
+|----------|-----|:--------:|------------|------|
+| id | UUID | | gen_random_uuid() | 主キー |
+| channel_id | UUID | | - | チャンネル（channels 参照） |
+| character_id | UUID | | - | キャラクター（characters 参照） |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
+
+**インデックス:**
+- PRIMARY KEY (id)
+- UNIQUE (channel_id, character_id)
 - INDEX (channel_id)
+- INDEX (character_id)
 
 **外部キー:**
 - channel_id → channels(id) ON DELETE CASCADE
-- voice_id → voices(id) ON DELETE RESTRICT
+- character_id → characters(id) ON DELETE RESTRICT
+
+**制約:**
+- 1 チャンネルにつき 1〜2 件まで（アプリケーション層で検証）
+- character_id は同一 user_id が所有するキャラクターのみ指定可能（アプリケーション層で検証）
 
 ---
 
@@ -642,9 +678,10 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 
 ### カスケード削除
 
-- Channel 削除時: 関連する Characters, Episodes, ScriptLines が削除
+- User 削除時: 関連する Characters, Channels, Episodes, ScriptLines が削除
+- Channel 削除時: 関連する channel_characters, Episodes, ScriptLines が削除
 - Episode 削除時: 関連する ScriptLines が削除
-- Character 削除時: 関連する ScriptLines（話者参照）が削除
+- Character 削除時: channel_characters で使用中の場合は RESTRICT（削除不可）
 - SoundEffect 削除時: 関連する ScriptLines（効果音参照）が削除
 - Audio / Image 削除時: 参照元は SET NULL（ファイルが消えても親レコードは残る）
 - Voice 削除時: 使用中の場合は RESTRICT（削除不可）

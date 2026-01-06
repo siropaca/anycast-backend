@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
@@ -27,6 +28,7 @@ type ChannelService interface {
 
 type channelService struct {
 	channelRepo   repository.ChannelRepository
+	characterRepo repository.CharacterRepository
 	categoryRepo  repository.CategoryRepository
 	imageRepo     repository.ImageRepository
 	voiceRepo     repository.VoiceRepository
@@ -36,6 +38,7 @@ type channelService struct {
 // ChannelService の実装を返す
 func NewChannelService(
 	channelRepo repository.ChannelRepository,
+	characterRepo repository.CharacterRepository,
 	categoryRepo repository.CategoryRepository,
 	imageRepo repository.ImageRepository,
 	voiceRepo repository.VoiceRepository,
@@ -43,6 +46,7 @@ func NewChannelService(
 ) ChannelService {
 	return &channelService{
 		channelRepo:   channelRepo,
+		characterRepo: characterRepo,
 		categoryRepo:  categoryRepo,
 		imageRepo:     imageRepo,
 		voiceRepo:     voiceRepo,
@@ -171,24 +175,10 @@ func (s *channelService) CreateChannel(ctx context.Context, userID string, req r
 		artworkID = &aid
 	}
 
-	// キャラクターのバリデーションと構築
-	characters := make([]model.Character, len(req.Characters))
-	for i, charReq := range req.Characters {
-		voiceID, err := uuid.Parse(charReq.VoiceID)
-		if err != nil {
-			return nil, err
-		}
-
-		// ボイスの存在確認（アクティブなもののみ）
-		if _, err := s.voiceRepo.FindActiveByID(ctx, charReq.VoiceID); err != nil {
-			return nil, err
-		}
-
-		characters[i] = model.Character{
-			Name:    charReq.Name,
-			Persona: charReq.Persona,
-			VoiceID: voiceID,
-		}
+	// キャラクターの処理（既存 or 新規作成）
+	characterIDs, err := s.processCharacterInputs(ctx, uid, req.Characters)
+	if err != nil {
+		return nil, err
 	}
 
 	// チャンネルモデルを作成
@@ -199,11 +189,15 @@ func (s *channelService) CreateChannel(ctx context.Context, userID string, req r
 		UserPrompt:  req.UserPrompt,
 		CategoryID:  categoryID,
 		ArtworkID:   artworkID,
-		Characters:  characters,
 	}
 
-	// チャンネルを保存（キャラクターも一緒に保存される）
+	// チャンネルを保存
 	if err := s.channelRepo.Create(ctx, channel); err != nil {
+		return nil, err
+	}
+
+	// キャラクターを紐づけ
+	if err := s.channelRepo.ReplaceChannelCharacters(ctx, channel.ID, characterIDs); err != nil {
 		return nil, err
 	}
 
@@ -426,6 +420,88 @@ func (s *channelService) UnpublishChannel(ctx context.Context, userID, channelID
 	}, nil
 }
 
+// キャラクター入力を処理して、キャラクター ID のスライスを返す
+// 既存キャラクターの場合は ID を検証、新規キャラクターの場合は作成
+func (s *channelService) processCharacterInputs(ctx context.Context, userID uuid.UUID, inputs []request.ChannelCharacterInputRequest) ([]uuid.UUID, error) {
+	characterIDs := make([]uuid.UUID, len(inputs))
+
+	for i, input := range inputs {
+		if input.IsExisting() {
+			// 既存キャラクター
+			cid, err := uuid.Parse(*input.ID)
+			if err != nil {
+				return nil, err
+			}
+
+			// キャラクターの存在確認とオーナーチェック
+			character, err := s.characterRepo.FindByID(ctx, cid)
+			if err != nil {
+				return nil, err
+			}
+			if character.UserID != userID {
+				return nil, apperror.ErrForbidden.WithMessage("You do not own the specified character")
+			}
+
+			characterIDs[i] = cid
+		} else {
+			// 新規キャラクター作成
+			if input.Name == nil || *input.Name == "" {
+				return nil, apperror.ErrValidation.WithMessage("Character name is required for new characters")
+			}
+			if input.VoiceID == nil || *input.VoiceID == "" {
+				return nil, apperror.ErrValidation.WithMessage("Character voiceId is required for new characters")
+			}
+
+			// ID と新規作成フィールドの両方が指定されている場合はエラー
+			// （IsExisting() が true なのでこのブロックには来ないが、念のため）
+
+			// 予約語チェック
+			if strings.HasPrefix(*input.Name, "__") {
+				return nil, apperror.ErrReservedName.WithMessage("Character name cannot start with '__'")
+			}
+
+			// 同一ユーザー内での名前重複チェック
+			exists, err := s.characterRepo.ExistsByUserIDAndName(ctx, userID, *input.Name, nil)
+			if err != nil {
+				return nil, err
+			}
+			if exists {
+				return nil, apperror.ErrDuplicateName.WithMessage("Character with this name already exists")
+			}
+
+			voiceID, err := uuid.Parse(*input.VoiceID)
+			if err != nil {
+				return nil, err
+			}
+
+			// ボイスの存在確認（アクティブなもののみ）
+			if _, err := s.voiceRepo.FindActiveByID(ctx, *input.VoiceID); err != nil {
+				return nil, err
+			}
+
+			persona := ""
+			if input.Persona != nil {
+				persona = *input.Persona
+			}
+
+			character := &model.Character{
+				UserID:  userID,
+				Name:    *input.Name,
+				Persona: persona,
+				VoiceID: voiceID,
+			}
+
+			if err := s.characterRepo.Create(ctx, character); err != nil {
+				return nil, err
+			}
+
+			characterIDs[i] = character.ID
+		}
+	}
+
+	return characterIDs, nil
+}
+
 // Channel モデルのスライスをレスポンス DTO のスライスに変換する
 // ListMyChannels で使用するため、常にオーナーとして扱う
 func (s *channelService) toChannelResponses(ctx context.Context, channels []model.Channel) ([]response.ChannelResponse, error) {
@@ -462,7 +538,7 @@ func (s *channelService) toChannelResponse(ctx context.Context, c *model.Channel
 			SortOrder: c.Category.SortOrder,
 			IsActive:  c.Category.IsActive,
 		},
-		Characters:  toCharacterResponses(c.Characters),
+		Characters:  s.toCharacterResponsesFromChannelCharacters(c.ChannelCharacters),
 		PublishedAt: c.PublishedAt,
 		CreatedAt:   c.CreatedAt,
 		UpdatedAt:   c.UpdatedAt,
@@ -482,20 +558,23 @@ func (s *channelService) toChannelResponse(ctx context.Context, c *model.Channel
 	return resp, nil
 }
 
-// Character モデルのスライスをレスポンス DTO のスライスに変換する
-func toCharacterResponses(characters []model.Character) []response.CharacterResponse {
-	result := make([]response.CharacterResponse, len(characters))
+// ChannelCharacter のスライスからレスポンス DTO のスライスに変換する
+func (s *channelService) toCharacterResponsesFromChannelCharacters(channelCharacters []model.ChannelCharacter) []response.CharacterResponse {
+	result := make([]response.CharacterResponse, len(channelCharacters))
 
-	for i, c := range characters {
+	for i, cc := range channelCharacters {
 		result[i] = response.CharacterResponse{
-			ID:      c.ID,
-			Name:    c.Name,
-			Persona: c.Persona,
+			ID:      cc.Character.ID,
+			Name:    cc.Character.Name,
+			Persona: cc.Character.Persona,
 			Voice: response.CharacterVoiceResponse{
-				ID:     c.Voice.ID,
-				Name:   c.Voice.Name,
-				Gender: string(c.Voice.Gender),
+				ID:       cc.Character.Voice.ID,
+				Name:     cc.Character.Voice.Name,
+				Provider: cc.Character.Voice.Provider,
+				Gender:   string(cc.Character.Voice.Gender),
 			},
+			CreatedAt: cc.Character.CreatedAt,
+			UpdatedAt: cc.Character.UpdatedAt,
 		}
 	}
 
