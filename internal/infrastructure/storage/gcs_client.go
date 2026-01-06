@@ -10,7 +10,7 @@ import (
 	"google.golang.org/api/option"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
-	"github.com/siropaca/anycast-backend/internal/logger"
+	"github.com/siropaca/anycast-backend/internal/pkg/logger"
 )
 
 // ストレージクライアントのインターフェース

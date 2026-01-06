@@ -5,7 +5,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
-	"github.com/siropaca/anycast-backend/internal/logger"
+	"github.com/siropaca/anycast-backend/internal/pkg/logger"
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 

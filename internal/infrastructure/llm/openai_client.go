@@ -9,7 +9,7 @@ import (
 	"github.com/openai/openai-go/v3/option"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
-	"github.com/siropaca/anycast-backend/internal/logger"
+	"github.com/siropaca/anycast-backend/internal/pkg/logger"
 	"github.com/siropaca/anycast-backend/internal/pkg/prompt"
 )
 

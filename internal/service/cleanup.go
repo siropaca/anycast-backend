@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
-	"github.com/siropaca/anycast-backend/internal/logger"
 	"github.com/siropaca/anycast-backend/internal/model"
+	"github.com/siropaca/anycast-backend/internal/pkg/logger"
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
