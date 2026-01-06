@@ -2247,6 +2247,21 @@ const docTemplate = `{
                 }
             }
         },
+        "response.CharacterChannelResponse": {
+            "type": "object",
+            "required": [
+                "id",
+                "name"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "response.CharacterListWithPaginationResponse": {
             "type": "object",
             "required": [
@@ -2257,7 +2272,7 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/response.CharacterResponse"
+                        "$ref": "#/definitions/response.CharacterWithChannelsResponse"
                     }
                 },
                 "pagination": {
@@ -2316,6 +2331,44 @@ const docTemplate = `{
                 },
                 "provider": {
                     "type": "string"
+                }
+            }
+        },
+        "response.CharacterWithChannelsResponse": {
+            "type": "object",
+            "required": [
+                "channels",
+                "createdAt",
+                "id",
+                "name",
+                "persona",
+                "updatedAt",
+                "voice"
+            ],
+            "properties": {
+                "channels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.CharacterChannelResponse"
+                    }
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "persona": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "voice": {
+                    "$ref": "#/definitions/response.CharacterVoiceResponse"
                 }
             }
         },

@@ -37,7 +37,7 @@ func (s *characterService) ListMyCharacters(ctx context.Context, userID string, 
 		return nil, err
 	}
 
-	responses := s.toCharacterResponses(characters)
+	responses := s.toCharacterWithChannelsResponses(characters)
 
 	return &response.CharacterListWithPaginationResponse{
 		Data:       responses,
@@ -45,25 +45,39 @@ func (s *characterService) ListMyCharacters(ctx context.Context, userID string, 
 	}, nil
 }
 
-// Character モデルのスライスをレスポンス DTO のスライスに変換する
-func (s *characterService) toCharacterResponses(characters []model.Character) []response.CharacterResponse {
-	result := make([]response.CharacterResponse, len(characters))
+// Character モデルのスライスをチャンネル情報付きレスポンス DTO のスライスに変換する
+func (s *characterService) toCharacterWithChannelsResponses(characters []model.Character) []response.CharacterWithChannelsResponse {
+	result := make([]response.CharacterWithChannelsResponse, len(characters))
 
 	for i, c := range characters {
-		result[i] = response.CharacterResponse{
-			ID:      c.ID,
-			Name:    c.Name,
-			Persona: c.Persona,
-			Voice: response.CharacterVoiceResponse{
-				ID:       c.Voice.ID,
-				Name:     c.Voice.Name,
-				Provider: c.Voice.Provider,
-				Gender:   string(c.Voice.Gender),
-			},
-			CreatedAt: c.CreatedAt,
-			UpdatedAt: c.UpdatedAt,
-		}
+		result[i] = s.toCharacterWithChannelsResponse(c)
 	}
 
 	return result
+}
+
+// Character モデルをチャンネル情報付きレスポンス DTO に変換する
+func (s *characterService) toCharacterWithChannelsResponse(c model.Character) response.CharacterWithChannelsResponse {
+	channels := make([]response.CharacterChannelResponse, len(c.ChannelCharacters))
+	for i, cc := range c.ChannelCharacters {
+		channels[i] = response.CharacterChannelResponse{
+			ID:   cc.Channel.ID,
+			Name: cc.Channel.Name,
+		}
+	}
+
+	return response.CharacterWithChannelsResponse{
+		ID:      c.ID,
+		Name:    c.Name,
+		Persona: c.Persona,
+		Voice: response.CharacterVoiceResponse{
+			ID:       c.Voice.ID,
+			Name:     c.Voice.Name,
+			Provider: c.Voice.Provider,
+			Gender:   string(c.Voice.Gender),
+		},
+		Channels:  channels,
+		CreatedAt: c.CreatedAt,
+		UpdatedAt: c.UpdatedAt,
+	}
 }

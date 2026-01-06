@@ -17,5 +17,6 @@ type Character struct {
 	UpdatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP"`
 
 	// リレーション
-	Voice Voice `gorm:"foreignKey:VoiceID"`
+	Voice             Voice              `gorm:"foreignKey:VoiceID"`
+	ChannelCharacters []ChannelCharacter `gorm:"foreignKey:CharacterID"`
 }

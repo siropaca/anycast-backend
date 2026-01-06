@@ -55,6 +55,7 @@ func (r *characterRepository) FindByUserID(ctx context.Context, userID uuid.UUID
 	// ページネーションとリレーションのプリロード
 	if err := tx.
 		Preload("Voice").
+		Preload("ChannelCharacters.Channel").
 		Order("created_at DESC").
 		Limit(filter.Limit).
 		Offset(filter.Offset).
@@ -72,6 +73,7 @@ func (r *characterRepository) FindByID(ctx context.Context, id uuid.UUID) (*mode
 
 	if err := r.db.WithContext(ctx).
 		Preload("Voice").
+		Preload("ChannelCharacters.Channel").
 		First(&character, "id = ?", id).Error; err != nil {
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {

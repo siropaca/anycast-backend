@@ -14,5 +14,6 @@ type ChannelCharacter struct {
 	CreatedAt   time.Time `gorm:"not null;default:CURRENT_TIMESTAMP"`
 
 	// リレーション
+	Channel   Channel   `gorm:"foreignKey:ChannelID"`
 	Character Character `gorm:"foreignKey:CharacterID"`
 }
