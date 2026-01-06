@@ -1,7 +1,6 @@
 package tts
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"time"
@@ -12,18 +11,21 @@ import (
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/logger"
+	"github.com/siropaca/anycast-backend/internal/model"
 )
 
 const (
-	// リトライ回数
-	maxRetries = 3
+	// Gemini TTS モデル名
+	geminiTTSModelName = "gemini-2.5-pro-tts"
 	// デフォルト言語コード
 	defaultLanguageCode = "ja-JP"
+	// リトライ回数
+	maxRetries = 3
 )
 
 // TTS クライアントのインターフェース
 type Client interface {
-	Synthesize(ctx context.Context, text, voiceID string) ([]byte, error)
+	Synthesize(ctx context.Context, text string, emotion *string, voiceID string, gender model.Gender) ([]byte, error)
 }
 
 type googleTTSClient struct {
@@ -48,18 +50,28 @@ func NewGoogleTTSClient(ctx context.Context, credentialsJSON string) (Client, er
 }
 
 // テキストから音声を合成する
-func (c *googleTTSClient) Synthesize(ctx context.Context, text, voiceID string) ([]byte, error) {
+// Gemini-TTS を使用し、emotion を Prompt フィールドでスタイル指示として渡す
+func (c *googleTTSClient) Synthesize(ctx context.Context, text string, emotion *string, voiceID string, gender model.Gender) ([]byte, error) {
 	log := logger.FromContext(ctx)
 
-	req := &texttospeechpb.SynthesizeSpeechRequest{
-		Input: &texttospeechpb.SynthesisInput{
-			InputSource: &texttospeechpb.SynthesisInput_Text{
-				Text: text,
-			},
+	input := &texttospeechpb.SynthesisInput{
+		InputSource: &texttospeechpb.SynthesisInput_Text{
+			Text: text,
 		},
+	}
+
+	// emotion がある場合は Prompt フィールドに設定
+	if emotion != nil && *emotion != "" {
+		input.Prompt = emotion
+	}
+
+	req := &texttospeechpb.SynthesizeSpeechRequest{
+		Input: input,
 		Voice: &texttospeechpb.VoiceSelectionParams{
+			ModelName:    geminiTTSModelName,
 			LanguageCode: defaultLanguageCode,
 			Name:         voiceID,
+			SsmlGender:   toSsmlVoiceGender(gender),
 		},
 		AudioConfig: &texttospeechpb.AudioConfig{
 			AudioEncoding: texttospeechpb.AudioEncoding_MP3,
@@ -105,24 +117,21 @@ func (c *googleTTSClient) Synthesize(ctx context.Context, text, voiceID string) 
 	return nil, apperror.ErrGenerationFailed.WithMessage("Failed to synthesize speech").WithError(lastErr)
 }
 
+// Gender を SsmlVoiceGender に変換する
+func toSsmlVoiceGender(gender model.Gender) texttospeechpb.SsmlVoiceGender {
+	switch gender {
+	case model.GenderMale:
+		return texttospeechpb.SsmlVoiceGender_MALE
+	case model.GenderFemale:
+		return texttospeechpb.SsmlVoiceGender_FEMALE
+	case model.GenderNeutral:
+		return texttospeechpb.SsmlVoiceGender_NEUTRAL
+	default:
+		return texttospeechpb.SsmlVoiceGender_SSML_VOICE_GENDER_UNSPECIFIED
+	}
+}
+
 // クライアントを閉じる
 func (c *googleTTSClient) Close() error {
 	return c.client.Close()
-}
-
-// MP3 データから再生時間（ミリ秒）を取得する
-func GetMP3DurationMs(data []byte) (int, error) {
-	reader := bytes.NewReader(data)
-
-	// MP3 ファイルのヘッダーを解析して duration を計算
-	// シンプルなビットレートベースの推定を使用
-	// MP3 は通常 128kbps なので、サイズから推定
-	// duration (秒) = ファイルサイズ (バイト) * 8 / ビットレート (bps)
-	const defaultBitrate = 128000 // 128 kbps
-
-	fileSize := reader.Size()
-	durationSeconds := float64(fileSize*8) / float64(defaultBitrate)
-	durationMs := int(durationSeconds * 1000)
-
-	return durationMs, nil
 }

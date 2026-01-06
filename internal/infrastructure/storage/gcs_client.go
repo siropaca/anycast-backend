@@ -20,6 +20,11 @@ type Client interface {
 	Delete(ctx context.Context, path string) error
 }
 
+// 音声ファイルの GCS パスを生成する
+func GenerateAudioPath(audioID string) string {
+	return fmt.Sprintf("audios/%s.mp3", audioID)
+}
+
 type gcsClient struct {
 	client     *storage.Client
 	bucketName string
