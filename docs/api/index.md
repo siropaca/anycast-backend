@@ -66,6 +66,7 @@
 | **Search（検索）** | - | - | - | [engagement.md](./engagement.md) |
 | GET | `/api/v1/search/channels` | チャンネル検索 | | [詳細](./engagement.md#チャンネル検索) |
 | GET | `/api/v1/search/episodes` | エピソード検索 | | [詳細](./engagement.md#エピソード検索) |
+| GET | `/api/v1/search/users` | ユーザー検索 | | [詳細](./engagement.md#ユーザー検索) |
 | **Likes（お気に入り）** | - | - | - | [engagement.md](./engagement.md#likesお気に入り) |
 | POST | `/api/v1/episodes/:episodeId/like` | お気に入り登録 | | [詳細](./engagement.md#お気に入り登録) |
 | DELETE | `/api/v1/episodes/:episodeId/like` | お気に入り解除 | | [詳細](./engagement.md#お気に入り解除) |
