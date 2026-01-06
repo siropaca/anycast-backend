@@ -24,3 +24,16 @@ const (
 	LineTypeSilence LineType = "silence"
 	LineTypeSfx     LineType = "sfx"
 )
+
+// ユーザーロール
+type Role string
+
+const (
+	RoleUser  Role = "user"
+	RoleAdmin Role = "admin"
+)
+
+// 管理者かどうかを判定
+func (r Role) IsAdmin() bool {
+	return r == RoleAdmin
+}

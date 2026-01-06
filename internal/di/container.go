@@ -28,6 +28,7 @@ type Container struct {
 	ScriptHandler     *handler.ScriptHandler
 	CleanupHandler    *handler.CleanupHandler
 	TokenManager      jwt.TokenManager
+	UserRepository    repository.UserRepository
 }
 
 // 依存関係を構築して Container を返す
@@ -96,5 +97,6 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		ScriptHandler:     scriptHandler,
 		CleanupHandler:    cleanupHandler,
 		TokenManager:      tokenManager,
+		UserRepository:    userRepo,
 	}
 }

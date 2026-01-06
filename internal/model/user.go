@@ -12,6 +12,7 @@ type User struct {
 	Email       string     `gorm:"type:varchar(255);not null;uniqueIndex"`
 	Username    string     `gorm:"type:varchar(20);not null;uniqueIndex"`
 	DisplayName string     `gorm:"type:varchar(20);not null;column:display_name"`
+	Role        Role       `gorm:"type:user_role;not null;default:'user'"`
 	AvatarID    *uuid.UUID `gorm:"type:uuid"`
 	CreatedAt   time.Time  `gorm:"not null;default:CURRENT_TIMESTAMP"`
 	UpdatedAt   time.Time  `gorm:"not null;default:CURRENT_TIMESTAMP"`

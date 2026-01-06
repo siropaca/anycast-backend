@@ -83,6 +83,44 @@ GET /search/episodes
 
 ---
 
+## ユーザー検索
+
+```
+GET /search/users
+```
+
+**クエリパラメータ:**
+
+| パラメータ | 型 | デフォルト | 説明 |
+|------------|-----|------------|------|
+| q | string | **必須** | 検索キーワード（username, displayName を対象） |
+| limit | int | 20 | 取得件数（最大 100） |
+| offset | int | 0 | オフセット |
+
+**レスポンス:**
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "username": "user_name",
+      "displayName": "ユーザー名",
+      "avatar": { "id": "uuid", "url": "..." },
+      "createdAt": "2025-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "total": 100,
+    "limit": 20,
+    "offset": 0
+  }
+}
+```
+
+※ 検索結果は公開プロフィールのみ（email は非公開）
+
+---
+
 # Likes（お気に入り）
 
 エピソードへのお気に入り機能。

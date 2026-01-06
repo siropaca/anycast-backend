@@ -100,10 +100,10 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	// Categories
 	authenticated.GET("/categories", container.CategoryHandler.ListCategories)
 
-	// Admin（認証必須）
-	// TODO: Admin 権限チェックミドルウェアを追加
+	// Admin（認証必須 + 管理者権限必須）
 	admin := r.Group("/admin")
 	admin.Use(middleware.Auth(container.TokenManager))
+	admin.Use(middleware.Admin(container.UserRepository))
 	admin.POST("/cleanup/orphaned-media", container.CleanupHandler.CleanupOrphanedMedia)
 
 	return r

@@ -108,6 +108,7 @@ func createTestUserResponse() *response.UserResponse {
 		Email:       "test@example.com",
 		Username:    "testuser",
 		DisplayName: "Test User",
+		Role:        "user",
 	}
 }
 
@@ -340,6 +341,7 @@ func TestAuthHandler_OAuthGoogle(t *testing.T) {
 			Email:       "oauth@example.com",
 			Username:    "oauthuser",
 			DisplayName: "OAuth User",
+			Role:        "user",
 		}
 		result := &service.AuthResult{User: user, IsCreated: true}
 		mockSvc.On("OAuthGoogle", mock.Anything, mock.AnythingOfType("request.OAuthGoogleRequest")).Return(result, nil)
@@ -375,6 +377,7 @@ func TestAuthHandler_OAuthGoogle(t *testing.T) {
 			Email:       "existing@example.com",
 			Username:    "existinguser",
 			DisplayName: "Existing User",
+			Role:        "user",
 		}
 		result := &service.AuthResult{User: user, IsCreated: false}
 		mockSvc.On("OAuthGoogle", mock.Anything, mock.AnythingOfType("request.OAuthGoogleRequest")).Return(result, nil)
@@ -457,6 +460,7 @@ func TestAuthHandler_OAuthGoogle(t *testing.T) {
 			Email:       "oauth@example.com",
 			Username:    "oauthuser",
 			DisplayName: "OAuth User",
+			Role:        "user",
 		}
 		result := &service.AuthResult{User: user, IsCreated: true}
 		mockSvc.On("OAuthGoogle", mock.Anything, mock.AnythingOfType("request.OAuthGoogleRequest")).Return(result, nil)
@@ -496,6 +500,7 @@ func TestAuthHandler_GetMe(t *testing.T) {
 			Email:          "test@example.com",
 			Username:       "testuser",
 			DisplayName:    "Test User",
+			Role:           "user",
 			HasPassword:    true,
 			OAuthProviders: []string{},
 			CreatedAt:      time.Now(),

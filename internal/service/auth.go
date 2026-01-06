@@ -284,6 +284,7 @@ func (s *authService) toUserResponse(ctx context.Context, user *model.User) *res
 		Email:       user.Email,
 		Username:    user.Username,
 		DisplayName: user.DisplayName,
+		Role:        string(user.Role),
 		AvatarURL:   avatarURL,
 	}
 }
@@ -337,6 +338,7 @@ func (s *authService) GetMe(ctx context.Context, userID string) (*response.MeRes
 		Email:          user.Email,
 		Username:       user.Username,
 		DisplayName:    user.DisplayName,
+		Role:           string(user.Role),
 		Avatar:         avatar,
 		HasPassword:    hasPassword,
 		OAuthProviders: providers,
