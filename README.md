@@ -184,15 +184,17 @@ make swagger
 │   ├── handler/         # ハンドラー
 │   ├── infrastructure/  # 外部サービス連携
 │   │   └── llm/         # LLM クライアント（OpenAI）
-│   ├── logger/          # 構造化ログ
 │   ├── middleware/      # ミドルウェア
 │   ├── model/           # ドメインモデル
 │   ├── pkg/             # 共通ユーティリティ
+│   │   ├── audio/       # 音声ファイル処理
 │   │   ├── crypto/      # パスワードハッシュ
 │   │   ├── db/          # DB 接続
 │   │   ├── jwt/         # JWT トークン管理
+│   │   ├── logger/      # 構造化ログ
 │   │   ├── prompt/      # プロンプト圧縮
-│   │   └── script/      # 台本パーサー
+│   │   ├── script/      # 台本パーサー
+│   │   └── uuid/        # UUID パース
 │   ├── repository/      # データアクセス層
 │   ├── router/          # ルーティング
 │   └── service/         # ビジネスロジック層
