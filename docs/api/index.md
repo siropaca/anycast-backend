@@ -58,7 +58,7 @@
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines` | 台本行一覧取得 | ✅ | [詳細](./script.md#台本行一覧取得) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines` | 行追加 | | [詳細](./script.md#行追加) |
 | PATCH | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | 行更新 | | [詳細](./script.md#行更新) |
-| DELETE | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | 行削除 | | [詳細](./script.md#行削除) |
+| DELETE | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | 行削除 | ✅ | [詳細](./script.md#行削除) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/reorder` | 行並び替え | | [詳細](./script.md#行並び替え) |
 | **Audio（音声生成）** | - | - | - | [media.md](./media.md) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId/audio/generate` | 行単位音声生成 | ✅ | [詳細](./media.md#行単位音声生成) |

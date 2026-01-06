@@ -204,6 +204,13 @@ PATCH /channels/:channelId/episodes/:episodeId/script/lines/:lineId
 DELETE /channels/:channelId/episodes/:episodeId/script/lines/:lineId
 ```
 
+指定した台本行を削除する。
+
+**レスポンス:**
+- `204 No Content`: 削除成功
+- `403 Forbidden`: チャンネルのオーナーでない場合
+- `404 Not Found`: 台本行が存在しない場合
+
 ---
 
 ## 行並び替え
