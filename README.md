@@ -148,6 +148,8 @@ make swagger
 | `make migrate-reset` | マイグレーションリセット（テーブル全削除 → 再マイグレーション） |
 | `make seed` | シードデータを投入（開発環境用） |
 | `make token` | 開発用 JWT トークンを生成 |
+| `make cleanup` | 孤児メディアファイルをクリーンアップ（dry-run） |
+| `make cleanup-run` | 孤児メディアファイルをクリーンアップ（実行） |
 
 ## ディレクトリ構成
 
@@ -177,7 +179,6 @@ make swagger
 ├── internal/            # 内部パッケージ
 │   ├── apperror/        # カスタムエラー型
 │   ├── config/          # 設定管理
-│   ├── db/              # DB 接続
 │   ├── di/              # DI コンテナ
 │   ├── dto/             # Data Transfer Objects
 │   ├── handler/         # ハンドラー
@@ -188,6 +189,7 @@ make swagger
 │   ├── model/           # ドメインモデル
 │   ├── pkg/             # 共通ユーティリティ
 │   │   ├── crypto/      # パスワードハッシュ
+│   │   ├── db/          # DB 接続
 │   │   ├── jwt/         # JWT トークン管理
 │   │   ├── prompt/      # プロンプト圧縮
 │   │   └── script/      # 台本パーサー

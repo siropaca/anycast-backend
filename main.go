@@ -12,9 +12,9 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/siropaca/anycast-backend/internal/config"
-	"github.com/siropaca/anycast-backend/internal/db"
 	"github.com/siropaca/anycast-backend/internal/di"
 	"github.com/siropaca/anycast-backend/internal/logger"
+	"github.com/siropaca/anycast-backend/internal/pkg/db"
 	"github.com/siropaca/anycast-backend/internal/router"
 )
 
