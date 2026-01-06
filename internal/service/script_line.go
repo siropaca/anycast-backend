@@ -12,6 +12,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/tts"
 	"github.com/siropaca/anycast-backend/internal/model"
+	"github.com/siropaca/anycast-backend/internal/pkg/audio"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
@@ -252,24 +253,21 @@ func (s *scriptLineService) GenerateAudio(ctx context.Context, userID, channelID
 	}
 
 	// MP3 の duration を取得
-	durationMs, err := tts.GetMP3DurationMs(audioData)
-	if err != nil {
-		return nil, apperror.ErrGenerationFailed.WithMessage("Failed to get audio duration").WithError(err)
-	}
+	durationMs := audio.GetMP3DurationMs(audioData)
 
 	// Audio モデルを作成（ID を先に生成して GCS パスに使用）
-	audio := &model.Audio{
+	newAudio := &model.Audio{
 		MimeType:   "audio/mpeg",
 		Filename:   fmt.Sprintf("%s.mp3", lid.String()),
 		FileSize:   len(audioData),
 		DurationMs: durationMs,
 	}
 	// GORM の BeforeCreate で ID が生成されるため、ここで明示的に生成
-	audio.ID = uuid.New()
-	audio.Path = fmt.Sprintf("audios/%s.mp3", audio.ID.String())
+	newAudio.ID = uuid.New()
+	newAudio.Path = s.storageClient.GenerateAudioPath(newAudio.ID.String())
 
 	// GCS にアップロード
-	_, err = s.storageClient.Upload(ctx, audioData, audio.Path, "audio/mpeg")
+	_, err = s.storageClient.Upload(ctx, audioData, newAudio.Path, "audio/mpeg")
 	if err != nil {
 		return nil, err
 	}
@@ -280,12 +278,12 @@ func (s *scriptLineService) GenerateAudio(ctx context.Context, userID, channelID
 		txScriptLineRepo := repository.NewScriptLineRepository(tx)
 
 		// Audio を作成
-		if err := txAudioRepo.Create(ctx, audio); err != nil {
+		if err := txAudioRepo.Create(ctx, newAudio); err != nil {
 			return err
 		}
 
 		// ScriptLine の AudioID を更新
-		scriptLine.AudioID = &audio.ID
+		scriptLine.AudioID = &newAudio.ID
 		if err := txScriptLineRepo.Update(ctx, scriptLine); err != nil {
 			return err
 		}
@@ -298,18 +296,18 @@ func (s *scriptLineService) GenerateAudio(ctx context.Context, userID, channelID
 	}
 
 	// 署名付き URL を生成
-	signedURL, err := s.storageClient.GenerateSignedURL(ctx, audio.Path, signedURLExpiration)
+	signedURL, err := s.storageClient.GenerateSignedURL(ctx, newAudio.Path, signedURLExpiration)
 	if err != nil {
 		return nil, err
 	}
 
 	return &response.GenerateAudioResponse{
 		Audio: response.AudioResponse{
-			ID:         audio.ID,
+			ID:         newAudio.ID,
 			URL:        signedURL,
-			MimeType:   audio.MimeType,
-			FileSize:   audio.FileSize,
-			DurationMs: audio.DurationMs,
+			MimeType:   newAudio.MimeType,
+			FileSize:   newAudio.FileSize,
+			DurationMs: newAudio.DurationMs,
 		},
 	}, nil
 }
