@@ -1,4 +1,4 @@
-.PHONY: bootstrap bs dev run build test fmt lint lint-fix tidy clean swagger migrate-up migrate-down migrate-reset seed token
+.PHONY: bootstrap bs dev run build test fmt lint lint-fix tidy clean swagger migrate-up migrate-down migrate-reset seed token cleanup cleanup-run
 
 DATABASE_URL ?= postgres://postgres:postgres@localhost:5433/anycast?sslmode=disable
 
@@ -71,3 +71,11 @@ seed:
 # 開発用 JWT トークンを生成
 token:
 	@go run ./scripts/gentoken
+
+# 孤児メディアファイルをクリーンアップ（dry-run）
+cleanup:
+	@go run ./scripts/cleanup --dry-run=true
+
+# 孤児メディアファイルをクリーンアップ（実行）
+cleanup-run:
+	@go run ./scripts/cleanup --dry-run=false
