@@ -11,6 +11,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/request"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
+	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/logger"
 	"github.com/siropaca/anycast-backend/internal/model"
 	"github.com/siropaca/anycast-backend/internal/pkg/crypto"
@@ -38,6 +39,7 @@ type authService struct {
 	oauthAccountRepo repository.OAuthAccountRepository
 	imageRepo        repository.ImageRepository
 	passwordHasher   crypto.PasswordHasher
+	storageClient    storage.Client
 }
 
 // AuthService の実装を返す
@@ -47,6 +49,7 @@ func NewAuthService(
 	oauthAccountRepo repository.OAuthAccountRepository,
 	imageRepo repository.ImageRepository,
 	passwordHasher crypto.PasswordHasher,
+	storageClient storage.Client,
 ) AuthService {
 	return &authService{
 		userRepo:         userRepo,
@@ -54,6 +57,7 @@ func NewAuthService(
 		oauthAccountRepo: oauthAccountRepo,
 		imageRepo:        imageRepo,
 		passwordHasher:   passwordHasher,
+		storageClient:    storageClient,
 	}
 }
 
@@ -267,9 +271,12 @@ func (s *authService) toUserResponse(ctx context.Context, user *model.User) *res
 	if user.AvatarID != nil {
 		image, err := s.imageRepo.FindByID(ctx, *user.AvatarID)
 		if err == nil {
-			avatarURL = &image.URL
+			signedURL, err := s.storageClient.GenerateSignedURL(ctx, image.Path, signedURLExpiration)
+			if err == nil {
+				avatarURL = &signedURL
+			}
 		}
-		// アバターが見つからない場合はエラーにせず nil のまま
+		// アバターが見つからない場合やURL生成に失敗した場合はエラーにせず nil のまま
 	}
 
 	return &response.UserResponse{
@@ -314,12 +321,15 @@ func (s *authService) GetMe(ctx context.Context, userID string) (*response.MeRes
 	if user.AvatarID != nil {
 		image, err := s.imageRepo.FindByID(ctx, *user.AvatarID)
 		if err == nil {
-			avatar = &response.AvatarResponse{
-				ID:  image.ID,
-				URL: image.URL,
+			signedURL, err := s.storageClient.GenerateSignedURL(ctx, image.Path, signedURLExpiration)
+			if err == nil {
+				avatar = &response.AvatarResponse{
+					ID:  image.ID,
+					URL: signedURL,
+				}
 			}
 		}
-		// アバターが見つからない場合はエラーにせず nil のまま
+		// アバターが見つからない場合やURL生成に失敗した場合はエラーにせず nil のまま
 	}
 
 	return &response.MeResponse{

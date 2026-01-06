@@ -1,20 +1,26 @@
 package service
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 
 	"github.com/siropaca/anycast-backend/internal/model"
 )
+
+// episodeService 用のモック（channel_test.go と同じパッケージなので重複定義はできない）
+// channel_test.go で定義した mockStorageClient を再利用
 
 func TestToEpisodeResponse(t *testing.T) {
 	now := time.Now()
 	episodeID := uuid.New()
 	channelID := uuid.New()
 	audioID := uuid.New()
+	artworkID := uuid.New()
 	description := "Test Description"
 	userPrompt := "Test User Prompt"
 
@@ -30,8 +36,13 @@ func TestToEpisodeResponse(t *testing.T) {
 	}
 
 	t.Run("基本的な変換が正しく行われる", func(t *testing.T) {
-		resp := toEpisodeResponse(baseEpisode)
+		mockStorage := new(mockStorageClient)
+		svc := &episodeService{storageClient: mockStorage}
+		ctx := context.Background()
 
+		resp, err := svc.toEpisodeResponse(ctx, baseEpisode)
+
+		assert.NoError(t, err)
 		assert.Equal(t, episodeID, resp.ID)
 		assert.Equal(t, "Test Episode", resp.Title)
 		assert.Equal(t, description, resp.Description)
@@ -42,37 +53,78 @@ func TestToEpisodeResponse(t *testing.T) {
 	})
 
 	t.Run("FullAudio が nil の場合、レスポンスの FullAudio も nil", func(t *testing.T) {
+		mockStorage := new(mockStorageClient)
+		svc := &episodeService{storageClient: mockStorage}
+		ctx := context.Background()
+
 		episode := *baseEpisode
 		episode.FullAudio = nil
 
-		resp := toEpisodeResponse(&episode)
+		resp, err := svc.toEpisodeResponse(ctx, &episode)
 
+		assert.NoError(t, err)
 		assert.Nil(t, resp.FullAudio)
 	})
 
-	t.Run("FullAudio がある場合、正しく変換される", func(t *testing.T) {
+	t.Run("FullAudio がある場合、署名 URL が生成される", func(t *testing.T) {
+		mockStorage := new(mockStorageClient)
+		mockStorage.On("GenerateSignedURL", mock.Anything, "audios/full-audio.mp3", signedURLExpiration).Return("https://signed-url.example.com/full-audio.mp3", nil)
+		svc := &episodeService{storageClient: mockStorage}
+		ctx := context.Background()
+
 		episode := *baseEpisode
 		episode.FullAudioID = &audioID
 		episode.FullAudio = &model.Audio{
 			ID:         audioID,
 			Path:       "audios/full-audio.mp3",
+			MimeType:   "audio/mpeg",
+			FileSize:   1024000,
 			DurationMs: 180000,
 		}
 
-		resp := toEpisodeResponse(&episode)
+		resp, err := svc.toEpisodeResponse(ctx, &episode)
 
+		assert.NoError(t, err)
 		assert.NotNil(t, resp.FullAudio)
 		assert.Equal(t, audioID, resp.FullAudio.ID)
-		assert.Equal(t, "audios/full-audio.mp3", resp.FullAudio.URL)
+		assert.Equal(t, "https://signed-url.example.com/full-audio.mp3", resp.FullAudio.URL)
 		assert.Equal(t, 180000, resp.FullAudio.DurationMs)
+		mockStorage.AssertExpectations(t)
+	})
+
+	t.Run("Artwork がある場合、署名 URL が生成される", func(t *testing.T) {
+		mockStorage := new(mockStorageClient)
+		mockStorage.On("GenerateSignedURL", mock.Anything, "images/artwork.png", signedURLExpiration).Return("https://signed-url.example.com/artwork.png", nil)
+		svc := &episodeService{storageClient: mockStorage}
+		ctx := context.Background()
+
+		episode := *baseEpisode
+		episode.ArtworkID = &artworkID
+		episode.Artwork = &model.Image{
+			ID:   artworkID,
+			Path: "images/artwork.png",
+		}
+
+		resp, err := svc.toEpisodeResponse(ctx, &episode)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, resp.Artwork)
+		assert.Equal(t, artworkID, resp.Artwork.ID)
+		assert.Equal(t, "https://signed-url.example.com/artwork.png", resp.Artwork.URL)
+		mockStorage.AssertExpectations(t)
 	})
 
 	t.Run("PublishedAt が nil の場合、レスポンスの PublishedAt も nil", func(t *testing.T) {
+		mockStorage := new(mockStorageClient)
+		svc := &episodeService{storageClient: mockStorage}
+		ctx := context.Background()
+
 		episode := *baseEpisode
 		episode.PublishedAt = nil
 
-		resp := toEpisodeResponse(&episode)
+		resp, err := svc.toEpisodeResponse(ctx, &episode)
 
+		assert.NoError(t, err)
 		assert.Nil(t, resp.PublishedAt)
 	})
 }
@@ -105,23 +157,38 @@ func TestToEpisodeResponses(t *testing.T) {
 	}
 
 	t.Run("複数エピソードを正しく変換する", func(t *testing.T) {
-		result := toEpisodeResponses(episodes)
+		mockStorage := new(mockStorageClient)
+		svc := &episodeService{storageClient: mockStorage}
+		ctx := context.Background()
 
+		result, err := svc.toEpisodeResponses(ctx, episodes)
+
+		assert.NoError(t, err)
 		assert.Len(t, result, 2)
 		assert.Equal(t, "Episode 1", result[0].Title)
 		assert.Equal(t, "Episode 2", result[1].Title)
 	})
 
 	t.Run("userPrompt が含まれる", func(t *testing.T) {
-		result := toEpisodeResponses(episodes)
+		mockStorage := new(mockStorageClient)
+		svc := &episodeService{storageClient: mockStorage}
+		ctx := context.Background()
 
+		result, err := svc.toEpisodeResponses(ctx, episodes)
+
+		assert.NoError(t, err)
 		assert.Equal(t, &prompt1, result[0].UserPrompt)
 		assert.Equal(t, &prompt2, result[1].UserPrompt)
 	})
 
 	t.Run("空のスライスの場合、空のスライスを返す", func(t *testing.T) {
-		result := toEpisodeResponses([]model.Episode{})
+		mockStorage := new(mockStorageClient)
+		svc := &episodeService{storageClient: mockStorage}
+		ctx := context.Background()
 
+		result, err := svc.toEpisodeResponses(ctx, []model.Episode{})
+
+		assert.NoError(t, err)
 		assert.Len(t, result, 0)
 		assert.NotNil(t, result)
 	})

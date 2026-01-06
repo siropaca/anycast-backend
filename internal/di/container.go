@@ -68,10 +68,10 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 
 	// Service 層
 	voiceService := service.NewVoiceService(voiceRepo)
-	authService := service.NewAuthService(userRepo, credentialRepo, oauthAccountRepo, imageRepo, passwordHasher)
-	channelService := service.NewChannelService(channelRepo, categoryRepo, imageRepo, voiceRepo)
+	authService := service.NewAuthService(userRepo, credentialRepo, oauthAccountRepo, imageRepo, passwordHasher, storageClient)
+	channelService := service.NewChannelService(channelRepo, categoryRepo, imageRepo, voiceRepo, storageClient)
 	categoryService := service.NewCategoryService(categoryRepo)
-	episodeService := service.NewEpisodeService(episodeRepo, channelRepo)
+	episodeService := service.NewEpisodeService(episodeRepo, channelRepo, storageClient)
 	scriptLineService := service.NewScriptLineService(db, scriptLineRepo, episodeRepo, channelRepo, audioRepo, ttsClient, storageClient)
 	scriptService := service.NewScriptService(db, channelRepo, episodeRepo, scriptLineRepo, llmClient, storageClient)
 	cleanupService := service.NewCleanupService(audioRepo, imageRepo, storageClient)

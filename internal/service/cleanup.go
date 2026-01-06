@@ -97,10 +97,10 @@ func (s *cleanupService) CleanupOrphanedMedia(ctx context.Context, dryRun bool) 
 
 	// Image を削除
 	for _, image := range orphanedImages {
-		// GCS から削除（Image は URL フィールドにパスが格納されている）
+		// GCS から削除
 		if s.storageClient != nil {
-			if err := s.storageClient.Delete(ctx, image.URL); err != nil {
-				log.Warn("failed to delete image from GCS", "image_id", image.ID, "url", image.URL, "error", err)
+			if err := s.storageClient.Delete(ctx, image.Path); err != nil {
+				log.Warn("failed to delete image from GCS", "image_id", image.ID, "path", image.Path, "error", err)
 				result.FailedImageCount++
 				continue
 			}
@@ -114,7 +114,7 @@ func (s *cleanupService) CleanupOrphanedMedia(ctx context.Context, dryRun bool) 
 		}
 
 		result.DeletedImageCount++
-		log.Debug("deleted orphaned image", "image_id", image.ID, "url", image.URL)
+		log.Debug("deleted orphaned image", "image_id", image.ID, "path", image.Path)
 	}
 
 	log.Info("orphaned media cleanup completed",

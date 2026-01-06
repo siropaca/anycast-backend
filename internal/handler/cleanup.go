@@ -101,7 +101,7 @@ func toOrphanedImageResponses(images []model.Image, storageClient storage.Client
 func toOrphanedImageResponse(image *model.Image, storageClient storage.Client, c *gin.Context) response.OrphanedImageResponse {
 	url := ""
 	if storageClient != nil {
-		signedURL, err := storageClient.GenerateSignedURL(c.Request.Context(), image.URL, 1*time.Hour)
+		signedURL, err := storageClient.GenerateSignedURL(c.Request.Context(), image.Path, 1*time.Hour)
 		if err == nil {
 			url = signedURL
 		}

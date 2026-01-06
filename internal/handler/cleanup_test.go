@@ -72,7 +72,7 @@ func TestCleanupHandler_CleanupOrphanedMedia(t *testing.T) {
 				{ID: audioID, Path: "audios/test.mp3", Filename: "test.mp3", FileSize: 1024, CreatedAt: now},
 			},
 			OrphanedImages: []model.Image{
-				{ID: imageID, URL: "images/test.png", Filename: "test.png", FileSize: 512, CreatedAt: now},
+				{ID: imageID, Path: "images/test.png", Filename: "test.png", FileSize: 512, CreatedAt: now},
 			},
 			DeletedAudioCount: 0,
 			DeletedImageCount: 0,
@@ -287,8 +287,8 @@ func TestToOrphanedImageResponses(t *testing.T) {
 		now := time.Now()
 
 		images := []model.Image{
-			{ID: id1, URL: "images/1.png", Filename: "1.png", FileSize: 100, CreatedAt: now},
-			{ID: id2, URL: "images/2.png", Filename: "2.png", FileSize: 200, CreatedAt: now},
+			{ID: id1, Path: "images/1.png", Filename: "1.png", FileSize: 100, CreatedAt: now},
+			{ID: id2, Path: "images/2.png", Filename: "2.png", FileSize: 200, CreatedAt: now},
 		}
 
 		resp := toOrphanedImageResponses(images, nil, c)
@@ -356,7 +356,7 @@ func TestToOrphanedImageResponse(t *testing.T) {
 
 		id := uuid.New()
 		now := time.Now()
-		image := &model.Image{ID: id, URL: "images/test.png", Filename: "test.png", FileSize: 512, CreatedAt: now}
+		image := &model.Image{ID: id, Path: "images/test.png", Filename: "test.png", FileSize: 512, CreatedAt: now}
 
 		resp := toOrphanedImageResponse(image, mockStorage, c)
 
@@ -375,7 +375,7 @@ func TestToOrphanedImageResponse(t *testing.T) {
 		c, _ := gin.CreateTestContext(w)
 		c.Request = httptest.NewRequest("GET", "/", http.NoBody)
 
-		image := &model.Image{ID: uuid.New(), URL: "images/test.png", Filename: "test.png", FileSize: 512}
+		image := &model.Image{ID: uuid.New(), Path: "images/test.png", Filename: "test.png", FileSize: 512}
 
 		resp := toOrphanedImageResponse(image, nil, c)
 
