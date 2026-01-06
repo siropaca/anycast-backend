@@ -67,6 +67,7 @@ erDiagram
         varchar email
         varchar username
         varchar display_name
+        user_role role
         uuid avatar_id FK
         timestamp created_at
         timestamp updated_at
@@ -215,6 +216,7 @@ erDiagram
 | email | VARCHAR(255) | | - | メールアドレス |
 | username | VARCHAR(20) | | - | ユーザー ID（displayName から自動生成、日本語可） |
 | display_name | VARCHAR(20) | | - | 表示名 |
+| role | user_role | | `user` | ロール |
 | avatar_id | UUID | ◯ | - | アバター画像（images 参照） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
@@ -630,6 +632,7 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 | oauth_provider | `google` | OAuth プロバイダ |
 | line_type | `speech`, `silence`, `sfx` | 台本行の種別 |
 | gender | `male`, `female`, `neutral` | ボイスの性別 |
+| user_role | `user`, `admin` | ユーザーのロール |
 
 ### UUID について
 

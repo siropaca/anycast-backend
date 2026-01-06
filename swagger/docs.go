@@ -2332,6 +2332,7 @@ const docTemplate = `{
                 "hasPassword",
                 "id",
                 "oauthProviders",
+                "role",
                 "username"
             ],
             "properties": {
@@ -2363,6 +2364,9 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "role": {
+                    "type": "string"
                 },
                 "username": {
                     "type": "string"
@@ -2540,6 +2544,7 @@ const docTemplate = `{
                 "displayName",
                 "email",
                 "id",
+                "role",
                 "username"
             ],
             "properties": {
@@ -2554,6 +2559,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "role": {
                     "type": "string"
                 },
                 "username": {

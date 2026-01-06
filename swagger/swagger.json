@@ -2326,6 +2326,7 @@
                 "hasPassword",
                 "id",
                 "oauthProviders",
+                "role",
                 "username"
             ],
             "properties": {
@@ -2357,6 +2358,9 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "role": {
+                    "type": "string"
                 },
                 "username": {
                     "type": "string"
@@ -2534,6 +2538,7 @@
                 "displayName",
                 "email",
                 "id",
+                "role",
                 "username"
             ],
             "properties": {
@@ -2548,6 +2553,9 @@
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "role": {
                     "type": "string"
                 },
                 "username": {

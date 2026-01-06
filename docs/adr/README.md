@@ -25,6 +25,7 @@ ADR（Architecture Decision Record）は、アーキテクチャ上の重要な�
 | [012](012-jwt-golang-jwt.md) | JWT ライブラリ: golang-jwt/jwt | Accepted |
 | [013](013-transaction-in-service-layer.md) | トランザクション管理は Service 層で行う | Accepted |
 | [014](014-orphaned-media-cleanup-api.md) | 孤児メディアファイル削除 API | Accepted |
+| [015](015-user-role-enum.md) | ユーザー権限管理に Enum 型を使用 | Accepted |
 
 ## ステータス
 

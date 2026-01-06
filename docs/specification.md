@@ -131,6 +131,7 @@ AI 専用のポッドキャストを作成・配信できるプラットフォ�
 | Gender | Enum | `male` / `female` / `neutral` |
 | Volume | Decimal | 0.00〜1.00 の範囲 |
 | MimeType | String | 有効な MIME タイプ形式（例: `audio/mpeg`, `image/png`） |
+| Role | Enum | `user` / `admin` |
 
 #### 値オブジェクトにしない例
 
@@ -157,7 +158,15 @@ Channel と Episode は公開状態（`publishedAt`）を持つ。
 
 - **他ユーザー**: 公開中のチャンネル・エピソードのみ閲覧可能
 - **オーナー**: 自分のチャンネル・エピソードは全て閲覧可能（下書き含む）
+- **管理者**: 全ユーザーのチャンネル・エピソードを閲覧・編集・削除可能
 - **検索**: 公開中のコンテンツのみ対象
+
+### ロールと権限
+
+| ロール | 権限 |
+|--------|------|
+| user | 自分のコンテンツのみ管理可能 |
+| admin | マスタデータ（Voice, Category, SoundEffect）の CRUD、全ユーザーのコンテンツ管理 |
 
 ---
 
@@ -173,6 +182,7 @@ Channel と Episode は公開状態（`publishedAt`）を持つ。
 | email | Email | ◯ | メールアドレス（一意） |
 | username | Username | ◯ | ユーザー ID（20文字以内、一意、日本語可） |
 | displayName | String | ◯ | 表示名（20文字以内） |
+| role | Role | ◯ | ロール（デフォルト: user） |
 | avatar | Image | | アバター画像 |
 
 #### username の自動生成
