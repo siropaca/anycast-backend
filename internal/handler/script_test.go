@@ -23,8 +23,8 @@ type mockScriptService struct {
 	mock.Mock
 }
 
-func (m *mockScriptService) GenerateScript(ctx context.Context, userID, channelID, episodeID, prompt string, durationMinutes *int) (*response.ScriptLineListResponse, error) {
-	args := m.Called(ctx, userID, channelID, episodeID, prompt, durationMinutes)
+func (m *mockScriptService) GenerateScript(ctx context.Context, userID, channelID, episodeID, prompt string, durationMinutes *int, withEmotion bool) (*response.ScriptLineListResponse, error) {
+	args := m.Called(ctx, userID, channelID, episodeID, prompt, durationMinutes, withEmotion)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -60,7 +60,7 @@ func TestScriptHandler_GenerateScript(t *testing.T) {
 		mockSvc := new(mockScriptService)
 		lines := []response.ScriptLineResponse{createTestScriptLineResponse()}
 		result := &response.ScriptLineListResponse{Data: lines}
-		mockSvc.On("GenerateScript", mock.Anything, userID, channelID, episodeID, "AI について語る", (*int)(nil)).Return(result, nil)
+		mockSvc.On("GenerateScript", mock.Anything, userID, channelID, episodeID, "AI について語る", (*int)(nil), false).Return(result, nil)
 
 		handler := NewScriptHandler(mockSvc)
 		router := setupAuthenticatedScriptRouter(handler, userID)
@@ -85,12 +85,31 @@ func TestScriptHandler_GenerateScript(t *testing.T) {
 		lines := []response.ScriptLineResponse{createTestScriptLineResponse()}
 		result := &response.ScriptLineListResponse{Data: lines}
 		duration := 30
-		mockSvc.On("GenerateScript", mock.Anything, userID, channelID, episodeID, "AI について語る", &duration).Return(result, nil)
+		mockSvc.On("GenerateScript", mock.Anything, userID, channelID, episodeID, "AI について語る", &duration, false).Return(result, nil)
 
 		handler := NewScriptHandler(mockSvc)
 		router := setupAuthenticatedScriptRouter(handler, userID)
 
 		body := `{"prompt":"AI について語る","durationMinutes":30}`
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes/"+episodeID+"/script/generate", bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("withEmotion を指定して台本を生成できる", func(t *testing.T) {
+		mockSvc := new(mockScriptService)
+		lines := []response.ScriptLineResponse{createTestScriptLineResponse()}
+		result := &response.ScriptLineListResponse{Data: lines}
+		mockSvc.On("GenerateScript", mock.Anything, userID, channelID, episodeID, "AI について語る", (*int)(nil), true).Return(result, nil)
+
+		handler := NewScriptHandler(mockSvc)
+		router := setupAuthenticatedScriptRouter(handler, userID)
+
+		body := `{"prompt":"AI について語る","withEmotion":true}`
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes/"+episodeID+"/script/generate", bytes.NewBufferString(body))
 		req.Header.Set("Content-Type", "application/json")
@@ -144,7 +163,7 @@ func TestScriptHandler_GenerateScript(t *testing.T) {
 
 	t.Run("チャンネルが見つからない場合は 404 を返す", func(t *testing.T) {
 		mockSvc := new(mockScriptService)
-		mockSvc.On("GenerateScript", mock.Anything, userID, channelID, episodeID, mock.Anything, mock.Anything).Return(nil, apperror.ErrNotFound.WithMessage("Channel not found"))
+		mockSvc.On("GenerateScript", mock.Anything, userID, channelID, episodeID, mock.Anything, mock.Anything, mock.Anything).Return(nil, apperror.ErrNotFound.WithMessage("Channel not found"))
 
 		handler := NewScriptHandler(mockSvc)
 		router := setupAuthenticatedScriptRouter(handler, userID)
@@ -161,7 +180,7 @@ func TestScriptHandler_GenerateScript(t *testing.T) {
 
 	t.Run("エピソードが見つからない場合は 404 を返す", func(t *testing.T) {
 		mockSvc := new(mockScriptService)
-		mockSvc.On("GenerateScript", mock.Anything, userID, channelID, episodeID, mock.Anything, mock.Anything).Return(nil, apperror.ErrNotFound.WithMessage("Episode not found"))
+		mockSvc.On("GenerateScript", mock.Anything, userID, channelID, episodeID, mock.Anything, mock.Anything, mock.Anything).Return(nil, apperror.ErrNotFound.WithMessage("Episode not found"))
 
 		handler := NewScriptHandler(mockSvc)
 		router := setupAuthenticatedScriptRouter(handler, userID)
@@ -178,7 +197,7 @@ func TestScriptHandler_GenerateScript(t *testing.T) {
 
 	t.Run("権限がない場合は 403 を返す", func(t *testing.T) {
 		mockSvc := new(mockScriptService)
-		mockSvc.On("GenerateScript", mock.Anything, userID, channelID, episodeID, mock.Anything, mock.Anything).Return(nil, apperror.ErrForbidden.WithMessage("You do not have permission"))
+		mockSvc.On("GenerateScript", mock.Anything, userID, channelID, episodeID, mock.Anything, mock.Anything, mock.Anything).Return(nil, apperror.ErrForbidden.WithMessage("You do not have permission"))
 
 		handler := NewScriptHandler(mockSvc)
 		router := setupAuthenticatedScriptRouter(handler, userID)
@@ -195,7 +214,7 @@ func TestScriptHandler_GenerateScript(t *testing.T) {
 
 	t.Run("台本生成に失敗した場合は 500 を返す", func(t *testing.T) {
 		mockSvc := new(mockScriptService)
-		mockSvc.On("GenerateScript", mock.Anything, userID, channelID, episodeID, mock.Anything, mock.Anything).Return(nil, apperror.ErrGenerationFailed.WithMessage("Failed to generate script"))
+		mockSvc.On("GenerateScript", mock.Anything, userID, channelID, episodeID, mock.Anything, mock.Anything, mock.Anything).Return(nil, apperror.ErrGenerationFailed.WithMessage("Failed to generate script"))
 
 		handler := NewScriptHandler(mockSvc)
 		router := setupAuthenticatedScriptRouter(handler, userID)
@@ -212,7 +231,7 @@ func TestScriptHandler_GenerateScript(t *testing.T) {
 
 	t.Run("サービスがエラーを返すとエラーレスポンスを返す", func(t *testing.T) {
 		mockSvc := new(mockScriptService)
-		mockSvc.On("GenerateScript", mock.Anything, userID, channelID, episodeID, mock.Anything, mock.Anything).Return(nil, apperror.ErrInternal)
+		mockSvc.On("GenerateScript", mock.Anything, userID, channelID, episodeID, mock.Anything, mock.Anything, mock.Anything).Return(nil, apperror.ErrInternal)
 
 		handler := NewScriptHandler(mockSvc)
 		router := setupAuthenticatedScriptRouter(handler, userID)

@@ -10,7 +10,8 @@ POST /channels/:channelId/episodes/:episodeId/script/generate
 ```json
 {
   "prompt": "今日の天気について楽しく話す",
-  "durationMinutes": 10
+  "durationMinutes": 10,
+  "withEmotion": true
 }
 ```
 
@@ -18,6 +19,7 @@ POST /channels/:channelId/episodes/:episodeId/script/generate
 |------------|-----|:----:|------|
 | prompt | string | ◯ | テーマやシナリオ（2000文字以内）。URL が含まれていれば RAG で内容を取得して台本生成に利用 |
 | durationMinutes | int | | エピソードの長さ（分）。3〜30の範囲で指定。デフォルト: 10 |
+| withEmotion | bool | | 感情を付与するかどうか。デフォルト: false |
 
 > **Note:** `prompt` はエピソードの `userPrompt` として自動保存されます。
 
@@ -201,6 +203,13 @@ PATCH /channels/:channelId/episodes/:episodeId/script/lines/:lineId
 ```
 DELETE /channels/:channelId/episodes/:episodeId/script/lines/:lineId
 ```
+
+指定した台本行を削除する。
+
+**レスポンス:**
+- `204 No Content`: 削除成功
+- `403 Forbidden`: チャンネルのオーナーでない場合
+- `404 Not Found`: 台本行が存在しない場合
 
 ---
 

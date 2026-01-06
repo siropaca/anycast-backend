@@ -70,6 +70,7 @@ func (h *ScriptHandler) GenerateScript(c *gin.Context) {
 		episodeID,
 		req.Prompt,
 		req.DurationMinutes,
+		req.WithEmotion,
 	)
 	if err != nil {
 		Error(c, err)

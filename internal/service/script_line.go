@@ -23,6 +23,7 @@ const signedURLExpiration = 1 * time.Hour
 // 台本行関連のビジネスロジックインターフェース
 type ScriptLineService interface {
 	ListByEpisodeID(ctx context.Context, userID, channelID, episodeID string) (*response.ScriptLineListResponse, error)
+	Delete(ctx context.Context, userID, channelID, episodeID, lineID string) error
 	GenerateAudio(ctx context.Context, userID, channelID, episodeID, lineID string) (*response.GenerateAudioResponse, error)
 }
 
@@ -109,6 +110,62 @@ func (s *scriptLineService) ListByEpisodeID(ctx context.Context, userID, channel
 	return &response.ScriptLineListResponse{
 		Data: responses,
 	}, nil
+}
+
+// 指定された台本行を削除する
+func (s *scriptLineService) Delete(ctx context.Context, userID, channelID, episodeID, lineID string) error {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return err
+	}
+
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return err
+	}
+
+	lid, err := uuid.Parse(lineID)
+	if err != nil {
+		return err
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return err
+	}
+
+	if channel.UserID != uid {
+		return apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
+	}
+
+	// エピソードの存在確認とチャンネルの一致チェック
+	episode, err := s.episodeRepo.FindByID(ctx, eid)
+	if err != nil {
+		return err
+	}
+
+	if episode.ChannelID != cid {
+		return apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+	}
+
+	// 台本行の存在確認とエピソードの一致チェック
+	scriptLine, err := s.scriptLineRepo.FindByID(ctx, lid)
+	if err != nil {
+		return err
+	}
+
+	if scriptLine.EpisodeID != eid {
+		return apperror.ErrNotFound.WithMessage("Script line not found in this episode")
+	}
+
+	// 台本行を削除
+	return s.scriptLineRepo.Delete(ctx, lid)
 }
 
 // ScriptLine モデルのスライスをレスポンス DTO のスライスに変換する

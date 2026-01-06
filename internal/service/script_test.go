@@ -177,7 +177,7 @@ func TestGenerateScript_Validation(t *testing.T) {
 	t.Run("無効な userID でエラー", func(t *testing.T) {
 		svc := &scriptService{}
 
-		_, err := svc.GenerateScript(ctx, "invalid-uuid", uuid.New().String(), uuid.New().String(), "test", nil)
+		_, err := svc.GenerateScript(ctx, "invalid-uuid", uuid.New().String(), uuid.New().String(), "test", nil, false)
 
 		assert.Error(t, err)
 	})
@@ -185,7 +185,7 @@ func TestGenerateScript_Validation(t *testing.T) {
 	t.Run("無効な channelID でエラー", func(t *testing.T) {
 		svc := &scriptService{}
 
-		_, err := svc.GenerateScript(ctx, uuid.New().String(), "invalid-uuid", uuid.New().String(), "test", nil)
+		_, err := svc.GenerateScript(ctx, uuid.New().String(), "invalid-uuid", uuid.New().String(), "test", nil, false)
 
 		assert.Error(t, err)
 	})
@@ -193,7 +193,7 @@ func TestGenerateScript_Validation(t *testing.T) {
 	t.Run("無効な episodeID でエラー", func(t *testing.T) {
 		svc := &scriptService{}
 
-		_, err := svc.GenerateScript(ctx, uuid.New().String(), uuid.New().String(), "invalid-uuid", "test", nil)
+		_, err := svc.GenerateScript(ctx, uuid.New().String(), uuid.New().String(), "invalid-uuid", "test", nil, false)
 
 		assert.Error(t, err)
 	})
@@ -212,7 +212,7 @@ func TestGenerateScript_ChannelNotFound(t *testing.T) {
 		channelRepo: mockChannelRepo,
 	}
 
-	_, err := svc.GenerateScript(ctx, userID.String(), channelID.String(), episodeID.String(), "test", nil)
+	_, err := svc.GenerateScript(ctx, userID.String(), channelID.String(), episodeID.String(), "test", nil, false)
 
 	assert.Error(t, err)
 	var appErr *apperror.AppError
@@ -237,7 +237,7 @@ func TestGenerateScript_Forbidden(t *testing.T) {
 		channelRepo: mockChannelRepo,
 	}
 
-	_, err := svc.GenerateScript(ctx, userID.String(), channelID.String(), episodeID.String(), "test", nil)
+	_, err := svc.GenerateScript(ctx, userID.String(), channelID.String(), episodeID.String(), "test", nil, false)
 
 	assert.Error(t, err)
 	var appErr *apperror.AppError
@@ -266,7 +266,7 @@ func TestGenerateScript_EpisodeNotFound(t *testing.T) {
 		episodeRepo: mockEpisodeRepo,
 	}
 
-	_, err := svc.GenerateScript(ctx, userID.String(), channelID.String(), episodeID.String(), "test", nil)
+	_, err := svc.GenerateScript(ctx, userID.String(), channelID.String(), episodeID.String(), "test", nil, false)
 
 	assert.Error(t, err)
 	mockChannelRepo.AssertExpectations(t)
@@ -297,7 +297,7 @@ func TestGenerateScript_EpisodeNotInChannel(t *testing.T) {
 		episodeRepo: mockEpisodeRepo,
 	}
 
-	_, err := svc.GenerateScript(ctx, userID.String(), channelID.String(), episodeID.String(), "test", nil)
+	_, err := svc.GenerateScript(ctx, userID.String(), channelID.String(), episodeID.String(), "test", nil, false)
 
 	assert.Error(t, err)
 	var appErr *apperror.AppError
@@ -338,7 +338,7 @@ func TestGenerateScript_LLMError(t *testing.T) {
 		llmClient:   mockLLM,
 	}
 
-	_, err := svc.GenerateScript(ctx, userID.String(), channelID.String(), episodeID.String(), "test", nil)
+	_, err := svc.GenerateScript(ctx, userID.String(), channelID.String(), episodeID.String(), "test", nil, false)
 
 	assert.Error(t, err)
 	mockChannelRepo.AssertExpectations(t)
@@ -378,7 +378,7 @@ func TestGenerateScript_ParseError(t *testing.T) {
 		llmClient:   mockLLM,
 	}
 
-	_, err := svc.GenerateScript(ctx, userID.String(), channelID.String(), episodeID.String(), "test", nil)
+	_, err := svc.GenerateScript(ctx, userID.String(), channelID.String(), episodeID.String(), "test", nil, false)
 
 	assert.Error(t, err)
 	var appErr *apperror.AppError
@@ -424,7 +424,7 @@ func TestGenerateScript_DurationMinutesDefault(t *testing.T) {
 	}
 
 	// durationMinutes を nil で渡す（デフォルト値 10 が使われるはず）
-	_, _ = svc.GenerateScript(ctx, userID.String(), channelID.String(), episodeID.String(), "test", nil)
+	_, _ = svc.GenerateScript(ctx, userID.String(), channelID.String(), episodeID.String(), "test", nil, false)
 
 	// LLM に渡されたプロンプトにデフォルト値の 10 分が含まれていることを確認
 	assert.Contains(t, capturedUserPrompt, "10分")
@@ -467,7 +467,7 @@ func TestGenerateScript_DurationMinutesCustom(t *testing.T) {
 
 	// durationMinutes を 30 で指定
 	duration := 30
-	_, _ = svc.GenerateScript(ctx, userID.String(), channelID.String(), episodeID.String(), "test", &duration)
+	_, _ = svc.GenerateScript(ctx, userID.String(), channelID.String(), episodeID.String(), "test", &duration, false)
 
 	// LLM に渡されたプロンプトに指定した 30 分が含まれていることを確認
 	assert.Contains(t, capturedUserPrompt, "30分")

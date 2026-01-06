@@ -15,6 +15,7 @@ import (
 type ScriptLineRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*model.ScriptLine, error)
 	FindByEpisodeID(ctx context.Context, episodeID uuid.UUID) ([]model.ScriptLine, error)
+	Delete(ctx context.Context, id uuid.UUID) error
 	DeleteByEpisodeID(ctx context.Context, episodeID uuid.UUID) error
 	CreateBatch(ctx context.Context, scriptLines []model.ScriptLine) ([]model.ScriptLine, error)
 	Update(ctx context.Context, scriptLine *model.ScriptLine) error
@@ -68,6 +69,21 @@ func (r *scriptLineRepository) FindByEpisodeID(ctx context.Context, episodeID uu
 	return scriptLines, nil
 }
 
+// 指定された台本行を削除する
+func (r *scriptLineRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	result := r.db.WithContext(ctx).Delete(&model.ScriptLine{}, "id = ?", id)
+	if result.Error != nil {
+		logger.FromContext(ctx).Error("failed to delete script line", "error", result.Error, "id", id)
+		return apperror.ErrInternal.WithMessage("Failed to delete script line").WithError(result.Error)
+	}
+
+	if result.RowsAffected == 0 {
+		return apperror.ErrNotFound.WithMessage("Script line not found")
+	}
+
+	return nil
+}
+
 // 指定されたエピソードの台本行を全て削除する
 func (r *scriptLineRepository) DeleteByEpisodeID(ctx context.Context, episodeID uuid.UUID) error {
 	if err := r.db.WithContext(ctx).
@@ -118,7 +134,7 @@ func (r *scriptLineRepository) Update(ctx context.Context, scriptLine *model.Scr
 }
 
 // 台本行の AudioID のみを更新する
-func (r *scriptLineRepository) UpdateAudioID(ctx context.Context, id uuid.UUID, audioID uuid.UUID) error {
+func (r *scriptLineRepository) UpdateAudioID(ctx context.Context, id, audioID uuid.UUID) error {
 	result := r.db.WithContext(ctx).
 		Model(&model.ScriptLine{}).
 		Where("id = ?", id).

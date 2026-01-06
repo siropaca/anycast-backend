@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -10,10 +11,54 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/model"
 )
 
 // mockStorageClient は channel_test.go で定義済み
+
+// mockScriptLineRepository は ScriptLineRepository のモック
+type mockScriptLineRepository struct {
+	mock.Mock
+}
+
+func (m *mockScriptLineRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.ScriptLine, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.ScriptLine), args.Error(1)
+}
+
+func (m *mockScriptLineRepository) FindByEpisodeID(ctx context.Context, episodeID uuid.UUID) ([]model.ScriptLine, error) {
+	args := m.Called(ctx, episodeID)
+	return args.Get(0).([]model.ScriptLine), args.Error(1)
+}
+
+func (m *mockScriptLineRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *mockScriptLineRepository) DeleteByEpisodeID(ctx context.Context, episodeID uuid.UUID) error {
+	args := m.Called(ctx, episodeID)
+	return args.Error(0)
+}
+
+func (m *mockScriptLineRepository) CreateBatch(ctx context.Context, scriptLines []model.ScriptLine) ([]model.ScriptLine, error) {
+	args := m.Called(ctx, scriptLines)
+	return args.Get(0).([]model.ScriptLine), args.Error(1)
+}
+
+func (m *mockScriptLineRepository) Update(ctx context.Context, scriptLine *model.ScriptLine) error {
+	args := m.Called(ctx, scriptLine)
+	return args.Error(0)
+}
+
+func (m *mockScriptLineRepository) UpdateAudioID(ctx context.Context, id, audioID uuid.UUID) error {
+	args := m.Called(ctx, id, audioID)
+	return args.Error(0)
+}
 
 func TestToScriptLineResponse(t *testing.T) {
 	ctx := context.Background()
@@ -309,5 +354,240 @@ func TestToScriptLineResponses(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Len(t, result, 0)
 		assert.NotNil(t, result)
+	})
+}
+
+func TestScriptLineService_Delete(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+	channelID := uuid.New()
+	episodeID := uuid.New()
+	lineID := uuid.New()
+
+	t.Run("正常に削除できる", func(t *testing.T) {
+		mockChannelRepo := new(mockChannelRepository)
+		mockEpisodeRepo := new(mockEpisodeRepository)
+		mockScriptLineRepo := new(mockScriptLineRepository)
+
+		mockChannelRepo.On("FindByID", ctx, channelID).Return(&model.Channel{
+			ID:     channelID,
+			UserID: userID,
+		}, nil)
+
+		mockEpisodeRepo.On("FindByID", ctx, episodeID).Return(&model.Episode{
+			ID:        episodeID,
+			ChannelID: channelID,
+		}, nil)
+
+		mockScriptLineRepo.On("FindByID", ctx, lineID).Return(&model.ScriptLine{
+			ID:        lineID,
+			EpisodeID: episodeID,
+		}, nil)
+
+		mockScriptLineRepo.On("Delete", ctx, lineID).Return(nil)
+
+		svc := &scriptLineService{
+			channelRepo:    mockChannelRepo,
+			episodeRepo:    mockEpisodeRepo,
+			scriptLineRepo: mockScriptLineRepo,
+		}
+
+		err := svc.Delete(ctx, userID.String(), channelID.String(), episodeID.String(), lineID.String())
+
+		assert.NoError(t, err)
+		mockChannelRepo.AssertExpectations(t)
+		mockEpisodeRepo.AssertExpectations(t)
+		mockScriptLineRepo.AssertExpectations(t)
+	})
+
+	t.Run("無効な userID でエラー", func(t *testing.T) {
+		svc := &scriptLineService{}
+
+		err := svc.Delete(ctx, "invalid-uuid", channelID.String(), episodeID.String(), lineID.String())
+
+		assert.Error(t, err)
+	})
+
+	t.Run("無効な channelID でエラー", func(t *testing.T) {
+		svc := &scriptLineService{}
+
+		err := svc.Delete(ctx, userID.String(), "invalid-uuid", episodeID.String(), lineID.String())
+
+		assert.Error(t, err)
+	})
+
+	t.Run("無効な episodeID でエラー", func(t *testing.T) {
+		svc := &scriptLineService{}
+
+		err := svc.Delete(ctx, userID.String(), channelID.String(), "invalid-uuid", lineID.String())
+
+		assert.Error(t, err)
+	})
+
+	t.Run("無効な lineID でエラー", func(t *testing.T) {
+		svc := &scriptLineService{}
+
+		err := svc.Delete(ctx, userID.String(), channelID.String(), episodeID.String(), "invalid-uuid")
+
+		assert.Error(t, err)
+	})
+
+	t.Run("チャンネルが見つからない場合エラー", func(t *testing.T) {
+		mockChannelRepo := new(mockChannelRepository)
+		mockChannelRepo.On("FindByID", ctx, channelID).Return(nil, apperror.ErrNotFound.WithMessage("Channel not found"))
+
+		svc := &scriptLineService{
+			channelRepo: mockChannelRepo,
+		}
+
+		err := svc.Delete(ctx, userID.String(), channelID.String(), episodeID.String(), lineID.String())
+
+		assert.Error(t, err)
+		var appErr *apperror.AppError
+		assert.True(t, errors.As(err, &appErr))
+		mockChannelRepo.AssertExpectations(t)
+	})
+
+	t.Run("チャンネルのオーナーでない場合エラー", func(t *testing.T) {
+		otherUserID := uuid.New()
+		mockChannelRepo := new(mockChannelRepository)
+		mockChannelRepo.On("FindByID", ctx, channelID).Return(&model.Channel{
+			ID:     channelID,
+			UserID: otherUserID,
+		}, nil)
+
+		svc := &scriptLineService{
+			channelRepo: mockChannelRepo,
+		}
+
+		err := svc.Delete(ctx, userID.String(), channelID.String(), episodeID.String(), lineID.String())
+
+		assert.Error(t, err)
+		var appErr *apperror.AppError
+		assert.True(t, errors.As(err, &appErr))
+		assert.Equal(t, apperror.ErrForbidden.Code, appErr.Code)
+		mockChannelRepo.AssertExpectations(t)
+	})
+
+	t.Run("エピソードが見つからない場合エラー", func(t *testing.T) {
+		mockChannelRepo := new(mockChannelRepository)
+		mockEpisodeRepo := new(mockEpisodeRepository)
+
+		mockChannelRepo.On("FindByID", ctx, channelID).Return(&model.Channel{
+			ID:     channelID,
+			UserID: userID,
+		}, nil)
+
+		mockEpisodeRepo.On("FindByID", ctx, episodeID).Return(nil, apperror.ErrNotFound.WithMessage("Episode not found"))
+
+		svc := &scriptLineService{
+			channelRepo: mockChannelRepo,
+			episodeRepo: mockEpisodeRepo,
+		}
+
+		err := svc.Delete(ctx, userID.String(), channelID.String(), episodeID.String(), lineID.String())
+
+		assert.Error(t, err)
+		mockChannelRepo.AssertExpectations(t)
+		mockEpisodeRepo.AssertExpectations(t)
+	})
+
+	t.Run("エピソードが別のチャンネルに属している場合エラー", func(t *testing.T) {
+		otherChannelID := uuid.New()
+		mockChannelRepo := new(mockChannelRepository)
+		mockEpisodeRepo := new(mockEpisodeRepository)
+
+		mockChannelRepo.On("FindByID", ctx, channelID).Return(&model.Channel{
+			ID:     channelID,
+			UserID: userID,
+		}, nil)
+
+		mockEpisodeRepo.On("FindByID", ctx, episodeID).Return(&model.Episode{
+			ID:        episodeID,
+			ChannelID: otherChannelID,
+		}, nil)
+
+		svc := &scriptLineService{
+			channelRepo: mockChannelRepo,
+			episodeRepo: mockEpisodeRepo,
+		}
+
+		err := svc.Delete(ctx, userID.String(), channelID.String(), episodeID.String(), lineID.String())
+
+		assert.Error(t, err)
+		var appErr *apperror.AppError
+		assert.True(t, errors.As(err, &appErr))
+		assert.Equal(t, apperror.ErrNotFound.Code, appErr.Code)
+		mockChannelRepo.AssertExpectations(t)
+		mockEpisodeRepo.AssertExpectations(t)
+	})
+
+	t.Run("台本行が見つからない場合エラー", func(t *testing.T) {
+		mockChannelRepo := new(mockChannelRepository)
+		mockEpisodeRepo := new(mockEpisodeRepository)
+		mockScriptLineRepo := new(mockScriptLineRepository)
+
+		mockChannelRepo.On("FindByID", ctx, channelID).Return(&model.Channel{
+			ID:     channelID,
+			UserID: userID,
+		}, nil)
+
+		mockEpisodeRepo.On("FindByID", ctx, episodeID).Return(&model.Episode{
+			ID:        episodeID,
+			ChannelID: channelID,
+		}, nil)
+
+		mockScriptLineRepo.On("FindByID", ctx, lineID).Return(nil, apperror.ErrNotFound.WithMessage("Script line not found"))
+
+		svc := &scriptLineService{
+			channelRepo:    mockChannelRepo,
+			episodeRepo:    mockEpisodeRepo,
+			scriptLineRepo: mockScriptLineRepo,
+		}
+
+		err := svc.Delete(ctx, userID.String(), channelID.String(), episodeID.String(), lineID.String())
+
+		assert.Error(t, err)
+		mockChannelRepo.AssertExpectations(t)
+		mockEpisodeRepo.AssertExpectations(t)
+		mockScriptLineRepo.AssertExpectations(t)
+	})
+
+	t.Run("台本行が別のエピソードに属している場合エラー", func(t *testing.T) {
+		otherEpisodeID := uuid.New()
+		mockChannelRepo := new(mockChannelRepository)
+		mockEpisodeRepo := new(mockEpisodeRepository)
+		mockScriptLineRepo := new(mockScriptLineRepository)
+
+		mockChannelRepo.On("FindByID", ctx, channelID).Return(&model.Channel{
+			ID:     channelID,
+			UserID: userID,
+		}, nil)
+
+		mockEpisodeRepo.On("FindByID", ctx, episodeID).Return(&model.Episode{
+			ID:        episodeID,
+			ChannelID: channelID,
+		}, nil)
+
+		mockScriptLineRepo.On("FindByID", ctx, lineID).Return(&model.ScriptLine{
+			ID:        lineID,
+			EpisodeID: otherEpisodeID,
+		}, nil)
+
+		svc := &scriptLineService{
+			channelRepo:    mockChannelRepo,
+			episodeRepo:    mockEpisodeRepo,
+			scriptLineRepo: mockScriptLineRepo,
+		}
+
+		err := svc.Delete(ctx, userID.String(), channelID.String(), episodeID.String(), lineID.String())
+
+		assert.Error(t, err)
+		var appErr *apperror.AppError
+		assert.True(t, errors.As(err, &appErr))
+		assert.Equal(t, apperror.ErrNotFound.Code, appErr.Code)
+		mockChannelRepo.AssertExpectations(t)
+		mockEpisodeRepo.AssertExpectations(t)
+		mockScriptLineRepo.AssertExpectations(t)
 	})
 }

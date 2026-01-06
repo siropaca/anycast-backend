@@ -4,4 +4,5 @@ package request
 type GenerateScriptRequest struct {
 	Prompt          string `json:"prompt" binding:"required,max=2000"` // Episode の UserPrompt になる
 	DurationMinutes *int   `json:"durationMinutes" binding:"omitempty,min=3,max=30"`
+	WithEmotion     bool   `json:"withEmotion"` // 感情を付与するかどうか
 }
