@@ -25,8 +25,39 @@ const (
 	signedURLExpirationScript = 1 * time.Hour
 )
 
-// 台本生成のシステムプロンプト
-const systemPrompt = `
+// 台本生成のシステムプロンプト（感情なし）
+const systemPromptWithoutEmotion = `
+あなたはポッドキャスト台本を作成する専門家です。
+
+## 基本ルール
+- 自然な会話のテンポを意識する
+- 登場人物それぞれの個性（ペルソナ）を反映したセリフにする
+- 長すぎるセリフは避け、1つのセリフは50〜100文字程度を目安にする
+- 聞き手が理解しやすいよう、適度に相槌や確認を入れる
+- 人間らしい自然な会話感を出すために、適度にフィラー（「えーと」「あのー」「まあ」「なんか」「うーん」など）を入れる
+- 指定されたエピソードの長さ（分）に合わせた台本を作成する
+  - 目安として、1分あたり約300文字程度のセリフ量になるよう調整する
+  - 10分のエピソードなら約3000文字、30分なら約9000文字が目安
+
+## 出力形式
+以下のテキスト形式で出力してください：
+
+話者名: セリフ
+
+- 1行につき1つのセリフ
+- 空行は入れない
+
+例：
+太郎: こんにちは！
+花子: やあ、元気？
+太郎: 元気だよ！
+
+## 制約
+- 話者名は与えられた登場人物リストの名前のみ使用可能
+- 台本テキスト以外の説明文やコメントは出力しない`
+
+// 台本生成のシステムプロンプト（感情あり）
+const systemPromptWithEmotion = `
 あなたはポッドキャスト台本を作成する専門家です。
 
 ## 基本ルール
@@ -59,7 +90,7 @@ const systemPrompt = `
 
 // 台本関連のビジネスロジックインターフェース
 type ScriptService interface {
-	GenerateScript(ctx context.Context, userID, channelID, episodeID, prompt string, durationMinutes *int) (*response.ScriptLineListResponse, error)
+	GenerateScript(ctx context.Context, userID, channelID, episodeID, prompt string, durationMinutes *int, withEmotion bool) (*response.ScriptLineListResponse, error)
 }
 
 type scriptService struct {
@@ -91,7 +122,7 @@ func NewScriptService(
 }
 
 // AI を使って台本を生成する
-func (s *scriptService) GenerateScript(ctx context.Context, userID, channelID, episodeID, prompt string, durationMinutes *int) (*response.ScriptLineListResponse, error) {
+func (s *scriptService) GenerateScript(ctx context.Context, userID, channelID, episodeID, prompt string, durationMinutes *int, withEmotion bool) (*response.ScriptLineListResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
 		return nil, err
@@ -136,8 +167,14 @@ func (s *scriptService) GenerateScript(ctx context.Context, userID, channelID, e
 	// LLM 用ユーザープロンプトを構築
 	userPrompt := s.buildUserPrompt(channel, episode, prompt, duration)
 
+	// withEmotion に応じてシステムプロンプトを選択
+	sysPrompt := systemPromptWithoutEmotion
+	if withEmotion {
+		sysPrompt = systemPromptWithEmotion
+	}
+
 	// LLM で台本生成
-	generatedText, err := s.llmClient.GenerateScript(ctx, systemPrompt, userPrompt)
+	generatedText, err := s.llmClient.GenerateScript(ctx, sysPrompt, userPrompt)
 	if err != nil {
 		return nil, err
 	}

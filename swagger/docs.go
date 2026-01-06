@@ -1764,6 +1764,10 @@ const docTemplate = `{
                     "description": "Episode の UserPrompt になる",
                     "type": "string",
                     "maxLength": 2000
+                },
+                "withEmotion": {
+                    "description": "感情を付与するかどうか",
+                    "type": "boolean"
                 }
             }
         },
