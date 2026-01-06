@@ -31,6 +31,11 @@ func (m *mockScriptLineService) ListByEpisodeID(ctx context.Context, userID, cha
 	return args.Get(0).(*response.ScriptLineListResponse), args.Error(1)
 }
 
+func (m *mockScriptLineService) Delete(ctx context.Context, userID, channelID, episodeID, lineID string) error {
+	args := m.Called(ctx, userID, channelID, episodeID, lineID)
+	return args.Error(0)
+}
+
 func (m *mockScriptLineService) GenerateAudio(ctx context.Context, userID, channelID, episodeID, lineID string) (*response.GenerateAudioResponse, error) {
 	args := m.Called(ctx, userID, channelID, episodeID, lineID)
 	if args.Get(0) == nil {

@@ -63,6 +63,55 @@ func (h *ScriptLineHandler) ListScriptLines(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// DeleteScriptLine godoc
+// @Summary 台本行削除
+// @Description 指定した台本行を削除します
+// @Tags script
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param episodeId path string true "エピソード ID"
+// @Param lineId path string true "台本行 ID"
+// @Success 204 "No Content"
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/episodes/{episodeId}/script/lines/{lineId} [delete]
+func (h *ScriptLineHandler) DeleteScriptLine(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		return
+	}
+
+	episodeID := c.Param("episodeId")
+	if episodeID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("episodeId is required"))
+		return
+	}
+
+	lineID := c.Param("lineId")
+	if lineID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("lineId is required"))
+		return
+	}
+
+	if err := h.scriptLineService.Delete(c.Request.Context(), userID, channelID, episodeID, lineID); err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
 // GenerateAudio godoc
 // @Summary 台本行の音声を生成
 // @Description 指定した台本行の音声を TTS で生成します。speech 行のみ対応しています。
