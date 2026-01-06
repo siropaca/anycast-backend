@@ -18,6 +18,7 @@ type ScriptLineRepository interface {
 	DeleteByEpisodeID(ctx context.Context, episodeID uuid.UUID) error
 	CreateBatch(ctx context.Context, scriptLines []model.ScriptLine) ([]model.ScriptLine, error)
 	Update(ctx context.Context, scriptLine *model.ScriptLine) error
+	UpdateAudioID(ctx context.Context, id uuid.UUID, audioID uuid.UUID) error
 }
 
 type scriptLineRepository struct {
@@ -111,6 +112,25 @@ func (r *scriptLineRepository) Update(ctx context.Context, scriptLine *model.Scr
 	if err := r.db.WithContext(ctx).Save(scriptLine).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to update script line", "error", err, "id", scriptLine.ID)
 		return apperror.ErrInternal.WithMessage("Failed to update script line").WithError(err)
+	}
+
+	return nil
+}
+
+// 台本行の AudioID のみを更新する
+func (r *scriptLineRepository) UpdateAudioID(ctx context.Context, id uuid.UUID, audioID uuid.UUID) error {
+	result := r.db.WithContext(ctx).
+		Model(&model.ScriptLine{}).
+		Where("id = ?", id).
+		Update("audio_id", audioID)
+
+	if result.Error != nil {
+		logger.FromContext(ctx).Error("failed to update script line audio_id", "error", result.Error, "id", id)
+		return apperror.ErrInternal.WithMessage("Failed to update script line audio").WithError(result.Error)
+	}
+
+	if result.RowsAffected == 0 {
+		return apperror.ErrNotFound.WithMessage("Script line not found")
 	}
 
 	return nil

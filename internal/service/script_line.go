@@ -285,9 +285,8 @@ func (s *scriptLineService) GenerateAudio(ctx context.Context, userID, channelID
 			return err
 		}
 
-		// ScriptLine の AudioID を更新
-		scriptLine.AudioID = &newAudio.ID
-		if err := txScriptLineRepo.Update(ctx, scriptLine); err != nil {
+		// ScriptLine の AudioID を更新（audio_id カラムのみを更新）
+		if err := txScriptLineRepo.UpdateAudioID(ctx, scriptLine.ID, newAudio.ID); err != nil {
 			return err
 		}
 
