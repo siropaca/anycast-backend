@@ -12,6 +12,7 @@ import (
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/logger"
+	"github.com/siropaca/anycast-backend/internal/model"
 )
 
 const (
@@ -23,7 +24,7 @@ const (
 
 // TTS クライアントのインターフェース
 type Client interface {
-	Synthesize(ctx context.Context, text, voiceID string) ([]byte, error)
+	Synthesize(ctx context.Context, text, voiceID string, gender model.Gender) ([]byte, error)
 }
 
 type googleTTSClient struct {
@@ -48,21 +49,30 @@ func NewGoogleTTSClient(ctx context.Context, credentialsJSON string) (Client, er
 }
 
 // テキストから音声を合成する
-func (c *googleTTSClient) Synthesize(ctx context.Context, text, voiceID string) ([]byte, error) {
+func (c *googleTTSClient) Synthesize(ctx context.Context, text, voiceID string, gender model.Gender) ([]byte, error) {
 	log := logger.FromContext(ctx)
+
+	// 自然な発声を促すためのSSMLラップ
+	// <speak>タグで囲み、わずかな「間」や「ピッチ」の調整を加える土台を作ります
+	ssml := fmt.Sprintf("<speak>%s</speak>", text)
 
 	req := &texttospeechpb.SynthesizeSpeechRequest{
 		Input: &texttospeechpb.SynthesisInput{
-			InputSource: &texttospeechpb.SynthesisInput_Text{
-				Text: text,
+			InputSource: &texttospeechpb.SynthesisInput_Ssml{
+				Ssml: ssml,
 			},
 		},
 		Voice: &texttospeechpb.VoiceSelectionParams{
 			LanguageCode: defaultLanguageCode,
 			Name:         voiceID,
+			SsmlGender:   toSsmlVoiceGender(gender),
 		},
 		AudioConfig: &texttospeechpb.AudioConfig{
-			AudioEncoding: texttospeechpb.AudioEncoding_MP3,
+			AudioEncoding:    texttospeechpb.AudioEncoding_MP3,
+			SampleRateHertz:  24000, // MP3 の最大サポート値（ポッドキャスト品質として十分）
+			Pitch:            0.0,
+			SpeakingRate:     1.05,                               // 日本語の場合、やや速めにすると自然に聞こえる
+			EffectsProfileId: []string{"headphone-class-device"}, // ヘッドホン/イヤホン向けに最適化
 		},
 	}
 
@@ -103,6 +113,20 @@ func (c *googleTTSClient) Synthesize(ctx context.Context, text, voiceID string) 
 	}
 
 	return nil, apperror.ErrGenerationFailed.WithMessage("Failed to synthesize speech").WithError(lastErr)
+}
+
+// Gender を SsmlVoiceGender に変換する
+func toSsmlVoiceGender(gender model.Gender) texttospeechpb.SsmlVoiceGender {
+	switch gender {
+	case model.GenderMale:
+		return texttospeechpb.SsmlVoiceGender_MALE
+	case model.GenderFemale:
+		return texttospeechpb.SsmlVoiceGender_FEMALE
+	case model.GenderNeutral:
+		return texttospeechpb.SsmlVoiceGender_NEUTRAL
+	default:
+		return texttospeechpb.SsmlVoiceGender_SSML_VOICE_GENDER_UNSPECIFIED
+	}
 }
 
 // クライアントを閉じる

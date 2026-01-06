@@ -246,7 +246,7 @@ func (s *scriptLineService) GenerateAudio(ctx context.Context, userID, channelID
 	ttsText := s.buildTTSText(*scriptLine.Text, scriptLine.Emotion)
 
 	// TTS で音声生成
-	audioData, err := s.ttsClient.Synthesize(ctx, ttsText, scriptLine.Speaker.Voice.ProviderVoiceID)
+	audioData, err := s.ttsClient.Synthesize(ctx, ttsText, scriptLine.Speaker.Voice.ProviderVoiceID, scriptLine.Speaker.Voice.Gender)
 	if err != nil {
 		return nil, err
 	}
