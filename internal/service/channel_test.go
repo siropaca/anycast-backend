@@ -1,14 +1,37 @@
 package service
 
 import (
+	"context"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 
+	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/model"
 )
+
+// storageClient のモック
+type mockStorageClient struct {
+	mock.Mock
+}
+
+func (m *mockStorageClient) Upload(ctx context.Context, data []byte, path, contentType string) (string, error) {
+	args := m.Called(ctx, data, path, contentType)
+	return args.String(0), args.Error(1)
+}
+
+func (m *mockStorageClient) GenerateSignedURL(ctx context.Context, path string, expiration time.Duration) (string, error) {
+	args := m.Called(ctx, path, expiration)
+	return args.String(0), args.Error(1)
+}
+
+func (m *mockStorageClient) Delete(ctx context.Context, path string) error {
+	args := m.Called(ctx, path)
+	return args.Error(0)
+}
 
 func TestToChannelResponse(t *testing.T) {
 	now := time.Now()
@@ -50,8 +73,13 @@ func TestToChannelResponse(t *testing.T) {
 	}
 
 	t.Run("isOwner が true の場合、userPrompt が含まれる", func(t *testing.T) {
-		resp := toChannelResponse(baseChannel, true)
+		mockStorage := new(mockStorageClient)
+		svc := &channelService{storageClient: mockStorage}
+		ctx := context.Background()
 
+		resp, err := svc.toChannelResponse(ctx, baseChannel, true)
+
+		assert.NoError(t, err)
 		assert.Equal(t, channelID, resp.ID)
 		assert.Equal(t, "Test Channel", resp.Name)
 		assert.Equal(t, "Test Description", resp.Description)
@@ -70,8 +98,13 @@ func TestToChannelResponse(t *testing.T) {
 	})
 
 	t.Run("isOwner が false の場合、userPrompt が空文字になる", func(t *testing.T) {
-		resp := toChannelResponse(baseChannel, false)
+		mockStorage := new(mockStorageClient)
+		svc := &channelService{storageClient: mockStorage}
+		ctx := context.Background()
 
+		resp, err := svc.toChannelResponse(ctx, baseChannel, false)
+
+		assert.NoError(t, err)
 		assert.Equal(t, channelID, resp.ID)
 		assert.Equal(t, "Test Channel", resp.Name)
 		assert.Equal(t, "Test Description", resp.Description)
@@ -79,35 +112,52 @@ func TestToChannelResponse(t *testing.T) {
 	})
 
 	t.Run("Artwork が nil の場合、レスポンスの Artwork も nil", func(t *testing.T) {
+		mockStorage := new(mockStorageClient)
+		svc := &channelService{storageClient: mockStorage}
+		ctx := context.Background()
+
 		channel := *baseChannel
 		channel.Artwork = nil
 
-		resp := toChannelResponse(&channel, true)
+		resp, err := svc.toChannelResponse(ctx, &channel, true)
 
+		assert.NoError(t, err)
 		assert.Nil(t, resp.Artwork)
 	})
 
-	t.Run("Artwork がある場合、正しく変換される", func(t *testing.T) {
+	t.Run("Artwork がある場合、署名 URL が生成される", func(t *testing.T) {
+		mockStorage := new(mockStorageClient)
+		mockStorage.On("GenerateSignedURL", mock.Anything, "images/artwork.png", signedURLExpiration).Return("https://signed-url.example.com/artwork.png", nil)
+		svc := &channelService{storageClient: mockStorage}
+		ctx := context.Background()
+
 		channel := *baseChannel
 		channel.ArtworkID = &artworkID
 		channel.Artwork = &model.Image{
-			ID:  artworkID,
-			URL: "https://example.com/artwork.png",
+			ID:   artworkID,
+			Path: "images/artwork.png",
 		}
 
-		resp := toChannelResponse(&channel, true)
+		resp, err := svc.toChannelResponse(ctx, &channel, true)
 
+		assert.NoError(t, err)
 		assert.NotNil(t, resp.Artwork)
 		assert.Equal(t, artworkID, resp.Artwork.ID)
-		assert.Equal(t, "https://example.com/artwork.png", resp.Artwork.URL)
+		assert.Equal(t, "https://signed-url.example.com/artwork.png", resp.Artwork.URL)
+		mockStorage.AssertExpectations(t)
 	})
 
 	t.Run("PublishedAt が nil の場合、レスポンスの PublishedAt も nil", func(t *testing.T) {
+		mockStorage := new(mockStorageClient)
+		svc := &channelService{storageClient: mockStorage}
+		ctx := context.Background()
+
 		channel := *baseChannel
 		channel.PublishedAt = nil
 
-		resp := toChannelResponse(&channel, true)
+		resp, err := svc.toChannelResponse(ctx, &channel, true)
 
+		assert.NoError(t, err)
 		assert.Nil(t, resp.PublishedAt)
 	})
 }
@@ -150,24 +200,98 @@ func TestToChannelResponses(t *testing.T) {
 	}
 
 	t.Run("複数チャンネルを正しく変換する", func(t *testing.T) {
-		result := toChannelResponses(channels)
+		mockStorage := new(mockStorageClient)
+		svc := &channelService{storageClient: mockStorage}
+		ctx := context.Background()
 
+		result, err := svc.toChannelResponses(ctx, channels)
+
+		assert.NoError(t, err)
 		assert.Len(t, result, 2)
 		assert.Equal(t, "Channel 1", result[0].Name)
 		assert.Equal(t, "Channel 2", result[1].Name)
 	})
 
 	t.Run("オーナーとして扱われるため userPrompt が含まれる", func(t *testing.T) {
-		result := toChannelResponses(channels)
+		mockStorage := new(mockStorageClient)
+		svc := &channelService{storageClient: mockStorage}
+		ctx := context.Background()
 
+		result, err := svc.toChannelResponses(ctx, channels)
+
+		assert.NoError(t, err)
 		assert.Equal(t, "Prompt 1", result[0].UserPrompt)
 		assert.Equal(t, "Prompt 2", result[1].UserPrompt)
 	})
 
 	t.Run("空のスライスの場合、空のスライスを返す", func(t *testing.T) {
-		result := toChannelResponses([]model.Channel{})
+		mockStorage := new(mockStorageClient)
+		svc := &channelService{storageClient: mockStorage}
+		ctx := context.Background()
+
+		result, err := svc.toChannelResponses(ctx, []model.Channel{})
+
+		assert.NoError(t, err)
+		assert.Len(t, result, 0)
+		assert.NotNil(t, result)
+	})
+}
+
+func TestToCharacterResponses(t *testing.T) {
+	voiceID1 := uuid.New()
+	voiceID2 := uuid.New()
+	charID1 := uuid.New()
+	charID2 := uuid.New()
+
+	characters := []model.Character{
+		{
+			ID:      charID1,
+			Name:    "太郎",
+			Persona: "明るい性格",
+			VoiceID: voiceID1,
+			Voice: model.Voice{
+				ID:     voiceID1,
+				Name:   "ja-JP-Wavenet-C",
+				Gender: model.GenderMale,
+			},
+		},
+		{
+			ID:      charID2,
+			Name:    "花子",
+			Persona: "落ち着いた性格",
+			VoiceID: voiceID2,
+			Voice: model.Voice{
+				ID:     voiceID2,
+				Name:   "ja-JP-Wavenet-B",
+				Gender: model.GenderFemale,
+			},
+		},
+	}
+
+	t.Run("複数キャラクターを正しく変換する", func(t *testing.T) {
+		result := toCharacterResponses(characters)
+
+		assert.Len(t, result, 2)
+		assert.Equal(t, charID1, result[0].ID)
+		assert.Equal(t, "太郎", result[0].Name)
+		assert.Equal(t, "明るい性格", result[0].Persona)
+		assert.Equal(t, voiceID1, result[0].Voice.ID)
+		assert.Equal(t, "ja-JP-Wavenet-C", result[0].Voice.Name)
+		assert.Equal(t, "male", result[0].Voice.Gender)
+
+		assert.Equal(t, charID2, result[1].ID)
+		assert.Equal(t, "花子", result[1].Name)
+		assert.Equal(t, "落ち着いた性格", result[1].Persona)
+		assert.Equal(t, voiceID2, result[1].Voice.ID)
+		assert.Equal(t, "ja-JP-Wavenet-B", result[1].Voice.Name)
+		assert.Equal(t, "female", result[1].Voice.Gender)
+	})
+
+	t.Run("空のスライスの場合、空のスライスを返す", func(t *testing.T) {
+		result := toCharacterResponses([]model.Character{})
 
 		assert.Len(t, result, 0)
 		assert.NotNil(t, result)
+		assert.Equal(t, []response.CharacterResponse{}, result)
 	})
 }

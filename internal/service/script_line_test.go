@@ -8,30 +8,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 
 	"github.com/siropaca/anycast-backend/internal/model"
 )
 
-// テスト用のモック storage クライアント
-type mockStorageClient struct {
-	signedURL string
-	err       error
-}
-
-func (m *mockStorageClient) Upload(_ context.Context, _ []byte, path, _ string) (string, error) {
-	return path, nil
-}
-
-func (m *mockStorageClient) GenerateSignedURL(_ context.Context, _ string, _ time.Duration) (string, error) {
-	if m.err != nil {
-		return "", m.err
-	}
-	return m.signedURL, nil
-}
-
-func (m *mockStorageClient) Delete(_ context.Context, _ string) error {
-	return nil
-}
+// mockStorageClient は channel_test.go で定義済み
 
 func TestToScriptLineResponse(t *testing.T) {
 	ctx := context.Background()
@@ -45,12 +27,6 @@ func TestToScriptLineResponse(t *testing.T) {
 	emotion := "happy"
 	durationMs := 3000
 	volume := decimal.NewFromFloat(0.75)
-
-	// テスト用のサービスインスタンスを作成
-	mockStorage := &mockStorageClient{signedURL: "https://signed-url.example.com/audio.mp3"}
-	svc := &scriptLineService{
-		storageClient: mockStorage,
-	}
 
 	baseScriptLine := &model.ScriptLine{
 		ID:         lineID,
@@ -69,6 +45,9 @@ func TestToScriptLineResponse(t *testing.T) {
 	}
 
 	t.Run("基本的な変換が正しく行われる", func(t *testing.T) {
+		mockStorage := new(mockStorageClient)
+		svc := &scriptLineService{storageClient: mockStorage}
+
 		sl := *baseScriptLine
 		sl.Speaker = nil
 		sl.Sfx = nil
@@ -88,6 +67,9 @@ func TestToScriptLineResponse(t *testing.T) {
 	})
 
 	t.Run("Volume が正しく float64 に変換される", func(t *testing.T) {
+		mockStorage := new(mockStorageClient)
+		svc := &scriptLineService{storageClient: mockStorage}
+
 		sl := *baseScriptLine
 		sl.Speaker = nil
 		sl.Sfx = nil
@@ -101,6 +83,9 @@ func TestToScriptLineResponse(t *testing.T) {
 	})
 
 	t.Run("Volume が nil の場合、レスポンスの Volume も nil", func(t *testing.T) {
+		mockStorage := new(mockStorageClient)
+		svc := &scriptLineService{storageClient: mockStorage}
+
 		sl := *baseScriptLine
 		sl.Volume = nil
 		sl.Speaker = nil
@@ -114,6 +99,9 @@ func TestToScriptLineResponse(t *testing.T) {
 	})
 
 	t.Run("Speaker がある場合、正しく変換される", func(t *testing.T) {
+		mockStorage := new(mockStorageClient)
+		svc := &scriptLineService{storageClient: mockStorage}
+
 		sl := *baseScriptLine
 		sl.Speaker = &model.Character{
 			ID:   speakerID,
@@ -131,6 +119,9 @@ func TestToScriptLineResponse(t *testing.T) {
 	})
 
 	t.Run("Speaker が nil の場合、レスポンスの Speaker も nil", func(t *testing.T) {
+		mockStorage := new(mockStorageClient)
+		svc := &scriptLineService{storageClient: mockStorage}
+
 		sl := *baseScriptLine
 		sl.Speaker = nil
 		sl.Sfx = nil
@@ -143,6 +134,9 @@ func TestToScriptLineResponse(t *testing.T) {
 	})
 
 	t.Run("Sfx がある場合、正しく変換される", func(t *testing.T) {
+		mockStorage := new(mockStorageClient)
+		svc := &scriptLineService{storageClient: mockStorage}
+
 		sl := *baseScriptLine
 		sl.Speaker = nil
 		sl.Sfx = &model.SoundEffect{
@@ -160,6 +154,9 @@ func TestToScriptLineResponse(t *testing.T) {
 	})
 
 	t.Run("Sfx が nil の場合、レスポンスの Sfx も nil", func(t *testing.T) {
+		mockStorage := new(mockStorageClient)
+		svc := &scriptLineService{storageClient: mockStorage}
+
 		sl := *baseScriptLine
 		sl.Speaker = nil
 		sl.Sfx = nil
@@ -172,12 +169,18 @@ func TestToScriptLineResponse(t *testing.T) {
 	})
 
 	t.Run("Audio がある場合、署名 URL が生成される", func(t *testing.T) {
+		mockStorage := new(mockStorageClient)
+		mockStorage.On("GenerateSignedURL", mock.Anything, "audios/test.mp3", signedURLExpiration).Return("https://signed-url.example.com/audio.mp3", nil)
+		svc := &scriptLineService{storageClient: mockStorage}
+
 		sl := *baseScriptLine
 		sl.Speaker = nil
 		sl.Sfx = nil
 		sl.Audio = &model.Audio{
 			ID:         audioID,
 			Path:       "audios/test.mp3",
+			MimeType:   "audio/mpeg",
+			FileSize:   1024,
 			DurationMs: 5000,
 		}
 
@@ -188,9 +191,13 @@ func TestToScriptLineResponse(t *testing.T) {
 		assert.Equal(t, audioID, resp.Audio.ID)
 		assert.Equal(t, "https://signed-url.example.com/audio.mp3", resp.Audio.URL)
 		assert.Equal(t, 5000, resp.Audio.DurationMs)
+		mockStorage.AssertExpectations(t)
 	})
 
 	t.Run("Audio が nil の場合、レスポンスの Audio も nil", func(t *testing.T) {
+		mockStorage := new(mockStorageClient)
+		svc := &scriptLineService{storageClient: mockStorage}
+
 		sl := *baseScriptLine
 		sl.Speaker = nil
 		sl.Sfx = nil
@@ -203,6 +210,9 @@ func TestToScriptLineResponse(t *testing.T) {
 	})
 
 	t.Run("Text が nil の場合、レスポンスの Text も nil", func(t *testing.T) {
+		mockStorage := new(mockStorageClient)
+		svc := &scriptLineService{storageClient: mockStorage}
+
 		sl := *baseScriptLine
 		sl.Text = nil
 		sl.Speaker = nil
@@ -216,6 +226,9 @@ func TestToScriptLineResponse(t *testing.T) {
 	})
 
 	t.Run("Emotion が nil の場合、レスポンスの Emotion も nil", func(t *testing.T) {
+		mockStorage := new(mockStorageClient)
+		svc := &scriptLineService{storageClient: mockStorage}
+
 		sl := *baseScriptLine
 		sl.Emotion = nil
 		sl.Speaker = nil
@@ -229,6 +242,9 @@ func TestToScriptLineResponse(t *testing.T) {
 	})
 
 	t.Run("DurationMs が nil の場合、レスポンスの DurationMs も nil", func(t *testing.T) {
+		mockStorage := new(mockStorageClient)
+		svc := &scriptLineService{storageClient: mockStorage}
+
 		sl := *baseScriptLine
 		sl.DurationMs = nil
 		sl.Speaker = nil
@@ -248,12 +264,6 @@ func TestToScriptLineResponses(t *testing.T) {
 	episodeID := uuid.New()
 	text1 := "テキスト1"
 	text2 := "テキスト2"
-
-	// テスト用のサービスインスタンスを作成
-	mockStorage := &mockStorageClient{signedURL: "https://signed-url.example.com/audio.mp3"}
-	svc := &scriptLineService{
-		storageClient: mockStorage,
-	}
 
 	scriptLines := []model.ScriptLine{
 		{
@@ -277,6 +287,9 @@ func TestToScriptLineResponses(t *testing.T) {
 	}
 
 	t.Run("複数の台本行を正しく変換する", func(t *testing.T) {
+		mockStorage := new(mockStorageClient)
+		svc := &scriptLineService{storageClient: mockStorage}
+
 		result, err := svc.toScriptLineResponses(ctx, scriptLines)
 
 		assert.NoError(t, err)
@@ -288,6 +301,9 @@ func TestToScriptLineResponses(t *testing.T) {
 	})
 
 	t.Run("空のスライスの場合、空のスライスを返す", func(t *testing.T) {
+		mockStorage := new(mockStorageClient)
+		svc := &scriptLineService{storageClient: mockStorage}
+
 		result, err := svc.toScriptLineResponses(ctx, []model.ScriptLine{})
 
 		assert.NoError(t, err)

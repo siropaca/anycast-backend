@@ -7,6 +7,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/request"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
+	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/model"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 	"github.com/siropaca/anycast-backend/internal/repository"
@@ -24,18 +25,21 @@ type EpisodeService interface {
 }
 
 type episodeService struct {
-	episodeRepo repository.EpisodeRepository
-	channelRepo repository.ChannelRepository
+	episodeRepo   repository.EpisodeRepository
+	channelRepo   repository.ChannelRepository
+	storageClient storage.Client
 }
 
 // EpisodeService の実装を返す
 func NewEpisodeService(
 	episodeRepo repository.EpisodeRepository,
 	channelRepo repository.ChannelRepository,
+	storageClient storage.Client,
 ) EpisodeService {
 	return &episodeService{
-		episodeRepo: episodeRepo,
-		channelRepo: channelRepo,
+		episodeRepo:   episodeRepo,
+		channelRepo:   channelRepo,
+		storageClient: storageClient,
 	}
 }
 
@@ -76,8 +80,13 @@ func (s *episodeService) GetMyChannelEpisode(ctx context.Context, userID, channe
 		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
 	}
 
+	resp, err := s.toEpisodeResponse(ctx, episode)
+	if err != nil {
+		return nil, err
+	}
+
 	return &response.EpisodeDataResponse{
-		Data: toEpisodeResponse(episode),
+		Data: resp,
 	}, nil
 }
 
@@ -109,8 +118,13 @@ func (s *episodeService) ListMyChannelEpisodes(ctx context.Context, userID, chan
 		return nil, err
 	}
 
+	responses, err := s.toEpisodeResponses(ctx, episodes)
+	if err != nil {
+		return nil, err
+	}
+
 	return &response.EpisodeListWithPaginationResponse{
-		Data:       toEpisodeResponses(episodes),
+		Data:       responses,
 		Pagination: response.PaginationResponse{Total: total, Limit: filter.Limit, Offset: filter.Offset},
 	}, nil
 }
@@ -257,8 +271,13 @@ func (s *episodeService) UpdateEpisode(ctx context.Context, userID, channelID, e
 		return nil, err
 	}
 
+	resp, err := s.toEpisodeResponse(ctx, updated)
+	if err != nil {
+		return nil, err
+	}
+
 	return &response.EpisodeDataResponse{
-		Data: toEpisodeResponse(updated),
+		Data: resp,
 	}, nil
 }
 
@@ -365,8 +384,13 @@ func (s *episodeService) PublishEpisode(ctx context.Context, userID, channelID, 
 		return nil, err
 	}
 
+	resp, err := s.toEpisodeResponse(ctx, updated)
+	if err != nil {
+		return nil, err
+	}
+
 	return &response.EpisodeDataResponse{
-		Data: toEpisodeResponse(updated),
+		Data: resp,
 	}, nil
 }
 
@@ -421,24 +445,33 @@ func (s *episodeService) UnpublishEpisode(ctx context.Context, userID, channelID
 		return nil, err
 	}
 
+	resp, err := s.toEpisodeResponse(ctx, updated)
+	if err != nil {
+		return nil, err
+	}
+
 	return &response.EpisodeDataResponse{
-		Data: toEpisodeResponse(updated),
+		Data: resp,
 	}, nil
 }
 
 // Episode モデルのスライスをレスポンス DTO のスライスに変換する
-func toEpisodeResponses(episodes []model.Episode) []response.EpisodeResponse {
+func (s *episodeService) toEpisodeResponses(ctx context.Context, episodes []model.Episode) ([]response.EpisodeResponse, error) {
 	result := make([]response.EpisodeResponse, len(episodes))
 
 	for i, e := range episodes {
-		result[i] = toEpisodeResponse(&e)
+		resp, err := s.toEpisodeResponse(ctx, &e)
+		if err != nil {
+			return nil, err
+		}
+		result[i] = resp
 	}
 
-	return result
+	return result, nil
 }
 
 // Episode モデルをレスポンス DTO に変換する
-func toEpisodeResponse(e *model.Episode) response.EpisodeResponse {
+func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode) (response.EpisodeResponse, error) {
 	resp := response.EpisodeResponse{
 		ID:          e.ID,
 		Title:       e.Title,
@@ -450,21 +483,29 @@ func toEpisodeResponse(e *model.Episode) response.EpisodeResponse {
 	}
 
 	if e.Artwork != nil {
+		signedURL, err := s.storageClient.GenerateSignedURL(ctx, e.Artwork.Path, signedURLExpiration)
+		if err != nil {
+			return response.EpisodeResponse{}, err
+		}
 		resp.Artwork = &response.ArtworkResponse{
 			ID:  e.Artwork.ID,
-			URL: e.Artwork.URL,
+			URL: signedURL,
 		}
 	}
 
 	if e.FullAudio != nil {
+		signedURL, err := s.storageClient.GenerateSignedURL(ctx, e.FullAudio.Path, signedURLExpiration)
+		if err != nil {
+			return response.EpisodeResponse{}, err
+		}
 		resp.FullAudio = &response.AudioResponse{
 			ID:         e.FullAudio.ID,
-			URL:        e.FullAudio.Path,
+			URL:        signedURL,
 			MimeType:   e.FullAudio.MimeType,
 			FileSize:   e.FullAudio.FileSize,
 			DurationMs: e.FullAudio.DurationMs,
 		}
 	}
 
-	return resp
+	return resp, nil
 }

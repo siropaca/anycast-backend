@@ -25,6 +25,12 @@ func GenerateAudioPath(audioID string) string {
 	return fmt.Sprintf("audios/%s.mp3", audioID)
 }
 
+// 画像ファイルの GCS パスを生成する
+// ext は拡張子（例: ".png", ".jpg"）
+func GenerateImagePath(imageID, ext string) string {
+	return fmt.Sprintf("images/%s%s", imageID, ext)
+}
+
 type gcsClient struct {
 	client     *storage.Client
 	bucketName string

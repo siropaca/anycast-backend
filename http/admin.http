@@ -1,0 +1,12 @@
+@baseUrl = http://localhost:8081
+
+# トークン生成: make token
+@token = YOUR_TOKEN_HERE
+
+### 孤児メディアファイル削除（dry-run）
+POST {{baseUrl}}/admin/cleanup/orphaned-media?dry_run=true
+Authorization: Bearer {{token}}
+
+### 孤児メディアファイル削除（実行）
+POST {{baseUrl}}/admin/cleanup/orphaned-media
+Authorization: Bearer {{token}}

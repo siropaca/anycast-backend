@@ -15,6 +15,55 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/admin/cleanup/orphaned-media": {
+            "post": {
+                "description": "どのテーブルからも参照されていない audios / images レコードを検出し、GCS ファイルと DB レコードを削除する",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "孤児メディアファイル削除",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "true の場合、削除対象の一覧を返すのみで実際の削除は行わない",
+                        "name": "dry_run",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.CleanupOrphanedMediaResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "description": "メールアドレスとパスワードで認証します",
@@ -2103,6 +2152,47 @@ const docTemplate = `{
                 }
             }
         },
+        "response.CleanupOrphanedMediaResponse": {
+            "type": "object",
+            "required": [
+                "deletedAudioCount",
+                "deletedImageCount",
+                "dryRun",
+                "failedAudioCount",
+                "failedImageCount",
+                "orphanedAudios",
+                "orphanedImages"
+            ],
+            "properties": {
+                "deletedAudioCount": {
+                    "type": "integer"
+                },
+                "deletedImageCount": {
+                    "type": "integer"
+                },
+                "dryRun": {
+                    "type": "boolean"
+                },
+                "failedAudioCount": {
+                    "type": "integer"
+                },
+                "failedImageCount": {
+                    "type": "integer"
+                },
+                "orphanedAudios": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.OrphanedAudioResponse"
+                    }
+                },
+                "orphanedImages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.OrphanedImageResponse"
+                    }
+                }
+            }
+        },
         "response.EpisodeDataResponse": {
             "type": "object",
             "required": [
@@ -2275,6 +2365,60 @@ const docTemplate = `{
                     }
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.OrphanedAudioResponse": {
+            "type": "object",
+            "required": [
+                "createdAt",
+                "fileSize",
+                "filename",
+                "id",
+                "url"
+            ],
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "fileSize": {
+                    "type": "integer"
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.OrphanedImageResponse": {
+            "type": "object",
+            "required": [
+                "createdAt",
+                "fileSize",
+                "filename",
+                "id",
+                "url"
+            ],
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "fileSize": {
+                    "type": "integer"
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "url": {
                     "type": "string"
                 }
             }

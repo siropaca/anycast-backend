@@ -61,14 +61,8 @@
 | **Audio（音声生成）** | - | - | - | [media.md](./media.md) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId/audio/generate` | 行単位音声生成 | ✅ | [詳細](./media.md#行単位音声生成) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/audio/generate` | エピソード全体音声生成 | | [詳細](./media.md#エピソード全体音声生成) |
-| **Audios（音声ファイル）** | - | - | - | [media.md](./media.md#audios音声ファイル) |
-| POST | `/api/v1/audios` | 音声アップロード | | [詳細](./media.md#音声アップロード) |
-| GET | `/api/v1/audios/:audioId` | 音声取得 | | [詳細](./media.md#音声取得) |
-| DELETE | `/api/v1/audios/:audioId` | 音声削除 | | [詳細](./media.md#音声削除) |
 | **Images（画像ファイル）** | - | - | - | [media.md](./media.md#images画像ファイル) |
 | POST | `/api/v1/images` | 画像アップロード | | [詳細](./media.md#画像アップロード) |
-| GET | `/api/v1/images/:imageId` | 画像取得 | | [詳細](./media.md#画像取得) |
-| DELETE | `/api/v1/images/:imageId` | 画像削除 | | [詳細](./media.md#画像削除) |
 | **Search（検索）** | - | - | - | [engagement.md](./engagement.md) |
 | GET | `/api/v1/search/channels` | チャンネル検索 | | [詳細](./engagement.md#チャンネル検索) |
 | GET | `/api/v1/search/episodes` | エピソード検索 | | [詳細](./engagement.md#エピソード検索) |
@@ -97,7 +91,7 @@
 | GET | `/api/v1/sound-effects` | 効果音一覧取得 | | [詳細](./master.md#効果音一覧取得) |
 | GET | `/api/v1/sound-effects/:sfxId` | 効果音取得 | | [詳細](./master.md#効果音取得) |
 | **Admin（管理者）** | - | - | - | [admin.md](./admin.md) |
-| POST | `/admin/cleanup/orphaned-media` | 孤児メディアファイル削除 | | [詳細](./admin.md#孤児メディアファイル削除) |
+| POST | `/admin/cleanup/orphaned-media` | 孤児メディアファイル削除 | ✅ | [詳細](./admin.md#孤児メディアファイル削除) |
 
 ---
 

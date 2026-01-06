@@ -16,6 +16,7 @@ type AudioRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*model.Audio, error)
 	Create(ctx context.Context, audio *model.Audio) error
 	Delete(ctx context.Context, id uuid.UUID) error
+	FindOrphaned(ctx context.Context) ([]model.Audio, error)
 }
 
 type audioRepository struct {
@@ -66,4 +67,28 @@ func (r *audioRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	}
 
 	return nil
+}
+
+// どのテーブルからも参照されていない孤児レコードを取得する
+// 対象: episodes.bgm_id, episodes.full_audio_id, script_lines.audio_id, sound_effects.audio_id
+// 条件: created_at から 1 時間以上経過したレコードのみ
+func (r *audioRepository) FindOrphaned(ctx context.Context) ([]model.Audio, error) {
+	var audios []model.Audio
+
+	query := `
+		SELECT a.* FROM audios a
+		WHERE a.created_at < NOW() - INTERVAL '1 hour'
+		AND NOT EXISTS (SELECT 1 FROM episodes e WHERE e.bgm_id = a.id)
+		AND NOT EXISTS (SELECT 1 FROM episodes e WHERE e.full_audio_id = a.id)
+		AND NOT EXISTS (SELECT 1 FROM script_lines sl WHERE sl.audio_id = a.id)
+		AND NOT EXISTS (SELECT 1 FROM sound_effects sf WHERE sf.audio_id = a.id)
+		ORDER BY a.created_at DESC
+	`
+
+	if err := r.db.WithContext(ctx).Raw(query).Scan(&audios).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to fetch orphaned audios", "error", err)
+		return nil, apperror.ErrInternal.WithMessage("Failed to fetch orphaned audios").WithError(err)
+	}
+
+	return audios, nil
 }

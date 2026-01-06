@@ -7,6 +7,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/request"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
+	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/model"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 	"github.com/siropaca/anycast-backend/internal/repository"
@@ -25,10 +26,11 @@ type ChannelService interface {
 }
 
 type channelService struct {
-	channelRepo  repository.ChannelRepository
-	categoryRepo repository.CategoryRepository
-	imageRepo    repository.ImageRepository
-	voiceRepo    repository.VoiceRepository
+	channelRepo   repository.ChannelRepository
+	categoryRepo  repository.CategoryRepository
+	imageRepo     repository.ImageRepository
+	voiceRepo     repository.VoiceRepository
+	storageClient storage.Client
 }
 
 // ChannelService の実装を返す
@@ -37,12 +39,14 @@ func NewChannelService(
 	categoryRepo repository.CategoryRepository,
 	imageRepo repository.ImageRepository,
 	voiceRepo repository.VoiceRepository,
+	storageClient storage.Client,
 ) ChannelService {
 	return &channelService{
-		channelRepo:  channelRepo,
-		categoryRepo: categoryRepo,
-		imageRepo:    imageRepo,
-		voiceRepo:    voiceRepo,
+		channelRepo:   channelRepo,
+		categoryRepo:  categoryRepo,
+		imageRepo:     imageRepo,
+		voiceRepo:     voiceRepo,
+		storageClient: storageClient,
 	}
 }
 
@@ -72,8 +76,13 @@ func (s *channelService) GetChannel(ctx context.Context, userID, channelID strin
 		return nil, apperror.ErrNotFound.WithMessage("Channel not found")
 	}
 
+	resp, err := s.toChannelResponse(ctx, channel, isOwner)
+	if err != nil {
+		return nil, err
+	}
+
 	return &response.ChannelDataResponse{
-		Data: toChannelResponse(channel, isOwner),
+		Data: resp,
 	}, nil
 }
 
@@ -99,8 +108,13 @@ func (s *channelService) GetMyChannel(ctx context.Context, userID, channelID str
 		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
 	}
 
+	resp, err := s.toChannelResponse(ctx, channel, true)
+	if err != nil {
+		return nil, err
+	}
+
 	return &response.ChannelDataResponse{
-		Data: toChannelResponse(channel, true),
+		Data: resp,
 	}, nil
 }
 
@@ -116,8 +130,13 @@ func (s *channelService) ListMyChannels(ctx context.Context, userID string, filt
 		return nil, err
 	}
 
+	responses, err := s.toChannelResponses(ctx, channels)
+	if err != nil {
+		return nil, err
+	}
+
 	return &response.ChannelListWithPaginationResponse{
-		Data:       toChannelResponses(channels),
+		Data:       responses,
 		Pagination: response.PaginationResponse{Total: total, Limit: filter.Limit, Offset: filter.Offset},
 	}, nil
 }
@@ -194,8 +213,13 @@ func (s *channelService) CreateChannel(ctx context.Context, userID string, req r
 		return nil, err
 	}
 
+	resp, err := s.toChannelResponse(ctx, created, true)
+	if err != nil {
+		return nil, err
+	}
+
 	return &response.ChannelDataResponse{
-		Data: toChannelResponse(created, true),
+		Data: resp,
 	}, nil
 }
 
@@ -264,8 +288,13 @@ func (s *channelService) UpdateChannel(ctx context.Context, userID, channelID st
 		return nil, err
 	}
 
+	resp, err := s.toChannelResponse(ctx, updated, true)
+	if err != nil {
+		return nil, err
+	}
+
 	return &response.ChannelDataResponse{
-		Data: toChannelResponse(updated, true),
+		Data: resp,
 	}, nil
 }
 
@@ -341,8 +370,13 @@ func (s *channelService) PublishChannel(ctx context.Context, userID, channelID s
 		return nil, err
 	}
 
+	resp, err := s.toChannelResponse(ctx, updated, true)
+	if err != nil {
+		return nil, err
+	}
+
 	return &response.ChannelDataResponse{
-		Data: toChannelResponse(updated, true),
+		Data: resp,
 	}, nil
 }
 
@@ -382,26 +416,35 @@ func (s *channelService) UnpublishChannel(ctx context.Context, userID, channelID
 		return nil, err
 	}
 
+	resp, err := s.toChannelResponse(ctx, updated, true)
+	if err != nil {
+		return nil, err
+	}
+
 	return &response.ChannelDataResponse{
-		Data: toChannelResponse(updated, true),
+		Data: resp,
 	}, nil
 }
 
 // Channel モデルのスライスをレスポンス DTO のスライスに変換する
 // ListMyChannels で使用するため、常にオーナーとして扱う
-func toChannelResponses(channels []model.Channel) []response.ChannelResponse {
+func (s *channelService) toChannelResponses(ctx context.Context, channels []model.Channel) ([]response.ChannelResponse, error) {
 	result := make([]response.ChannelResponse, len(channels))
 
 	for i, c := range channels {
-		result[i] = toChannelResponse(&c, true)
+		resp, err := s.toChannelResponse(ctx, &c, true)
+		if err != nil {
+			return nil, err
+		}
+		result[i] = resp
 	}
 
-	return result
+	return result, nil
 }
 
 // Channel モデルをレスポンス DTO に変換する
 // isOwner が false の場合、userPrompt は空文字になる
-func toChannelResponse(c *model.Channel, isOwner bool) response.ChannelResponse {
+func (s *channelService) toChannelResponse(ctx context.Context, c *model.Channel, isOwner bool) (response.ChannelResponse, error) {
 	userPrompt := ""
 	if isOwner {
 		userPrompt = c.UserPrompt
@@ -426,13 +469,17 @@ func toChannelResponse(c *model.Channel, isOwner bool) response.ChannelResponse 
 	}
 
 	if c.Artwork != nil {
+		signedURL, err := s.storageClient.GenerateSignedURL(ctx, c.Artwork.Path, signedURLExpiration)
+		if err != nil {
+			return response.ChannelResponse{}, err
+		}
 		resp.Artwork = &response.ArtworkResponse{
 			ID:  c.Artwork.ID,
-			URL: c.Artwork.URL,
+			URL: signedURL,
 		}
 	}
 
-	return resp
+	return resp, nil
 }
 
 // Character モデルのスライスをレスポンス DTO のスライスに変換する

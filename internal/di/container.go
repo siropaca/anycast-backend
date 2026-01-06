@@ -26,6 +26,7 @@ type Container struct {
 	EpisodeHandler    *handler.EpisodeHandler
 	ScriptLineHandler *handler.ScriptLineHandler
 	ScriptHandler     *handler.ScriptHandler
+	CleanupHandler    *handler.CleanupHandler
 	TokenManager      jwt.TokenManager
 }
 
@@ -67,12 +68,13 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 
 	// Service 層
 	voiceService := service.NewVoiceService(voiceRepo)
-	authService := service.NewAuthService(userRepo, credentialRepo, oauthAccountRepo, imageRepo, passwordHasher)
-	channelService := service.NewChannelService(channelRepo, categoryRepo, imageRepo, voiceRepo)
+	authService := service.NewAuthService(userRepo, credentialRepo, oauthAccountRepo, imageRepo, passwordHasher, storageClient)
+	channelService := service.NewChannelService(channelRepo, categoryRepo, imageRepo, voiceRepo, storageClient)
 	categoryService := service.NewCategoryService(categoryRepo)
-	episodeService := service.NewEpisodeService(episodeRepo, channelRepo)
+	episodeService := service.NewEpisodeService(episodeRepo, channelRepo, storageClient)
 	scriptLineService := service.NewScriptLineService(db, scriptLineRepo, episodeRepo, channelRepo, audioRepo, ttsClient, storageClient)
 	scriptService := service.NewScriptService(db, channelRepo, episodeRepo, scriptLineRepo, llmClient, storageClient)
+	cleanupService := service.NewCleanupService(audioRepo, imageRepo, storageClient)
 
 	// Handler 層
 	voiceHandler := handler.NewVoiceHandler(voiceService)
@@ -82,6 +84,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	episodeHandler := handler.NewEpisodeHandler(episodeService)
 	scriptLineHandler := handler.NewScriptLineHandler(scriptLineService)
 	scriptHandler := handler.NewScriptHandler(scriptService)
+	cleanupHandler := handler.NewCleanupHandler(cleanupService, storageClient)
 
 	return &Container{
 		VoiceHandler:      voiceHandler,
@@ -91,6 +94,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		EpisodeHandler:    episodeHandler,
 		ScriptLineHandler: scriptLineHandler,
 		ScriptHandler:     scriptHandler,
+		CleanupHandler:    cleanupHandler,
 		TokenManager:      tokenManager,
 	}
 }
