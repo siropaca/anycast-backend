@@ -2,14 +2,33 @@ package script
 
 import (
 	"regexp"
+	"strconv"
 	"strings"
+)
+
+// 行の種別
+type LineType string
+
+const (
+	LineTypeSpeech  LineType = "speech"
+	LineTypeSilence LineType = "silence"
+	LineTypeSfx     LineType = "sfx"
+)
+
+// 予約語（話者名として使用不可）
+const (
+	SilenceKeyword = "__SILENCE__"
+	SfxKeyword     = "__SFX__"
 )
 
 // パース済みの台本行
 type ParsedLine struct {
-	SpeakerName string  // 話者名（speech 時のみ）
-	Text        string  // セリフ（speech 時のみ）
-	Emotion     *string // 感情・喋り方（speech 時のみ、オプション）
+	LineType    LineType // 行の種別
+	SpeakerName string   // 話者名（speech 時のみ）
+	Text        string   // セリフ（speech 時のみ）
+	Emotion     *string  // 感情・喋り方（speech 時のみ、オプション）
+	DurationMs  int      // 無音の長さ（silence 時のみ）
+	SfxName     string   // 効果音名（sfx 時のみ）
 }
 
 // パースエラー
@@ -27,15 +46,18 @@ type ParseResult struct {
 // 感情を抽出する正規表現: [感情] パターン
 var emotionRegex = regexp.MustCompile(`^\[([^\]]+)\]\s*`)
 
-// LLM が生成した台本テキストをパースして ParsedLine のスライスに変換する
+// 台本テキストをパースして ParsedLine のスライスに変換する
 //
 // フォーマット:
 //
 //	話者名: [感情] セリフ
+//	__SILENCE__: ミリ秒
+//	__SFX__: 効果音名
 //
 // - 感情は省略可能
 // - allowedSpeakers に含まれない話者名はエラー
-func Parse(text string, allowedSpeakers []string) ParseResult {
+// - allowedSfx が指定されている場合、含まれない効果音名はエラー（nil の場合はチェックしない）
+func Parse(text string, allowedSpeakers, allowedSfx []string) ParseResult {
 	result := ParseResult{
 		Lines:  []ParsedLine{},
 		Errors: []ParseError{},
@@ -45,6 +67,15 @@ func Parse(text string, allowedSpeakers []string) ParseResult {
 	speakerMap := make(map[string]bool, len(allowedSpeakers))
 	for _, s := range allowedSpeakers {
 		speakerMap[s] = true
+	}
+
+	// 許可された効果音名をマップに変換
+	var sfxMap map[string]bool
+	if allowedSfx != nil {
+		sfxMap = make(map[string]bool, len(allowedSfx))
+		for _, s := range allowedSfx {
+			sfxMap[s] = true
+		}
 	}
 
 	lines := strings.Split(text, "\n")
@@ -67,17 +98,68 @@ func Parse(text string, allowedSpeakers []string) ParseResult {
 			continue
 		}
 
-		speakerName := strings.TrimSpace(trimmed[:colonIdx])
+		keyword := strings.TrimSpace(trimmed[:colonIdx])
 		content := strings.TrimSpace(trimmed[colonIdx+1:])
 
-		// 話者名が空
-		if speakerName == "" {
+		// キーワードが空
+		if keyword == "" {
 			result.Errors = append(result.Errors, ParseError{
 				Line:   lineNum,
 				Reason: "話者名が空です",
 			})
 			continue
 		}
+
+		// __SILENCE__ の処理
+		if keyword == SilenceKeyword {
+			if content == "" {
+				result.Errors = append(result.Errors, ParseError{
+					Line:   lineNum,
+					Reason: "__SILENCE__ の値が空です",
+				})
+				continue
+			}
+			durationMs, err := strconv.Atoi(content)
+			if err != nil || durationMs <= 0 {
+				result.Errors = append(result.Errors, ParseError{
+					Line:   lineNum,
+					Reason: "__SILENCE__ の値は正の整数である必要があります",
+				})
+				continue
+			}
+			result.Lines = append(result.Lines, ParsedLine{
+				LineType:   LineTypeSilence,
+				DurationMs: durationMs,
+			})
+			continue
+		}
+
+		// __SFX__ の処理
+		if keyword == SfxKeyword {
+			if content == "" {
+				result.Errors = append(result.Errors, ParseError{
+					Line:   lineNum,
+					Reason: "__SFX__ の値が空です",
+				})
+				continue
+			}
+			// 許可リストがある場合はチェック
+			if sfxMap != nil && !sfxMap[content] {
+				result.Errors = append(result.Errors, ParseError{
+					Line:   lineNum,
+					Reason: "不明な効果音: " + content,
+				})
+				continue
+			}
+			result.Lines = append(result.Lines, ParsedLine{
+				LineType: LineTypeSfx,
+				SfxName:  content,
+			})
+			continue
+		}
+
+		// speech の処理
+		speakerName := keyword
 
 		// 話者名が許可リストにない
 		if !speakerMap[speakerName] {
@@ -116,6 +198,7 @@ func Parse(text string, allowedSpeakers []string) ParseResult {
 		}
 
 		result.Lines = append(result.Lines, ParsedLine{
+			LineType:    LineTypeSpeech,
 			SpeakerName: speakerName,
 			Text:        text,
 			Emotion:     emotion,

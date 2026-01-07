@@ -12,7 +12,7 @@ type Episode struct {
 	ChannelID   uuid.UUID  `gorm:"type:uuid;not null;column:channel_id"`
 	Title       string     `gorm:"type:varchar(255);not null"`
 	Description string     `gorm:"type:text;not null"`
-	UserPrompt  *string    `gorm:"type:text;column:user_prompt"`
+	UserPrompt  string     `gorm:"type:text;not null;default:'';column:user_prompt"`
 	ArtworkID   *uuid.UUID `gorm:"type:uuid;column:artwork_id"`
 	BgmID       *uuid.UUID `gorm:"type:uuid;column:bgm_id"`
 	FullAudioID *uuid.UUID `gorm:"type:uuid;column:full_audio_id"`

@@ -175,6 +175,11 @@ func (s *channelService) CreateChannel(ctx context.Context, userID string, req r
 		artworkID = &aid
 	}
 
+	// キャラクター数のバリデーション（1〜2件）
+	if req.Characters.Total() < 1 || req.Characters.Total() > 2 {
+		return nil, apperror.ErrValidation.WithMessage("Characters must have 1 to 2 items")
+	}
+
 	// キャラクターの処理（既存 or 新規作成）
 	characterIDs, err := s.processCharacterInputs(ctx, uid, req.Characters)
 	if err != nil {
@@ -421,82 +426,81 @@ func (s *channelService) UnpublishChannel(ctx context.Context, userID, channelID
 }
 
 // キャラクター入力を処理して、キャラクター ID のスライスを返す
-// 既存キャラクターの場合は ID を検証、新規キャラクターの場合は作成
-func (s *channelService) processCharacterInputs(ctx context.Context, userID uuid.UUID, inputs []request.ChannelCharacterInputRequest) ([]uuid.UUID, error) {
-	characterIDs := make([]uuid.UUID, len(inputs))
+// connect は既存キャラクターの紐づけ、create は新規キャラクターの作成
+func (s *channelService) processCharacterInputs(ctx context.Context, userID uuid.UUID, input request.ChannelCharactersInput) ([]uuid.UUID, error) {
+	characterIDs := make([]uuid.UUID, 0, input.Total())
 
-	for i, input := range inputs {
-		if input.IsExisting() {
-			// 既存キャラクター
-			cid, err := uuid.Parse(*input.ID)
-			if err != nil {
-				return nil, err
-			}
-
-			// キャラクターの存在確認とオーナーチェック
-			character, err := s.characterRepo.FindByID(ctx, cid)
-			if err != nil {
-				return nil, err
-			}
-			if character.UserID != userID {
-				return nil, apperror.ErrForbidden.WithMessage("You do not own the specified character")
-			}
-
-			characterIDs[i] = cid
-		} else {
-			// 新規キャラクター作成
-			if input.Name == nil || *input.Name == "" {
-				return nil, apperror.ErrValidation.WithMessage("Character name is required for new characters")
-			}
-			if input.VoiceID == nil || *input.VoiceID == "" {
-				return nil, apperror.ErrValidation.WithMessage("Character voiceId is required for new characters")
-			}
-
-			// ID と新規作成フィールドの両方が指定されている場合はエラー
-			// （IsExisting() が true なのでこのブロックには来ないが、念のため）
-
-			// 予約語チェック
-			if strings.HasPrefix(*input.Name, "__") {
-				return nil, apperror.ErrReservedName.WithMessage("Character name cannot start with '__'")
-			}
-
-			// 同一ユーザー内での名前重複チェック
-			exists, err := s.characterRepo.ExistsByUserIDAndName(ctx, userID, *input.Name, nil)
-			if err != nil {
-				return nil, err
-			}
-			if exists {
-				return nil, apperror.ErrDuplicateName.WithMessage("Character with this name already exists")
-			}
-
-			voiceID, err := uuid.Parse(*input.VoiceID)
-			if err != nil {
-				return nil, err
-			}
-
-			// ボイスの存在確認（アクティブなもののみ）
-			if _, err := s.voiceRepo.FindActiveByID(ctx, *input.VoiceID); err != nil {
-				return nil, err
-			}
-
-			persona := ""
-			if input.Persona != nil {
-				persona = *input.Persona
-			}
-
-			character := &model.Character{
-				UserID:  userID,
-				Name:    *input.Name,
-				Persona: persona,
-				VoiceID: voiceID,
-			}
-
-			if err := s.characterRepo.Create(ctx, character); err != nil {
-				return nil, err
-			}
-
-			characterIDs[i] = character.ID
+	// 既存キャラクターの紐づけ処理
+	for _, connect := range input.Connect {
+		cid, err := uuid.Parse(connect.ID)
+		if err != nil {
+			return nil, err
 		}
+
+		// キャラクターの存在確認とオーナーチェック
+		character, err := s.characterRepo.FindByID(ctx, cid)
+		if err != nil {
+			return nil, err
+		}
+		if character.UserID != userID {
+			return nil, apperror.ErrForbidden.WithMessage("You do not own the specified character")
+		}
+
+		characterIDs = append(characterIDs, cid)
+	}
+
+	// 新規キャラクターの作成処理
+	for _, create := range input.Create {
+		// 予約語チェック
+		if strings.HasPrefix(create.Name, "__") {
+			return nil, apperror.ErrReservedName.WithMessage("Character name cannot start with '__'")
+		}
+
+		// 同一ユーザー内での名前重複チェック
+		exists, err := s.characterRepo.ExistsByUserIDAndName(ctx, userID, create.Name, nil)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			return nil, apperror.ErrDuplicateName.WithMessage("Character with this name already exists")
+		}
+
+		voiceID, err := uuid.Parse(create.VoiceID)
+		if err != nil {
+			return nil, err
+		}
+
+		// ボイスの存在確認（アクティブなもののみ）
+		if _, err := s.voiceRepo.FindActiveByID(ctx, create.VoiceID); err != nil {
+			return nil, err
+		}
+
+		// アバター画像の存在確認（指定時のみ）
+		var avatarID *uuid.UUID
+		if create.AvatarID != nil {
+			aid, err := uuid.Parse(*create.AvatarID)
+			if err != nil {
+				return nil, err
+			}
+			if _, err := s.imageRepo.FindByID(ctx, aid); err != nil {
+				return nil, err
+			}
+			avatarID = &aid
+		}
+
+		character := &model.Character{
+			UserID:   userID,
+			Name:     create.Name,
+			Persona:  create.Persona,
+			AvatarID: avatarID,
+			VoiceID:  voiceID,
+		}
+
+		if err := s.characterRepo.Create(ctx, character); err != nil {
+			return nil, err
+		}
+
+		characterIDs = append(characterIDs, character.ID)
 	}
 
 	return characterIDs, nil

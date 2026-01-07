@@ -54,6 +54,7 @@ func (r *characterRepository) FindByUserID(ctx context.Context, userID uuid.UUID
 
 	// ページネーションとリレーションのプリロード
 	if err := tx.
+		Preload("Avatar").
 		Preload("Voice").
 		Preload("ChannelCharacters.Channel").
 		Order("created_at DESC").
@@ -72,6 +73,7 @@ func (r *characterRepository) FindByID(ctx context.Context, id uuid.UUID) (*mode
 	var character model.Character
 
 	if err := r.db.WithContext(ctx).
+		Preload("Avatar").
 		Preload("Voice").
 		Preload("ChannelCharacters.Channel").
 		First(&character, "id = ?", id).Error; err != nil {
@@ -96,6 +98,7 @@ func (r *characterRepository) FindByIDs(ctx context.Context, ids []uuid.UUID) ([
 	}
 
 	if err := r.db.WithContext(ctx).
+		Preload("Avatar").
 		Preload("Voice").
 		Where("id IN ?", ids).
 		Find(&characters).Error; err != nil {

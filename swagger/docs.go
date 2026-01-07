@@ -801,6 +801,77 @@ const docTemplate = `{
                 }
             }
         },
+        "/channels/{channelId}/episodes/{episodeId}/script/export": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "台本をテキストファイルとしてダウンロードします。",
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "script"
+                ],
+                "summary": "台本テキストを出力",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "チャンネル ID",
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "エピソード ID",
+                        "name": "episodeId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "台本テキスト",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/channels/{channelId}/episodes/{episodeId}/script/generate": {
             "post": {
                 "security": [
@@ -841,6 +912,89 @@ const docTemplate = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/request.GenerateScriptRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ScriptLineListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/channels/{channelId}/episodes/{episodeId}/script/import": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "テキスト形式の台本をインポートします。既存の台本がある場合は全て削除されます。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "script"
+                ],
+                "summary": "台本テキストを取り込み",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "チャンネル ID",
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "エピソード ID",
+                        "name": "episodeId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "台本インポートリクエスト",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ImportScriptRequest"
                         }
                     }
                 ],
@@ -1799,23 +1953,30 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "request.ChannelCharacterInputRequest": {
+        "request.ChannelCharactersInput": {
             "type": "object",
             "properties": {
+                "connect": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ConnectCharacterInput"
+                    }
+                },
+                "create": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.CreateCharacterInput"
+                    }
+                }
+            }
+        },
+        "request.ConnectCharacterInput": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
                 "id": {
-                    "description": "既存キャラクターを指定する場合",
-                    "type": "string"
-                },
-                "name": {
-                    "description": "新規キャラクターを作成する場合",
-                    "type": "string",
-                    "maxLength": 255
-                },
-                "persona": {
-                    "type": "string",
-                    "maxLength": 2000
-                },
-                "voiceId": {
                     "type": "string"
                 }
             }
@@ -1837,12 +1998,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "characters": {
-                    "type": "array",
-                    "maxItems": 2,
-                    "minItems": 1,
-                    "items": {
-                        "$ref": "#/definitions/request.ChannelCharacterInputRequest"
-                    }
+                    "$ref": "#/definitions/request.ChannelCharactersInput"
                 },
                 "description": {
                     "type": "string",
@@ -1855,6 +2011,29 @@ const docTemplate = `{
                 "userPrompt": {
                     "type": "string",
                     "maxLength": 2000
+                }
+            }
+        },
+        "request.CreateCharacterInput": {
+            "type": "object",
+            "required": [
+                "name",
+                "voiceId"
+            ],
+            "properties": {
+                "avatarId": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "persona": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "voiceId": {
+                    "type": "string"
                 }
             }
         },
@@ -1900,6 +2079,17 @@ const docTemplate = `{
                 "withEmotion": {
                     "description": "感情を付与するかどうか",
                     "type": "boolean"
+                }
+            }
+        },
+        "request.ImportScriptRequest": {
+            "type": "object",
+            "required": [
+                "text"
+            ],
+            "properties": {
+                "text": {
+                    "type": "string"
                 }
             }
         },
@@ -2346,6 +2536,14 @@ const docTemplate = `{
                 "voice"
             ],
             "properties": {
+                "avatar": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.AvatarResponse"
+                        }
+                    ],
+                    "x-nullable": true
+                },
                 "channels": {
                     "type": "array",
                     "items": {
@@ -2449,7 +2647,8 @@ const docTemplate = `{
                 "description",
                 "id",
                 "title",
-                "updatedAt"
+                "updatedAt",
+                "userPrompt"
             ],
             "properties": {
                 "artwork": {

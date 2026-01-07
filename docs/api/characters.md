@@ -25,6 +25,10 @@ GET /me/characters
       "id": "uuid",
       "name": "太郎",
       "persona": "明るく元気な性格",
+      "avatar": {
+        "id": "uuid",
+        "url": "https://storage.example.com/images/xxx.png?signature=..."
+      },
       "voice": {
         "id": "uuid",
         "name": "ja-JP-Wavenet-C",
@@ -58,6 +62,10 @@ GET /me/characters/:characterId
     "id": "uuid",
     "name": "太郎",
     "persona": "明るく元気な性格",
+    "avatar": {
+      "id": "uuid",
+      "url": "https://storage.example.com/images/xxx.png?signature=..."
+    },
     "voice": {
       "id": "uuid",
       "name": "ja-JP-Wavenet-C",
@@ -83,6 +91,7 @@ POST /me/characters
 {
   "name": "太郎",
   "persona": "明るく元気な性格。語尾に「だよね」をつける。",
+  "avatarId": "uuid",
   "voiceId": "uuid"
 }
 ```
@@ -93,6 +102,7 @@ POST /me/characters
 |------------|--------|
 | name | 必須、255文字以内、同一ユーザー内で一意、`__` で始まる名前は禁止 |
 | persona | 2000文字以内 |
+| avatarId | UUID 形式、存在する画像のみ指定可能 |
 | voiceId | 必須、UUID 形式、is_active = true のボイスのみ指定可能 |
 
 **レスポンス（201 Created）:**
@@ -102,6 +112,10 @@ POST /me/characters
     "id": "uuid",
     "name": "太郎",
     "persona": "明るく元気な性格。語尾に「だよね」をつける。",
+    "avatar": {
+      "id": "uuid",
+      "url": "https://storage.example.com/images/xxx.png?signature=..."
+    },
     "voice": {
       "id": "uuid",
       "name": "ja-JP-Wavenet-C",
@@ -137,6 +151,7 @@ PATCH /me/characters/:characterId
 {
   "name": "新しい名前",
   "persona": "新しいペルソナ",
+  "avatarId": "uuid",
   "voiceId": "uuid"
 }
 ```
@@ -147,6 +162,7 @@ PATCH /me/characters/:characterId
 |------------|--------|
 | name | 255文字以内、同一ユーザー内で一意、`__` で始まる名前は禁止 |
 | persona | 2000文字以内 |
+| avatarId | UUID 形式、存在する画像のみ指定可能 |
 | voiceId | UUID 形式、is_active = true のボイスのみ指定可能 |
 
 **レスポンス（200 OK）:**
@@ -156,6 +172,10 @@ PATCH /me/characters/:characterId
     "id": "uuid",
     "name": "新しい名前",
     "persona": "新しいペルソナ",
+    "avatar": {
+      "id": "uuid",
+      "url": "https://storage.example.com/images/xxx.png?signature=..."
+    },
     "voice": {
       "id": "uuid",
       "name": "ja-JP-Wavenet-C",

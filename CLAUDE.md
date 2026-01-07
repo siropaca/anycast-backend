@@ -114,6 +114,13 @@
 - ポインタ型で `null` を返すフィールド（`omitempty` なし）には `extensions:"x-nullable"` タグを付ける
   - TypeScript の型が `string | null` のように nullable として生成される
   - `omitempty` があるフィールドは JSON から除外されるため不要
+- リレーション操作（既存の紐づけ / 新規作成）を含むリクエストは `connect` / `create` パターンを使用する
+  ```go
+  type XxxInput struct {
+      Connect []ConnectXxxInput `json:"connect"`
+      Create  []CreateXxxInput  `json:"create"`
+  }
+  ```
 
 ### マイグレーション
 

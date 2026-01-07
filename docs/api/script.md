@@ -40,21 +40,37 @@ POST /channels/:channelId/episodes/:episodeId/script/generate
 POST /channels/:channelId/episodes/:episodeId/script/import
 ```
 
+テキスト形式の台本をインポートする。既存の台本がある場合は全て削除される。
+
 **リクエスト:**
 ```json
 {
-  "text": "太郎: こんにちは\n花子: やあ\n__SILENCE__: 800\n__SFX__: chime"
+  "text": "太郎: こんにちは\n花子: [嬉しそうに] やあ\n__SILENCE__: 800\n__SFX__: chime"
 }
 ```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| text | string | ◯ | 台本テキスト |
+
+**テキストフォーマット:**
+
+| 行タイプ | 形式 | 例 |
+|----------|------|-----|
+| speech | `話者名: [感情] セリフ` | `太郎: [嬉しそうに] こんにちは` |
+| silence | `__SILENCE__: ミリ秒` | `__SILENCE__: 800` |
+| sfx | `__SFX__: 効果音名` | `__SFX__: chime` |
+
+- `[感情]` は省略可能
+- 話者名はチャンネルに登録されているキャラクター名のみ使用可能
+- 効果音名は登録済みの効果音名のみ使用可能
 
 **レスポンス（成功時）:**
 ```json
 {
-  "data": {
-    "lines": [
-      { "id": "uuid", "lineOrder": 0, "lineType": "speech", ... }
-    ]
-  }
+  "data": [
+    { "id": "uuid", "lineOrder": 0, "lineType": "speech", ... }
+  ]
 }
 ```
 
@@ -80,13 +96,17 @@ POST /channels/:channelId/episodes/:episodeId/script/import
 GET /channels/:channelId/episodes/:episodeId/script/export
 ```
 
+台本をテキストファイルとしてダウンロードする。出力されたテキストはそのままインポート可能。
+
 **レスポンス:**
-```json
-{
-  "data": {
-    "text": "太郎: こんにちは\n花子: やあ\n__SILENCE__: 800"
-  }
-}
+- Content-Type: `text/plain; charset=utf-8`
+- Content-Disposition: `attachment; filename="エピソード名.txt"; filename*=UTF-8''...`
+
+```
+太郎: こんにちは
+花子: [嬉しそうに] やあ
+__SILENCE__: 800
+__SFX__: chime
 ```
 
 ---

@@ -354,15 +354,15 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 		handler := NewChannelHandler(mockSvc)
 		router := setupAuthenticatedChannelRouter(handler, userID)
 
-		hostName := "Host"
-		hostPersona := "Friendly"
 		reqBody := request.CreateChannelRequest{
 			Name:        "New Channel",
 			Description: "Description",
 			UserPrompt:  "User prompt",
 			CategoryID:  categoryID,
-			Characters: []request.ChannelCharacterInputRequest{
-				{Name: &hostName, Persona: &hostPersona, VoiceID: &voiceID},
+			Characters: request.ChannelCharactersInput{
+				Create: []request.CreateCharacterInput{
+					{Name: "Host", Persona: "Friendly", VoiceID: voiceID},
+				},
 			},
 		}
 		body, _ := json.Marshal(reqBody)
@@ -407,15 +407,15 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 		handler := NewChannelHandler(mockSvc)
 		router := setupAuthenticatedChannelRouter(handler, userID)
 
-		hostName := "Host"
-		hostPersona := "Friendly"
 		reqBody := request.CreateChannelRequest{
 			Name:        "New Channel",
 			Description: "Description",
 			UserPrompt:  "User prompt",
 			CategoryID:  categoryID,
-			Characters: []request.ChannelCharacterInputRequest{
-				{Name: &hostName, Persona: &hostPersona, VoiceID: &voiceID},
+			Characters: request.ChannelCharactersInput{
+				Create: []request.CreateCharacterInput{
+					{Name: "Host", Persona: "Friendly", VoiceID: voiceID},
+				},
 			},
 		}
 		body, _ := json.Marshal(reqBody)
@@ -434,15 +434,15 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 		handler := NewChannelHandler(mockSvc)
 		router := setupChannelRouter(handler)
 
-		hostName := "Host"
-		hostPersona := "Friendly"
 		reqBody := request.CreateChannelRequest{
 			Name:        "New Channel",
 			Description: "Description",
 			UserPrompt:  "User prompt",
 			CategoryID:  categoryID,
-			Characters: []request.ChannelCharacterInputRequest{
-				{Name: &hostName, Persona: &hostPersona, VoiceID: &voiceID},
+			Characters: request.ChannelCharactersInput{
+				Create: []request.CreateCharacterInput{
+					{Name: "Host", Persona: "Friendly", VoiceID: voiceID},
+				},
 			},
 		}
 		body, _ := json.Marshal(reqBody)
