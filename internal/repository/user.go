@@ -15,6 +15,7 @@ import (
 // ユーザーデータへのアクセスインターフェース
 type UserRepository interface {
 	Create(ctx context.Context, user *model.User) error
+	Update(ctx context.Context, user *model.User) error
 	FindByID(ctx context.Context, id uuid.UUID) (*model.User, error)
 	FindByEmail(ctx context.Context, email string) (*model.User, error)
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
@@ -35,6 +36,16 @@ func (r *userRepository) Create(ctx context.Context, user *model.User) error {
 	if err := r.db.WithContext(ctx).Create(user).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to create user", "error", err)
 		return apperror.ErrInternal.WithMessage("Failed to create user").WithError(err)
+	}
+
+	return nil
+}
+
+// ユーザーを更新する
+func (r *userRepository) Update(ctx context.Context, user *model.User) error {
+	if err := r.db.WithContext(ctx).Save(user).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to update user", "error", err, "user_id", user.ID)
+		return apperror.ErrInternal.WithMessage("Failed to update user").WithError(err)
 	}
 
 	return nil

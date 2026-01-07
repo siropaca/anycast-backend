@@ -79,7 +79,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	categoryService := service.NewCategoryService(categoryRepo)
 	episodeService := service.NewEpisodeService(episodeRepo, channelRepo, storageClient)
 	scriptLineService := service.NewScriptLineService(db, scriptLineRepo, episodeRepo, channelRepo, audioRepo, ttsClient, storageClient)
-	scriptService := service.NewScriptService(db, channelRepo, episodeRepo, scriptLineRepo, soundEffectRepo, llmClient, storageClient)
+	scriptService := service.NewScriptService(db, userRepo, channelRepo, episodeRepo, scriptLineRepo, soundEffectRepo, llmClient, storageClient)
 	cleanupService := service.NewCleanupService(audioRepo, imageRepo, storageClient)
 	imageService := service.NewImageService(imageRepo, storageClient)
 

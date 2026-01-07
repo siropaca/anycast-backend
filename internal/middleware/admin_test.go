@@ -51,6 +51,11 @@ func (m *mockUserRepository) ExistsByUsername(ctx context.Context, username stri
 	return args.Bool(0), args.Error(1)
 }
 
+func (m *mockUserRepository) Update(ctx context.Context, user *model.User) error {
+	args := m.Called(ctx, user)
+	return args.Error(0)
+}
+
 func setupAdminRouter(userRepo *mockUserRepository) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()

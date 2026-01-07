@@ -2845,6 +2845,7 @@ const docTemplate = `{
                 "id",
                 "oauthProviders",
                 "role",
+                "userPrompt",
                 "username"
             ],
             "properties": {
@@ -2878,6 +2879,9 @@ const docTemplate = `{
                     }
                 },
                 "role": {
+                    "type": "string"
+                },
+                "userPrompt": {
                     "type": "string"
                 },
                 "username": {

@@ -340,6 +340,7 @@ func (s *authService) GetMe(ctx context.Context, userID string) (*response.MeRes
 		DisplayName:    user.DisplayName,
 		Role:           string(user.Role),
 		Avatar:         avatar,
+		UserPrompt:     user.UserPrompt,
 		HasPassword:    hasPassword,
 		OAuthProviders: providers,
 		CreatedAt:      user.CreatedAt,

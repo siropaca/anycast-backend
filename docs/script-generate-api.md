@@ -36,6 +36,7 @@
 │ 4. 既存の台本行を削除（再生成のため）                                        │
 │ 5. LLM 用プロンプト構築                                                     │
 │    - システムプロンプト（サーバー側固定、ユーザー閲覧/変更不可）             │
+│    - user.userPrompt（ユーザー基本方針）                                   │
 │    - channel.userPrompt（チャンネル全体方針）                              │
 │    - channel.characters（登場人物情報）                                     │
 │    - prompt（ユーザー入力）                                                 │
@@ -64,6 +65,7 @@
                         ▼
 ┌───────────────────────────────────────────────────────┐
 │ User Prompt                                           │
+│ ├─ user.userPrompt（ユーザー基本方針）                │
 │ ├─ channel.name（チャンネル名）                       │
 │ ├─ channel.description（チャンネル説明）              │
 │ ├─ channel.category（チャンネルカテゴリー）           │
@@ -81,6 +83,7 @@
 | 情報 | 取得元 | 説明 |
 |------|--------|------|
 | システムプロンプト | サーバー側固定 | ポッドキャスト台本生成の基本ルール（ユーザー閲覧/変更不可） |
+| userPrompt | user.userPrompt | ユーザーの基本方針（全チャンネル・エピソードに適用） |
 | name | channel.name | チャンネル名 |
 | description | channel.description | チャンネルの説明 |
 | category | channel.category | チャンネルのカテゴリー（コメディ、教育、ニュースなど） |
@@ -90,6 +93,14 @@
 | description | episode.description | エピソードの説明 |
 | prompt | リクエスト | ユーザーが入力したテーマ/シナリオ |
 | durationMinutes | リクエスト | エピソードの長さ（分）。3〜30分、デフォルト10分 |
+
+### プロンプト適用順序
+
+台本生成時、プロンプトは以下の順序で結合（追記）される：
+
+1. **user.userPrompt** - ユーザーの基本方針
+2. **channel.userPrompt** - チャンネル固有の方針
+3. **episode.userPrompt**（リクエストの prompt）- エピソード固有の設定
 
 ### 出力形式（LLM に期待する形式）
 
@@ -155,6 +166,9 @@
 ### ユーザープロンプト構築例
 
 ```
+## ユーザー設定
+{user.userPrompt}
+
 ## チャンネル情報
 チャンネル名: {channel.name}
 説明: {channel.description}
@@ -177,6 +191,8 @@
 ## 今回のテーマ
 {prompt}
 ```
+
+※ `user.userPrompt` と `channel.userPrompt` が空の場合、それぞれのセクションは省略される
 
 ---
 

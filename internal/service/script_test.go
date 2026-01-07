@@ -100,6 +100,9 @@ func TestBuildUserPrompt(t *testing.T) {
 	svc := &scriptService{}
 
 	t.Run("チャンネル設定とキャラクターが正しく含まれる", func(t *testing.T) {
+		user := &model.User{
+			UserPrompt: "ユーザーの基本方針",
+		}
 		channel := &model.Channel{
 			Name:       "テックラジオ",
 			UserPrompt: "テック系ポッドキャスト",
@@ -113,8 +116,10 @@ func TestBuildUserPrompt(t *testing.T) {
 			Title: "AI の未来",
 		}
 
-		result := svc.buildUserPrompt(channel, episode, "AI について語る", 10)
+		result := svc.buildUserPrompt(user, channel, episode, "AI について語る", 10)
 
+		assert.Contains(t, result, "## ユーザー設定")
+		assert.Contains(t, result, "ユーザーの基本方針")
 		assert.Contains(t, result, "## チャンネル情報")
 		assert.Contains(t, result, "チャンネル名: テックラジオ")
 		assert.Contains(t, result, "カテゴリー: テクノロジー")
@@ -131,7 +136,10 @@ func TestBuildUserPrompt(t *testing.T) {
 		assert.Contains(t, result, "AI について語る")
 	})
 
-	t.Run("チャンネル設定が空の場合は省略される", func(t *testing.T) {
+	t.Run("ユーザー・チャンネル設定が空の場合は省略される", func(t *testing.T) {
+		user := &model.User{
+			UserPrompt: "",
+		}
 		channel := &model.Channel{
 			Name:       "テストチャンネル",
 			UserPrompt: "",
@@ -144,14 +152,16 @@ func TestBuildUserPrompt(t *testing.T) {
 			Title: "テストエピソード",
 		}
 
-		result := svc.buildUserPrompt(channel, episode, "テスト", 5)
+		result := svc.buildUserPrompt(user, channel, episode, "テスト", 5)
 
+		assert.NotContains(t, result, "## ユーザー設定")
 		assert.NotContains(t, result, "## チャンネル設定")
 		assert.Contains(t, result, "## 登場人物")
 		assert.Contains(t, result, "- 太郎（male）")
 	})
 
 	t.Run("キャラクターのペルソナが空の場合は名前のみ", func(t *testing.T) {
+		user := &model.User{}
 		channel := &model.Channel{
 			Name:     "テストチャンネル",
 			Category: model.Category{Name: "教育"},
@@ -164,7 +174,7 @@ func TestBuildUserPrompt(t *testing.T) {
 			Title: "テストエピソード",
 		}
 
-		result := svc.buildUserPrompt(channel, episode, "テスト", 10)
+		result := svc.buildUserPrompt(user, channel, episode, "テスト", 10)
 
 		assert.Contains(t, result, "- 太郎（male）\n")
 		assert.Contains(t, result, "- 花子（female）: ゲスト")

@@ -2839,6 +2839,7 @@
                 "id",
                 "oauthProviders",
                 "role",
+                "userPrompt",
                 "username"
             ],
             "properties": {
@@ -2872,6 +2873,9 @@
                     }
                 },
                 "role": {
+                    "type": "string"
+                },
+                "userPrompt": {
                     "type": "string"
                 },
                 "username": {

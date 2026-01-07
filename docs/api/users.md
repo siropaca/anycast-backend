@@ -38,6 +38,7 @@ GET /me
     "username": "user_name",
     "displayName": "ユーザー名",
     "avatar": { "id": "uuid", "url": "..." },
+    "userPrompt": "台本生成の基本方針...",
     "hasPassword": true,
     "oauthProviders": ["google"],
     "createdAt": "2025-01-01T00:00:00Z"
@@ -61,3 +62,45 @@ PATCH /me
   "avatarImageId": "uuid"
 }
 ```
+
+---
+
+## ユーザープロンプト更新
+
+```
+PATCH /me/prompt
+```
+
+ユーザーの台本生成用プロンプト（基本方針）を更新する。このプロンプトはユーザーのすべてのチャンネル・エピソードの台本生成に適用される。
+
+**リクエスト:**
+```json
+{
+  "userPrompt": "台本生成の基本方針..."
+}
+```
+
+**レスポンス:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "username": "user_name",
+    "displayName": "ユーザー名",
+    "avatar": { "id": "uuid", "url": "..." },
+    "userPrompt": "台本生成の基本方針...",
+    "hasPassword": true,
+    "oauthProviders": ["google"],
+    "createdAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+### プロンプトの適用順序
+
+台本生成時、プロンプトは以下の順序で結合（追記）される：
+
+1. **User.userPrompt** - ユーザーの基本方針
+2. **Channel.userPrompt** - チャンネル固有の方針
+3. **Episode.userPrompt** - エピソード固有の設定
