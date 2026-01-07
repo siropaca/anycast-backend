@@ -14,6 +14,7 @@ import (
 
 // 画像データへのアクセスインターフェース
 type ImageRepository interface {
+	Create(ctx context.Context, image *model.Image) error
 	FindByID(ctx context.Context, id uuid.UUID) (*model.Image, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 	FindOrphaned(ctx context.Context) ([]model.Image, error)
@@ -26,6 +27,16 @@ type imageRepository struct {
 // ImageRepository の実装を返す
 func NewImageRepository(db *gorm.DB) ImageRepository {
 	return &imageRepository{db: db}
+}
+
+// 画像を作成する
+func (r *imageRepository) Create(ctx context.Context, image *model.Image) error {
+	if err := r.db.WithContext(ctx).Create(image).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to create image", "error", err)
+		return apperror.ErrInternal.WithMessage("Failed to create image").WithError(err)
+	}
+
+	return nil
 }
 
 // 指定された ID の画像を取得する
