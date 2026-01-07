@@ -29,7 +29,7 @@ func TestToEpisodeResponse(t *testing.T) {
 		ChannelID:   channelID,
 		Title:       "Test Episode",
 		Description: description,
-		UserPrompt:  &userPrompt,
+		UserPrompt:  userPrompt,
 		PublishedAt: &now,
 		CreatedAt:   now,
 		UpdatedAt:   now,
@@ -46,7 +46,7 @@ func TestToEpisodeResponse(t *testing.T) {
 		assert.Equal(t, episodeID, resp.ID)
 		assert.Equal(t, "Test Episode", resp.Title)
 		assert.Equal(t, description, resp.Description)
-		assert.Equal(t, &userPrompt, resp.UserPrompt)
+		assert.Equal(t, userPrompt, resp.UserPrompt)
 		assert.NotNil(t, resp.PublishedAt)
 		assert.Equal(t, now, resp.CreatedAt)
 		assert.Equal(t, now, resp.UpdatedAt)
@@ -141,7 +141,7 @@ func TestToEpisodeResponses(t *testing.T) {
 			ChannelID:   channelID,
 			Title:       "Episode 1",
 			Description: "Description 1",
-			UserPrompt:  &prompt1,
+			UserPrompt:  prompt1,
 			CreatedAt:   now,
 			UpdatedAt:   now,
 		},
@@ -150,7 +150,7 @@ func TestToEpisodeResponses(t *testing.T) {
 			ChannelID:   channelID,
 			Title:       "Episode 2",
 			Description: "Description 2",
-			UserPrompt:  &prompt2,
+			UserPrompt:  prompt2,
 			CreatedAt:   now,
 			UpdatedAt:   now,
 		},
@@ -177,8 +177,8 @@ func TestToEpisodeResponses(t *testing.T) {
 		result, err := svc.toEpisodeResponses(ctx, episodes)
 
 		assert.NoError(t, err)
-		assert.Equal(t, &prompt1, result[0].UserPrompt)
-		assert.Equal(t, &prompt2, result[1].UserPrompt)
+		assert.Equal(t, prompt1, result[0].UserPrompt)
+		assert.Equal(t, prompt2, result[1].UserPrompt)
 	})
 
 	t.Run("空のスライスの場合、空のスライスを返す", func(t *testing.T) {

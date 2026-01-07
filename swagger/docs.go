@@ -2457,7 +2457,8 @@ const docTemplate = `{
                 "description",
                 "id",
                 "title",
-                "updatedAt"
+                "updatedAt",
+                "userPrompt"
             ],
             "properties": {
                 "artwork": {

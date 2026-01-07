@@ -229,7 +229,7 @@ func (s *scriptService) GenerateScript(ctx context.Context, userID, channelID, e
 		createdLines = created
 
 		// episode.userPrompt を更新
-		episode.UserPrompt = &prompt
+		episode.UserPrompt = prompt
 		if err := txEpisodeRepo.Update(ctx, episode); err != nil {
 			return err
 		}
