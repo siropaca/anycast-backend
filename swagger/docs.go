@@ -801,6 +801,77 @@ const docTemplate = `{
                 }
             }
         },
+        "/channels/{channelId}/episodes/{episodeId}/script/export": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "台本をテキスト形式でエクスポートします。",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "script"
+                ],
+                "summary": "台本テキストを出力",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "チャンネル ID",
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "エピソード ID",
+                        "name": "episodeId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ExportScriptResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/channels/{channelId}/episodes/{episodeId}/script/generate": {
             "post": {
                 "security": [
@@ -841,6 +912,89 @@ const docTemplate = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/request.GenerateScriptRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ScriptLineListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/channels/{channelId}/episodes/{episodeId}/script/import": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "テキスト形式の台本をインポートします。既存の台本がある場合は全て削除されます。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "script"
+                ],
+                "summary": "台本テキストを取り込み",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "チャンネル ID",
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "エピソード ID",
+                        "name": "episodeId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "台本インポートリクエスト",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ImportScriptRequest"
                         }
                     }
                 ],
@@ -1928,6 +2082,17 @@ const docTemplate = `{
                 }
             }
         },
+        "request.ImportScriptRequest": {
+            "type": "object",
+            "required": [
+                "text"
+            ],
+            "properties": {
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
         "request.LoginRequest": {
             "type": "object",
             "required": [
@@ -2552,6 +2717,28 @@ const docTemplate = `{
             "properties": {
                 "error": {
                     "$ref": "#/definitions/response.ErrorDetail"
+                }
+            }
+        },
+        "response.ExportScriptData": {
+            "type": "object",
+            "required": [
+                "text"
+            ],
+            "properties": {
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.ExportScriptResponse": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.ExportScriptData"
                 }
             }
         },

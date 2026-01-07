@@ -53,8 +53,8 @@
 | GET | `/api/v1/me/channels/:channelId/episodes/:episodeId` | 自分のチャンネルのエピソード取得 | ✅ | [詳細](./episodes.md#自分のチャンネルのエピソード取得) |
 | **Script（台本）** | - | - | - | [script.md](./script.md) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/generate` | 台本を AI で生成 | ✅ | [詳細](./script.md#台本を-ai-で生成) |
-| POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/import` | 台本テキスト取り込み | | [詳細](./script.md#台本テキスト取り込み) |
-| GET | `/api/v1/channels/:channelId/episodes/:episodeId/script/export` | 台本テキスト出力 | | [詳細](./script.md#台本テキスト出力) |
+| POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/import` | 台本テキスト取り込み | ✅ | [詳細](./script.md#台本テキスト取り込み) |
+| GET | `/api/v1/channels/:channelId/episodes/:episodeId/script/export` | 台本テキスト出力 | ✅ | [詳細](./script.md#台本テキスト出力) |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines` | 台本行一覧取得 | ✅ | [詳細](./script.md#台本行一覧取得) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines` | 行追加 | | [詳細](./script.md#行追加) |
 | PATCH | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | 行更新 | | [詳細](./script.md#行更新) |

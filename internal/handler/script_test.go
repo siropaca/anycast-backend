@@ -31,6 +31,24 @@ func (m *mockScriptService) GenerateScript(ctx context.Context, userID, channelI
 	return args.Get(0).(*response.ScriptLineListResponse), args.Error(1)
 }
 
+func (m *mockScriptService) ImportScript(ctx context.Context, userID, channelID, episodeID, text string) (*response.ScriptLineListResponse, error) {
+	args := m.Called(ctx, userID, channelID, episodeID, text)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+
+	return args.Get(0).(*response.ScriptLineListResponse), args.Error(1)
+}
+
+func (m *mockScriptService) ExportScript(ctx context.Context, userID, channelID, episodeID string) (*response.ExportScriptResponse, error) {
+	args := m.Called(ctx, userID, channelID, episodeID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+
+	return args.Get(0).(*response.ExportScriptResponse), args.Error(1)
+}
+
 // テスト用のルーターをセットアップする
 func setupScriptRouter(h *ScriptHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)

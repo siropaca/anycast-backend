@@ -37,6 +37,19 @@ Content-Type: application/json
   "withEmotion": true
 }
 
+### 台本テキスト取り込み
+POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/import
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "text": "太郎: こんにちは\n花子: やあ"
+}
+
+### 台本テキスト出力
+GET {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/export
+Authorization: Bearer {{token}}
+
 ### 台本行削除
 DELETE {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/lines/YOUR_LINE_ID_HERE
 Authorization: Bearer {{token}}
