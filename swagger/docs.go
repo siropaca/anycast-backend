@@ -1799,23 +1799,30 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "request.ChannelCharacterInputRequest": {
+        "request.ChannelCharactersInput": {
             "type": "object",
             "properties": {
+                "connect": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.ConnectCharacterInput"
+                    }
+                },
+                "create": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.CreateCharacterInput"
+                    }
+                }
+            }
+        },
+        "request.ConnectCharacterInput": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
                 "id": {
-                    "description": "既存キャラクターを指定する場合",
-                    "type": "string"
-                },
-                "name": {
-                    "description": "新規キャラクターを作成する場合",
-                    "type": "string",
-                    "maxLength": 255
-                },
-                "persona": {
-                    "type": "string",
-                    "maxLength": 2000
-                },
-                "voiceId": {
                     "type": "string"
                 }
             }
@@ -1837,12 +1844,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "characters": {
-                    "type": "array",
-                    "maxItems": 2,
-                    "minItems": 1,
-                    "items": {
-                        "$ref": "#/definitions/request.ChannelCharacterInputRequest"
-                    }
+                    "$ref": "#/definitions/request.ChannelCharactersInput"
                 },
                 "description": {
                     "type": "string",
@@ -1855,6 +1857,29 @@ const docTemplate = `{
                 "userPrompt": {
                     "type": "string",
                     "maxLength": 2000
+                }
+            }
+        },
+        "request.CreateCharacterInput": {
+            "type": "object",
+            "required": [
+                "name",
+                "voiceId"
+            ],
+            "properties": {
+                "avatarId": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "persona": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "voiceId": {
+                    "type": "string"
                 }
             }
         },

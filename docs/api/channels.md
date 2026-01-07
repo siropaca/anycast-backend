@@ -96,20 +96,25 @@ POST /channels
   "userPrompt": "明るく楽しい雰囲気で...",
   "categoryId": "uuid",
   "artworkImageId": "uuid",
-  "characters": [
-    { "id": "uuid" },
-    {
-      "name": "新しいキャラ",
-      "persona": "明るく元気な性格",
-      "voiceId": "uuid"
-    }
-  ]
+  "characters": {
+    "connect": [
+      { "id": "uuid" }
+    ],
+    "create": [
+      {
+        "name": "新しいキャラ",
+        "persona": "明るく元気な性格",
+        "avatarId": "uuid",
+        "voiceId": "uuid"
+      }
+    ]
+  }
 }
 ```
 
-`characters` 配列の各要素は、以下のいずれかの形式で指定:
-- **既存キャラクター**: `{ "id": "uuid" }` - 自分が所有するキャラクターの ID を指定
-- **新規キャラクター**: `{ "name": "...", "persona": "...", "voiceId": "..." }` - その場で作成
+`characters` オブジェクトの各フィールド:
+- **connect**: 既存キャラクターを紐づける（自分が所有するキャラクターの ID を指定）
+- **create**: 新規キャラクターを作成して紐づける
 
 **バリデーション:**
 
@@ -119,13 +124,12 @@ POST /channels
 | description | 必須、2000文字以内 |
 | userPrompt | 必須、2000文字以内 |
 | categoryId | 必須、UUID 形式 |
-| characters | 必須、1〜2件 |
-| characters[].id | UUID 形式、自分が所有するキャラクターのみ |
-| characters[].name | 新規作成時は必須、255文字以内、同一ユーザー内で一意、`__` 始まり禁止 |
-| characters[].persona | 2000文字以内 |
-| characters[].voiceId | 新規作成時は必須、UUID 形式、is_active = true のボイスのみ |
-
-> **Note:** `id` と `name`/`voiceId` を同時に指定した場合はエラー
+| characters | 必須、connect と create の合計が 1〜2 件 |
+| characters.connect[].id | 必須、UUID 形式、自分が所有するキャラクターのみ |
+| characters.create[].name | 必須、255文字以内、同一ユーザー内で一意、`__` 始まり禁止 |
+| characters.create[].persona | 2000文字以内 |
+| characters.create[].avatarId | UUID 形式 |
+| characters.create[].voiceId | 必須、UUID 形式、is_active = true のボイスのみ |
 
 ---
 
@@ -351,32 +355,36 @@ PUT /channels/:channelId/characters
 **リクエスト:**
 ```json
 {
-  "characters": [
-    { "id": "uuid" },
-    {
-      "name": "新しいキャラ",
-      "persona": "明るく元気な性格",
-      "voiceId": "uuid"
-    }
-  ]
+  "characters": {
+    "connect": [
+      { "id": "uuid" }
+    ],
+    "create": [
+      {
+        "name": "新しいキャラ",
+        "persona": "明るく元気な性格",
+        "avatarId": "uuid",
+        "voiceId": "uuid"
+      }
+    ]
+  }
 }
 ```
 
-`characters` 配列の各要素は、以下のいずれかの形式で指定:
-- **既存キャラクター**: `{ "id": "uuid" }` - 自分が所有するキャラクターの ID を指定
-- **新規キャラクター**: `{ "name": "...", "persona": "...", "voiceId": "..." }` - その場で作成
+`characters` オブジェクトの各フィールド:
+- **connect**: 既存キャラクターを紐づける（自分が所有するキャラクターの ID を指定）
+- **create**: 新規キャラクターを作成して紐づける
 
 **バリデーション:**
 
 | フィールド | ルール |
 |------------|--------|
-| characters | 必須、1〜2件 |
-| characters[].id | UUID 形式、自分が所有するキャラクターのみ |
-| characters[].name | 新規作成時は必須、255文字以内、同一ユーザー内で一意、`__` 始まり禁止 |
-| characters[].persona | 2000文字以内 |
-| characters[].voiceId | 新規作成時は必須、UUID 形式、is_active = true のボイスのみ |
-
-> **Note:** `id` と `name`/`voiceId` を同時に指定した場合はエラー
+| characters | 必須、connect と create の合計が 1〜2 件 |
+| characters.connect[].id | 必須、UUID 形式、自分が所有するキャラクターのみ |
+| characters.create[].name | 必須、255文字以内、同一ユーザー内で一意、`__` 始まり禁止 |
+| characters.create[].persona | 2000文字以内 |
+| characters.create[].avatarId | UUID 形式 |
+| characters.create[].voiceId | 必須、UUID 形式、is_active = true のボイスのみ |
 
 **レスポンス（200 OK）:**
 ```json
