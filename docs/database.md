@@ -19,6 +19,7 @@ erDiagram
     channels ||--o| images : artwork
     characters ||--o{ channel_characters : assigned_to
     characters ||--|| voices : uses
+    characters ||--o| images : avatar
     episodes ||--o{ script_lines : has
     episodes ||--o{ likes : has
     episodes ||--o{ bookmarks : has
@@ -123,6 +124,7 @@ erDiagram
         uuid user_id FK
         varchar name
         text persona
+        uuid avatar_id FK
         uuid voice_id FK
         timestamp created_at
         timestamp updated_at
@@ -333,6 +335,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | user_id | UUID | | - | 所有ユーザー（users 参照） |
 | name | VARCHAR(255) | | - | キャラクター名 |
 | persona | TEXT | | - | キャラクター設定 |
+| avatar_id | UUID | ◯ | - | アバター画像（images 参照） |
 | voice_id | UUID | | - | ボイス（voices 参照） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
@@ -341,9 +344,11 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 - PRIMARY KEY (id)
 - UNIQUE (user_id, name)
 - INDEX (user_id)
+- INDEX (avatar_id)
 
 **外部キー:**
 - user_id → users(id) ON DELETE CASCADE
+- avatar_id → images(id) ON DELETE SET NULL
 - voice_id → voices(id) ON DELETE RESTRICT
 
 ---

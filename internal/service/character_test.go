@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -77,8 +78,10 @@ func TestToCharacterWithChannelsResponses(t *testing.T) {
 
 	t.Run("複数キャラクターを正しく変換する", func(t *testing.T) {
 		svc := &characterService{}
-		result := svc.toCharacterWithChannelsResponses(characters)
+		ctx := context.Background()
+		result, err := svc.toCharacterWithChannelsResponses(ctx, characters)
 
+		assert.NoError(t, err)
 		assert.Len(t, result, 2)
 
 		// 1人目のキャラクター
@@ -114,8 +117,10 @@ func TestToCharacterWithChannelsResponses(t *testing.T) {
 
 	t.Run("空のスライスの場合、空のスライスを返す", func(t *testing.T) {
 		svc := &characterService{}
-		result := svc.toCharacterWithChannelsResponses([]model.Character{})
+		ctx := context.Background()
+		result, err := svc.toCharacterWithChannelsResponses(ctx, []model.Character{})
 
+		assert.NoError(t, err)
 		assert.Len(t, result, 0)
 		assert.NotNil(t, result)
 		assert.Equal(t, []response.CharacterWithChannelsResponse{}, result)

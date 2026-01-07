@@ -59,6 +59,10 @@ GET /channels/:channelId
         "id": "uuid",
         "name": "太郎",
         "persona": "明るい性格",
+        "avatar": {
+          "id": "uuid",
+          "url": "https://storage.example.com/images/xxx.png?signature=..."
+        },
         "voice": {
           "id": "uuid",
           "name": "ja-JP-Wavenet-C",
@@ -292,6 +296,10 @@ GET /me/channels/:channelId
         "id": "uuid",
         "name": "太郎",
         "persona": "明るい性格",
+        "avatar": {
+          "id": "uuid",
+          "url": "https://storage.example.com/images/xxx.png?signature=..."
+        },
         "voice": {
           "id": "uuid",
           "name": "ja-JP-Wavenet-C",
@@ -381,6 +389,10 @@ PUT /channels/:channelId/characters
         "id": "uuid",
         "name": "太郎",
         "persona": "明るい性格",
+        "avatar": {
+          "id": "uuid",
+          "url": "https://storage.example.com/images/xxx.png?signature=..."
+        },
         "voice": {
           "id": "uuid",
           "name": "ja-JP-Wavenet-C",

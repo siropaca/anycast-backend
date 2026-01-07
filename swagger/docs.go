@@ -2346,6 +2346,14 @@ const docTemplate = `{
                 "voice"
             ],
             "properties": {
+                "avatar": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.AvatarResponse"
+                        }
+                    ],
+                    "x-nullable": true
+                },
                 "channels": {
                     "type": "array",
                     "items": {

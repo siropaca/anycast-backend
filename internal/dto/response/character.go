@@ -22,6 +22,7 @@ type CharacterWithChannelsResponse struct {
 	ID        uuid.UUID                  `json:"id" validate:"required"`
 	Name      string                     `json:"name" validate:"required"`
 	Persona   string                     `json:"persona" validate:"required"`
+	Avatar    *AvatarResponse            `json:"avatar" extensions:"x-nullable"`
 	Voice     CharacterVoiceResponse     `json:"voice" validate:"required"`
 	Channels  []CharacterChannelResponse `json:"channels" validate:"required"`
 	CreatedAt time.Time                  `json:"createdAt" validate:"required"`
