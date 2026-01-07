@@ -68,6 +68,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	episodeRepo := repository.NewEpisodeRepository(db)
 	scriptLineRepo := repository.NewScriptLineRepository(db)
 	audioRepo := repository.NewAudioRepository(db)
+	soundEffectRepo := repository.NewSoundEffectRepository(db)
 
 	// Service 層
 	voiceService := service.NewVoiceService(voiceRepo)
@@ -77,7 +78,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	categoryService := service.NewCategoryService(categoryRepo)
 	episodeService := service.NewEpisodeService(episodeRepo, channelRepo, storageClient)
 	scriptLineService := service.NewScriptLineService(db, scriptLineRepo, episodeRepo, channelRepo, audioRepo, ttsClient, storageClient)
-	scriptService := service.NewScriptService(db, channelRepo, episodeRepo, scriptLineRepo, llmClient, storageClient)
+	scriptService := service.NewScriptService(db, channelRepo, episodeRepo, scriptLineRepo, soundEffectRepo, llmClient, storageClient)
 	cleanupService := service.NewCleanupService(audioRepo, imageRepo, storageClient)
 
 	// Handler 層

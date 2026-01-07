@@ -92,8 +92,10 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.DELETE("/channels/:channelId/episodes/:episodeId/script/lines/:lineId", container.ScriptLineHandler.DeleteScriptLine)
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/script/lines/:lineId/audio/generate", container.ScriptLineHandler.GenerateAudio)
 
-	// Script（台本生成）
+	// Script（台本）
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/script/generate", container.ScriptHandler.GenerateScript)
+	authenticated.POST("/channels/:channelId/episodes/:episodeId/script/import", container.ScriptHandler.ImportScript)
+	authenticated.GET("/channels/:channelId/episodes/:episodeId/script/export", container.ScriptHandler.ExportScript)
 
 	// Voices
 	authenticated.GET("/voices", container.VoiceHandler.ListVoices)
