@@ -33,3 +33,9 @@ func Validate(s string) error {
 	_, err := Parse(s)
 	return err
 }
+
+// 文字列を UUID に変換する（パースに失敗した場合は panic）
+// テストコードでのみ使用すること
+func MustParse(s string) UUID {
+	return googleuuid.MustParse(s)
+}

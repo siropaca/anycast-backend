@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 
 	"github.com/siropaca/anycast-backend/internal/pkg/logger"
+	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
 // リクエストログを出力するミドルウェア

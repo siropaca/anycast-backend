@@ -1,6 +1,6 @@
 package response
 
-import "github.com/google/uuid"
+import "github.com/siropaca/anycast-backend/internal/pkg/uuid"
 
 // ボイスのレスポンス
 type VoiceResponse struct {

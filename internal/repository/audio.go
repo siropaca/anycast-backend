@@ -3,12 +3,12 @@ package repository
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/model"
 	"github.com/siropaca/anycast-backend/internal/pkg/logger"
+	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
 // 音声データへのアクセスインターフェース

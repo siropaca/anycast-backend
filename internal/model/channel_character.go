@@ -3,7 +3,7 @@ package model
 import (
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
 // チャンネルとキャラクターの紐づけを管理する中間テーブル
