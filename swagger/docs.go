@@ -808,9 +808,9 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "台本をテキスト形式でエクスポートします。",
+                "description": "台本をテキストファイルとしてダウンロードします。",
                 "produces": [
-                    "application/json"
+                    "text/plain"
                 ],
                 "tags": [
                     "script"
@@ -834,9 +834,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "台本テキスト",
                         "schema": {
-                            "$ref": "#/definitions/response.ExportScriptResponse"
+                            "type": "string"
                         }
                     },
                     "400": {
@@ -2717,28 +2717,6 @@ const docTemplate = `{
             "properties": {
                 "error": {
                     "$ref": "#/definitions/response.ErrorDetail"
-                }
-            }
-        },
-        "response.ExportScriptData": {
-            "type": "object",
-            "required": [
-                "text"
-            ],
-            "properties": {
-                "text": {
-                    "type": "string"
-                }
-            }
-        },
-        "response.ExportScriptResponse": {
-            "type": "object",
-            "required": [
-                "data"
-            ],
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/response.ExportScriptData"
                 }
             }
         },

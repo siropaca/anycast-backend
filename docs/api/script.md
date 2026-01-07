@@ -96,20 +96,18 @@ POST /channels/:channelId/episodes/:episodeId/script/import
 GET /channels/:channelId/episodes/:episodeId/script/export
 ```
 
-台本をテキスト形式でエクスポートする。出力されたテキストはそのままインポート可能。
+台本をテキストファイルとしてダウンロードする。出力されたテキストはそのままインポート可能。
 
 **レスポンス:**
-```json
-{
-  "data": {
-    "text": "太郎: こんにちは\n花子: [嬉しそうに] やあ\n__SILENCE__: 800\n__SFX__: chime"
-  }
-}
-```
+- Content-Type: `text/plain; charset=utf-8`
+- Content-Disposition: `attachment; filename="エピソード名.txt"; filename*=UTF-8''...`
 
-| フィールド | 型 | 説明 |
-|------------|-----|------|
-| text | string | 台本テキスト（インポート可能な形式） |
+```
+太郎: こんにちは
+花子: [嬉しそうに] やあ
+__SILENCE__: 800
+__SFX__: chime
+```
 
 ---
 

@@ -16,6 +16,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/middleware"
+	"github.com/siropaca/anycast-backend/internal/service"
 )
 
 // ScriptService のモック
@@ -40,13 +41,12 @@ func (m *mockScriptService) ImportScript(ctx context.Context, userID, channelID,
 	return args.Get(0).(*response.ScriptLineListResponse), args.Error(1)
 }
 
-func (m *mockScriptService) ExportScript(ctx context.Context, userID, channelID, episodeID string) (*response.ExportScriptResponse, error) {
+func (m *mockScriptService) ExportScript(ctx context.Context, userID, channelID, episodeID string) (*service.ExportScriptResult, error) {
 	args := m.Called(ctx, userID, channelID, episodeID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-
-	return args.Get(0).(*response.ExportScriptResponse), args.Error(1)
+	return args.Get(0).(*service.ExportScriptResult), args.Error(1)
 }
 
 // テスト用のルーターをセットアップする
