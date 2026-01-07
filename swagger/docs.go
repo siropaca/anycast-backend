@@ -1463,6 +1463,61 @@ const docTemplate = `{
                 }
             }
         },
+        "/images": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "画像ファイルをアップロードします",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "images"
+                ],
+                "summary": "画像アップロード",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "アップロードする画像ファイル（png, jpeg, gif, webp）",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.ImageUploadDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/me": {
             "get": {
                 "security": [
@@ -2728,6 +2783,44 @@ const docTemplate = `{
             "properties": {
                 "audio": {
                     "$ref": "#/definitions/response.AudioResponse"
+                }
+            }
+        },
+        "response.ImageUploadDataResponse": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.ImageUploadResponse"
+                }
+            }
+        },
+        "response.ImageUploadResponse": {
+            "type": "object",
+            "required": [
+                "fileSize",
+                "filename",
+                "id",
+                "mimeType",
+                "url"
+            ],
+            "properties": {
+                "fileSize": {
+                    "type": "integer"
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "mimeType": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
                 }
             }
         },
