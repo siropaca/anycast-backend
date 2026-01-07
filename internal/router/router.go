@@ -104,6 +104,9 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	// Categories
 	authenticated.GET("/categories", container.CategoryHandler.ListCategories)
 
+	// Images
+	authenticated.POST("/images", container.ImageHandler.UploadImage)
+
 	// Admin（認証必須 + 管理者権限必須）
 	admin := r.Group("/admin")
 	admin.Use(middleware.Auth(container.TokenManager))
