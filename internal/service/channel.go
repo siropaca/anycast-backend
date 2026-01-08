@@ -260,6 +260,7 @@ func (s *channelService) UpdateChannel(ctx context.Context, userID, channelID st
 	channel.CategoryID = categoryID
 
 	// アートワークの更新
+	// 注意: プリロードされた Artwork リレーションをクリアせんと、Save 時に古い値が残る
 	if req.ArtworkImageID != nil {
 		if *req.ArtworkImageID == "" {
 			// 空文字の場合は null に設定
@@ -274,6 +275,7 @@ func (s *channelService) UpdateChannel(ctx context.Context, userID, channelID st
 			}
 			channel.ArtworkID = &artworkID
 		}
+		channel.Artwork = nil
 	}
 
 	// チャンネルを更新

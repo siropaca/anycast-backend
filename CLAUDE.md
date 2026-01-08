@@ -132,6 +132,22 @@
 - `github.com/google/uuid` の代わりに `internal/pkg/uuid` を使用する（統一されたエラーハンドリングのため）
 - 汎用的な処理は `internal/pkg/` にまとめ、テストを必ず実装する
 
+### GORM
+
+- **プリロードされたリレーションの更新時は、リレーションフィールドを nil にクリアする**
+  - `FindByID` 等でプリロードされたエンティティの外部キー（例: `ArtworkID`）を変更する際、対応するリレーションフィールド（例: `Artwork`）も `nil` に設定する
+  - これをしないと、`Save` 時に古いリレーションが残り、外部キーの変更が反映されない
+  ```go
+  // 悪い例
+  channel.ArtworkID = &newArtworkID
+  repo.Update(ctx, channel)  // Artwork リレーションが古いまま → 更新されない
+
+  // 良い例
+  channel.ArtworkID = &newArtworkID
+  channel.Artwork = nil  // リレーションをクリア
+  repo.Update(ctx, channel)  // 正しく更新される
+  ```
+
 ### ログ
 
 | レベル | 用途 | 自動追加 |
