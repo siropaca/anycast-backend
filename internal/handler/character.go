@@ -62,3 +62,39 @@ func (h *CharacterHandler) ListMyCharacters(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+
+// GetMyCharacter godoc
+// @Summary 自分のキャラクター取得
+// @Description 認証ユーザーの所有するキャラクターを取得します
+// @Tags me
+// @Accept json
+// @Produce json
+// @Param characterId path string true "キャラクター ID"
+// @Success 200 {object} response.CharacterDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /me/characters/{characterId} [get]
+func (h *CharacterHandler) GetMyCharacter(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	characterID := c.Param("characterId")
+	if characterID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("character ID is required"))
+		return
+	}
+
+	result, err := h.characterService.GetMyCharacter(c.Request.Context(), userID, characterID)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}

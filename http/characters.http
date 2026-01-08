@@ -10,3 +10,8 @@ Authorization: Bearer {{token}}
 ### 自分のキャラクター一覧取得（ページネーション）
 GET {{baseUrl}}/me/characters?limit=10&offset=0
 Authorization: Bearer {{token}}
+
+### 自分のキャラクター取得
+@characterId = YOUR_CHARACTER_ID_HERE
+GET {{baseUrl}}/me/characters/{{characterId}}
+Authorization: Bearer {{token}}

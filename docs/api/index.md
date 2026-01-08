@@ -37,7 +37,7 @@
 | GET | `/api/v1/me/channels/:channelId` | 自分のチャンネル取得 | ✅ | [詳細](./channels.md#自分のチャンネル取得) |
 | **Characters** | - | - | - | [characters.md](./characters.md) |
 | GET | `/api/v1/me/characters` | キャラクター一覧取得 | ✅ | [詳細](./characters.md#キャラクター一覧取得) |
-| GET | `/api/v1/me/characters/:characterId` | キャラクター取得 | | [詳細](./characters.md#キャラクター取得) |
+| GET | `/api/v1/me/characters/:characterId` | キャラクター取得 | ✅ | [詳細](./characters.md#キャラクター取得) |
 | POST | `/api/v1/me/characters` | キャラクター作成 | | [詳細](./characters.md#キャラクター作成) |
 | PATCH | `/api/v1/me/characters/:characterId` | キャラクター更新 | | [詳細](./characters.md#キャラクター更新) |
 | DELETE | `/api/v1/me/characters/:characterId` | キャラクター削除 | | [詳細](./characters.md#キャラクター削除) |

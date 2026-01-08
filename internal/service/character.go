@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/model"
@@ -17,6 +18,7 @@ const signedURLExpirationCharacter = 1 * time.Hour
 // キャラクター関連のビジネスロジックインターフェース
 type CharacterService interface {
 	ListMyCharacters(ctx context.Context, userID string, filter repository.CharacterFilter) (*response.CharacterListWithPaginationResponse, error)
+	GetMyCharacter(ctx context.Context, userID, characterID string) (*response.CharacterDataResponse, error)
 }
 
 type characterService struct {
@@ -53,6 +55,36 @@ func (s *characterService) ListMyCharacters(ctx context.Context, userID string, 
 		Data:       responses,
 		Pagination: response.PaginationResponse{Total: total, Limit: filter.Limit, Offset: filter.Offset},
 	}, nil
+}
+
+// 自分のキャラクターを取得する
+func (s *characterService) GetMyCharacter(ctx context.Context, userID, characterID string) (*response.CharacterDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(characterID)
+	if err != nil {
+		return nil, err
+	}
+
+	character, err := s.characterRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	// 所有者チェック
+	if character.UserID != uid {
+		return nil, apperror.ErrNotFound.WithMessage("Character not found")
+	}
+
+	res, err := s.toCharacterWithChannelsResponse(ctx, *character)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.CharacterDataResponse{Data: res}, nil
 }
 
 // Character モデルのスライスをチャンネル情報付きレスポンス DTO のスライスに変換する
