@@ -15,3 +15,36 @@ Authorization: Bearer {{token}}
 @characterId = YOUR_CHARACTER_ID_HERE
 GET {{baseUrl}}/me/characters/{{characterId}}
 Authorization: Bearer {{token}}
+
+### キャラクター作成
+POST {{baseUrl}}/me/characters
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "テストキャラクター",
+  "persona": "明るく元気な性格。語尾に「だよ」をつける。",
+  "voiceId": "YOUR_VOICE_ID_HERE"
+}
+
+### キャラクター作成（アバター付き）
+POST {{baseUrl}}/me/characters
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "テストキャラクター",
+  "persona": "明るく元気な性格。語尾に「だよ」をつける。",
+  "avatarId": "YOUR_IMAGE_ID_HERE",
+  "voiceId": "YOUR_VOICE_ID_HERE"
+}
+
+### キャラクター作成（persona なし）
+POST {{baseUrl}}/me/characters
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "シンプルキャラ",
+  "voiceId": "YOUR_VOICE_ID_HERE"
+}

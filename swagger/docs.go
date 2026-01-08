@@ -2054,6 +2054,73 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "新しいキャラクターを作成します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "me"
+                ],
+                "summary": "キャラクター作成",
+                "parameters": [
+                    {
+                        "description": "キャラクター作成リクエスト",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreateCharacterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.CharacterDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "指定されたボイスまたは画像が見つからない場合",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "同じ名前のキャラクターが既に存在する場合",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/me/characters/{characterId}": {
@@ -2280,6 +2347,29 @@ const docTemplate = `{
             }
         },
         "request.CreateCharacterInput": {
+            "type": "object",
+            "required": [
+                "name",
+                "voiceId"
+            ],
+            "properties": {
+                "avatarId": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "persona": {
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "voiceId": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.CreateCharacterRequest": {
             "type": "object",
             "required": [
                 "name",

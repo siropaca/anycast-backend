@@ -98,3 +98,40 @@ func (h *CharacterHandler) GetMyCharacter(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+
+// CreateCharacter godoc
+// @Summary キャラクター作成
+// @Description 新しいキャラクターを作成します
+// @Tags me
+// @Accept json
+// @Produce json
+// @Param request body request.CreateCharacterRequest true "キャラクター作成リクエスト"
+// @Success 201 {object} response.CharacterDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse "指定されたボイスまたは画像が見つからない場合"
+// @Failure 409 {object} response.ErrorResponse "同じ名前のキャラクターが既に存在する場合"
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /me/characters [post]
+func (h *CharacterHandler) CreateCharacter(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	var req request.CreateCharacterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		return
+	}
+
+	result, err := h.characterService.CreateCharacter(c.Request.Context(), userID, req)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, result)
+}
