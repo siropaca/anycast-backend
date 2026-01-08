@@ -25,6 +25,7 @@
 | GET | `/api/v1/users/:userId` | ユーザー取得 | | [詳細](./users.md#ユーザー取得) |
 | GET | `/api/v1/me` | 現在のユーザー取得 | ✅ | [詳細](./users.md#現在のユーザー取得) |
 | PATCH | `/api/v1/me` | ユーザー情報更新 | | [詳細](./users.md#ユーザー情報更新) |
+| PATCH | `/api/v1/me/prompt` | ユーザープロンプト更新 | | [詳細](./users.md#ユーザープロンプト更新) |
 | **Channels** | - | - | - | [channels.md](./channels.md) |
 | GET | `/api/v1/channels` | チャンネル一覧取得 | | [詳細](./channels.md#チャンネル一覧取得) |
 | GET | `/api/v1/channels/:channelId` | チャンネル取得 | ✅ | [詳細](./channels.md#チャンネル取得) |
