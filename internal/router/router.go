@@ -73,6 +73,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.GET("/me/characters", container.CharacterHandler.ListMyCharacters)
 	authenticated.GET("/me/characters/:characterId", container.CharacterHandler.GetMyCharacter)
 	authenticated.POST("/me/characters", container.CharacterHandler.CreateCharacter)
+	authenticated.PATCH("/me/characters/:characterId", container.CharacterHandler.UpdateCharacter)
 
 	// Channels
 	authenticated.GET("/channels/:channelId", container.ChannelHandler.GetChannel)

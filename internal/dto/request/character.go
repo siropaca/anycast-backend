@@ -12,3 +12,11 @@ type CreateCharacterRequest struct {
 	AvatarID *string `json:"avatarId" binding:"omitempty,uuid"`
 	VoiceID  string  `json:"voiceId" binding:"required,uuid"`
 }
+
+// キャラクター更新リクエスト
+type UpdateCharacterRequest struct {
+	Name     *string `json:"name" binding:"omitempty,max=255"`
+	Persona  *string `json:"persona" binding:"omitempty,max=2000"`
+	AvatarID *string `json:"avatarId" binding:"omitempty,uuid"`
+	VoiceID  *string `json:"voiceId" binding:"omitempty,uuid"`
+}

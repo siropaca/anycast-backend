@@ -48,3 +48,41 @@ Authorization: Bearer {{token}}
   "name": "シンプルキャラ",
   "voiceId": "YOUR_VOICE_ID_HERE"
 }
+
+### キャラクター更新（名前のみ）
+PATCH {{baseUrl}}/me/characters/{{characterId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "更新後の名前"
+}
+
+### キャラクター更新（複数フィールド）
+PATCH {{baseUrl}}/me/characters/{{characterId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "更新後の名前",
+  "persona": "更新後のペルソナ",
+  "voiceId": "YOUR_VOICE_ID_HERE"
+}
+
+### キャラクター更新（アバター設定）
+PATCH {{baseUrl}}/me/characters/{{characterId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "avatarId": "YOUR_IMAGE_ID_HERE"
+}
+
+### キャラクター更新（アバター削除）
+PATCH {{baseUrl}}/me/characters/{{characterId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "avatarId": ""
+}

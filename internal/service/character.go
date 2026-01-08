@@ -22,6 +22,7 @@ type CharacterService interface {
 	ListMyCharacters(ctx context.Context, userID string, filter repository.CharacterFilter) (*response.CharacterListWithPaginationResponse, error)
 	GetMyCharacter(ctx context.Context, userID, characterID string) (*response.CharacterDataResponse, error)
 	CreateCharacter(ctx context.Context, userID string, req request.CreateCharacterRequest) (*response.CharacterDataResponse, error)
+	UpdateCharacter(ctx context.Context, userID, characterID string, req request.UpdateCharacterRequest) (*response.CharacterDataResponse, error)
 }
 
 type characterService struct {
@@ -214,6 +215,94 @@ func (s *characterService) CreateCharacter(ctx context.Context, userID string, r
 	character.Voice = *voice
 	if avatar != nil {
 		character.Avatar = avatar
+	}
+
+	res, err := s.toCharacterWithChannelsResponse(ctx, *character)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.CharacterDataResponse{Data: res}, nil
+}
+
+// キャラクターを更新する
+func (s *characterService) UpdateCharacter(ctx context.Context, userID, characterID string, req request.UpdateCharacterRequest) (*response.CharacterDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(characterID)
+	if err != nil {
+		return nil, err
+	}
+
+	character, err := s.characterRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	// 所有者チェック
+	if character.UserID != uid {
+		return nil, apperror.ErrNotFound.WithMessage("Character not found")
+	}
+
+	// 名前の更新
+	if req.Name != nil {
+		// 名前が __ で始まる場合は禁止
+		if strings.HasPrefix(*req.Name, "__") {
+			return nil, apperror.ErrValidation.WithMessage("Name cannot start with '__'")
+		}
+
+		// 同一ユーザー内で同じ名前のキャラクターが存在するかチェック（自分自身は除外）
+		exists, err := s.characterRepo.ExistsByUserIDAndName(ctx, uid, *req.Name, &cid)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			return nil, apperror.ErrDuplicateName.WithMessage("Character with the same name already exists")
+		}
+
+		character.Name = *req.Name
+	}
+
+	// ペルソナの更新
+	if req.Persona != nil {
+		character.Persona = *req.Persona
+	}
+
+	// ボイスの更新
+	if req.VoiceID != nil {
+		voice, err := s.voiceRepo.FindActiveByID(ctx, *req.VoiceID)
+		if err != nil {
+			return nil, err
+		}
+		character.VoiceID = voice.ID
+		character.Voice = *voice
+	}
+
+	// アバター画像の更新
+	if req.AvatarID != nil {
+		if *req.AvatarID == "" {
+			// 空文字の場合はアバターを削除
+			character.AvatarID = nil
+			character.Avatar = nil
+		} else {
+			aid, err := uuid.Parse(*req.AvatarID)
+			if err != nil {
+				return nil, err
+			}
+			avatar, err := s.imageRepo.FindByID(ctx, aid)
+			if err != nil {
+				return nil, err
+			}
+			character.AvatarID = &aid
+			character.Avatar = avatar
+		}
+	}
+
+	if err := s.characterRepo.Update(ctx, character); err != nil {
+		return nil, err
 	}
 
 	res, err := s.toCharacterWithChannelsResponse(ctx, *character)
