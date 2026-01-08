@@ -124,3 +124,53 @@ POST /auth/oauth/google
   }
 }
 ```
+
+---
+
+## パスワード更新
+
+```
+PUT /auth/password
+```
+
+認証済みユーザーが自分のパスワードを更新する。
+
+**認証:** 必須（Bearer Token）
+
+**リクエスト:**
+```json
+{
+  "currentPassword": "current_password123",
+  "newPassword": "new_password456"
+}
+```
+
+**バリデーション:**
+| フィールド | ルール |
+|------------|--------|
+| currentPassword | 必須 |
+| newPassword | 必須、8〜100文字 |
+
+**レスポンス（204 No Content）:**
+
+レスポンスボディなし
+
+**エラー（401 Unauthorized）:**
+```json
+{
+  "error": {
+    "code": "INVALID_CREDENTIALS",
+    "message": "現在のパスワードが正しくありません"
+  }
+}
+```
+
+**エラー（400 Bad Request）:**
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "新しいパスワードは8文字以上100文字以下で入力してください"
+  }
+}
+```

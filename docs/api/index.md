@@ -20,6 +20,7 @@
 | POST | `/api/v1/auth/register` | ユーザー登録 | ✅ | [詳細](./auth.md#ユーザー登録) |
 | POST | `/api/v1/auth/login` | メール/パスワード認証 | ✅ | [詳細](./auth.md#メールパスワード認証) |
 | POST | `/api/v1/auth/oauth/google` | Google OAuth 認証 | ✅ | [詳細](./auth.md#google-oauth-認証) |
+| PUT | `/api/v1/auth/password` | パスワード更新 | | [詳細](./auth.md#パスワード更新) |
 | **Users（ユーザー）** | - | - | - | [users.md](./users.md) |
 | GET | `/api/v1/users/:userId` | ユーザー取得 | | [詳細](./users.md#ユーザー取得) |
 | GET | `/api/v1/me` | 現在のユーザー取得 | ✅ | [詳細](./users.md#現在のユーザー取得) |
