@@ -103,6 +103,7 @@ type ScriptService interface {
 
 type scriptService struct {
 	db              *gorm.DB
+	userRepo        repository.UserRepository
 	channelRepo     repository.ChannelRepository
 	episodeRepo     repository.EpisodeRepository
 	scriptLineRepo  repository.ScriptLineRepository
@@ -114,6 +115,7 @@ type scriptService struct {
 // ScriptService の実装を返す
 func NewScriptService(
 	db *gorm.DB,
+	userRepo repository.UserRepository,
 	channelRepo repository.ChannelRepository,
 	episodeRepo repository.EpisodeRepository,
 	scriptLineRepo repository.ScriptLineRepository,
@@ -123,6 +125,7 @@ func NewScriptService(
 ) ScriptService {
 	return &scriptService{
 		db:              db,
+		userRepo:        userRepo,
 		channelRepo:     channelRepo,
 		episodeRepo:     episodeRepo,
 		scriptLineRepo:  scriptLineRepo,
@@ -169,6 +172,18 @@ func (s *scriptService) GenerateScript(ctx context.Context, userID, channelID, e
 		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
 	}
 
+	// ユーザー情報を取得（userPrompt 用）
+	user, err := s.userRepo.FindByID(ctx, uid)
+	if err != nil {
+		return nil, err
+	}
+
+	// withEmotion に応じてシステムプロンプトを選択
+	sysPrompt := systemPromptWithoutEmotion
+	if withEmotion {
+		sysPrompt = systemPromptWithEmotion
+	}
+
 	// durationMinutes のデフォルト値設定
 	duration := defaultDurationMinutes
 	if durationMinutes != nil {
@@ -176,13 +191,7 @@ func (s *scriptService) GenerateScript(ctx context.Context, userID, channelID, e
 	}
 
 	// LLM 用ユーザープロンプトを構築
-	userPrompt := s.buildUserPrompt(channel, episode, prompt, duration)
-
-	// withEmotion に応じてシステムプロンプトを選択
-	sysPrompt := systemPromptWithoutEmotion
-	if withEmotion {
-		sysPrompt = systemPromptWithEmotion
-	}
+	userPrompt := s.buildUserPrompt(user, channel, episode, prompt, duration)
 
 	// LLM で台本生成
 	generatedText, err := s.llmClient.GenerateScript(ctx, sysPrompt, userPrompt)
@@ -330,8 +339,16 @@ func (s *scriptService) toScriptLineResponse(ctx context.Context, sl *model.Scri
 }
 
 // LLM 用のユーザープロンプトを構築する
-func (s *scriptService) buildUserPrompt(channel *model.Channel, episode *model.Episode, prompt string, durationMinutes int) string {
+// プロンプトは User → Channel → Episode の順で結合（追記）される
+func (s *scriptService) buildUserPrompt(user *model.User, channel *model.Channel, episode *model.Episode, prompt string, durationMinutes int) string {
 	var sb strings.Builder
+
+	// ユーザー設定（ユーザーレベルのプロンプト）
+	if user.UserPrompt != "" {
+		sb.WriteString("## ユーザー設定\n")
+		sb.WriteString(user.UserPrompt)
+		sb.WriteString("\n\n")
+	}
 
 	// チャンネル情報
 	sb.WriteString("## チャンネル情報\n")

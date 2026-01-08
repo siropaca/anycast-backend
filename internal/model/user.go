@@ -14,6 +14,7 @@ type User struct {
 	DisplayName string     `gorm:"type:varchar(20);not null;column:display_name"`
 	Role        Role       `gorm:"type:user_role;not null;default:'user'"`
 	AvatarID    *uuid.UUID `gorm:"type:uuid"`
+	UserPrompt  string     `gorm:"type:text;not null;default:'';column:user_prompt"`
 	CreatedAt   time.Time  `gorm:"not null;default:CURRENT_TIMESTAMP"`
 	UpdatedAt   time.Time  `gorm:"not null;default:CURRENT_TIMESTAMP"`
 }

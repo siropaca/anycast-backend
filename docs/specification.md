@@ -186,6 +186,15 @@ Channel と Episode は公開状態（`publishedAt`）を持つ。
 | displayName | String | ◯ | 表示名（20文字以内） |
 | role | Role | ◯ | ロール（デフォルト: user） |
 | avatar | Image | | アバター画像 |
+| userPrompt | String | | 台本生成の基本方針（全チャンネル・エピソードに適用、内部管理用） |
+
+#### userPrompt の適用
+
+台本生成時、プロンプトは以下の順序で結合（追記）される：
+
+1. **User.userPrompt** - ユーザーの基本方針
+2. **Channel.userPrompt** - チャンネル固有の方針
+3. **Episode.userPrompt** - エピソード固有の設定
 
 #### username の自動生成
 
@@ -287,7 +296,7 @@ OAuth プロバイダとの連携情報。
 | id | UUID | ◯ | 識別子 |
 | channelId | UUID | ◯ | 所属する Channel |
 | title | String | ◯ | エピソードタイトル |
-| description | String | ◯ | エピソードの説明（公開情報） |
+| description | String | | エピソードの説明（公開情報） |
 | userPrompt | String | | エピソード固有の台本生成設定（台本生成時に自動保存、内部管理用） |
 | script | ScriptLine[] | | 台本（順序付きの ScriptLine 配列） |
 | bgm | Audio | | BGM 音声ファイル |

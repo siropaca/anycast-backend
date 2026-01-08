@@ -16,6 +16,46 @@ import (
 
 // モックリポジトリ
 
+type mockUserRepository struct {
+	mock.Mock
+}
+
+func (m *mockUserRepository) Create(ctx context.Context, user *model.User) error {
+	args := m.Called(ctx, user)
+	return args.Error(0)
+}
+
+func (m *mockUserRepository) Update(ctx context.Context, user *model.User) error {
+	args := m.Called(ctx, user)
+	return args.Error(0)
+}
+
+func (m *mockUserRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.User), args.Error(1)
+}
+
+func (m *mockUserRepository) FindByEmail(ctx context.Context, email string) (*model.User, error) {
+	args := m.Called(ctx, email)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.User), args.Error(1)
+}
+
+func (m *mockUserRepository) ExistsByEmail(ctx context.Context, email string) (bool, error) {
+	args := m.Called(ctx, email)
+	return args.Bool(0), args.Error(1)
+}
+
+func (m *mockUserRepository) ExistsByUsername(ctx context.Context, username string) (bool, error) {
+	args := m.Called(ctx, username)
+	return args.Bool(0), args.Error(1)
+}
+
 type mockChannelRepository struct {
 	mock.Mock
 }
@@ -100,6 +140,9 @@ func TestBuildUserPrompt(t *testing.T) {
 	svc := &scriptService{}
 
 	t.Run("チャンネル設定とキャラクターが正しく含まれる", func(t *testing.T) {
+		user := &model.User{
+			UserPrompt: "ユーザーの基本方針",
+		}
 		channel := &model.Channel{
 			Name:       "テックラジオ",
 			UserPrompt: "テック系ポッドキャスト",
@@ -113,8 +156,10 @@ func TestBuildUserPrompt(t *testing.T) {
 			Title: "AI の未来",
 		}
 
-		result := svc.buildUserPrompt(channel, episode, "AI について語る", 10)
+		result := svc.buildUserPrompt(user, channel, episode, "AI について語る", 10)
 
+		assert.Contains(t, result, "## ユーザー設定")
+		assert.Contains(t, result, "ユーザーの基本方針")
 		assert.Contains(t, result, "## チャンネル情報")
 		assert.Contains(t, result, "チャンネル名: テックラジオ")
 		assert.Contains(t, result, "カテゴリー: テクノロジー")
@@ -131,7 +176,10 @@ func TestBuildUserPrompt(t *testing.T) {
 		assert.Contains(t, result, "AI について語る")
 	})
 
-	t.Run("チャンネル設定が空の場合は省略される", func(t *testing.T) {
+	t.Run("ユーザー・チャンネル設定が空の場合は省略される", func(t *testing.T) {
+		user := &model.User{
+			UserPrompt: "",
+		}
 		channel := &model.Channel{
 			Name:       "テストチャンネル",
 			UserPrompt: "",
@@ -144,14 +192,16 @@ func TestBuildUserPrompt(t *testing.T) {
 			Title: "テストエピソード",
 		}
 
-		result := svc.buildUserPrompt(channel, episode, "テスト", 5)
+		result := svc.buildUserPrompt(user, channel, episode, "テスト", 5)
 
+		assert.NotContains(t, result, "## ユーザー設定")
 		assert.NotContains(t, result, "## チャンネル設定")
 		assert.Contains(t, result, "## 登場人物")
 		assert.Contains(t, result, "- 太郎（male）")
 	})
 
 	t.Run("キャラクターのペルソナが空の場合は名前のみ", func(t *testing.T) {
+		user := &model.User{}
 		channel := &model.Channel{
 			Name:     "テストチャンネル",
 			Category: model.Category{Name: "教育"},
@@ -164,7 +214,7 @@ func TestBuildUserPrompt(t *testing.T) {
 			Title: "テストエピソード",
 		}
 
-		result := svc.buildUserPrompt(channel, episode, "テスト", 10)
+		result := svc.buildUserPrompt(user, channel, episode, "テスト", 10)
 
 		assert.Contains(t, result, "- 太郎（male）\n")
 		assert.Contains(t, result, "- 花子（female）: ゲスト")
@@ -314,6 +364,11 @@ func TestGenerateScript_LLMError(t *testing.T) {
 	episodeID := uuid.New()
 	characterID := uuid.New()
 
+	mockUserRepo := new(mockUserRepository)
+	mockUserRepo.On("FindByID", ctx, userID).Return(&model.User{
+		ID: userID,
+	}, nil)
+
 	mockChannelRepo := new(mockChannelRepository)
 	mockChannelRepo.On("FindByID", ctx, channelID).Return(&model.Channel{
 		ID:     channelID,
@@ -333,6 +388,7 @@ func TestGenerateScript_LLMError(t *testing.T) {
 	mockLLM.On("GenerateScript", ctx, mock.Anything, mock.Anything).Return("", apperror.ErrGenerationFailed.WithMessage("LLM error"))
 
 	svc := &scriptService{
+		userRepo:    mockUserRepo,
 		channelRepo: mockChannelRepo,
 		episodeRepo: mockEpisodeRepo,
 		llmClient:   mockLLM,
@@ -341,6 +397,7 @@ func TestGenerateScript_LLMError(t *testing.T) {
 	_, err := svc.GenerateScript(ctx, userID.String(), channelID.String(), episodeID.String(), "test", nil, false)
 
 	assert.Error(t, err)
+	mockUserRepo.AssertExpectations(t)
 	mockChannelRepo.AssertExpectations(t)
 	mockEpisodeRepo.AssertExpectations(t)
 	mockLLM.AssertExpectations(t)
@@ -352,6 +409,11 @@ func TestGenerateScript_ParseError(t *testing.T) {
 	channelID := uuid.New()
 	episodeID := uuid.New()
 	characterID := uuid.New()
+
+	mockUserRepo := new(mockUserRepository)
+	mockUserRepo.On("FindByID", ctx, userID).Return(&model.User{
+		ID: userID,
+	}, nil)
 
 	mockChannelRepo := new(mockChannelRepository)
 	mockChannelRepo.On("FindByID", ctx, channelID).Return(&model.Channel{
@@ -373,6 +435,7 @@ func TestGenerateScript_ParseError(t *testing.T) {
 	mockLLM.On("GenerateScript", ctx, mock.Anything, mock.Anything).Return("不明な話者: こんにちは", nil)
 
 	svc := &scriptService{
+		userRepo:    mockUserRepo,
 		channelRepo: mockChannelRepo,
 		episodeRepo: mockEpisodeRepo,
 		llmClient:   mockLLM,
@@ -384,6 +447,7 @@ func TestGenerateScript_ParseError(t *testing.T) {
 	var appErr *apperror.AppError
 	assert.True(t, errors.As(err, &appErr))
 	assert.Equal(t, apperror.ErrGenerationFailed.Code, appErr.Code)
+	mockUserRepo.AssertExpectations(t)
 	mockChannelRepo.AssertExpectations(t)
 	mockEpisodeRepo.AssertExpectations(t)
 	mockLLM.AssertExpectations(t)
@@ -395,6 +459,11 @@ func TestGenerateScript_DurationMinutesDefault(t *testing.T) {
 	channelID := uuid.New()
 	episodeID := uuid.New()
 	characterID := uuid.New()
+
+	mockUserRepo := new(mockUserRepository)
+	mockUserRepo.On("FindByID", ctx, userID).Return(&model.User{
+		ID: userID,
+	}, nil)
 
 	mockChannelRepo := new(mockChannelRepository)
 	mockChannelRepo.On("FindByID", ctx, channelID).Return(&model.Channel{
@@ -418,6 +487,7 @@ func TestGenerateScript_DurationMinutesDefault(t *testing.T) {
 	}).Return("", apperror.ErrGenerationFailed) // LLM エラーで早期終了させてトランザクションをスキップ
 
 	svc := &scriptService{
+		userRepo:    mockUserRepo,
 		channelRepo: mockChannelRepo,
 		episodeRepo: mockEpisodeRepo,
 		llmClient:   mockLLM,
@@ -438,6 +508,11 @@ func TestGenerateScript_DurationMinutesCustom(t *testing.T) {
 	episodeID := uuid.New()
 	characterID := uuid.New()
 
+	mockUserRepo := new(mockUserRepository)
+	mockUserRepo.On("FindByID", ctx, userID).Return(&model.User{
+		ID: userID,
+	}, nil)
+
 	mockChannelRepo := new(mockChannelRepository)
 	mockChannelRepo.On("FindByID", ctx, channelID).Return(&model.Channel{
 		ID:     channelID,
@@ -460,6 +535,7 @@ func TestGenerateScript_DurationMinutesCustom(t *testing.T) {
 	}).Return("", apperror.ErrGenerationFailed) // LLM エラーで早期終了させてトランザクションをスキップ
 
 	svc := &scriptService{
+		userRepo:    mockUserRepo,
 		channelRepo: mockChannelRepo,
 		episodeRepo: mockEpisodeRepo,
 		llmClient:   mockLLM,

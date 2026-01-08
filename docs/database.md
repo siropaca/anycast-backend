@@ -72,6 +72,7 @@ erDiagram
         varchar display_name
         user_role role
         uuid avatar_id FK
+        text user_prompt
         timestamp created_at
         timestamp updated_at
     }
@@ -229,6 +230,7 @@ erDiagram
 | display_name | VARCHAR(20) | | - | 表示名 |
 | role | user_role | | `user` | ロール |
 | avatar_id | UUID | ◯ | - | アバター画像（images 参照） |
+| user_prompt | TEXT | | '' | 台本生成の基本方針（全チャンネル・エピソードに適用） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
 
