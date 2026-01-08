@@ -60,6 +60,14 @@ func (m *mockAuthService) GetMe(ctx context.Context, userID string) (*response.M
 	return args.Get(0).(*response.MeResponse), args.Error(1)
 }
 
+func (m *mockAuthService) UpdatePrompt(ctx context.Context, userID string, req request.UpdateUserPromptRequest) (*response.MeResponse, error) {
+	args := m.Called(ctx, userID, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.MeResponse), args.Error(1)
+}
+
 // TokenManager のモック
 type mockTokenManager struct {
 	mock.Mock

@@ -36,5 +36,23 @@ Content-Type: application/json
 }
 
 ### 現在のユーザー取得
-GET {{baseUrl}}/auth/me
+GET {{baseUrl}}/me
 Authorization: Bearer {{token}}
+
+### ユーザープロンプト更新
+PATCH {{baseUrl}}/me/prompt
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userPrompt": "話し方はカジュアルで、聴きやすいポッドキャストを目指す"
+}
+
+### ユーザープロンプト削除（null に設定）
+PATCH {{baseUrl}}/me/prompt
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "userPrompt": null
+}
