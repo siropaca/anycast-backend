@@ -23,6 +23,7 @@ type CharacterService interface {
 	GetMyCharacter(ctx context.Context, userID, characterID string) (*response.CharacterDataResponse, error)
 	CreateCharacter(ctx context.Context, userID string, req request.CreateCharacterRequest) (*response.CharacterDataResponse, error)
 	UpdateCharacter(ctx context.Context, userID, characterID string, req request.UpdateCharacterRequest) (*response.CharacterDataResponse, error)
+	DeleteCharacter(ctx context.Context, userID, characterID string) error
 }
 
 type characterService struct {
@@ -311,4 +312,38 @@ func (s *characterService) UpdateCharacter(ctx context.Context, userID, characte
 	}
 
 	return &response.CharacterDataResponse{Data: res}, nil
+}
+
+// キャラクターを削除する
+func (s *characterService) DeleteCharacter(ctx context.Context, userID, characterID string) error {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+
+	cid, err := uuid.Parse(characterID)
+	if err != nil {
+		return err
+	}
+
+	character, err := s.characterRepo.FindByID(ctx, cid)
+	if err != nil {
+		return err
+	}
+
+	// 所有者チェック
+	if character.UserID != uid {
+		return apperror.ErrNotFound.WithMessage("Character not found")
+	}
+
+	// いずれかのチャンネルで使用中かチェック
+	inUse, err := s.characterRepo.IsUsedInAnyChannel(ctx, cid)
+	if err != nil {
+		return err
+	}
+	if inUse {
+		return apperror.ErrCharacterInUse.WithMessage("This character is in use and cannot be deleted")
+	}
+
+	return s.characterRepo.Delete(ctx, cid)
 }

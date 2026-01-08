@@ -86,3 +86,7 @@ Authorization: Bearer {{token}}
 {
   "avatarId": ""
 }
+
+### キャラクター削除
+DELETE {{baseUrl}}/me/characters/{{characterId}}
+Authorization: Bearer {{token}}

@@ -179,3 +179,39 @@ func (h *CharacterHandler) UpdateCharacter(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+
+// DeleteCharacter godoc
+// @Summary キャラクター削除
+// @Description キャラクターを削除します
+// @Tags me
+// @Accept json
+// @Produce json
+// @Param characterId path string true "キャラクター ID"
+// @Success 204 "No Content"
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse "キャラクターが見つからない場合"
+// @Failure 409 {object} response.ErrorResponse "キャラクターが使用中の場合"
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /me/characters/{characterId} [delete]
+func (h *CharacterHandler) DeleteCharacter(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	characterID := c.Param("characterId")
+	if characterID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("character ID is required"))
+		return
+	}
+
+	if err := h.characterService.DeleteCharacter(c.Request.Context(), userID, characterID); err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}

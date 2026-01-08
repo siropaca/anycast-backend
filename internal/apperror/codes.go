@@ -22,6 +22,7 @@ const (
 	CodeAlreadyBookmarked    ErrorCode = "ALREADY_BOOKMARKED"      // 409
 	CodeAlreadyFollowed      ErrorCode = "ALREADY_FOLLOWED"        // 409
 	CodeSfxInUse             ErrorCode = "SFX_IN_USE"              // 409
+	CodeCharacterInUse       ErrorCode = "CHARACTER_IN_USE"        // 409
 	CodeInternal             ErrorCode = "INTERNAL_ERROR"          // 500
 	CodeGenerationFailed     ErrorCode = "GENERATION_FAILED"       // 500
 	CodeMediaUploadFailed    ErrorCode = "MEDIA_UPLOAD_FAILED"     // 500
@@ -58,6 +59,7 @@ var (
 	ErrAlreadyBookmarked = newError(CodeAlreadyBookmarked, "Already bookmarked", http.StatusConflict)      // 既にブックマーク済み
 	ErrAlreadyFollowed   = newError(CodeAlreadyFollowed, "Already followed", http.StatusConflict)          // 既にフォロー済み
 	ErrSfxInUse          = newError(CodeSfxInUse, "Sound effect is in use", http.StatusConflict)           // 効果音が使用中
+	ErrCharacterInUse    = newError(CodeCharacterInUse, "Character is in use", http.StatusConflict)        // キャラクターが使用中
 
 	// 500 Internal Server Error
 	ErrInternal          = newError(CodeInternal, "Internal server error", http.StatusInternalServerError)        // サーバー内部エラー

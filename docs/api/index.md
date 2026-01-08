@@ -40,7 +40,7 @@
 | GET | `/api/v1/me/characters/:characterId` | キャラクター取得 | ✅ | [詳細](./characters.md#キャラクター取得) |
 | POST | `/api/v1/me/characters` | キャラクター作成 | ✅ | [詳細](./characters.md#キャラクター作成) |
 | PATCH | `/api/v1/me/characters/:characterId` | キャラクター更新 | ✅ | [詳細](./characters.md#キャラクター更新) |
-| DELETE | `/api/v1/me/characters/:characterId` | キャラクター削除 | | [詳細](./characters.md#キャラクター削除) |
+| DELETE | `/api/v1/me/characters/:characterId` | キャラクター削除 | ✅ | [詳細](./characters.md#キャラクター削除) |
 | PUT | `/api/v1/channels/:channelId/characters` | チャンネルのキャラクター紐づけ更新 | | [詳細](./channels.md#チャンネルのキャラクター紐づけ更新) |
 | **Episodes** | - | - | - | [episodes.md](./episodes.md) |
 | GET | `/api/v1/channels/:channelId/episodes` | エピソード一覧取得 | | [詳細](./episodes.md#エピソード一覧取得公開用) |
