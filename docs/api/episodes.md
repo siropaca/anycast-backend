@@ -103,8 +103,7 @@ POST /channels/:channelId/episodes
 {
   "title": "エピソードタイトル",
   "description": "エピソードの説明",
-  "artworkImageId": "uuid",
-  "bgmAudioId": "uuid"
+  "artworkImageId": "uuid"
 }
 ```
 
@@ -127,8 +126,7 @@ PATCH /channels/:channelId/episodes/:episodeId
 {
   "title": "新しいタイトル",
   "description": "新しい説明",
-  "artworkImageId": "uuid",
-  "bgmAudioId": "uuid"
+  "artworkImageId": "uuid"
 }
 ```
 
@@ -141,6 +139,8 @@ PATCH /channels/:channelId/episodes/:episodeId
 > **Note:** `userPrompt` は台本生成時に自動で保存されます。エピソード更新 API からは編集できません。
 >
 > **Note:** 公開状態の変更は専用エンドポイント（[エピソード公開](#エピソード公開) / [エピソード非公開](#エピソード非公開)）を使用してください。
+>
+> **Note:** BGM の設定・削除は専用エンドポイント（[エピソード BGM 設定](#エピソード-bgm-設定) / [エピソード BGM 削除](#エピソード-bgm-削除)）を使用してください。
 
 ---
 
@@ -203,6 +203,65 @@ POST /channels/:channelId/episodes/:episodeId/unpublish
     "title": "エピソードタイトル",
     "description": "エピソードの説明",
     "publishedAt": null,
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+---
+
+## エピソード BGM 設定
+
+```
+PUT /channels/:channelId/episodes/:episodeId/bgm
+```
+
+エピソードに BGM を設定する。既に BGM が設定されている場合は上書きされる。
+
+**リクエスト:**
+```json
+{
+  "bgmAudioId": "uuid"
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| bgmAudioId | uuid | ◯ | BGM 音声ファイル ID |
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "title": "エピソードタイトル",
+    "description": "エピソードの説明",
+    "publishedAt": "2025-01-01T00:00:00Z",
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+---
+
+## エピソード BGM 削除
+
+```
+DELETE /channels/:channelId/episodes/:episodeId/bgm
+```
+
+エピソードに設定されている BGM を削除する。
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "title": "エピソードタイトル",
+    "description": "エピソードの説明",
+    "publishedAt": "2025-01-01T00:00:00Z",
     "createdAt": "2025-01-01T00:00:00Z",
     "updatedAt": "2025-01-01T00:00:00Z"
   }

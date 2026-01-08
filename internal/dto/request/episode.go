@@ -11,7 +11,6 @@ type CreateEpisodeRequest struct {
 	Title          string  `json:"title" binding:"required,max=255"`
 	Description    string  `json:"description" binding:"required,max=2000"`
 	ArtworkImageID *string `json:"artworkImageId" binding:"omitempty,uuid"`
-	BgmAudioID     *string `json:"bgmAudioId" binding:"omitempty,uuid"`
 }
 
 // エピソード更新リクエスト
@@ -19,7 +18,11 @@ type UpdateEpisodeRequest struct {
 	Title          string  `json:"title" binding:"required,max=255"`
 	Description    string  `json:"description" binding:"required,max=2000"`
 	ArtworkImageID *string `json:"artworkImageId" binding:"omitempty,uuid"`
-	BgmAudioID     *string `json:"bgmAudioId" binding:"omitempty,uuid"`
+}
+
+// エピソード BGM 設定リクエスト
+type SetEpisodeBgmRequest struct {
+	BgmAudioID string `json:"bgmAudioId" binding:"required,uuid"`
 }
 
 // エピソード公開リクエスト

@@ -42,8 +42,8 @@ func (m *mockEpisodeService) GetMyChannelEpisode(ctx context.Context, userID, ch
 	return args.Get(0).(*response.EpisodeDataResponse), args.Error(1)
 }
 
-func (m *mockEpisodeService) CreateEpisode(ctx context.Context, userID, channelID, title, description string, artworkImageID, bgmAudioID *string) (*response.EpisodeResponse, error) {
-	args := m.Called(ctx, userID, channelID, title, description, artworkImageID, bgmAudioID)
+func (m *mockEpisodeService) CreateEpisode(ctx context.Context, userID, channelID, title, description string, artworkImageID *string) (*response.EpisodeResponse, error) {
+	args := m.Called(ctx, userID, channelID, title, description, artworkImageID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -72,6 +72,22 @@ func (m *mockEpisodeService) PublishEpisode(ctx context.Context, userID, channel
 }
 
 func (m *mockEpisodeService) UnpublishEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error) {
+	args := m.Called(ctx, userID, channelID, episodeID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.EpisodeDataResponse), args.Error(1)
+}
+
+func (m *mockEpisodeService) SetEpisodeBgm(ctx context.Context, userID, channelID, episodeID, bgmAudioID string) (*response.EpisodeDataResponse, error) {
+	args := m.Called(ctx, userID, channelID, episodeID, bgmAudioID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.EpisodeDataResponse), args.Error(1)
+}
+
+func (m *mockEpisodeService) RemoveEpisodeBgm(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error) {
 	args := m.Called(ctx, userID, channelID, episodeID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -376,7 +392,7 @@ func TestEpisodeHandler_CreateEpisode(t *testing.T) {
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
-		mockSvc.On("CreateEpisode", mock.Anything, userID, channelID, "Test Episode", "Test Description", (*string)(nil), (*string)(nil)).Return(result, nil)
+		mockSvc.On("CreateEpisode", mock.Anything, userID, channelID, "Test Episode", "Test Description", (*string)(nil)).Return(result, nil)
 
 		handler := NewEpisodeHandler(mockSvc)
 		router := setupAuthenticatedEpisodeRouter(handler, userID)
@@ -427,7 +443,7 @@ func TestEpisodeHandler_CreateEpisode(t *testing.T) {
 
 	t.Run("チャンネルが見つからない場合は 404 を返す", func(t *testing.T) {
 		mockSvc := new(mockEpisodeService)
-		mockSvc.On("CreateEpisode", mock.Anything, userID, channelID, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, apperror.ErrNotFound.WithMessage("Channel not found"))
+		mockSvc.On("CreateEpisode", mock.Anything, userID, channelID, mock.Anything, mock.Anything, mock.Anything).Return(nil, apperror.ErrNotFound.WithMessage("Channel not found"))
 
 		handler := NewEpisodeHandler(mockSvc)
 		router := setupAuthenticatedEpisodeRouter(handler, userID)
@@ -444,7 +460,7 @@ func TestEpisodeHandler_CreateEpisode(t *testing.T) {
 
 	t.Run("権限がない場合は 403 を返す", func(t *testing.T) {
 		mockSvc := new(mockEpisodeService)
-		mockSvc.On("CreateEpisode", mock.Anything, userID, channelID, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, apperror.ErrForbidden.WithMessage("You do not have permission"))
+		mockSvc.On("CreateEpisode", mock.Anything, userID, channelID, mock.Anything, mock.Anything, mock.Anything).Return(nil, apperror.ErrForbidden.WithMessage("You do not have permission"))
 
 		handler := NewEpisodeHandler(mockSvc)
 		router := setupAuthenticatedEpisodeRouter(handler, userID)

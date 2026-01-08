@@ -50,6 +50,8 @@
 | DELETE | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード削除 | ✅ | [詳細](./episodes.md#エピソード削除) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/publish` | エピソード公開 | ✅ | [詳細](./episodes.md#エピソード公開) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/unpublish` | エピソード非公開 | ✅ | [詳細](./episodes.md#エピソード非公開) |
+| PUT | `/api/v1/channels/:channelId/episodes/:episodeId/bgm` | エピソード BGM 設定 | ✅ | [詳細](./episodes.md#エピソード-bgm-設定) |
+| DELETE | `/api/v1/channels/:channelId/episodes/:episodeId/bgm` | エピソード BGM 削除 | ✅ | [詳細](./episodes.md#エピソード-bgm-削除) |
 | GET | `/api/v1/me/channels/:channelId/episodes` | 自分のチャンネルのエピソード一覧 | ✅ | [詳細](./episodes.md#自分のチャンネルのエピソード一覧取得) |
 | GET | `/api/v1/me/channels/:channelId/episodes/:episodeId` | 自分のチャンネルのエピソード取得 | ✅ | [詳細](./episodes.md#自分のチャンネルのエピソード取得) |
 | **Script（台本）** | - | - | - | [script.md](./script.md) |

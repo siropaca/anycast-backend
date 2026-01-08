@@ -17,11 +17,13 @@ import (
 type EpisodeService interface {
 	GetMyChannelEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error)
 	ListMyChannelEpisodes(ctx context.Context, userID, channelID string, filter repository.EpisodeFilter) (*response.EpisodeListWithPaginationResponse, error)
-	CreateEpisode(ctx context.Context, userID, channelID, title, description string, artworkImageID, bgmAudioID *string) (*response.EpisodeResponse, error)
+	CreateEpisode(ctx context.Context, userID, channelID, title, description string, artworkImageID *string) (*response.EpisodeResponse, error)
 	UpdateEpisode(ctx context.Context, userID, channelID, episodeID string, req request.UpdateEpisodeRequest) (*response.EpisodeDataResponse, error)
 	DeleteEpisode(ctx context.Context, userID, channelID, episodeID string) error
 	PublishEpisode(ctx context.Context, userID, channelID, episodeID string, publishedAt *string) (*response.EpisodeDataResponse, error)
 	UnpublishEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error)
+	SetEpisodeBgm(ctx context.Context, userID, channelID, episodeID, bgmAudioID string) (*response.EpisodeDataResponse, error)
+	RemoveEpisodeBgm(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error)
 }
 
 type episodeService struct {
@@ -130,7 +132,7 @@ func (s *episodeService) ListMyChannelEpisodes(ctx context.Context, userID, chan
 }
 
 // エピソードを作成する
-func (s *episodeService) CreateEpisode(ctx context.Context, userID, channelID, title, description string, artworkImageID, bgmAudioID *string) (*response.EpisodeResponse, error) {
+func (s *episodeService) CreateEpisode(ctx context.Context, userID, channelID, title, description string, artworkImageID *string) (*response.EpisodeResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
 		return nil, err
@@ -165,15 +167,6 @@ func (s *episodeService) CreateEpisode(ctx context.Context, userID, channelID, t
 			return nil, err
 		}
 		episode.ArtworkID = &artworkID
-	}
-
-	// BGM が指定されている場合
-	if bgmAudioID != nil {
-		bgmID, err := uuid.Parse(*bgmAudioID)
-		if err != nil {
-			return nil, err
-		}
-		episode.BgmID = &bgmID
 	}
 
 	if err := s.episodeRepo.Create(ctx, episode); err != nil {
@@ -245,21 +238,6 @@ func (s *episodeService) UpdateEpisode(ctx context.Context, userID, channelID, e
 			episode.ArtworkID = &artworkID
 		}
 		episode.Artwork = nil
-	}
-
-	// BGM の更新
-	if req.BgmAudioID != nil {
-		if *req.BgmAudioID == "" {
-			// 空文字の場合は null に設定
-			episode.BgmID = nil
-		} else {
-			bgmID, err := uuid.Parse(*req.BgmAudioID)
-			if err != nil {
-				return nil, err
-			}
-			episode.BgmID = &bgmID
-		}
-		episode.Bgm = nil
 	}
 
 	// エピソードを更新
@@ -510,4 +488,133 @@ func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode
 	}
 
 	return resp, nil
+}
+
+// エピソードに BGM を設定する
+func (s *episodeService) SetEpisodeBgm(ctx context.Context, userID, channelID, episodeID, bgmAudioID string) (*response.EpisodeDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	bgmID, err := uuid.Parse(bgmAudioID)
+	if err != nil {
+		return nil, err
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to update this episode")
+	}
+
+	// エピソードの存在確認とチャンネルの一致チェック
+	episode, err := s.episodeRepo.FindByID(ctx, eid)
+	if err != nil {
+		return nil, err
+	}
+
+	if episode.ChannelID != cid {
+		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+	}
+
+	// BGM を設定
+	episode.BgmID = &bgmID
+	episode.Bgm = nil
+
+	// エピソードを更新
+	if err := s.episodeRepo.Update(ctx, episode); err != nil {
+		return nil, err
+	}
+
+	// リレーションをプリロードして取得
+	updated, err := s.episodeRepo.FindByID(ctx, episode.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := s.toEpisodeResponse(ctx, updated)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.EpisodeDataResponse{
+		Data: resp,
+	}, nil
+}
+
+// エピソードの BGM を削除する
+func (s *episodeService) RemoveEpisodeBgm(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to update this episode")
+	}
+
+	// エピソードの存在確認とチャンネルの一致チェック
+	episode, err := s.episodeRepo.FindByID(ctx, eid)
+	if err != nil {
+		return nil, err
+	}
+
+	if episode.ChannelID != cid {
+		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+	}
+
+	// BGM を削除
+	episode.BgmID = nil
+	episode.Bgm = nil
+
+	// エピソードを更新
+	if err := s.episodeRepo.Update(ctx, episode); err != nil {
+		return nil, err
+	}
+
+	// リレーションをプリロードして取得
+	updated, err := s.episodeRepo.FindByID(ctx, episode.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := s.toEpisodeResponse(ctx, updated)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.EpisodeDataResponse{
+		Data: resp,
+	}, nil
 }

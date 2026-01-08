@@ -160,7 +160,6 @@ func (h *EpisodeHandler) CreateEpisode(c *gin.Context) {
 		req.Title,
 		req.Description,
 		req.ArtworkImageID,
-		req.BgmAudioID,
 	)
 	if err != nil {
 		Error(c, err)
@@ -350,6 +349,100 @@ func (h *EpisodeHandler) UnpublishEpisode(c *gin.Context) {
 	}
 
 	result, err := h.episodeService.UnpublishEpisode(c.Request.Context(), userID, channelID, episodeID)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+// SetEpisodeBgm godoc
+// @Summary エピソード BGM 設定
+// @Description 指定したエピソードに BGM を設定します
+// @Tags episodes
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param episodeId path string true "エピソード ID"
+// @Param request body request.SetEpisodeBgmRequest true "BGM 設定リクエスト"
+// @Success 200 {object} response.EpisodeDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/episodes/{episodeId}/bgm [put]
+func (h *EpisodeHandler) SetEpisodeBgm(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		return
+	}
+
+	episodeID := c.Param("episodeId")
+	if episodeID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("episodeId is required"))
+		return
+	}
+
+	var req request.SetEpisodeBgmRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		return
+	}
+
+	result, err := h.episodeService.SetEpisodeBgm(c.Request.Context(), userID, channelID, episodeID, req.BgmAudioID)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+// RemoveEpisodeBgm godoc
+// @Summary エピソード BGM 削除
+// @Description 指定したエピソードの BGM を削除します
+// @Tags episodes
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param episodeId path string true "エピソード ID"
+// @Success 200 {object} response.EpisodeDataResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/episodes/{episodeId}/bgm [delete]
+func (h *EpisodeHandler) RemoveEpisodeBgm(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		return
+	}
+
+	episodeID := c.Param("episodeId")
+	if episodeID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("episodeId is required"))
+		return
+	}
+
+	result, err := h.episodeService.RemoveEpisodeBgm(c.Request.Context(), userID, channelID, episodeID)
 	if err != nil {
 		Error(c, err)
 		return
