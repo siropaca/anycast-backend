@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
+	"github.com/siropaca/anycast-backend/internal/dto/request"
 	"github.com/siropaca/anycast-backend/internal/middleware"
 	"github.com/siropaca/anycast-backend/internal/service"
 )
@@ -55,6 +56,64 @@ func (h *ScriptLineHandler) ListScriptLines(c *gin.Context) {
 	}
 
 	result, err := h.scriptLineService.ListByEpisodeID(c.Request.Context(), userID, channelID, episodeID)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+// UpdateScriptLine godoc
+// @Summary 台本行更新
+// @Description 指定した台本行を更新します。speech 行のみ対応しています。
+// @Tags script
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param episodeId path string true "エピソード ID"
+// @Param lineId path string true "台本行 ID"
+// @Param request body request.UpdateScriptLineRequest true "台本行更新リクエスト"
+// @Success 200 {object} response.ScriptLineResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/episodes/{episodeId}/script/lines/{lineId} [patch]
+func (h *ScriptLineHandler) UpdateScriptLine(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		return
+	}
+
+	episodeID := c.Param("episodeId")
+	if episodeID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("episodeId is required"))
+		return
+	}
+
+	lineID := c.Param("lineId")
+	if lineID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("lineId is required"))
+		return
+	}
+
+	var req request.UpdateScriptLineRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		return
+	}
+
+	result, err := h.scriptLineService.Update(c.Request.Context(), userID, channelID, episodeID, lineID, req)
 	if err != nil {
 		Error(c, err)
 		return

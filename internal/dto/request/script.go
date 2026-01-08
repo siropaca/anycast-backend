@@ -11,3 +11,9 @@ type GenerateScriptRequest struct {
 type ImportScriptRequest struct {
 	Text string `json:"text" binding:"required"`
 }
+
+// 台本行更新リクエスト
+type UpdateScriptLineRequest struct {
+	Text    *string `json:"text"`
+	Emotion *string `json:"emotion"`
+}
