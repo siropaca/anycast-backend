@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS bookmarks;
 DROP TABLE IF EXISTS likes;
 DROP TABLE IF EXISTS script_lines;
 DROP TABLE IF EXISTS episodes;
+DROP TABLE IF EXISTS channel_characters;
 DROP TABLE IF EXISTS characters;
 DROP TABLE IF EXISTS channels;
 DROP TABLE IF EXISTS oauth_accounts;
@@ -18,6 +19,7 @@ DROP TABLE IF EXISTS audios;
 DROP TABLE IF EXISTS images;
 
 -- ENUM 型を削除
+DROP TYPE IF EXISTS user_role;
 DROP TYPE IF EXISTS gender;
 DROP TYPE IF EXISTS line_type;
 DROP TYPE IF EXISTS oauth_provider;

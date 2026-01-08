@@ -8,6 +8,7 @@
 CREATE TYPE oauth_provider AS ENUM ('google');
 CREATE TYPE line_type AS ENUM ('speech', 'silence', 'sfx');
 CREATE TYPE gender AS ENUM ('male', 'female', 'neutral');
+CREATE TYPE user_role AS ENUM ('user', 'admin');
 
 -- ===========================================
 -- メディア関連テーブル
@@ -17,11 +18,13 @@ CREATE TYPE gender AS ENUM ('male', 'female', 'neutral');
 CREATE TABLE images (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 	mime_type VARCHAR(100) NOT NULL,
-	url VARCHAR(1024) NOT NULL,
+	path VARCHAR(1024) NOT NULL,
 	filename VARCHAR(255) NOT NULL,
 	file_size INTEGER NOT NULL,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+COMMENT ON COLUMN images.path IS 'GCS 上のパス（例: images/xxx.png）';
 
 -- 音声
 CREATE TABLE audios (
@@ -89,6 +92,8 @@ CREATE TABLE users (
 	username VARCHAR(20) NOT NULL UNIQUE,
 	display_name VARCHAR(20) NOT NULL,
 	avatar_id UUID REFERENCES images (id) ON DELETE SET NULL,
+	role user_role NOT NULL DEFAULT 'user',
+	user_prompt TEXT NOT NULL DEFAULT '',
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -140,19 +145,33 @@ CREATE INDEX idx_channels_user_id ON channels (user_id);
 CREATE INDEX idx_channels_category_id ON channels (category_id);
 CREATE INDEX idx_channels_published_at ON channels (published_at);
 
--- キャラクター
+-- キャラクター（ユーザー所有）
 CREATE TABLE characters (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-	channel_id UUID NOT NULL REFERENCES channels (id) ON DELETE CASCADE,
+	user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
 	name VARCHAR(255) NOT NULL,
 	persona TEXT NOT NULL,
 	voice_id UUID NOT NULL REFERENCES voices (id) ON DELETE RESTRICT,
+	avatar_id UUID REFERENCES images (id) ON DELETE SET NULL,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	UNIQUE (channel_id, name)
+	UNIQUE (user_id, name)
 );
 
-CREATE INDEX idx_characters_channel_id ON characters (channel_id);
+CREATE INDEX idx_characters_user_id ON characters (user_id);
+CREATE INDEX idx_characters_avatar_id ON characters (avatar_id);
+
+-- チャンネルとキャラクターの中間テーブル
+CREATE TABLE channel_characters (
+	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+	channel_id UUID NOT NULL REFERENCES channels (id) ON DELETE CASCADE,
+	character_id UUID NOT NULL REFERENCES characters (id) ON DELETE RESTRICT,
+	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	UNIQUE (channel_id, character_id)
+);
+
+CREATE INDEX idx_channel_characters_channel_id ON channel_characters (channel_id);
+CREATE INDEX idx_channel_characters_character_id ON channel_characters (character_id);
 
 -- エピソード
 CREATE TABLE episodes (
@@ -163,7 +182,7 @@ CREATE TABLE episodes (
 	bgm_id UUID REFERENCES audios (id) ON DELETE SET NULL,
 	full_audio_id UUID REFERENCES audios (id) ON DELETE SET NULL,
 	published_at TIMESTAMP,
-	user_prompt TEXT,
+	user_prompt TEXT NOT NULL DEFAULT '',
 	artwork_id UUID REFERENCES images (id) ON DELETE SET NULL,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
