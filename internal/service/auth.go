@@ -31,6 +31,7 @@ type AuthService interface {
 	Login(ctx context.Context, req request.LoginRequest) (*response.UserResponse, error)
 	OAuthGoogle(ctx context.Context, req request.OAuthGoogleRequest) (*AuthResult, error)
 	GetMe(ctx context.Context, userID string) (*response.MeResponse, error)
+	UpdatePrompt(ctx context.Context, userID string, req request.UpdateUserPromptRequest) (*response.MeResponse, error)
 }
 
 type authService struct {
@@ -345,4 +346,32 @@ func (s *authService) GetMe(ctx context.Context, userID string) (*response.MeRes
 		OAuthProviders: providers,
 		CreatedAt:      user.CreatedAt,
 	}, nil
+}
+
+// ユーザーの台本生成用プロンプトを更新する
+func (s *authService) UpdatePrompt(ctx context.Context, userID string, req request.UpdateUserPromptRequest) (*response.MeResponse, error) {
+	// UUID をパース
+	id, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// ユーザーを取得
+	user, err := s.userRepo.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// プロンプトを更新（null の場合は空文字列）
+	if req.UserPrompt != nil {
+		user.UserPrompt = *req.UserPrompt
+	} else {
+		user.UserPrompt = ""
+	}
+	if err := s.userRepo.Update(ctx, user); err != nil {
+		return nil, err
+	}
+
+	// 更新後のユーザー情報を返す
+	return s.GetMe(ctx, userID)
 }

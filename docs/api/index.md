@@ -25,6 +25,7 @@
 | GET | `/api/v1/users/:userId` | ユーザー取得 | | [詳細](./users.md#ユーザー取得) |
 | GET | `/api/v1/me` | 現在のユーザー取得 | ✅ | [詳細](./users.md#現在のユーザー取得) |
 | PATCH | `/api/v1/me` | ユーザー情報更新 | | [詳細](./users.md#ユーザー情報更新) |
+| PATCH | `/api/v1/me/prompt` | ユーザープロンプト更新 | ✅ | [詳細](./users.md#ユーザープロンプト更新) |
 | **Channels** | - | - | - | [channels.md](./channels.md) |
 | GET | `/api/v1/channels` | チャンネル一覧取得 | | [詳細](./channels.md#チャンネル一覧取得) |
 | GET | `/api/v1/channels/:channelId` | チャンネル取得 | ✅ | [詳細](./channels.md#チャンネル取得) |
@@ -38,9 +39,9 @@
 | **Characters** | - | - | - | [characters.md](./characters.md) |
 | GET | `/api/v1/me/characters` | キャラクター一覧取得 | ✅ | [詳細](./characters.md#キャラクター一覧取得) |
 | GET | `/api/v1/me/characters/:characterId` | キャラクター取得 | ✅ | [詳細](./characters.md#キャラクター取得) |
-| POST | `/api/v1/me/characters` | キャラクター作成 | | [詳細](./characters.md#キャラクター作成) |
-| PATCH | `/api/v1/me/characters/:characterId` | キャラクター更新 | | [詳細](./characters.md#キャラクター更新) |
-| DELETE | `/api/v1/me/characters/:characterId` | キャラクター削除 | | [詳細](./characters.md#キャラクター削除) |
+| POST | `/api/v1/me/characters` | キャラクター作成 | ✅ | [詳細](./characters.md#キャラクター作成) |
+| PATCH | `/api/v1/me/characters/:characterId` | キャラクター更新 | ✅ | [詳細](./characters.md#キャラクター更新) |
+| DELETE | `/api/v1/me/characters/:characterId` | キャラクター削除 | ✅ | [詳細](./characters.md#キャラクター削除) |
 | PUT | `/api/v1/channels/:channelId/characters` | チャンネルのキャラクター紐づけ更新 | | [詳細](./channels.md#チャンネルのキャラクター紐づけ更新) |
 | **Episodes** | - | - | - | [episodes.md](./episodes.md) |
 | GET | `/api/v1/channels/:channelId/episodes` | エピソード一覧取得 | | [詳細](./episodes.md#エピソード一覧取得公開用) |
@@ -60,7 +61,7 @@
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId/script/export` | 台本テキスト出力 | ✅ | [詳細](./script.md#台本テキスト出力) |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines` | 台本行一覧取得 | ✅ | [詳細](./script.md#台本行一覧取得) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines` | 行追加 | | [詳細](./script.md#行追加) |
-| PATCH | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | 行更新 | | [詳細](./script.md#行更新) |
+| PATCH | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | 行更新 | ✅ | [詳細](./script.md#行更新) |
 | DELETE | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | 行削除 | ✅ | [詳細](./script.md#行削除) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/reorder` | 行並び替え | | [詳細](./script.md#行並び替え) |
 | **Audio（音声生成）** | - | - | - | [media.md](./media.md) |

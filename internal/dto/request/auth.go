@@ -22,3 +22,8 @@ type OAuthGoogleRequest struct {
 	RefreshToken   *string `json:"refreshToken"`
 	ExpiresAt      *int64  `json:"expiresAt"`
 }
+
+// PATCH /me/prompt のリクエストボディ
+type UpdateUserPromptRequest struct {
+	UserPrompt *string `json:"userPrompt"`
+}

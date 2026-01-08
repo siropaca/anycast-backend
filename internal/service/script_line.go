@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
+	"github.com/siropaca/anycast-backend/internal/dto/request"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/tts"
@@ -23,6 +24,7 @@ const signedURLExpiration = 1 * time.Hour
 // 台本行関連のビジネスロジックインターフェース
 type ScriptLineService interface {
 	ListByEpisodeID(ctx context.Context, userID, channelID, episodeID string) (*response.ScriptLineListResponse, error)
+	Update(ctx context.Context, userID, channelID, episodeID, lineID string, req request.UpdateScriptLineRequest) (*response.ScriptLineResponse, error)
 	Delete(ctx context.Context, userID, channelID, episodeID, lineID string) error
 	GenerateAudio(ctx context.Context, userID, channelID, episodeID, lineID string) (*response.GenerateAudioResponse, error)
 }
@@ -110,6 +112,95 @@ func (s *scriptLineService) ListByEpisodeID(ctx context.Context, userID, channel
 	return &response.ScriptLineListResponse{
 		Data: responses,
 	}, nil
+}
+
+// 指定された台本行を更新する
+func (s *scriptLineService) Update(ctx context.Context, userID, channelID, episodeID, lineID string, req request.UpdateScriptLineRequest) (*response.ScriptLineResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	lid, err := uuid.Parse(lineID)
+	if err != nil {
+		return nil, err
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
+	}
+
+	// エピソードの存在確認とチャンネルの一致チェック
+	episode, err := s.episodeRepo.FindByID(ctx, eid)
+	if err != nil {
+		return nil, err
+	}
+
+	if episode.ChannelID != cid {
+		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+	}
+
+	// 台本行の存在確認とエピソードの一致チェック
+	scriptLine, err := s.scriptLineRepo.FindByID(ctx, lid)
+	if err != nil {
+		return nil, err
+	}
+
+	if scriptLine.EpisodeID != eid {
+		return nil, apperror.ErrNotFound.WithMessage("Script line not found in this episode")
+	}
+
+	// speech 行のみ更新可能
+	if scriptLine.LineType != model.LineTypeSpeech {
+		return nil, apperror.ErrValidation.WithMessage("Only speech lines can be updated")
+	}
+
+	// フィールドを更新
+	if req.Text != nil {
+		scriptLine.Text = req.Text
+		// テキストが変更された場合、既存の音声を無効化
+		scriptLine.AudioID = nil
+		scriptLine.Audio = nil
+	}
+
+	if req.Emotion != nil {
+		if *req.Emotion == "" {
+			scriptLine.Emotion = nil
+		} else {
+			scriptLine.Emotion = req.Emotion
+		}
+		// 感情が変更された場合も既存の音声を無効化（音声生成時に emotion が使われるため）
+		scriptLine.AudioID = nil
+		scriptLine.Audio = nil
+	}
+
+	if err := s.scriptLineRepo.Update(ctx, scriptLine); err != nil {
+		return nil, err
+	}
+
+	// レスポンスに変換
+	resp, err := s.toScriptLineResponse(ctx, scriptLine)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
 }
 
 // 指定された台本行を削除する

@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
+	"github.com/siropaca/anycast-backend/internal/dto/request"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/middleware"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
@@ -29,6 +30,14 @@ func (m *mockScriptLineService) ListByEpisodeID(ctx context.Context, userID, cha
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*response.ScriptLineListResponse), args.Error(1)
+}
+
+func (m *mockScriptLineService) Update(ctx context.Context, userID, channelID, episodeID, lineID string, req request.UpdateScriptLineRequest) (*response.ScriptLineResponse, error) {
+	args := m.Called(ctx, userID, channelID, episodeID, lineID, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.ScriptLineResponse), args.Error(1)
 }
 
 func (m *mockScriptLineService) Delete(ctx context.Context, userID, channelID, episodeID, lineID string) error {

@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
+	"github.com/siropaca/anycast-backend/internal/dto/request"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/model"
@@ -19,17 +21,29 @@ const signedURLExpirationCharacter = 1 * time.Hour
 type CharacterService interface {
 	ListMyCharacters(ctx context.Context, userID string, filter repository.CharacterFilter) (*response.CharacterListWithPaginationResponse, error)
 	GetMyCharacter(ctx context.Context, userID, characterID string) (*response.CharacterDataResponse, error)
+	CreateCharacter(ctx context.Context, userID string, req request.CreateCharacterRequest) (*response.CharacterDataResponse, error)
+	UpdateCharacter(ctx context.Context, userID, characterID string, req request.UpdateCharacterRequest) (*response.CharacterDataResponse, error)
+	DeleteCharacter(ctx context.Context, userID, characterID string) error
 }
 
 type characterService struct {
 	characterRepo repository.CharacterRepository
+	voiceRepo     repository.VoiceRepository
+	imageRepo     repository.ImageRepository
 	storageClient storage.Client
 }
 
 // CharacterService の実装を返す
-func NewCharacterService(characterRepo repository.CharacterRepository, storageClient storage.Client) CharacterService {
+func NewCharacterService(
+	characterRepo repository.CharacterRepository,
+	voiceRepo repository.VoiceRepository,
+	imageRepo repository.ImageRepository,
+	storageClient storage.Client,
+) CharacterService {
 	return &characterService{
 		characterRepo: characterRepo,
+		voiceRepo:     voiceRepo,
+		imageRepo:     imageRepo,
 		storageClient: storageClient,
 	}
 }
@@ -140,4 +154,196 @@ func (s *characterService) toCharacterWithChannelsResponse(ctx context.Context, 
 		CreatedAt: c.CreatedAt,
 		UpdatedAt: c.UpdatedAt,
 	}, nil
+}
+
+// キャラクターを作成する
+func (s *characterService) CreateCharacter(ctx context.Context, userID string, req request.CreateCharacterRequest) (*response.CharacterDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 名前が __ で始まる場合は禁止
+	if strings.HasPrefix(req.Name, "__") {
+		return nil, apperror.ErrValidation.WithMessage("Name cannot start with '__'")
+	}
+
+	// 同一ユーザー内で同じ名前のキャラクターが存在するかチェック
+	exists, err := s.characterRepo.ExistsByUserIDAndName(ctx, uid, req.Name, nil)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, apperror.ErrDuplicateName.WithMessage("Character with the same name already exists")
+	}
+
+	// ボイスの存在確認（アクティブなボイスのみ）
+	voice, err := s.voiceRepo.FindActiveByID(ctx, req.VoiceID)
+	if err != nil {
+		return nil, err
+	}
+
+	// アバター画像の存在確認（指定された場合のみ）
+	var avatar *model.Image
+	var avatarID *uuid.UUID
+	if req.AvatarID != nil && *req.AvatarID != "" {
+		aid, err := uuid.Parse(*req.AvatarID)
+		if err != nil {
+			return nil, err
+		}
+		avatar, err = s.imageRepo.FindByID(ctx, aid)
+		if err != nil {
+			return nil, err
+		}
+		avatarID = &aid
+	}
+
+	// キャラクターを作成
+	character := &model.Character{
+		ID:       uuid.New(),
+		UserID:   uid,
+		Name:     req.Name,
+		Persona:  req.Persona,
+		AvatarID: avatarID,
+		VoiceID:  voice.ID,
+	}
+
+	if err := s.characterRepo.Create(ctx, character); err != nil {
+		return nil, err
+	}
+
+	// レスポンス用にリレーションを設定
+	character.Voice = *voice
+	if avatar != nil {
+		character.Avatar = avatar
+	}
+
+	res, err := s.toCharacterWithChannelsResponse(ctx, *character)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.CharacterDataResponse{Data: res}, nil
+}
+
+// キャラクターを更新する
+func (s *characterService) UpdateCharacter(ctx context.Context, userID, characterID string, req request.UpdateCharacterRequest) (*response.CharacterDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(characterID)
+	if err != nil {
+		return nil, err
+	}
+
+	character, err := s.characterRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	// 所有者チェック
+	if character.UserID != uid {
+		return nil, apperror.ErrNotFound.WithMessage("Character not found")
+	}
+
+	// 名前の更新
+	if req.Name != nil {
+		// 名前が __ で始まる場合は禁止
+		if strings.HasPrefix(*req.Name, "__") {
+			return nil, apperror.ErrValidation.WithMessage("Name cannot start with '__'")
+		}
+
+		// 同一ユーザー内で同じ名前のキャラクターが存在するかチェック（自分自身は除外）
+		exists, err := s.characterRepo.ExistsByUserIDAndName(ctx, uid, *req.Name, &cid)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			return nil, apperror.ErrDuplicateName.WithMessage("Character with the same name already exists")
+		}
+
+		character.Name = *req.Name
+	}
+
+	// ペルソナの更新
+	if req.Persona != nil {
+		character.Persona = *req.Persona
+	}
+
+	// ボイスの更新
+	if req.VoiceID != nil {
+		voice, err := s.voiceRepo.FindActiveByID(ctx, *req.VoiceID)
+		if err != nil {
+			return nil, err
+		}
+		character.VoiceID = voice.ID
+		character.Voice = *voice
+	}
+
+	// アバター画像の更新
+	if req.AvatarID != nil {
+		if *req.AvatarID == "" {
+			// 空文字の場合はアバターを削除
+			character.AvatarID = nil
+			character.Avatar = nil
+		} else {
+			aid, err := uuid.Parse(*req.AvatarID)
+			if err != nil {
+				return nil, err
+			}
+			avatar, err := s.imageRepo.FindByID(ctx, aid)
+			if err != nil {
+				return nil, err
+			}
+			character.AvatarID = &aid
+			character.Avatar = avatar
+		}
+	}
+
+	if err := s.characterRepo.Update(ctx, character); err != nil {
+		return nil, err
+	}
+
+	res, err := s.toCharacterWithChannelsResponse(ctx, *character)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.CharacterDataResponse{Data: res}, nil
+}
+
+// キャラクターを削除する
+func (s *characterService) DeleteCharacter(ctx context.Context, userID, characterID string) error {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+
+	cid, err := uuid.Parse(characterID)
+	if err != nil {
+		return err
+	}
+
+	character, err := s.characterRepo.FindByID(ctx, cid)
+	if err != nil {
+		return err
+	}
+
+	// 所有者チェック
+	if character.UserID != uid {
+		return apperror.ErrNotFound.WithMessage("Character not found")
+	}
+
+	// いずれかのチャンネルで使用中かチェック
+	inUse, err := s.characterRepo.IsUsedInAnyChannel(ctx, cid)
+	if err != nil {
+		return err
+	}
+	if inUse {
+		return apperror.ErrCharacterInUse.WithMessage("This character is in use and cannot be deleted")
+	}
+
+	return s.characterRepo.Delete(ctx, cid)
 }

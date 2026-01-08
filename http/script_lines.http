@@ -50,6 +50,43 @@ Content-Type: application/json
 GET {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/export
 Authorization: Bearer {{token}}
 
+### 台本行更新（テキストのみ）
+PATCH {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/lines/YOUR_LINE_ID_HERE
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "text": "新しいセリフ"
+}
+
+### 台本行更新（感情のみ）
+PATCH {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/lines/YOUR_LINE_ID_HERE
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "emotion": "笑いながら"
+}
+
+### 台本行更新（テキストと感情）
+PATCH {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/lines/YOUR_LINE_ID_HERE
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "text": "新しいセリフ",
+  "emotion": "笑いながら"
+}
+
+### 台本行更新（感情削除）
+PATCH {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/lines/YOUR_LINE_ID_HERE
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "emotion": ""
+}
+
 ### 台本行削除
 DELETE {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/lines/YOUR_LINE_ID_HERE
 Authorization: Bearer {{token}}

@@ -66,12 +66,16 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 
 	// Me（自分のリソース）
 	authenticated.GET("/me", container.AuthHandler.GetMe)
+	authenticated.PATCH("/me/prompt", container.AuthHandler.UpdatePrompt)
 	authenticated.GET("/me/channels", container.ChannelHandler.ListMyChannels)
 	authenticated.GET("/me/channels/:channelId", container.ChannelHandler.GetMyChannel)
 	authenticated.GET("/me/channels/:channelId/episodes", container.EpisodeHandler.ListMyChannelEpisodes)
 	authenticated.GET("/me/channels/:channelId/episodes/:episodeId", container.EpisodeHandler.GetMyChannelEpisode)
 	authenticated.GET("/me/characters", container.CharacterHandler.ListMyCharacters)
 	authenticated.GET("/me/characters/:characterId", container.CharacterHandler.GetMyCharacter)
+	authenticated.POST("/me/characters", container.CharacterHandler.CreateCharacter)
+	authenticated.PATCH("/me/characters/:characterId", container.CharacterHandler.UpdateCharacter)
+	authenticated.DELETE("/me/characters/:characterId", container.CharacterHandler.DeleteCharacter)
 
 	// Channels
 	authenticated.GET("/channels/:channelId", container.ChannelHandler.GetChannel)
@@ -92,6 +96,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 
 	// Script Lines
 	authenticated.GET("/channels/:channelId/episodes/:episodeId/script/lines", container.ScriptLineHandler.ListScriptLines)
+	authenticated.PATCH("/channels/:channelId/episodes/:episodeId/script/lines/:lineId", container.ScriptLineHandler.UpdateScriptLine)
 	authenticated.DELETE("/channels/:channelId/episodes/:episodeId/script/lines/:lineId", container.ScriptLineHandler.DeleteScriptLine)
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/script/lines/:lineId/audio/generate", container.ScriptLineHandler.GenerateAudio)
 

@@ -177,3 +177,38 @@ func (h *AuthHandler) GetMe(c *gin.Context) {
 
 	Success(c, http.StatusOK, me)
 }
+
+// UpdatePrompt godoc
+// @Summary ユーザープロンプト更新
+// @Description ユーザーの台本生成用プロンプト（基本方針）を更新します
+// @Tags me
+// @Accept json
+// @Produce json
+// @Param request body request.UpdateUserPromptRequest true "プロンプト更新リクエスト"
+// @Security BearerAuth
+// @Success 200 {object} response.MeDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /me/prompt [patch]
+func (h *AuthHandler) UpdatePrompt(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	var req request.UpdateUserPromptRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		return
+	}
+
+	me, err := h.authService.UpdatePrompt(c.Request.Context(), userID, req)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	Success(c, http.StatusOK, me)
+}
