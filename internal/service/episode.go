@@ -244,6 +244,7 @@ func (s *episodeService) UpdateEpisode(ctx context.Context, userID, channelID, e
 			}
 			episode.ArtworkID = &artworkID
 		}
+		episode.Artwork = nil
 	}
 
 	// BGM の更新
@@ -258,6 +259,7 @@ func (s *episodeService) UpdateEpisode(ctx context.Context, userID, channelID, e
 			}
 			episode.BgmID = &bgmID
 		}
+		episode.Bgm = nil
 	}
 
 	// エピソードを更新
