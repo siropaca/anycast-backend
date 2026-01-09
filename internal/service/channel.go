@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"gorm.io/gorm"
+
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/request"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
@@ -27,6 +29,7 @@ type ChannelService interface {
 }
 
 type channelService struct {
+	db            *gorm.DB
 	channelRepo   repository.ChannelRepository
 	characterRepo repository.CharacterRepository
 	categoryRepo  repository.CategoryRepository
@@ -37,6 +40,7 @@ type channelService struct {
 
 // ChannelService の実装を返す
 func NewChannelService(
+	db *gorm.DB,
 	channelRepo repository.ChannelRepository,
 	characterRepo repository.CharacterRepository,
 	categoryRepo repository.CategoryRepository,
@@ -45,6 +49,7 @@ func NewChannelService(
 	storageClient storage.Client,
 ) ChannelService {
 	return &channelService{
+		db:            db,
 		channelRepo:   channelRepo,
 		characterRepo: characterRepo,
 		categoryRepo:  categoryRepo,
@@ -180,34 +185,49 @@ func (s *channelService) CreateChannel(ctx context.Context, userID string, req r
 		return nil, apperror.ErrValidation.WithMessage("Characters must have 1 to 2 items")
 	}
 
-	// キャラクターの処理（既存 or 新規作成）
-	characterIDs, err := s.processCharacterInputs(ctx, uid, req.Characters)
-	if err != nil {
-		return nil, err
-	}
+	var created *model.Channel
 
-	// チャンネルモデルを作成
-	channel := &model.Channel{
-		UserID:      uid,
-		Name:        req.Name,
-		Description: req.Description,
-		UserPrompt:  req.UserPrompt,
-		CategoryID:  categoryID,
-		ArtworkID:   artworkID,
-	}
+	// トランザクションでキャラクター作成・チャンネル作成・紐づけを実行
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		// トランザクション内で使うリポジトリを作成
+		txCharacterRepo := repository.NewCharacterRepository(tx)
+		txChannelRepo := repository.NewChannelRepository(tx)
 
-	// チャンネルを保存
-	if err := s.channelRepo.Create(ctx, channel); err != nil {
-		return nil, err
-	}
+		// キャラクターの処理（既存 or 新規作成）
+		characterIDs, err := s.processCharacterInputs(ctx, uid, req.Characters, txCharacterRepo)
+		if err != nil {
+			return err
+		}
 
-	// キャラクターを紐づけ
-	if err := s.channelRepo.ReplaceChannelCharacters(ctx, channel.ID, characterIDs); err != nil {
-		return nil, err
-	}
+		// チャンネルモデルを作成
+		channel := &model.Channel{
+			UserID:      uid,
+			Name:        req.Name,
+			Description: req.Description,
+			UserPrompt:  req.UserPrompt,
+			CategoryID:  categoryID,
+			ArtworkID:   artworkID,
+		}
 
-	// リレーションをプリロードして取得
-	created, err := s.channelRepo.FindByID(ctx, channel.ID)
+		// チャンネルを保存
+		if err := txChannelRepo.Create(ctx, channel); err != nil {
+			return err
+		}
+
+		// キャラクターを紐づけ
+		if err := txChannelRepo.ReplaceChannelCharacters(ctx, channel.ID, characterIDs); err != nil {
+			return err
+		}
+
+		// リレーションをプリロードして取得
+		created, err = txChannelRepo.FindByID(ctx, channel.ID)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
 	if err != nil {
 		return nil, err
 	}
@@ -428,7 +448,7 @@ func (s *channelService) UnpublishChannel(ctx context.Context, userID, channelID
 
 // キャラクター入力を処理して、キャラクター ID のスライスを返す
 // connect は既存キャラクターの紐づけ、create は新規キャラクターの作成
-func (s *channelService) processCharacterInputs(ctx context.Context, userID uuid.UUID, input request.ChannelCharactersInput) ([]uuid.UUID, error) {
+func (s *channelService) processCharacterInputs(ctx context.Context, userID uuid.UUID, input request.ChannelCharactersInput, characterRepo repository.CharacterRepository) ([]uuid.UUID, error) {
 	characterIDs := make([]uuid.UUID, 0, input.Total())
 
 	// 既存キャラクターの紐づけ処理
@@ -439,7 +459,7 @@ func (s *channelService) processCharacterInputs(ctx context.Context, userID uuid
 		}
 
 		// キャラクターの存在確認とオーナーチェック
-		character, err := s.characterRepo.FindByID(ctx, cid)
+		character, err := characterRepo.FindByID(ctx, cid)
 		if err != nil {
 			return nil, err
 		}
@@ -458,7 +478,7 @@ func (s *channelService) processCharacterInputs(ctx context.Context, userID uuid
 		}
 
 		// 同一ユーザー内での名前重複チェック
-		exists, err := s.characterRepo.ExistsByUserIDAndName(ctx, userID, create.Name, nil)
+		exists, err := characterRepo.ExistsByUserIDAndName(ctx, userID, create.Name, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -497,7 +517,7 @@ func (s *channelService) processCharacterInputs(ctx context.Context, userID uuid
 			VoiceID:  voiceID,
 		}
 
-		if err := s.characterRepo.Create(ctx, character); err != nil {
+		if err := characterRepo.Create(ctx, character); err != nil {
 			return nil, err
 		}
 
