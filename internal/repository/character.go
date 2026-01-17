@@ -76,6 +76,8 @@ func (r *characterRepository) FindByID(ctx context.Context, id uuid.UUID) (*mode
 		Preload("Avatar").
 		Preload("Voice").
 		Preload("ChannelCharacters.Channel").
+		Preload("ChannelCharacters.Channel.Category").
+		Preload("ChannelCharacters.Channel.Artwork").
 		First(&character, "id = ?", id).Error; err != nil {
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {

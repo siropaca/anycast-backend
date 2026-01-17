@@ -56,6 +56,7 @@ func (r *scriptLineRepository) FindByEpisodeID(ctx context.Context, episodeID uu
 
 	if err := r.db.WithContext(ctx).
 		Preload("Speaker").
+		Preload("Speaker.Voice").
 		Preload("Sfx").
 		Where("episode_id = ?", episodeID).
 		Order("line_order ASC").
