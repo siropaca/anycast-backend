@@ -151,6 +151,15 @@ make swagger
 | `make cleanup` | 孤児メディアファイルをクリーンアップ（dry-run） |
 | `make cleanup-run` | 孤児メディアファイルをクリーンアップ（実行） |
 
+### mise タスク
+
+一部のコマンドは `mise run` でも実行できます。
+
+| コマンド | 説明 |
+|----------|------|
+| `mise run bootstrap` (`mise run bs`) | 開発環境をセットアップ |
+| `mise run clean` | ビルド成果物を削除 |
+
 ## ディレクトリ構成
 
 ```
