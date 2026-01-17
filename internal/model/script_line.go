@@ -19,7 +19,6 @@ type ScriptLine struct {
 	DurationMs *int             `gorm:"column:duration_ms"`
 	SfxID      *uuid.UUID       `gorm:"type:uuid;column:sfx_id"`
 	Volume     *decimal.Decimal `gorm:"type:decimal(3,2);column:volume"`
-	AudioID    *uuid.UUID       `gorm:"type:uuid;column:audio_id"`
 	CreatedAt  time.Time        `gorm:"not null;default:CURRENT_TIMESTAMP"`
 	UpdatedAt  time.Time        `gorm:"not null;default:CURRENT_TIMESTAMP"`
 
@@ -27,7 +26,6 @@ type ScriptLine struct {
 	Episode Episode      `gorm:"foreignKey:EpisodeID"`
 	Speaker *Character   `gorm:"foreignKey:SpeakerID"`
 	Sfx     *SoundEffect `gorm:"foreignKey:SfxID"`
-	Audio   *Audio       `gorm:"foreignKey:AudioID"`
 }
 
 // テーブル名を指定
