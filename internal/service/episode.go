@@ -322,8 +322,31 @@ func (s *episodeService) DeleteEpisode(ctx context.Context, userID, channelID, e
 		return apperror.ErrNotFound.WithMessage("Episode not found in this channel")
 	}
 
+	// 削除前に GCS ファイルのパスを収集
+	var filesToDelete []string
+	if episode.Artwork != nil {
+		filesToDelete = append(filesToDelete, episode.Artwork.Path)
+	}
+	if episode.FullAudio != nil {
+		filesToDelete = append(filesToDelete, episode.FullAudio.Path)
+	}
+	if episode.Bgm != nil {
+		filesToDelete = append(filesToDelete, episode.Bgm.Path)
+	}
+
 	// エピソードを削除
-	return s.episodeRepo.Delete(ctx, eid)
+	if err := s.episodeRepo.Delete(ctx, eid); err != nil {
+		return err
+	}
+
+	// GCS からファイルを削除（失敗してもログを出すだけで続行）
+	for _, path := range filesToDelete {
+		if err := s.storageClient.Delete(ctx, path); err != nil {
+			logger.FromContext(ctx).Warn("failed to delete file from storage", "path", path, "error", err)
+		}
+	}
+
+	return nil
 }
 
 // エピソードを公開する
