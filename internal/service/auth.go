@@ -272,7 +272,7 @@ func (s *authService) toUserResponse(ctx context.Context, user *model.User) *res
 	if user.AvatarID != nil {
 		image, err := s.imageRepo.FindByID(ctx, *user.AvatarID)
 		if err == nil {
-			signedURL, err := s.storageClient.GenerateSignedURL(ctx, image.Path, signedURLExpiration)
+			signedURL, err := s.storageClient.GenerateSignedURL(ctx, image.Path, storage.SignedURLExpirationImage)
 			if err == nil {
 				avatarURL = &signedURL
 			}
@@ -323,7 +323,7 @@ func (s *authService) GetMe(ctx context.Context, userID string) (*response.MeRes
 	if user.AvatarID != nil {
 		image, err := s.imageRepo.FindByID(ctx, *user.AvatarID)
 		if err == nil {
-			signedURL, err := s.storageClient.GenerateSignedURL(ctx, image.Path, signedURLExpiration)
+			signedURL, err := s.storageClient.GenerateSignedURL(ctx, image.Path, storage.SignedURLExpirationImage)
 			if err == nil {
 				avatar = &response.AvatarResponse{
 					ID:  image.ID,
