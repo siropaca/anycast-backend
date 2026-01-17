@@ -42,18 +42,23 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	// Infrastructure
 	llmClient := llm.NewOpenAIClient(cfg.OpenAIAPIKey)
 
-	// TTS クライアント（音声生成用）
-	ttsClient, err := tts.NewGoogleTTSClient(ctx, cfg.GoogleCredentialsJSON)
-	if err != nil {
-		log.Printf("Warning: failed to create TTS client: %v", err)
-	}
-
 	// Storage クライアント（GCS）
 	var storageClient storage.Client
 	if cfg.GCSBucketName != "" {
+		var err error
 		storageClient, err = storage.NewGCSClient(ctx, cfg.GCSBucketName, cfg.GoogleCredentialsJSON)
 		if err != nil {
 			log.Printf("Warning: failed to create storage client: %v", err)
+		}
+	}
+
+	// TTS クライアント（音声生成用）
+	var ttsClient tts.Client
+	if cfg.GoogleCredentialsJSON != "" {
+		var err error
+		ttsClient, err = tts.NewGoogleTTSClient(ctx, cfg.GoogleCredentialsJSON)
+		if err != nil {
+			log.Printf("Warning: failed to create TTS client: %v", err)
 		}
 	}
 
@@ -77,8 +82,8 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	channelService := service.NewChannelService(db, channelRepo, characterRepo, categoryRepo, imageRepo, voiceRepo, storageClient)
 	characterService := service.NewCharacterService(characterRepo, voiceRepo, imageRepo, storageClient)
 	categoryService := service.NewCategoryService(categoryRepo)
-	episodeService := service.NewEpisodeService(episodeRepo, channelRepo, storageClient)
-	scriptLineService := service.NewScriptLineService(db, scriptLineRepo, episodeRepo, channelRepo, audioRepo, ttsClient, storageClient)
+	episodeService := service.NewEpisodeService(episodeRepo, channelRepo, scriptLineRepo, audioRepo, storageClient, ttsClient)
+	scriptLineService := service.NewScriptLineService(scriptLineRepo, episodeRepo, channelRepo)
 	scriptService := service.NewScriptService(db, userRepo, channelRepo, episodeRepo, scriptLineRepo, soundEffectRepo, llmClient, storageClient)
 	cleanupService := service.NewCleanupService(audioRepo, imageRepo, storageClient)
 	imageService := service.NewImageService(imageRepo, storageClient)
