@@ -1,26 +1,24 @@
 package service
 
 import (
-  "context"
-  "fmt"
-  "strings"
+	"context"
+	"fmt"
+	"strings"
 
-  "gorm.io/gorm"
+	"gorm.io/gorm"
 
-  "github.com/siropaca/anycast-backend/internal/apperror"
-  "github.com/siropaca/anycast-backend/internal/dto/response"
-  "github.com/siropaca/anycast-backend/internal/infrastructure/llm"
-  "github.com/siropaca/anycast-backend/internal/infrastructure/storage"
-  "github.com/siropaca/anycast-backend/internal/model"
-  "github.com/siropaca/anycast-backend/internal/pkg/script"
-  "github.com/siropaca/anycast-backend/internal/pkg/uuid"
-  "github.com/siropaca/anycast-backend/internal/repository"
+	"github.com/siropaca/anycast-backend/internal/apperror"
+	"github.com/siropaca/anycast-backend/internal/dto/response"
+	"github.com/siropaca/anycast-backend/internal/infrastructure/llm"
+	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
+	"github.com/siropaca/anycast-backend/internal/model"
+	"github.com/siropaca/anycast-backend/internal/pkg/script"
+	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
+	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
-const (
-  // デフォルトのエピソード長さ（分）
-  defaultDurationMinutes = 10
-)
+// デフォルトのエピソード長さ（分）
+const defaultDurationMinutes = 10
 
 // 台本生成のシステムプロンプト（感情なし）
 const systemPromptWithoutEmotion = `
@@ -105,508 +103,508 @@ const systemPromptWithEmotion = `
 
 // 台本エクスポート結果
 type ExportScriptResult struct {
-  EpisodeTitle string // エピソードタイトル
-  Text         string // 台本テキスト
+	EpisodeTitle string // エピソードタイトル
+	Text         string // 台本テキスト
 }
 
 // 台本関連のビジネスロジックインターフェース
 type ScriptService interface {
-  GenerateScript(ctx context.Context, userID, channelID, episodeID, prompt string, durationMinutes *int, withEmotion bool) (*response.ScriptLineListResponse, error)
-  ImportScript(ctx context.Context, userID, channelID, episodeID, text string) (*response.ScriptLineListResponse, error)
-  ExportScript(ctx context.Context, userID, channelID, episodeID string) (*ExportScriptResult, error)
+	GenerateScript(ctx context.Context, userID, channelID, episodeID, prompt string, durationMinutes *int, withEmotion bool) (*response.ScriptLineListResponse, error)
+	ImportScript(ctx context.Context, userID, channelID, episodeID, text string) (*response.ScriptLineListResponse, error)
+	ExportScript(ctx context.Context, userID, channelID, episodeID string) (*ExportScriptResult, error)
 }
 
 type scriptService struct {
-  db              *gorm.DB
-  userRepo        repository.UserRepository
-  channelRepo     repository.ChannelRepository
-  episodeRepo     repository.EpisodeRepository
-  scriptLineRepo  repository.ScriptLineRepository
-  soundEffectRepo repository.SoundEffectRepository
-  llmClient       llm.Client
-  storageClient   storage.Client
+	db              *gorm.DB
+	userRepo        repository.UserRepository
+	channelRepo     repository.ChannelRepository
+	episodeRepo     repository.EpisodeRepository
+	scriptLineRepo  repository.ScriptLineRepository
+	soundEffectRepo repository.SoundEffectRepository
+	llmClient       llm.Client
+	storageClient   storage.Client
 }
 
 // ScriptService の実装を返す
 func NewScriptService(
-  db *gorm.DB,
-  userRepo repository.UserRepository,
-  channelRepo repository.ChannelRepository,
-  episodeRepo repository.EpisodeRepository,
-  scriptLineRepo repository.ScriptLineRepository,
-  soundEffectRepo repository.SoundEffectRepository,
-  llmClient llm.Client,
-  storageClient storage.Client,
+	db *gorm.DB,
+	userRepo repository.UserRepository,
+	channelRepo repository.ChannelRepository,
+	episodeRepo repository.EpisodeRepository,
+	scriptLineRepo repository.ScriptLineRepository,
+	soundEffectRepo repository.SoundEffectRepository,
+	llmClient llm.Client,
+	storageClient storage.Client,
 ) ScriptService {
-  return &scriptService{
-    db:              db,
-    userRepo:        userRepo,
-    channelRepo:     channelRepo,
-    episodeRepo:     episodeRepo,
-    scriptLineRepo:  scriptLineRepo,
-    soundEffectRepo: soundEffectRepo,
-    llmClient:       llmClient,
-    storageClient:   storageClient,
-  }
+	return &scriptService{
+		db:              db,
+		userRepo:        userRepo,
+		channelRepo:     channelRepo,
+		episodeRepo:     episodeRepo,
+		scriptLineRepo:  scriptLineRepo,
+		soundEffectRepo: soundEffectRepo,
+		llmClient:       llmClient,
+		storageClient:   storageClient,
+	}
 }
 
 // AI を使って台本を生成する
 func (s *scriptService) GenerateScript(ctx context.Context, userID, channelID, episodeID, prompt string, durationMinutes *int, withEmotion bool) (*response.ScriptLineListResponse, error) {
-  uid, err := uuid.Parse(userID)
-  if err != nil {
-    return nil, err
-  }
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
 
-  cid, err := uuid.Parse(channelID)
-  if err != nil {
-    return nil, err
-  }
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
 
-  eid, err := uuid.Parse(episodeID)
-  if err != nil {
-    return nil, err
-  }
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return nil, err
+	}
 
-  // チャンネルの存在確認とオーナーチェック
-  channel, err := s.channelRepo.FindByID(ctx, cid)
-  if err != nil {
-    return nil, err
-  }
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
 
-  if channel.UserID != uid {
-    return nil, apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
-  }
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
+	}
 
-  // エピソードの存在確認とチャンネルの一致チェック
-  episode, err := s.episodeRepo.FindByID(ctx, eid)
-  if err != nil {
-    return nil, err
-  }
+	// エピソードの存在確認とチャンネルの一致チェック
+	episode, err := s.episodeRepo.FindByID(ctx, eid)
+	if err != nil {
+		return nil, err
+	}
 
-  if episode.ChannelID != cid {
-    return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
-  }
+	if episode.ChannelID != cid {
+		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+	}
 
-  // ユーザー情報を取得（userPrompt 用）
-  user, err := s.userRepo.FindByID(ctx, uid)
-  if err != nil {
-    return nil, err
-  }
+	// ユーザー情報を取得（userPrompt 用）
+	user, err := s.userRepo.FindByID(ctx, uid)
+	if err != nil {
+		return nil, err
+	}
 
-  // withEmotion に応じてシステムプロンプトを選択
-  sysPrompt := systemPromptWithoutEmotion
-  if withEmotion {
-    sysPrompt = systemPromptWithEmotion
-  }
+	// withEmotion に応じてシステムプロンプトを選択
+	sysPrompt := systemPromptWithoutEmotion
+	if withEmotion {
+		sysPrompt = systemPromptWithEmotion
+	}
 
-  // durationMinutes のデフォルト値設定
-  duration := defaultDurationMinutes
-  if durationMinutes != nil {
-    duration = *durationMinutes
-  }
+	// durationMinutes のデフォルト値設定
+	duration := defaultDurationMinutes
+	if durationMinutes != nil {
+		duration = *durationMinutes
+	}
 
-  // LLM 用ユーザープロンプトを構築
-  userPrompt := s.buildUserPrompt(user, channel, episode, prompt, duration)
+	// LLM 用ユーザープロンプトを構築
+	userPrompt := s.buildUserPrompt(user, channel, episode, prompt, duration)
 
-  // LLM で台本生成
-  generatedText, err := s.llmClient.GenerateScript(ctx, sysPrompt, userPrompt)
-  if err != nil {
-    return nil, err
-  }
+	// LLM で台本生成
+	generatedText, err := s.llmClient.GenerateScript(ctx, sysPrompt, userPrompt)
+	if err != nil {
+		return nil, err
+	}
 
-  // 許可された話者名のリストを作成
-  allowedSpeakers := make([]string, len(channel.ChannelCharacters))
-  speakerMap := make(map[string]*model.Character, len(channel.ChannelCharacters))
-  for i, cc := range channel.ChannelCharacters {
-    allowedSpeakers[i] = cc.Character.Name
-    speakerMap[cc.Character.Name] = &channel.ChannelCharacters[i].Character
-  }
+	// 許可された話者名のリストを作成
+	allowedSpeakers := make([]string, len(channel.ChannelCharacters))
+	speakerMap := make(map[string]*model.Character, len(channel.ChannelCharacters))
+	for i, cc := range channel.ChannelCharacters {
+		allowedSpeakers[i] = cc.Character.Name
+		speakerMap[cc.Character.Name] = &channel.ChannelCharacters[i].Character
+	}
 
-  // 生成されたテキストをパース（AI 生成なので SFX チェックは不要）
-  parseResult := script.Parse(generatedText, allowedSpeakers, nil)
+	// 生成されたテキストをパース（AI 生成なので SFX チェックは不要）
+	parseResult := script.Parse(generatedText, allowedSpeakers, nil)
 
-  // パースエラーがある場合（全行失敗の場合のみエラー）
-  if len(parseResult.Lines) == 0 && parseResult.HasErrors() {
-    return nil, apperror.ErrGenerationFailed.WithMessage("Failed to parse generated script")
-  }
+	// パースエラーがある場合（全行失敗の場合のみエラー）
+	if len(parseResult.Lines) == 0 && parseResult.HasErrors() {
+		return nil, apperror.ErrGenerationFailed.WithMessage("Failed to parse generated script")
+	}
 
-  // ScriptLine モデルに変換
-  scriptLines := make([]model.ScriptLine, len(parseResult.Lines))
-  for i, line := range parseResult.Lines {
-    speaker := speakerMap[line.SpeakerName]
-    scriptLines[i] = model.ScriptLine{
-      EpisodeID: eid,
-      LineOrder: i,
-      LineType:  model.LineTypeSpeech,
-      SpeakerID: &speaker.ID,
-      Text:      &line.Text,
-      Emotion:   line.Emotion,
-    }
-  }
+	// ScriptLine モデルに変換
+	scriptLines := make([]model.ScriptLine, len(parseResult.Lines))
+	for i, line := range parseResult.Lines {
+		speaker := speakerMap[line.SpeakerName]
+		scriptLines[i] = model.ScriptLine{
+			EpisodeID: eid,
+			LineOrder: i,
+			LineType:  model.LineTypeSpeech,
+			SpeakerID: &speaker.ID,
+			Text:      &line.Text,
+			Emotion:   line.Emotion,
+		}
+	}
 
-  // トランザクションで既存行削除・新規作成・エピソード更新を実行
-  var createdLines []model.ScriptLine
-  err = s.db.Transaction(func(tx *gorm.DB) error {
-    // トランザクション内で使うリポジトリを作成
-    txScriptLineRepo := repository.NewScriptLineRepository(tx)
-    txEpisodeRepo := repository.NewEpisodeRepository(tx)
+	// トランザクションで既存行削除・新規作成・エピソード更新を実行
+	var createdLines []model.ScriptLine
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		// トランザクション内で使うリポジトリを作成
+		txScriptLineRepo := repository.NewScriptLineRepository(tx)
+		txEpisodeRepo := repository.NewEpisodeRepository(tx)
 
-    // 既存の台本行を削除
-    if err := txScriptLineRepo.DeleteByEpisodeID(ctx, eid); err != nil {
-      return err
-    }
+		// 既存の台本行を削除
+		if err := txScriptLineRepo.DeleteByEpisodeID(ctx, eid); err != nil {
+			return err
+		}
 
-    // 新しい台本行を一括作成
-    created, err := txScriptLineRepo.CreateBatch(ctx, scriptLines)
-    if err != nil {
-      return err
-    }
-    createdLines = created
+		// 新しい台本行を一括作成
+		created, err := txScriptLineRepo.CreateBatch(ctx, scriptLines)
+		if err != nil {
+			return err
+		}
+		createdLines = created
 
-    // episode.userPrompt を更新
-    episode.UserPrompt = prompt
-    if err := txEpisodeRepo.Update(ctx, episode); err != nil {
-      return err
-    }
+		// episode.userPrompt を更新
+		episode.UserPrompt = prompt
+		if err := txEpisodeRepo.Update(ctx, episode); err != nil {
+			return err
+		}
 
-    return nil
-  })
+		return nil
+	})
 
-  if err != nil {
-    return nil, err
-  }
+	if err != nil {
+		return nil, err
+	}
 
-  // レスポンス DTO に変換（署名 URL を生成）
-  responses, err := s.toScriptLineResponses(ctx, createdLines)
-  if err != nil {
-    return nil, err
-  }
+	// レスポンス DTO に変換
+	responses, err := s.toScriptLineResponses(createdLines)
+	if err != nil {
+		return nil, err
+	}
 
-  return &response.ScriptLineListResponse{
-    Data: responses,
-  }, nil
+	return &response.ScriptLineListResponse{
+		Data: responses,
+	}, nil
 }
 
 // ScriptLine モデルのスライスをレスポンス DTO のスライスに変換する
-func (s *scriptService) toScriptLineResponses(ctx context.Context, scriptLines []model.ScriptLine) ([]response.ScriptLineResponse, error) {
-  result := make([]response.ScriptLineResponse, len(scriptLines))
+func (s *scriptService) toScriptLineResponses(scriptLines []model.ScriptLine) ([]response.ScriptLineResponse, error) {
+	result := make([]response.ScriptLineResponse, len(scriptLines))
 
-  for i, sl := range scriptLines {
-    resp, err := s.toScriptLineResponse(ctx, &sl)
-    if err != nil {
-      return nil, err
-    }
-    result[i] = resp
-  }
+	for i, sl := range scriptLines {
+		resp, err := s.toScriptLineResponse(&sl)
+		if err != nil {
+			return nil, err
+		}
+		result[i] = resp
+	}
 
-  return result, nil
+	return result, nil
 }
 
 // ScriptLine モデルをレスポンス DTO に変換する
-func (s *scriptService) toScriptLineResponse(ctx context.Context, sl *model.ScriptLine) (response.ScriptLineResponse, error) {
-  resp := response.ScriptLineResponse{
-    ID:         sl.ID,
-    LineOrder:  sl.LineOrder,
-    LineType:   string(sl.LineType),
-    Text:       sl.Text,
-    Emotion:    sl.Emotion,
-    DurationMs: sl.DurationMs,
-    CreatedAt:  sl.CreatedAt,
-    UpdatedAt:  sl.UpdatedAt,
-  }
+func (s *scriptService) toScriptLineResponse(sl *model.ScriptLine) (response.ScriptLineResponse, error) {
+	resp := response.ScriptLineResponse{
+		ID:         sl.ID,
+		LineOrder:  sl.LineOrder,
+		LineType:   string(sl.LineType),
+		Text:       sl.Text,
+		Emotion:    sl.Emotion,
+		DurationMs: sl.DurationMs,
+		CreatedAt:  sl.CreatedAt,
+		UpdatedAt:  sl.UpdatedAt,
+	}
 
-  // decimal.Decimal から float64 に変換
-  if sl.Volume != nil {
-    v, _ := sl.Volume.Float64()
-    resp.Volume = &v
-  }
+	// decimal.Decimal から float64 に変換
+	if sl.Volume != nil {
+		v, _ := sl.Volume.Float64()
+		resp.Volume = &v
+	}
 
-  if sl.Speaker != nil {
-    resp.Speaker = &response.SpeakerResponse{
-      ID:   sl.Speaker.ID,
-      Name: sl.Speaker.Name,
-    }
-  }
+	if sl.Speaker != nil {
+		resp.Speaker = &response.SpeakerResponse{
+			ID:   sl.Speaker.ID,
+			Name: sl.Speaker.Name,
+		}
+	}
 
-  if sl.Sfx != nil {
-    resp.Sfx = &response.SfxResponse{
-      ID:   sl.Sfx.ID,
-      Name: sl.Sfx.Name,
-    }
-  }
+	if sl.Sfx != nil {
+		resp.Sfx = &response.SfxResponse{
+			ID:   sl.Sfx.ID,
+			Name: sl.Sfx.Name,
+		}
+	}
 
-  return resp, nil
+	return resp, nil
 }
 
 // LLM 用のユーザープロンプトを構築する
 // プロンプトは User → Channel → Episode の順で結合（追記）される
 func (s *scriptService) buildUserPrompt(user *model.User, channel *model.Channel, episode *model.Episode, prompt string, durationMinutes int) string {
-  var sb strings.Builder
+	var sb strings.Builder
 
-  // ユーザー設定（ユーザーレベルのプロンプト）
-  if user.UserPrompt != "" {
-    sb.WriteString("## ユーザー設定\n")
-    sb.WriteString(user.UserPrompt)
-    sb.WriteString("\n\n")
-  }
+	// ユーザー設定（ユーザーレベルのプロンプト）
+	if user.UserPrompt != "" {
+		sb.WriteString("## ユーザー設定\n")
+		sb.WriteString(user.UserPrompt)
+		sb.WriteString("\n\n")
+	}
 
-  // チャンネル情報
-  sb.WriteString("## チャンネル情報\n")
-  sb.WriteString(fmt.Sprintf("チャンネル名: %s\n", channel.Name))
-  if channel.Description != "" {
-    sb.WriteString(fmt.Sprintf("説明: %s\n", channel.Description))
-  }
-  sb.WriteString(fmt.Sprintf("カテゴリー: %s\n", channel.Category.Name))
-  sb.WriteString("\n")
+	// チャンネル情報
+	sb.WriteString("## チャンネル情報\n")
+	sb.WriteString(fmt.Sprintf("チャンネル名: %s\n", channel.Name))
+	if channel.Description != "" {
+		sb.WriteString(fmt.Sprintf("説明: %s\n", channel.Description))
+	}
+	sb.WriteString(fmt.Sprintf("カテゴリー: %s\n", channel.Category.Name))
+	sb.WriteString("\n")
 
-  // チャンネル設定
-  if channel.UserPrompt != "" {
-    sb.WriteString("## チャンネル設定\n")
-    sb.WriteString(channel.UserPrompt)
-    sb.WriteString("\n\n")
-  }
+	// チャンネル設定
+	if channel.UserPrompt != "" {
+		sb.WriteString("## チャンネル設定\n")
+		sb.WriteString(channel.UserPrompt)
+		sb.WriteString("\n\n")
+	}
 
-  // 登場人物
-  sb.WriteString("## 登場人物\n")
-  for _, cc := range channel.ChannelCharacters {
-    if cc.Character.Persona != "" {
-      sb.WriteString(fmt.Sprintf("- %s（%s）: %s\n", cc.Character.Name, cc.Character.Voice.Gender, cc.Character.Persona))
-    } else {
-      sb.WriteString(fmt.Sprintf("- %s（%s）\n", cc.Character.Name, cc.Character.Voice.Gender))
-    }
-  }
-  sb.WriteString("\n")
+	// 登場人物
+	sb.WriteString("## 登場人物\n")
+	for _, cc := range channel.ChannelCharacters {
+		if cc.Character.Persona != "" {
+			sb.WriteString(fmt.Sprintf("- %s（%s）: %s\n", cc.Character.Name, cc.Character.Voice.Gender, cc.Character.Persona))
+		} else {
+			sb.WriteString(fmt.Sprintf("- %s（%s）\n", cc.Character.Name, cc.Character.Voice.Gender))
+		}
+	}
+	sb.WriteString("\n")
 
-  // エピソード情報
-  sb.WriteString("## エピソード情報\n")
-  sb.WriteString(fmt.Sprintf("タイトル: %s\n", episode.Title))
-  if episode.Description != "" {
-    sb.WriteString(fmt.Sprintf("説明: %s\n", episode.Description))
-  }
-  sb.WriteString("\n")
+	// エピソード情報
+	sb.WriteString("## エピソード情報\n")
+	sb.WriteString(fmt.Sprintf("タイトル: %s\n", episode.Title))
+	if episode.Description != "" {
+		sb.WriteString(fmt.Sprintf("説明: %s\n", episode.Description))
+	}
+	sb.WriteString("\n")
 
-  // エピソードの長さ
-  sb.WriteString(fmt.Sprintf("## エピソードの長さ\n%d分\n\n", durationMinutes))
+	// エピソードの長さ
+	sb.WriteString(fmt.Sprintf("## エピソードの長さ\n%d分\n\n", durationMinutes))
 
-  // 今回のテーマ
-  sb.WriteString("## 今回のテーマ\n")
-  sb.WriteString(prompt)
+	// 今回のテーマ
+	sb.WriteString("## 今回のテーマ\n")
+	sb.WriteString(prompt)
 
-  return sb.String()
+	return sb.String()
 }
 
 // テキスト形式の台本をインポートする
 func (s *scriptService) ImportScript(ctx context.Context, userID, channelID, episodeID, text string) (*response.ScriptLineListResponse, error) {
-  uid, err := uuid.Parse(userID)
-  if err != nil {
-    return nil, err
-  }
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
 
-  cid, err := uuid.Parse(channelID)
-  if err != nil {
-    return nil, err
-  }
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
 
-  eid, err := uuid.Parse(episodeID)
-  if err != nil {
-    return nil, err
-  }
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return nil, err
+	}
 
-  // チャンネルの存在確認とオーナーチェック
-  channel, err := s.channelRepo.FindByID(ctx, cid)
-  if err != nil {
-    return nil, err
-  }
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
 
-  if channel.UserID != uid {
-    return nil, apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
-  }
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
+	}
 
-  // エピソードの存在確認とチャンネルの一致チェック
-  episode, err := s.episodeRepo.FindByID(ctx, eid)
-  if err != nil {
-    return nil, err
-  }
+	// エピソードの存在確認とチャンネルの一致チェック
+	episode, err := s.episodeRepo.FindByID(ctx, eid)
+	if err != nil {
+		return nil, err
+	}
 
-  if episode.ChannelID != cid {
-    return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
-  }
+	if episode.ChannelID != cid {
+		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+	}
 
-  // 許可された話者名のリストを作成
-  allowedSpeakers := make([]string, len(channel.ChannelCharacters))
-  speakerMap := make(map[string]*model.Character, len(channel.ChannelCharacters))
-  for i, cc := range channel.ChannelCharacters {
-    allowedSpeakers[i] = cc.Character.Name
-    speakerMap[cc.Character.Name] = &channel.ChannelCharacters[i].Character
-  }
+	// 許可された話者名のリストを作成
+	allowedSpeakers := make([]string, len(channel.ChannelCharacters))
+	speakerMap := make(map[string]*model.Character, len(channel.ChannelCharacters))
+	for i, cc := range channel.ChannelCharacters {
+		allowedSpeakers[i] = cc.Character.Name
+		speakerMap[cc.Character.Name] = &channel.ChannelCharacters[i].Character
+	}
 
-  // 許可された効果音のリストを取得
-  sfxList, err := s.soundEffectRepo.FindAll(ctx)
-  if err != nil {
-    return nil, err
-  }
-  allowedSfx := make([]string, len(sfxList))
-  sfxMap := make(map[string]*model.SoundEffect, len(sfxList))
-  for i, sfx := range sfxList {
-    allowedSfx[i] = sfx.Name
-    sfxMap[sfx.Name] = &sfxList[i]
-  }
+	// 許可された効果音のリストを取得
+	sfxList, err := s.soundEffectRepo.FindAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+	allowedSfx := make([]string, len(sfxList))
+	sfxMap := make(map[string]*model.SoundEffect, len(sfxList))
+	for i, sfx := range sfxList {
+		allowedSfx[i] = sfx.Name
+		sfxMap[sfx.Name] = &sfxList[i]
+	}
 
-  // テキストをパース
-  parseResult := script.Parse(text, allowedSpeakers, allowedSfx)
+	// テキストをパース
+	parseResult := script.Parse(text, allowedSpeakers, allowedSfx)
 
-  // パースエラーがある場合
-  if parseResult.HasErrors() {
-    details := make([]map[string]any, len(parseResult.Errors))
-    for i, e := range parseResult.Errors {
-      details[i] = map[string]any{
-        "line":   e.Line,
-        "reason": e.Reason,
-      }
-    }
-    return nil, apperror.ErrScriptParse.WithMessage("台本のパースに失敗しました").WithDetails(details)
-  }
+	// パースエラーがある場合
+	if parseResult.HasErrors() {
+		details := make([]map[string]any, len(parseResult.Errors))
+		for i, e := range parseResult.Errors {
+			details[i] = map[string]any{
+				"line":   e.Line,
+				"reason": e.Reason,
+			}
+		}
+		return nil, apperror.ErrScriptParse.WithMessage("台本のパースに失敗しました").WithDetails(details)
+	}
 
-  // ScriptLine モデルに変換
-  scriptLines := make([]model.ScriptLine, len(parseResult.Lines))
-  for i, line := range parseResult.Lines {
-    sl := model.ScriptLine{
-      EpisodeID: eid,
-      LineOrder: i,
-      LineType:  model.LineType(line.LineType),
-    }
+	// ScriptLine モデルに変換
+	scriptLines := make([]model.ScriptLine, len(parseResult.Lines))
+	for i, line := range parseResult.Lines {
+		sl := model.ScriptLine{
+			EpisodeID: eid,
+			LineOrder: i,
+			LineType:  model.LineType(line.LineType),
+		}
 
-    switch line.LineType {
-    case script.LineTypeSpeech:
-      speaker := speakerMap[line.SpeakerName]
-      sl.SpeakerID = &speaker.ID
-      sl.Text = &line.Text
-      sl.Emotion = line.Emotion
+		switch line.LineType {
+		case script.LineTypeSpeech:
+			speaker := speakerMap[line.SpeakerName]
+			sl.SpeakerID = &speaker.ID
+			sl.Text = &line.Text
+			sl.Emotion = line.Emotion
 
-    case script.LineTypeSilence:
-      sl.DurationMs = &line.DurationMs
+		case script.LineTypeSilence:
+			sl.DurationMs = &line.DurationMs
 
-    case script.LineTypeSfx:
-      sfx := sfxMap[line.SfxName]
-      sl.SfxID = &sfx.ID
-    }
+		case script.LineTypeSfx:
+			sfx := sfxMap[line.SfxName]
+			sl.SfxID = &sfx.ID
+		}
 
-    scriptLines[i] = sl
-  }
+		scriptLines[i] = sl
+	}
 
-  // トランザクションで既存行削除・新規作成を実行
-  var createdLines []model.ScriptLine
-  err = s.db.Transaction(func(tx *gorm.DB) error {
-    txScriptLineRepo := repository.NewScriptLineRepository(tx)
+	// トランザクションで既存行削除・新規作成を実行
+	var createdLines []model.ScriptLine
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		txScriptLineRepo := repository.NewScriptLineRepository(tx)
 
-    // 既存の台本行を削除
-    if err := txScriptLineRepo.DeleteByEpisodeID(ctx, eid); err != nil {
-      return err
-    }
+		// 既存の台本行を削除
+		if err := txScriptLineRepo.DeleteByEpisodeID(ctx, eid); err != nil {
+			return err
+		}
 
-    // 新しい台本行を一括作成
-    created, err := txScriptLineRepo.CreateBatch(ctx, scriptLines)
-    if err != nil {
-      return err
-    }
-    createdLines = created
+		// 新しい台本行を一括作成
+		created, err := txScriptLineRepo.CreateBatch(ctx, scriptLines)
+		if err != nil {
+			return err
+		}
+		createdLines = created
 
-    return nil
-  })
+		return nil
+	})
 
-  if err != nil {
-    return nil, err
-  }
+	if err != nil {
+		return nil, err
+	}
 
-  // レスポンス DTO に変換
-  responses, err := s.toScriptLineResponses(ctx, createdLines)
-  if err != nil {
-    return nil, err
-  }
+	// レスポンス DTO に変換
+	responses, err := s.toScriptLineResponses(createdLines)
+	if err != nil {
+		return nil, err
+	}
 
-  return &response.ScriptLineListResponse{
-    Data: responses,
-  }, nil
+	return &response.ScriptLineListResponse{
+		Data: responses,
+	}, nil
 }
 
 // 台本をテキスト形式でエクスポートする
 func (s *scriptService) ExportScript(ctx context.Context, userID, channelID, episodeID string) (*ExportScriptResult, error) {
-  uid, err := uuid.Parse(userID)
-  if err != nil {
-    return nil, err
-  }
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
 
-  cid, err := uuid.Parse(channelID)
-  if err != nil {
-    return nil, err
-  }
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
 
-  eid, err := uuid.Parse(episodeID)
-  if err != nil {
-    return nil, err
-  }
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return nil, err
+	}
 
-  // チャンネルの存在確認とオーナーチェック
-  channel, err := s.channelRepo.FindByID(ctx, cid)
-  if err != nil {
-    return nil, err
-  }
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
 
-  if channel.UserID != uid {
-    return nil, apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
-  }
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
+	}
 
-  // エピソードの存在確認とチャンネルの一致チェック
-  episode, err := s.episodeRepo.FindByID(ctx, eid)
-  if err != nil {
-    return nil, err
-  }
+	// エピソードの存在確認とチャンネルの一致チェック
+	episode, err := s.episodeRepo.FindByID(ctx, eid)
+	if err != nil {
+		return nil, err
+	}
 
-  if episode.ChannelID != cid {
-    return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
-  }
+	if episode.ChannelID != cid {
+		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+	}
 
-  // 台本行を取得
-  scriptLines, err := s.scriptLineRepo.FindByEpisodeID(ctx, eid)
-  if err != nil {
-    return nil, err
-  }
+	// 台本行を取得
+	scriptLines, err := s.scriptLineRepo.FindByEpisodeID(ctx, eid)
+	if err != nil {
+		return nil, err
+	}
 
-  // テキスト形式に変換
-  formatLines := make([]script.FormatLine, len(scriptLines))
-  for i, sl := range scriptLines {
-    fl := script.FormatLine{
-      LineType: script.LineType(sl.LineType),
-    }
+	// テキスト形式に変換
+	formatLines := make([]script.FormatLine, len(scriptLines))
+	for i, sl := range scriptLines {
+		fl := script.FormatLine{
+			LineType: script.LineType(sl.LineType),
+		}
 
-    switch sl.LineType {
-    case model.LineTypeSpeech:
-      if sl.Speaker != nil {
-        fl.SpeakerName = sl.Speaker.Name
-      }
-      if sl.Text != nil {
-        fl.Text = *sl.Text
-      }
-      fl.Emotion = sl.Emotion
+		switch sl.LineType {
+		case model.LineTypeSpeech:
+			if sl.Speaker != nil {
+				fl.SpeakerName = sl.Speaker.Name
+			}
+			if sl.Text != nil {
+				fl.Text = *sl.Text
+			}
+			fl.Emotion = sl.Emotion
 
-    case model.LineTypeSilence:
-      if sl.DurationMs != nil {
-        fl.DurationMs = *sl.DurationMs
-      }
+		case model.LineTypeSilence:
+			if sl.DurationMs != nil {
+				fl.DurationMs = *sl.DurationMs
+			}
 
-    case model.LineTypeSfx:
-      if sl.Sfx != nil {
-        fl.SfxName = sl.Sfx.Name
-      }
-    }
+		case model.LineTypeSfx:
+			if sl.Sfx != nil {
+				fl.SfxName = sl.Sfx.Name
+			}
+		}
 
-    formatLines[i] = fl
-  }
+		formatLines[i] = fl
+	}
 
-  text := script.Format(formatLines)
+	text := script.Format(formatLines)
 
-  return &ExportScriptResult{
-    EpisodeTitle: episode.Title,
-    Text:         text,
-  }, nil
+	return &ExportScriptResult{
+		EpisodeTitle: episode.Title,
+		Text:         text,
+	}, nil
 }

@@ -23,9 +23,22 @@ const (
 	maxRetries = 3
 )
 
+// SpeakerTurn は multi-speaker 合成用の話者とテキストのペア
+type SpeakerTurn struct {
+	Speaker string // 話者名（キャラクター名）
+	Text    string // セリフ
+}
+
+// SpeakerVoiceConfig は話者名と Voice ID のマッピング
+type SpeakerVoiceConfig struct {
+	SpeakerAlias string // 話者名（スクリプト内での名前）
+	VoiceID      string // Voice の ProviderVoiceID
+}
+
 // TTS クライアントのインターフェース
 type Client interface {
 	Synthesize(ctx context.Context, text string, emotion *string, voiceID string, gender model.Gender) ([]byte, error)
+	SynthesizeMultiSpeaker(ctx context.Context, turns []SpeakerTurn, voiceConfigs []SpeakerVoiceConfig) ([]byte, error)
 }
 
 type googleTTSClient struct {
@@ -115,6 +128,97 @@ func (c *googleTTSClient) Synthesize(ctx context.Context, text string, emotion *
 	}
 
 	return nil, apperror.ErrGenerationFailed.WithMessage("Failed to synthesize speech").WithError(lastErr)
+}
+
+// 複数話者のテキストから音声を合成する
+// Gemini-TTS の multi-speaker 機能を使用
+func (c *googleTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []SpeakerTurn, voiceConfigs []SpeakerVoiceConfig) ([]byte, error) {
+	log := logger.FromContext(ctx)
+
+	if len(turns) == 0 {
+		return nil, apperror.ErrValidation.WithMessage("No turns provided for multi-speaker synthesis")
+	}
+
+	if len(voiceConfigs) == 0 {
+		return nil, apperror.ErrValidation.WithMessage("No voice configs provided for multi-speaker synthesis")
+	}
+
+	// MultiSpeakerMarkup を構築
+	markupTurns := make([]*texttospeechpb.MultiSpeakerMarkup_Turn, len(turns))
+	for i, turn := range turns {
+		markupTurns[i] = &texttospeechpb.MultiSpeakerMarkup_Turn{
+			Speaker: turn.Speaker,
+			Text:    turn.Text,
+		}
+	}
+
+	input := &texttospeechpb.SynthesisInput{
+		InputSource: &texttospeechpb.SynthesisInput_MultiSpeakerMarkup{
+			MultiSpeakerMarkup: &texttospeechpb.MultiSpeakerMarkup{
+				Turns: markupTurns,
+			},
+		},
+	}
+
+	// SpeakerVoiceConfigs を構築
+	speakerVoiceConfigs := make([]*texttospeechpb.MultispeakerPrebuiltVoice, len(voiceConfigs))
+	for i, vc := range voiceConfigs {
+		speakerVoiceConfigs[i] = &texttospeechpb.MultispeakerPrebuiltVoice{
+			SpeakerAlias: vc.SpeakerAlias,
+			SpeakerId:    vc.VoiceID,
+		}
+	}
+
+	req := &texttospeechpb.SynthesizeSpeechRequest{
+		Input: input,
+		Voice: &texttospeechpb.VoiceSelectionParams{
+			ModelName:    geminiTTSModelName,
+			LanguageCode: defaultLanguageCode,
+			MultiSpeakerVoiceConfig: &texttospeechpb.MultiSpeakerVoiceConfig{
+				SpeakerVoiceConfigs: speakerVoiceConfigs,
+			},
+		},
+		AudioConfig: &texttospeechpb.AudioConfig{
+			AudioEncoding: texttospeechpb.AudioEncoding_MP3,
+		},
+	}
+
+	var lastErr error
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		log.Debug("synthesizing multi-speaker speech", "attempt", attempt, "turns_count", len(turns), "speakers_count", len(voiceConfigs))
+
+		resp, err := c.client.SynthesizeSpeech(ctx, req)
+		if err != nil {
+			lastErr = err
+			log.Warn(fmt.Sprintf("multi-speaker tts api error: attempt=%d, error=%v", attempt, err))
+
+			if attempt < maxRetries {
+				time.Sleep(time.Duration(attempt) * time.Second)
+				continue
+			}
+
+			log.Error("multi-speaker tts api failed after retries", "error", err)
+			return nil, apperror.ErrGenerationFailed.WithMessage("Failed to synthesize multi-speaker speech").WithError(err)
+		}
+
+		if len(resp.AudioContent) == 0 {
+			lastErr = fmt.Errorf("empty audio content in response")
+			log.Warn("empty audio content in multi-speaker tts response", "attempt", attempt)
+
+			if attempt < maxRetries {
+				time.Sleep(time.Duration(attempt) * time.Second)
+				continue
+			}
+
+			log.Error("multi-speaker tts returned empty audio after retries")
+			return nil, apperror.ErrGenerationFailed.WithMessage("Failed to synthesize multi-speaker speech: empty audio")
+		}
+
+		log.Debug("multi-speaker speech synthesized successfully", "audio_size", len(resp.AudioContent))
+		return resp.AudioContent, nil
+	}
+
+	return nil, apperror.ErrGenerationFailed.WithMessage("Failed to synthesize multi-speaker speech").WithError(lastErr)
 }
 
 // Gender を SsmlVoiceGender に変換する
