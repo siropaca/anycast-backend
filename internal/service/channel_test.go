@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/siropaca/anycast-backend/internal/dto/response"
+	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/model"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
@@ -131,7 +132,7 @@ func TestToChannelResponse(t *testing.T) {
 
 	t.Run("Artwork がある場合、署名 URL が生成される", func(t *testing.T) {
 		mockStorage := new(mockStorageClient)
-		mockStorage.On("GenerateSignedURL", mock.Anything, "images/artwork.png", signedURLExpiration).Return("https://signed-url.example.com/artwork.png", nil)
+		mockStorage.On("GenerateSignedURL", mock.Anything, "images/artwork.png", storage.SignedURLExpirationImage).Return("https://signed-url.example.com/artwork.png", nil)
 		svc := &channelService{storageClient: mockStorage}
 		ctx := context.Background()
 

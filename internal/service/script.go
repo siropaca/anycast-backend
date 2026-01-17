@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"gorm.io/gorm"
 
@@ -18,12 +17,8 @@ import (
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
-const (
-	// デフォルトのエピソード長さ（分）
-	defaultDurationMinutes = 10
-	// 署名 URL の有効期限（1時間）
-	signedURLExpirationScript = 1 * time.Hour
-)
+// デフォルトのエピソード長さ（分）
+const defaultDurationMinutes = 10
 
 // 台本生成のシステムプロンプト（感情なし）
 const systemPromptWithoutEmotion = `
@@ -279,8 +274,8 @@ func (s *scriptService) GenerateScript(ctx context.Context, userID, channelID, e
 		return nil, err
 	}
 
-	// レスポンス DTO に変換（署名 URL を生成）
-	responses, err := s.toScriptLineResponses(ctx, createdLines)
+	// レスポンス DTO に変換
+	responses, err := s.toScriptLineResponses(createdLines)
 	if err != nil {
 		return nil, err
 	}
@@ -291,11 +286,11 @@ func (s *scriptService) GenerateScript(ctx context.Context, userID, channelID, e
 }
 
 // ScriptLine モデルのスライスをレスポンス DTO のスライスに変換する
-func (s *scriptService) toScriptLineResponses(ctx context.Context, scriptLines []model.ScriptLine) ([]response.ScriptLineResponse, error) {
+func (s *scriptService) toScriptLineResponses(scriptLines []model.ScriptLine) ([]response.ScriptLineResponse, error) {
 	result := make([]response.ScriptLineResponse, len(scriptLines))
 
 	for i, sl := range scriptLines {
-		resp, err := s.toScriptLineResponse(ctx, &sl)
+		resp, err := s.toScriptLineResponse(&sl)
 		if err != nil {
 			return nil, err
 		}
@@ -306,7 +301,7 @@ func (s *scriptService) toScriptLineResponses(ctx context.Context, scriptLines [
 }
 
 // ScriptLine モデルをレスポンス DTO に変換する
-func (s *scriptService) toScriptLineResponse(ctx context.Context, sl *model.ScriptLine) (response.ScriptLineResponse, error) {
+func (s *scriptService) toScriptLineResponse(sl *model.ScriptLine) (response.ScriptLineResponse, error) {
 	resp := response.ScriptLineResponse{
 		ID:         sl.ID,
 		LineOrder:  sl.LineOrder,
@@ -335,21 +330,6 @@ func (s *scriptService) toScriptLineResponse(ctx context.Context, sl *model.Scri
 		resp.Sfx = &response.SfxResponse{
 			ID:   sl.Sfx.ID,
 			Name: sl.Sfx.Name,
-		}
-	}
-
-	if sl.Audio != nil {
-		// 署名付き URL を生成
-		signedURL, err := s.storageClient.GenerateSignedURL(ctx, sl.Audio.Path, signedURLExpirationScript)
-		if err != nil {
-			return response.ScriptLineResponse{}, err
-		}
-		resp.Audio = &response.AudioResponse{
-			ID:         sl.Audio.ID,
-			URL:        signedURL,
-			MimeType:   sl.Audio.MimeType,
-			FileSize:   sl.Audio.FileSize,
-			DurationMs: sl.Audio.DurationMs,
 		}
 	}
 
@@ -537,7 +517,7 @@ func (s *scriptService) ImportScript(ctx context.Context, userID, channelID, epi
 	}
 
 	// レスポンス DTO に変換
-	responses, err := s.toScriptLineResponses(ctx, createdLines)
+	responses, err := s.toScriptLineResponses(createdLines)
 	if err != nil {
 		return nil, err
 	}

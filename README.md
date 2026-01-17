@@ -48,7 +48,7 @@ Handler → Service → Repository → DB
 ドメインモデル設計 → API 設計 → DB 設計
 ```
 
-新しい機能を追加する際は、まずドメインモデルを設計し、それを永続化・公開するための手段として API と DB を設計します。詳細は [docs/specification.md](docs/specification.md) を参照。
+新しい機能を追加する際は、まずドメインモデルを設計し、それを永続化・公開するための手段として API と DB を設計します。詳細は [docs/specs/specification.md](docs/specs/specification.md) を参照。
 
 アーキテクチャ決定の詳細は [docs/adr/](docs/adr/) を参照。
 
@@ -151,6 +151,15 @@ make swagger
 | `make cleanup` | 孤児メディアファイルをクリーンアップ（dry-run） |
 | `make cleanup-run` | 孤児メディアファイルをクリーンアップ（実行） |
 
+### mise タスク
+
+一部のコマンドは `mise run` でも実行できます。
+
+| コマンド | 説明 |
+|----------|------|
+| `mise run bootstrap` (`mise run bs`) | 開発環境をセットアップ |
+| `mise run clean` | ビルド成果物を削除 |
+
 ## ディレクトリ構成
 
 ```
@@ -171,9 +180,7 @@ make swagger
 ├── docs/                # ドキュメント
 │   ├── adr/             # Architecture Decision Records
 │   ├── api/             # API 設計
-│   ├── specification.md # 仕様書
-│   ├── database.md      # DB 設計
-│   └── system.md        # システム設定
+│   └── specs/           # 仕様ドキュメント（ドメインモデル、DB 設計など）
 ├── swagger/             # Swagger ドキュメント（自動生成）
 ├── http/                # HTTP リクエストファイル
 ├── internal/            # 内部パッケージ

@@ -8,7 +8,10 @@ import (
 	"github.com/siropaca/anycast-backend/internal/dto/request"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
+	"github.com/siropaca/anycast-backend/internal/infrastructure/tts"
 	"github.com/siropaca/anycast-backend/internal/model"
+	"github.com/siropaca/anycast-backend/internal/pkg/audio"
+	"github.com/siropaca/anycast-backend/internal/pkg/logger"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
@@ -24,24 +27,37 @@ type EpisodeService interface {
 	UnpublishEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error)
 	SetEpisodeBgm(ctx context.Context, userID, channelID, episodeID, bgmAudioID string) (*response.EpisodeDataResponse, error)
 	RemoveEpisodeBgm(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error)
+	GenerateAudio(ctx context.Context, userID, channelID, episodeID string) (*response.GenerateAudioResponse, error)
 }
 
 type episodeService struct {
-	episodeRepo   repository.EpisodeRepository
-	channelRepo   repository.ChannelRepository
-	storageClient storage.Client
+	episodeRepo    repository.EpisodeRepository
+	channelRepo    repository.ChannelRepository
+	scriptLineRepo repository.ScriptLineRepository
+	audioRepo      repository.AudioRepository
+	imageRepo      repository.ImageRepository
+	storageClient  storage.Client
+	ttsClient      tts.Client
 }
 
 // EpisodeService の実装を返す
 func NewEpisodeService(
 	episodeRepo repository.EpisodeRepository,
 	channelRepo repository.ChannelRepository,
+	scriptLineRepo repository.ScriptLineRepository,
+	audioRepo repository.AudioRepository,
+	imageRepo repository.ImageRepository,
 	storageClient storage.Client,
+	ttsClient tts.Client,
 ) EpisodeService {
 	return &episodeService{
-		episodeRepo:   episodeRepo,
-		channelRepo:   channelRepo,
-		storageClient: storageClient,
+		episodeRepo:    episodeRepo,
+		channelRepo:    channelRepo,
+		scriptLineRepo: scriptLineRepo,
+		audioRepo:      audioRepo,
+		imageRepo:      imageRepo,
+		storageClient:  storageClient,
+		ttsClient:      ttsClient,
 	}
 }
 
@@ -166,6 +182,10 @@ func (s *episodeService) CreateEpisode(ctx context.Context, userID, channelID, t
 		if err != nil {
 			return nil, err
 		}
+		// 画像の存在確認
+		if _, err := s.imageRepo.FindByID(ctx, artworkID); err != nil {
+			return nil, err
+		}
 		episode.ArtworkID = &artworkID
 	}
 
@@ -235,6 +255,10 @@ func (s *episodeService) UpdateEpisode(ctx context.Context, userID, channelID, e
 			if err != nil {
 				return nil, err
 			}
+			// 画像の存在確認
+			if _, err := s.imageRepo.FindByID(ctx, artworkID); err != nil {
+				return nil, err
+			}
 			episode.ArtworkID = &artworkID
 		}
 		episode.Artwork = nil
@@ -298,8 +322,31 @@ func (s *episodeService) DeleteEpisode(ctx context.Context, userID, channelID, e
 		return apperror.ErrNotFound.WithMessage("Episode not found in this channel")
 	}
 
+	// 削除前に GCS ファイルのパスを収集
+	var filesToDelete []string
+	if episode.Artwork != nil {
+		filesToDelete = append(filesToDelete, episode.Artwork.Path)
+	}
+	if episode.FullAudio != nil {
+		filesToDelete = append(filesToDelete, episode.FullAudio.Path)
+	}
+	if episode.Bgm != nil {
+		filesToDelete = append(filesToDelete, episode.Bgm.Path)
+	}
+
 	// エピソードを削除
-	return s.episodeRepo.Delete(ctx, eid)
+	if err := s.episodeRepo.Delete(ctx, eid); err != nil {
+		return err
+	}
+
+	// GCS からファイルを削除（失敗してもログを出すだけで続行）
+	for _, path := range filesToDelete {
+		if err := s.storageClient.Delete(ctx, path); err != nil {
+			logger.FromContext(ctx).Warn("failed to delete file from storage", "path", path, "error", err)
+		}
+	}
+
+	return nil
 }
 
 // エピソードを公開する
@@ -463,7 +510,7 @@ func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode
 	}
 
 	if e.Artwork != nil {
-		signedURL, err := s.storageClient.GenerateSignedURL(ctx, e.Artwork.Path, signedURLExpiration)
+		signedURL, err := s.storageClient.GenerateSignedURL(ctx, e.Artwork.Path, storage.SignedURLExpirationImage)
 		if err != nil {
 			return response.EpisodeResponse{}, err
 		}
@@ -474,7 +521,7 @@ func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode
 	}
 
 	if e.FullAudio != nil {
-		signedURL, err := s.storageClient.GenerateSignedURL(ctx, e.FullAudio.Path, signedURLExpiration)
+		signedURL, err := s.storageClient.GenerateSignedURL(ctx, e.FullAudio.Path, storage.SignedURLExpirationAudio)
 		if err != nil {
 			return response.EpisodeResponse{}, err
 		}
@@ -484,6 +531,20 @@ func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode
 			MimeType:   e.FullAudio.MimeType,
 			FileSize:   e.FullAudio.FileSize,
 			DurationMs: e.FullAudio.DurationMs,
+		}
+	}
+
+	if e.Bgm != nil {
+		signedURL, err := s.storageClient.GenerateSignedURL(ctx, e.Bgm.Path, storage.SignedURLExpirationAudio)
+		if err != nil {
+			return response.EpisodeResponse{}, err
+		}
+		resp.Bgm = &response.AudioResponse{
+			ID:         e.Bgm.ID,
+			URL:        signedURL,
+			MimeType:   e.Bgm.MimeType,
+			FileSize:   e.Bgm.FileSize,
+			DurationMs: e.Bgm.DurationMs,
 		}
 	}
 
@@ -530,6 +591,11 @@ func (s *episodeService) SetEpisodeBgm(ctx context.Context, userID, channelID, e
 
 	if episode.ChannelID != cid {
 		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+	}
+
+	// BGM 音声の存在確認
+	if _, err := s.audioRepo.FindByID(ctx, bgmID); err != nil {
+		return nil, err
 	}
 
 	// BGM を設定
@@ -616,5 +682,155 @@ func (s *episodeService) RemoveEpisodeBgm(ctx context.Context, userID, channelID
 
 	return &response.EpisodeDataResponse{
 		Data: resp,
+	}, nil
+}
+
+// エピソードの音声を生成する
+func (s *episodeService) GenerateAudio(ctx context.Context, userID, channelID, episodeID string) (*response.GenerateAudioResponse, error) {
+	log := logger.FromContext(ctx)
+
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to generate audio for this episode")
+	}
+
+	// エピソードの存在確認とチャンネルの一致チェック
+	episode, err := s.episodeRepo.FindByID(ctx, eid)
+	if err != nil {
+		return nil, err
+	}
+
+	if episode.ChannelID != cid {
+		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+	}
+
+	// 台本行を取得（Voice 情報を含む）
+	scriptLines, err := s.scriptLineRepo.FindByEpisodeIDWithVoice(ctx, eid)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(scriptLines) == 0 {
+		return nil, apperror.ErrValidation.WithMessage("No script lines found for this episode")
+	}
+
+	// speech 行から turns と voiceConfigs を構築
+	var turns []tts.SpeakerTurn
+	voiceConfigMap := make(map[string]string) // speakerName -> voiceID
+
+	for _, line := range scriptLines {
+		if line.LineType != model.LineTypeSpeech {
+			continue
+		}
+
+		if line.Text == nil || *line.Text == "" {
+			continue
+		}
+
+		if line.Speaker == nil {
+			log.Warn("speech line has no speaker", "line_id", line.ID)
+			continue
+		}
+
+		// Turn を追加
+		turns = append(turns, tts.SpeakerTurn{
+			Speaker: line.Speaker.Name,
+			Text:    *line.Text,
+		})
+
+		// VoiceConfig を収集（重複しないように）
+		if _, exists := voiceConfigMap[line.Speaker.Name]; !exists {
+			voiceConfigMap[line.Speaker.Name] = line.Speaker.Voice.ProviderVoiceID
+		}
+	}
+
+	if len(turns) == 0 {
+		return nil, apperror.ErrValidation.WithMessage("No speech lines found for audio generation")
+	}
+
+	// voiceConfigs を構築
+	voiceConfigs := make([]tts.SpeakerVoiceConfig, 0, len(voiceConfigMap))
+	for speakerName, voiceID := range voiceConfigMap {
+		voiceConfigs = append(voiceConfigs, tts.SpeakerVoiceConfig{
+			SpeakerAlias: speakerName,
+			VoiceID:      voiceID,
+		})
+	}
+
+	// Multi-speaker TTS で音声を生成
+	combinedAudio, err := s.ttsClient.SynthesizeMultiSpeaker(ctx, turns, voiceConfigs)
+	if err != nil {
+		log.Error("failed to synthesize multi-speaker audio", "error", err)
+		return nil, apperror.ErrGenerationFailed.WithMessage("Failed to generate audio").WithError(err)
+	}
+
+	// 新しい Audio ID を生成してパスを作成
+	audioID := uuid.New()
+	audioPath := storage.GenerateAudioPath(audioID.String())
+
+	// GCS にアップロード
+	if _, err := s.storageClient.Upload(ctx, combinedAudio, audioPath, "audio/mpeg"); err != nil {
+		log.Error("failed to upload audio", "error", err)
+		return nil, apperror.ErrInternal.WithMessage("Failed to upload audio").WithError(err)
+	}
+
+	// Audio レコードを作成
+	audioRecord := &model.Audio{
+		ID:         audioID,
+		MimeType:   "audio/mpeg",
+		Path:       audioPath,
+		Filename:   audioID.String() + ".mp3",
+		FileSize:   len(combinedAudio),
+		DurationMs: audio.GetMP3DurationMs(combinedAudio),
+	}
+
+	if err := s.audioRepo.Create(ctx, audioRecord); err != nil {
+		log.Error("failed to create audio record", "error", err)
+		return nil, apperror.ErrInternal.WithMessage("Failed to save audio record").WithError(err)
+	}
+
+	// エピソードの FullAudioID を更新
+	episode.FullAudioID = &audioID
+	episode.FullAudio = nil
+
+	if err := s.episodeRepo.Update(ctx, episode); err != nil {
+		return nil, err
+	}
+
+	// 署名付き URL を生成
+	signedURL, err := s.storageClient.GenerateSignedURL(ctx, audioPath, storage.SignedURLExpirationAudio)
+	if err != nil {
+		log.Error("failed to generate signed URL for audio", "error", err)
+		return nil, apperror.ErrInternal.WithMessage("Failed to generate audio URL").WithError(err)
+	}
+
+	return &response.GenerateAudioResponse{
+		Data: response.AudioResponse{
+			ID:         audioID,
+			URL:        signedURL,
+			MimeType:   "audio/mpeg",
+			FileSize:   len(combinedAudio),
+			DurationMs: audio.GetMP3DurationMs(combinedAudio),
+		},
 	}, nil
 }

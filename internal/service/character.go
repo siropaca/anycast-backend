@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"strings"
-	"time"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/request"
@@ -13,9 +12,6 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
-
-// 署名付き URL の有効期限
-const signedURLExpirationCharacter = 1 * time.Hour
 
 // キャラクター関連のビジネスロジックインターフェース
 type CharacterService interface {
@@ -129,7 +125,7 @@ func (s *characterService) toCharacterWithChannelsResponse(ctx context.Context, 
 	// アバター画像の署名付き URL を生成
 	var avatar *response.AvatarResponse
 	if c.Avatar != nil && s.storageClient != nil {
-		signedURL, err := s.storageClient.GenerateSignedURL(ctx, c.Avatar.Path, signedURLExpirationCharacter)
+		signedURL, err := s.storageClient.GenerateSignedURL(ctx, c.Avatar.Path, storage.SignedURLExpirationImage)
 		if err == nil {
 			avatar = &response.AvatarResponse{
 				ID:  c.Avatar.ID,

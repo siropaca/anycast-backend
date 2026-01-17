@@ -203,7 +203,6 @@ CREATE TABLE script_lines (
 	duration_ms INTEGER,
 	sfx_id UUID REFERENCES sound_effects (id) ON DELETE CASCADE,
 	volume DECIMAL(3,2) DEFAULT 1.00,
-	audio_id UUID REFERENCES audios (id) ON DELETE SET NULL,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	UNIQUE (episode_id, line_order)

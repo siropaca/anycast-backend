@@ -12,6 +12,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/model"
+	"github.com/siropaca/anycast-backend/internal/pkg/logger"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
@@ -35,6 +36,7 @@ type channelService struct {
 	categoryRepo  repository.CategoryRepository
 	imageRepo     repository.ImageRepository
 	voiceRepo     repository.VoiceRepository
+	episodeRepo   repository.EpisodeRepository
 	storageClient storage.Client
 }
 
@@ -46,6 +48,7 @@ func NewChannelService(
 	categoryRepo repository.CategoryRepository,
 	imageRepo repository.ImageRepository,
 	voiceRepo repository.VoiceRepository,
+	episodeRepo repository.EpisodeRepository,
 	storageClient storage.Client,
 ) ChannelService {
 	return &channelService{
@@ -55,6 +58,7 @@ func NewChannelService(
 		categoryRepo:  categoryRepo,
 		imageRepo:     imageRepo,
 		voiceRepo:     voiceRepo,
+		episodeRepo:   episodeRepo,
 		storageClient: storageClient,
 	}
 }
@@ -340,7 +344,45 @@ func (s *channelService) DeleteChannel(ctx context.Context, userID, channelID st
 		return apperror.ErrForbidden.WithMessage("You do not have permission to delete this channel")
 	}
 
-	return s.channelRepo.Delete(ctx, cid)
+	// 削除前に GCS ファイルのパスを収集
+	var filesToDelete []string
+
+	// チャンネルのアートワーク
+	if channel.Artwork != nil {
+		filesToDelete = append(filesToDelete, channel.Artwork.Path)
+	}
+
+	// 関連する全エピソードのファイルを収集
+	episodes, _, err := s.episodeRepo.FindByChannelID(ctx, cid, repository.EpisodeFilter{Limit: 10000})
+	if err != nil {
+		return err
+	}
+
+	for _, episode := range episodes {
+		if episode.Artwork != nil {
+			filesToDelete = append(filesToDelete, episode.Artwork.Path)
+		}
+		if episode.FullAudio != nil {
+			filesToDelete = append(filesToDelete, episode.FullAudio.Path)
+		}
+		if episode.Bgm != nil {
+			filesToDelete = append(filesToDelete, episode.Bgm.Path)
+		}
+	}
+
+	// チャンネルを削除（カスケードでエピソード等も削除される）
+	if err := s.channelRepo.Delete(ctx, cid); err != nil {
+		return err
+	}
+
+	// GCS からファイルを削除（失敗してもログを出すだけで続行）
+	for _, path := range filesToDelete {
+		if err := s.storageClient.Delete(ctx, path); err != nil {
+			logger.FromContext(ctx).Warn("failed to delete file from storage", "path", path, "error", err)
+		}
+	}
+
+	return nil
 }
 
 // チャンネルを公開する
@@ -570,7 +612,7 @@ func (s *channelService) toChannelResponse(ctx context.Context, c *model.Channel
 	}
 
 	if c.Artwork != nil {
-		signedURL, err := s.storageClient.GenerateSignedURL(ctx, c.Artwork.Path, signedURLExpiration)
+		signedURL, err := s.storageClient.GenerateSignedURL(ctx, c.Artwork.Path, storage.SignedURLExpirationImage)
 		if err != nil {
 			return response.ChannelResponse{}, err
 		}

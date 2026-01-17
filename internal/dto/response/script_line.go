@@ -29,7 +29,6 @@ type ScriptLineResponse struct {
 	DurationMs *int             `json:"durationMs,omitempty"`
 	Sfx        *SfxResponse     `json:"sfx,omitempty"`
 	Volume     *float64         `json:"volume,omitempty"`
-	Audio      *AudioResponse   `json:"audio,omitempty"`
 	CreatedAt  time.Time        `json:"createdAt" validate:"required"`
 	UpdatedAt  time.Time        `json:"updatedAt" validate:"required"`
 }
