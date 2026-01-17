@@ -178,7 +178,7 @@ DELETE /episodes/:episodeId/like
 ## お気に入りしたエピソード一覧
 
 ```
-GET /auth/me/likes
+GET /me/likes
 ```
 
 **クエリパラメータ:**
@@ -274,7 +274,7 @@ DELETE /episodes/:episodeId/bookmark
 ## ブックマークしたエピソード一覧
 
 ```
-GET /auth/me/bookmarks
+GET /me/bookmarks
 ```
 
 **クエリパラメータ:**
@@ -376,7 +376,7 @@ DELETE /episodes/:episodeId/playback
 ## 再生履歴一覧を取得
 
 ```
-GET /auth/me/playback-history
+GET /me/playback-history
 ```
 
 最近再生した順で一覧を取得。
@@ -488,7 +488,7 @@ DELETE /episodes/:episodeId/follow
 ## フォロー中のエピソード一覧
 
 ```
-GET /auth/me/follows
+GET /me/follows
 ```
 
 **クエリパラメータ:**

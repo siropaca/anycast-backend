@@ -757,7 +757,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.EpisodeDataResponse"
+                            "$ref": "#/definitions/response.GenerateAudioResponse"
                         }
                     },
                     "400": {
@@ -3400,6 +3400,17 @@ const docTemplate = `{
             "properties": {
                 "error": {
                     "$ref": "#/definitions/response.ErrorDetail"
+                }
+            }
+        },
+        "response.GenerateAudioResponse": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.AudioResponse"
                 }
             }
         },
