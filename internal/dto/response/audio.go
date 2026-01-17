@@ -13,5 +13,5 @@ type AudioResponse struct {
 
 // 音声生成レスポンス
 type GenerateAudioResponse struct {
-	Audio AudioResponse `json:"audio" validate:"required"`
+	Data AudioResponse `json:"data" validate:"required"`
 }
