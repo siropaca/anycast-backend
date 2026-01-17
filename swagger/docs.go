@@ -3342,6 +3342,14 @@ const docTemplate = `{
                     ],
                     "x-nullable": true
                 },
+                "bgm": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.AudioResponse"
+                        }
+                    ],
+                    "x-nullable": true
+                },
                 "createdAt": {
                     "type": "string"
                 },
