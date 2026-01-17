@@ -131,7 +131,7 @@ func TestToChannelResponse(t *testing.T) {
 
 	t.Run("Artwork がある場合、署名 URL が生成される", func(t *testing.T) {
 		mockStorage := new(mockStorageClient)
-		mockStorage.On("GenerateSignedURL", mock.Anything, "images/artwork.png", signedURLExpiration).Return("https://signed-url.example.com/artwork.png", nil)
+		mockStorage.On("GenerateSignedURL", mock.Anything, "images/artwork.png", signedURLExpirationChannel).Return("https://signed-url.example.com/artwork.png", nil)
 		svc := &channelService{storageClient: mockStorage}
 		ctx := context.Background()
 
