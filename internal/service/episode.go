@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
@@ -735,8 +736,12 @@ func (s *episodeService) GenerateAudio(ctx context.Context, userID, channelID, e
 	}
 
 	// speech 行から turns と voiceConfigs を構築
+	// Google TTS の multi-speaker 機能では speaker alias に英数字のみ使用可能なため、
+	// キャラクター名から speakerX 形式のエイリアスにマッピングする
 	var turns []tts.SpeakerTurn
-	voiceConfigMap := make(map[string]string) // speakerName -> voiceID
+	speakerAliasMap := make(map[string]string) // キャラクター名 -> speakerX
+	voiceConfigMap := make(map[string]string)  // speakerX -> voiceID
+	speakerIndex := 1
 
 	for _, line := range scriptLines {
 		if line.LineType != model.LineTypeSpeech {
@@ -752,16 +757,20 @@ func (s *episodeService) GenerateAudio(ctx context.Context, userID, channelID, e
 			continue
 		}
 
+		// キャラクター名からエイリアスを取得または作成
+		alias, exists := speakerAliasMap[line.Speaker.Name]
+		if !exists {
+			alias = fmt.Sprintf("speaker%d", speakerIndex)
+			speakerAliasMap[line.Speaker.Name] = alias
+			voiceConfigMap[alias] = line.Speaker.Voice.ProviderVoiceID
+			speakerIndex++
+		}
+
 		// Turn を追加
 		turns = append(turns, tts.SpeakerTurn{
-			Speaker: line.Speaker.Name,
+			Speaker: alias,
 			Text:    *line.Text,
 		})
-
-		// VoiceConfig を収集（重複しないように）
-		if _, exists := voiceConfigMap[line.Speaker.Name]; !exists {
-			voiceConfigMap[line.Speaker.Name] = line.Speaker.Voice.ProviderVoiceID
-		}
 	}
 
 	if len(turns) == 0 {
@@ -770,9 +779,9 @@ func (s *episodeService) GenerateAudio(ctx context.Context, userID, channelID, e
 
 	// voiceConfigs を構築
 	voiceConfigs := make([]tts.SpeakerVoiceConfig, 0, len(voiceConfigMap))
-	for speakerName, voiceID := range voiceConfigMap {
+	for alias, voiceID := range voiceConfigMap {
 		voiceConfigs = append(voiceConfigs, tts.SpeakerVoiceConfig{
-			SpeakerAlias: speakerName,
+			SpeakerAlias: alias,
 			VoiceID:      voiceID,
 		})
 	}
