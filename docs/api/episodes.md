@@ -64,8 +64,7 @@ GET /channels/:channelId/episodes/:episodeId
         "lineType": "speech",
         "speaker": { "id": "uuid", "name": "太郎" },
         "text": "こんにちは",
-        "emotion": null,
-        "audio": { "id": "uuid", "url": "..." }
+        "emotion": null
       },
       {
         "id": "uuid",

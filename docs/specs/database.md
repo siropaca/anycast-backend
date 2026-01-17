@@ -29,7 +29,6 @@ erDiagram
     episodes ||--o| audios : bgm
     episodes ||--o| audios : full_audio
     script_lines ||--o| characters : speaker
-    script_lines ||--o| audios : audio
     script_lines ||--o| sound_effects : sfx
     sound_effects ||--|| audios : audio
 
@@ -174,7 +173,6 @@ erDiagram
         integer duration_ms
         uuid sfx_id FK
         decimal volume
-        uuid audio_id FK
         timestamp created_at
         timestamp updated_at
     }
@@ -529,7 +527,6 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | duration_ms | INTEGER | ◯ | - | 無音時間 ms（silence 時のみ） |
 | sfx_id | UUID | ◯ | - | 効果音（sfx 時のみ、sound_effects 参照） |
 | volume | DECIMAL(3,2) | ◯ | 1.00 | 音量 0.00〜1.00（sfx 時のみ） |
-| audio_id | UUID | ◯ | - | 生成済み音声（audios 参照） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
 
@@ -542,7 +539,6 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 - episode_id → episodes(id) ON DELETE CASCADE
 - speaker_id → characters(id) ON DELETE CASCADE
 - sfx_id → sound_effects(id) ON DELETE CASCADE
-- audio_id → audios(id) ON DELETE SET NULL
 
 **制約:**
 - line_type が `speech` の場合: speaker_id, text は NOT NULL

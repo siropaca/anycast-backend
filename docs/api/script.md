@@ -132,7 +132,6 @@ GET /channels/:channelId/episodes/:episodeId/script/lines
       "speaker": { "id": "uuid", "name": "太郎" },
       "text": "こんにちは",
       "emotion": null,
-      "audio": { "id": "uuid", "url": "...", "durationMs": 2500 },
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2025-01-01T00:00:00Z"
     },
