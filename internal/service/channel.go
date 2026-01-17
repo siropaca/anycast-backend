@@ -570,7 +570,7 @@ func (s *channelService) toChannelResponse(ctx context.Context, c *model.Channel
 	}
 
 	if c.Artwork != nil {
-		signedURL, err := s.storageClient.GenerateSignedURL(ctx, c.Artwork.Path, signedURLExpiration)
+		signedURL, err := s.storageClient.GenerateSignedURL(ctx, c.Artwork.Path, storage.SignedURLExpirationImage)
 		if err != nil {
 			return response.ChannelResponse{}, err
 		}

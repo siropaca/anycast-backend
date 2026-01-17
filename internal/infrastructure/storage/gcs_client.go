@@ -13,6 +13,12 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/logger"
 )
 
+// 署名付き URL の有効期限
+const (
+	SignedURLExpirationAudio = 1 * time.Hour
+	SignedURLExpirationImage = 1 * time.Hour
+)
+
 // ストレージクライアントのインターフェース
 type Client interface {
 	Upload(ctx context.Context, data []byte, path, contentType string) (string, error)
