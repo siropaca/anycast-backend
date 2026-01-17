@@ -14,6 +14,7 @@ type EpisodeResponse struct {
 	UserPrompt  string           `json:"userPrompt" validate:"required"`
 	Artwork     *ArtworkResponse `json:"artwork" extensions:"x-nullable"`
 	FullAudio   *AudioResponse   `json:"fullAudio" extensions:"x-nullable"`
+	Bgm         *AudioResponse   `json:"bgm" extensions:"x-nullable"`
 	PublishedAt *time.Time       `json:"publishedAt" extensions:"x-nullable"`
 	CreatedAt   time.Time        `json:"createdAt" validate:"required"`
 	UpdatedAt   time.Time        `json:"updatedAt" validate:"required"`

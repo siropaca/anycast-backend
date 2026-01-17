@@ -35,6 +35,7 @@ type episodeService struct {
 	channelRepo    repository.ChannelRepository
 	scriptLineRepo repository.ScriptLineRepository
 	audioRepo      repository.AudioRepository
+	imageRepo      repository.ImageRepository
 	storageClient  storage.Client
 	ttsClient      tts.Client
 }
@@ -45,6 +46,7 @@ func NewEpisodeService(
 	channelRepo repository.ChannelRepository,
 	scriptLineRepo repository.ScriptLineRepository,
 	audioRepo repository.AudioRepository,
+	imageRepo repository.ImageRepository,
 	storageClient storage.Client,
 	ttsClient tts.Client,
 ) EpisodeService {
@@ -53,6 +55,7 @@ func NewEpisodeService(
 		channelRepo:    channelRepo,
 		scriptLineRepo: scriptLineRepo,
 		audioRepo:      audioRepo,
+		imageRepo:      imageRepo,
 		storageClient:  storageClient,
 		ttsClient:      ttsClient,
 	}
@@ -179,6 +182,10 @@ func (s *episodeService) CreateEpisode(ctx context.Context, userID, channelID, t
 		if err != nil {
 			return nil, err
 		}
+		// 画像の存在確認
+		if _, err := s.imageRepo.FindByID(ctx, artworkID); err != nil {
+			return nil, err
+		}
 		episode.ArtworkID = &artworkID
 	}
 
@@ -246,6 +253,10 @@ func (s *episodeService) UpdateEpisode(ctx context.Context, userID, channelID, e
 		} else {
 			artworkID, err := uuid.Parse(*req.ArtworkImageID)
 			if err != nil {
+				return nil, err
+			}
+			// 画像の存在確認
+			if _, err := s.imageRepo.FindByID(ctx, artworkID); err != nil {
 				return nil, err
 			}
 			episode.ArtworkID = &artworkID
@@ -500,6 +511,20 @@ func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode
 		}
 	}
 
+	if e.Bgm != nil {
+		signedURL, err := s.storageClient.GenerateSignedURL(ctx, e.Bgm.Path, storage.SignedURLExpirationAudio)
+		if err != nil {
+			return response.EpisodeResponse{}, err
+		}
+		resp.Bgm = &response.AudioResponse{
+			ID:         e.Bgm.ID,
+			URL:        signedURL,
+			MimeType:   e.Bgm.MimeType,
+			FileSize:   e.Bgm.FileSize,
+			DurationMs: e.Bgm.DurationMs,
+		}
+	}
+
 	return resp, nil
 }
 
@@ -543,6 +568,11 @@ func (s *episodeService) SetEpisodeBgm(ctx context.Context, userID, channelID, e
 
 	if episode.ChannelID != cid {
 		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+	}
+
+	// BGM 音声の存在確認
+	if _, err := s.audioRepo.FindByID(ctx, bgmID); err != nil {
+		return nil, err
 	}
 
 	// BGM を設定
