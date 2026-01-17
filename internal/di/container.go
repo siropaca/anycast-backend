@@ -43,23 +43,15 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	llmClient := llm.NewOpenAIClient(cfg.OpenAIAPIKey)
 
 	// Storage クライアント（GCS）
-	var storageClient storage.Client
-	if cfg.GCSBucketName != "" {
-		var err error
-		storageClient, err = storage.NewGCSClient(ctx, cfg.GCSBucketName, cfg.GoogleCredentialsJSON)
-		if err != nil {
-			log.Printf("Warning: failed to create storage client: %v", err)
-		}
+	storageClient, err := storage.NewGCSClient(ctx, cfg.GCSBucketName, cfg.GoogleCredentialsJSON)
+	if err != nil {
+		log.Fatalf("failed to create storage client: %v", err)
 	}
 
 	// TTS クライアント（音声生成用）
-	var ttsClient tts.Client
-	if cfg.GoogleCredentialsJSON != "" {
-		var err error
-		ttsClient, err = tts.NewGoogleTTSClient(ctx, cfg.GoogleCredentialsJSON)
-		if err != nil {
-			log.Printf("Warning: failed to create TTS client: %v", err)
-		}
+	ttsClient, err := tts.NewGoogleTTSClient(ctx, cfg.GoogleCredentialsJSON)
+	if err != nil {
+		log.Fatalf("failed to create TTS client: %v", err)
 	}
 
 	// Repository 層
