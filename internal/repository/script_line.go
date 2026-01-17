@@ -15,11 +15,11 @@ import (
 type ScriptLineRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*model.ScriptLine, error)
 	FindByEpisodeID(ctx context.Context, episodeID uuid.UUID) ([]model.ScriptLine, error)
+	FindByEpisodeIDWithVoice(ctx context.Context, episodeID uuid.UUID) ([]model.ScriptLine, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 	DeleteByEpisodeID(ctx context.Context, episodeID uuid.UUID) error
 	CreateBatch(ctx context.Context, scriptLines []model.ScriptLine) ([]model.ScriptLine, error)
 	Update(ctx context.Context, scriptLine *model.ScriptLine) error
-	UpdateAudioID(ctx context.Context, id uuid.UUID, audioID uuid.UUID) error
 }
 
 type scriptLineRepository struct {
@@ -39,7 +39,6 @@ func (r *scriptLineRepository) FindByID(ctx context.Context, id uuid.UUID) (*mod
 		Preload("Speaker").
 		Preload("Speaker.Voice").
 		Preload("Sfx").
-		Preload("Audio").
 		First(&scriptLine, "id = ?", id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, apperror.ErrNotFound.WithMessage("Script line not found")
@@ -58,11 +57,28 @@ func (r *scriptLineRepository) FindByEpisodeID(ctx context.Context, episodeID uu
 	if err := r.db.WithContext(ctx).
 		Preload("Speaker").
 		Preload("Sfx").
-		Preload("Audio").
 		Where("episode_id = ?", episodeID).
 		Order("line_order ASC").
 		Find(&scriptLines).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to fetch script lines", "error", err, "episode_id", episodeID)
+		return nil, apperror.ErrInternal.WithMessage("Failed to fetch script lines").WithError(err)
+	}
+
+	return scriptLines, nil
+}
+
+// 指定されたエピソードの台本行一覧を取得する（Voice 情報を含む）
+func (r *scriptLineRepository) FindByEpisodeIDWithVoice(ctx context.Context, episodeID uuid.UUID) ([]model.ScriptLine, error) {
+	var scriptLines []model.ScriptLine
+
+	if err := r.db.WithContext(ctx).
+		Preload("Speaker").
+		Preload("Speaker.Voice").
+		Preload("Sfx").
+		Where("episode_id = ?", episodeID).
+		Order("line_order ASC").
+		Find(&scriptLines).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to fetch script lines with voice", "error", err, "episode_id", episodeID)
 		return nil, apperror.ErrInternal.WithMessage("Failed to fetch script lines").WithError(err)
 	}
 
@@ -112,7 +128,6 @@ func (r *scriptLineRepository) CreateBatch(ctx context.Context, scriptLines []mo
 	if err := r.db.WithContext(ctx).
 		Preload("Speaker").
 		Preload("Sfx").
-		Preload("Audio").
 		Where("episode_id = ?", scriptLines[0].EpisodeID).
 		Order("line_order ASC").
 		Find(&created).Error; err != nil {
@@ -128,25 +143,6 @@ func (r *scriptLineRepository) Update(ctx context.Context, scriptLine *model.Scr
 	if err := r.db.WithContext(ctx).Save(scriptLine).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to update script line", "error", err, "id", scriptLine.ID)
 		return apperror.ErrInternal.WithMessage("Failed to update script line").WithError(err)
-	}
-
-	return nil
-}
-
-// 台本行の AudioID のみを更新する
-func (r *scriptLineRepository) UpdateAudioID(ctx context.Context, id, audioID uuid.UUID) error {
-	result := r.db.WithContext(ctx).
-		Model(&model.ScriptLine{}).
-		Where("id = ?", id).
-		Update("audio_id", audioID)
-
-	if result.Error != nil {
-		logger.FromContext(ctx).Error("failed to update script line audio_id", "error", result.Error, "id", id)
-		return apperror.ErrInternal.WithMessage("Failed to update script line audio").WithError(result.Error)
-	}
-
-	if result.RowsAffected == 0 {
-		return apperror.ErrNotFound.WithMessage("Script line not found")
 	}
 
 	return nil
