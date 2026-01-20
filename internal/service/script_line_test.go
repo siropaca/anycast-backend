@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
@@ -65,141 +64,60 @@ func TestToScriptLineResponse(t *testing.T) {
 	lineID := uuid.New()
 	episodeID := uuid.New()
 	speakerID := uuid.New()
-	sfxID := uuid.New()
-	text := "テストテキスト"
+	voiceID := uuid.New()
 	emotion := "happy"
-	durationMs := 3000
-	volume := decimal.NewFromFloat(0.75)
 
 	baseScriptLine := &model.ScriptLine{
-		ID:         lineID,
-		EpisodeID:  episodeID,
-		LineOrder:  1,
-		LineType:   model.LineTypeSpeech,
-		SpeakerID:  &speakerID,
-		Text:       &text,
-		Emotion:    &emotion,
-		DurationMs: &durationMs,
-		SfxID:      &sfxID,
-		Volume:     &volume,
-		CreatedAt:  now,
-		UpdatedAt:  now,
+		ID:        lineID,
+		EpisodeID: episodeID,
+		LineOrder: 1,
+		SpeakerID: speakerID,
+		Text:      "テストテキスト",
+		Emotion:   &emotion,
+		CreatedAt: now,
+		UpdatedAt: now,
+		Speaker: model.Character{
+			ID:      speakerID,
+			Name:    "テストスピーカー",
+			Persona: "テスト用のペルソナ",
+			Voice: model.Voice{
+				ID:       voiceID,
+				Name:     "テストボイス",
+				Provider: "google",
+				Gender:   model.GenderFemale,
+			},
+		},
 	}
 
 	t.Run("基本的な変換が正しく行われる", func(t *testing.T) {
 		svc := &scriptLineService{}
 
 		sl := *baseScriptLine
-		sl.Speaker = nil
-		sl.Sfx = nil
 
 		resp := svc.toScriptLineResponse(&sl)
 
 		assert.Equal(t, lineID, resp.ID)
 		assert.Equal(t, 1, resp.LineOrder)
-		assert.Equal(t, "speech", resp.LineType)
-		assert.Equal(t, &text, resp.Text)
+		assert.Equal(t, "テストテキスト", resp.Text)
 		assert.Equal(t, &emotion, resp.Emotion)
-		assert.Equal(t, &durationMs, resp.DurationMs)
 		assert.Equal(t, now, resp.CreatedAt)
 		assert.Equal(t, now, resp.UpdatedAt)
 	})
 
-	t.Run("Volume が正しく float64 に変換される", func(t *testing.T) {
+	t.Run("Speaker が正しく変換される", func(t *testing.T) {
 		svc := &scriptLineService{}
 
 		sl := *baseScriptLine
-		sl.Speaker = nil
-		sl.Sfx = nil
 
 		resp := svc.toScriptLineResponse(&sl)
 
-		assert.NotNil(t, resp.Volume)
-		assert.Equal(t, 0.75, *resp.Volume)
-	})
-
-	t.Run("Volume が nil の場合、レスポンスの Volume も nil", func(t *testing.T) {
-		svc := &scriptLineService{}
-
-		sl := *baseScriptLine
-		sl.Volume = nil
-		sl.Speaker = nil
-		sl.Sfx = nil
-
-		resp := svc.toScriptLineResponse(&sl)
-
-		assert.Nil(t, resp.Volume)
-	})
-
-	t.Run("Speaker がある場合、正しく変換される", func(t *testing.T) {
-		svc := &scriptLineService{}
-
-		sl := *baseScriptLine
-		sl.Speaker = &model.Character{
-			ID:   speakerID,
-			Name: "テストスピーカー",
-		}
-		sl.Sfx = nil
-
-		resp := svc.toScriptLineResponse(&sl)
-
-		assert.NotNil(t, resp.Speaker)
 		assert.Equal(t, speakerID, resp.Speaker.ID)
 		assert.Equal(t, "テストスピーカー", resp.Speaker.Name)
-	})
-
-	t.Run("Speaker が nil の場合、レスポンスの Speaker も nil", func(t *testing.T) {
-		svc := &scriptLineService{}
-
-		sl := *baseScriptLine
-		sl.Speaker = nil
-		sl.Sfx = nil
-
-		resp := svc.toScriptLineResponse(&sl)
-
-		assert.Nil(t, resp.Speaker)
-	})
-
-	t.Run("Sfx がある場合、正しく変換される", func(t *testing.T) {
-		svc := &scriptLineService{}
-
-		sl := *baseScriptLine
-		sl.Speaker = nil
-		sl.Sfx = &model.SoundEffect{
-			ID:   sfxID,
-			Name: "テスト効果音",
-		}
-
-		resp := svc.toScriptLineResponse(&sl)
-
-		assert.NotNil(t, resp.Sfx)
-		assert.Equal(t, sfxID, resp.Sfx.ID)
-		assert.Equal(t, "テスト効果音", resp.Sfx.Name)
-	})
-
-	t.Run("Sfx が nil の場合、レスポンスの Sfx も nil", func(t *testing.T) {
-		svc := &scriptLineService{}
-
-		sl := *baseScriptLine
-		sl.Speaker = nil
-		sl.Sfx = nil
-
-		resp := svc.toScriptLineResponse(&sl)
-
-		assert.Nil(t, resp.Sfx)
-	})
-
-	t.Run("Text が nil の場合、レスポンスの Text も nil", func(t *testing.T) {
-		svc := &scriptLineService{}
-
-		sl := *baseScriptLine
-		sl.Text = nil
-		sl.Speaker = nil
-		sl.Sfx = nil
-
-		resp := svc.toScriptLineResponse(&sl)
-
-		assert.Nil(t, resp.Text)
+		assert.Equal(t, "テスト用のペルソナ", resp.Speaker.Persona)
+		assert.Equal(t, voiceID, resp.Speaker.Voice.ID)
+		assert.Equal(t, "テストボイス", resp.Speaker.Voice.Name)
+		assert.Equal(t, "google", resp.Speaker.Voice.Provider)
+		assert.Equal(t, "female", resp.Speaker.Voice.Gender)
 	})
 
 	t.Run("Emotion が nil の場合、レスポンスの Emotion も nil", func(t *testing.T) {
@@ -207,52 +125,55 @@ func TestToScriptLineResponse(t *testing.T) {
 
 		sl := *baseScriptLine
 		sl.Emotion = nil
-		sl.Speaker = nil
-		sl.Sfx = nil
 
 		resp := svc.toScriptLineResponse(&sl)
 
 		assert.Nil(t, resp.Emotion)
-	})
-
-	t.Run("DurationMs が nil の場合、レスポンスの DurationMs も nil", func(t *testing.T) {
-		svc := &scriptLineService{}
-
-		sl := *baseScriptLine
-		sl.DurationMs = nil
-		sl.Speaker = nil
-		sl.Sfx = nil
-
-		resp := svc.toScriptLineResponse(&sl)
-
-		assert.Nil(t, resp.DurationMs)
 	})
 }
 
 func TestToScriptLineResponses(t *testing.T) {
 	now := time.Now()
 	episodeID := uuid.New()
-	text1 := "テキスト1"
-	text2 := "テキスト2"
+	speakerID := uuid.New()
+	voiceID := uuid.New()
 
 	scriptLines := []model.ScriptLine{
 		{
 			ID:        uuid.New(),
 			EpisodeID: episodeID,
 			LineOrder: 1,
-			LineType:  model.LineTypeSpeech,
-			Text:      &text1,
+			SpeakerID: speakerID,
+			Text:      "テキスト1",
 			CreatedAt: now,
 			UpdatedAt: now,
+			Speaker: model.Character{
+				ID:   speakerID,
+				Name: "テストスピーカー",
+				Voice: model.Voice{
+					ID:       voiceID,
+					Provider: "google",
+					Gender:   model.GenderMale,
+				},
+			},
 		},
 		{
 			ID:        uuid.New(),
 			EpisodeID: episodeID,
 			LineOrder: 2,
-			LineType:  model.LineTypeSfx,
-			Text:      &text2,
+			SpeakerID: speakerID,
+			Text:      "テキスト2",
 			CreatedAt: now,
 			UpdatedAt: now,
+			Speaker: model.Character{
+				ID:   speakerID,
+				Name: "テストスピーカー",
+				Voice: model.Voice{
+					ID:       voiceID,
+					Provider: "google",
+					Gender:   model.GenderMale,
+				},
+			},
 		},
 	}
 
@@ -264,8 +185,8 @@ func TestToScriptLineResponses(t *testing.T) {
 		assert.Len(t, result, 2)
 		assert.Equal(t, 1, result[0].LineOrder)
 		assert.Equal(t, 2, result[1].LineOrder)
-		assert.Equal(t, "speech", result[0].LineType)
-		assert.Equal(t, "sfx", result[1].LineType)
+		assert.Equal(t, "テキスト1", result[0].Text)
+		assert.Equal(t, "テキスト2", result[1].Text)
 	})
 
 	t.Run("空のスライスの場合、空のスライスを返す", func(t *testing.T) {

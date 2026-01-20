@@ -95,7 +95,7 @@ INSERT INTO script_lines (id, episode_id, line_order, line_type, speaker_id, tex
 -- Episode 2: スマートホームのすすめ
 INSERT INTO script_lines (id, episode_id, line_order, line_type, speaker_id, text, emotion) VALUES
 	('d8909d91-da04-4ec6-bec1-356eb9c4e2d9', '67e8e26d-20c8-492a-ac2c-5c79d8050aa3', 0, 'speech', 'd1f7e3e3-d2e9-4a8f-a155-99b1e3ccf007', '今日はスマートホームについて紹介していきます。', NULL),
-	('f0d41215-6172-4bca-a10e-efaa002a09fc', '67e8e26d-20c8-492a-ac2c-5c79d8050aa3', 1, 'speech', '4cee85f3-adec-4333-84e6-d6aaefb63408', 'スマートホームって難しそうなイメージがあるんですけど…', NULL),
+	('f0d41215-6172-4bca-a10e-efaa002a09fc', '67e8e26d-20c8-492a-ac2c-5c79d8050aa3', 1, 'speech', '4cee85f3-adec-4333-84e6-d6aaefb63408', 'スマートホームって難しそうなイメージがあるんですけど', NULL),
 	('6723d570-d7c6-4a07-b481-0b609765be86', '67e8e26d-20c8-492a-ac2c-5c79d8050aa3', 2, 'speech', 'd1f7e3e3-d2e9-4a8f-a155-99b1e3ccf007', '私も最初は全然分からなかったんですよ。でもやってみたら意外と簡単でした。', '笑いながら'),
 	('504ebb03-a05c-49ce-9e94-974f9cc80cc0', '67e8e26d-20c8-492a-ac2c-5c79d8050aa3', 3, 'speech', '4cee85f3-adec-4333-84e6-d6aaefb63408', 'なるほど！それなら私でもできそうです。', NULL);
 
@@ -116,7 +116,7 @@ INSERT INTO script_lines (id, episode_id, line_order, line_type, speaker_id, tex
 -- Episode 5: 失敗しない資金調達の秘訣（test_user2）
 INSERT INTO script_lines (id, episode_id, line_order, line_type, speaker_id, text, emotion) VALUES
 	('089e59a2-e26b-4dcc-aeca-6763a7ab16b9', '9cde2abb-30e8-447b-bc8b-bb799b0f6f06', 0, 'speech', 'a4e0f973-f91a-4103-b758-fed371622046', '今回は資金調達について詳しくお話ししていきます。', NULL),
-	('83fccc88-5647-47df-9757-5ebd19b301c7', '9cde2abb-30e8-447b-bc8b-bb799b0f6f06', 1, 'speech', 'b7efbbae-0655-46f1-afb7-a42d2646f0c1', '資金調達って種類がたくさんありますよね。VC、エンジェル投資家、融資…', NULL),
+	('83fccc88-5647-47df-9757-5ebd19b301c7', '9cde2abb-30e8-447b-bc8b-bb799b0f6f06', 1, 'speech', 'b7efbbae-0655-46f1-afb7-a42d2646f0c1', '資金調達って種類がたくさんありますよね。VC、エンジェル投資家、融資', NULL),
 	('8f197ebe-677f-4d9d-add7-111af58b6c04', '9cde2abb-30e8-447b-bc8b-bb799b0f6f06', 2, 'speech', 'a4e0f973-f91a-4103-b758-fed371622046', 'その通りです。事業のフェーズによって最適な調達方法は変わってきます。', NULL),
 	('2fecb517-5d29-4f74-b3a7-7a85700e4e22', '9cde2abb-30e8-447b-bc8b-bb799b0f6f06', 3, 'speech', 'b7efbbae-0655-46f1-afb7-a42d2646f0c1', '私も最初のピッチでは緊張しすぎて、投資家の名前を間違えちゃいました。', '笑いながら');
 

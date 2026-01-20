@@ -66,7 +66,7 @@ func (h *ScriptLineHandler) ListScriptLines(c *gin.Context) {
 
 // UpdateScriptLine godoc
 // @Summary 台本行更新
-// @Description 指定した台本行を更新します。speech 行のみ対応しています。
+// @Description 指定した台本行を更新します。
 // @Tags script
 // @Accept json
 // @Produce json

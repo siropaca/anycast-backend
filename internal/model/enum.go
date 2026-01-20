@@ -16,15 +16,6 @@ const (
 	GenderNeutral Gender = "neutral"
 )
 
-// 台本行の種別
-type LineType string
-
-const (
-	LineTypeSpeech  LineType = "speech"
-	LineTypeSilence LineType = "silence"
-	LineTypeSfx     LineType = "sfx"
-)
-
 // ユーザーロール
 type Role string
 

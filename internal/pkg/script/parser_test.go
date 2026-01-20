@@ -9,7 +9,6 @@ func TestParse(t *testing.T) {
 		name            string
 		text            string
 		allowedSpeakers []string
-		allowedSfx      []string
 		wantLines       int
 		wantErrors      int
 	}{
@@ -35,29 +34,6 @@ func TestParse(t *testing.T) {
 			text:            "太郎: こんにちは\n\n花子: やあ",
 			allowedSpeakers: []string{"太郎", "花子"},
 			wantLines:       2,
-			wantErrors:      0,
-		},
-		{
-			name:            "正常系: SILENCE を含む",
-			text:            "太郎: こんにちは\n__SILENCE__: 800\n花子: やあ",
-			allowedSpeakers: []string{"太郎", "花子"},
-			wantLines:       3,
-			wantErrors:      0,
-		},
-		{
-			name:            "正常系: SFX を含む（チェックなし）",
-			text:            "太郎: こんにちは\n__SFX__: chime\n花子: やあ",
-			allowedSpeakers: []string{"太郎", "花子"},
-			allowedSfx:      nil,
-			wantLines:       3,
-			wantErrors:      0,
-		},
-		{
-			name:            "正常系: SFX を含む（許可リストあり）",
-			text:            "__SFX__: chime",
-			allowedSpeakers: []string{},
-			allowedSfx:      []string{"chime", "bell"},
-			wantLines:       1,
 			wantErrors:      0,
 		},
 		{
@@ -89,28 +65,6 @@ func TestParse(t *testing.T) {
 			wantErrors:      1,
 		},
 		{
-			name:            "エラー: SILENCE の値が不正",
-			text:            "__SILENCE__: abc",
-			allowedSpeakers: []string{},
-			wantLines:       0,
-			wantErrors:      1,
-		},
-		{
-			name:            "エラー: SILENCE の値が負数",
-			text:            "__SILENCE__: -100",
-			allowedSpeakers: []string{},
-			wantLines:       0,
-			wantErrors:      1,
-		},
-		{
-			name:            "エラー: SFX が許可リストにない",
-			text:            "__SFX__: unknown",
-			allowedSpeakers: []string{},
-			allowedSfx:      []string{"chime", "bell"},
-			wantLines:       0,
-			wantErrors:      1,
-		},
-		{
 			name:            "複合: 正常行とエラー行が混在",
 			text:            "太郎: こんにちは\n三郎: やあ\n花子: 元気？",
 			allowedSpeakers: []string{"太郎", "花子"},
@@ -121,7 +75,7 @@ func TestParse(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := Parse(tt.text, tt.allowedSpeakers, tt.allowedSfx)
+			result := Parse(tt.text, tt.allowedSpeakers)
 
 			if len(result.Lines) != tt.wantLines {
 				t.Errorf("Parse() lines = %d, want %d", len(result.Lines), tt.wantLines)
@@ -139,7 +93,7 @@ func TestParse_EmotionExtraction(t *testing.T) {
 花子: やあ、元気？`
 	allowedSpeakers := []string{"太郎", "花子"}
 
-	result := Parse(text, allowedSpeakers, nil)
+	result := Parse(text, allowedSpeakers)
 
 	if len(result.Lines) != 2 {
 		t.Fatalf("expected 2 lines, got %d", len(result.Lines))
@@ -164,46 +118,23 @@ func TestParse_EmotionExtraction(t *testing.T) {
 	}
 }
 
-func TestParse_LineTypes(t *testing.T) {
+func TestParse_SpeakerExtraction(t *testing.T) {
 	text := `太郎: こんにちは
-__SILENCE__: 500
-__SFX__: chime
 花子: やあ`
 	allowedSpeakers := []string{"太郎", "花子"}
 
-	result := Parse(text, allowedSpeakers, nil)
+	result := Parse(text, allowedSpeakers)
 
-	if len(result.Lines) != 4 {
-		t.Fatalf("expected 4 lines, got %d", len(result.Lines))
+	if len(result.Lines) != 2 {
+		t.Fatalf("expected 2 lines, got %d", len(result.Lines))
 	}
 
-	// 1行目: speech
-	if result.Lines[0].LineType != LineTypeSpeech {
-		t.Errorf("expected LineTypeSpeech, got %s", result.Lines[0].LineType)
-	}
 	if result.Lines[0].SpeakerName != "太郎" {
 		t.Errorf("expected speaker '太郎', got '%s'", result.Lines[0].SpeakerName)
 	}
 
-	// 2行目: silence
-	if result.Lines[1].LineType != LineTypeSilence {
-		t.Errorf("expected LineTypeSilence, got %s", result.Lines[1].LineType)
-	}
-	if result.Lines[1].DurationMs != 500 {
-		t.Errorf("expected durationMs 500, got %d", result.Lines[1].DurationMs)
-	}
-
-	// 3行目: sfx
-	if result.Lines[2].LineType != LineTypeSfx {
-		t.Errorf("expected LineTypeSfx, got %s", result.Lines[2].LineType)
-	}
-	if result.Lines[2].SfxName != "chime" {
-		t.Errorf("expected sfxName 'chime', got '%s'", result.Lines[2].SfxName)
-	}
-
-	// 4行目: speech
-	if result.Lines[3].LineType != LineTypeSpeech {
-		t.Errorf("expected LineTypeSpeech, got %s", result.Lines[3].LineType)
+	if result.Lines[1].SpeakerName != "花子" {
+		t.Errorf("expected speaker '花子', got '%s'", result.Lines[1].SpeakerName)
 	}
 }
 

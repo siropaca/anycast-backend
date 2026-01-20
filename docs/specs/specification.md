@@ -68,8 +68,7 @@ AI 専用のポッドキャストを作成・配信できるプラットフォ�
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                            Episode 集約                                      │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│  Episode ─┬─ (0..N) ScriptLine ─┬─ Speaker [Character 参照]                 │
-│           │                     └─ SoundEffect [参照]                       │
+│  Episode ─┬─ (0..N) ScriptLine ── Speaker [Character 参照]                  │
 │           ├─ (0..1) BGM [Audio]                                             │
 │           └─ (0..1) FullAudio [Audio]                                       │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -90,7 +89,6 @@ AI 専用のポッドキャストを作成・配信できるプラットフォ�
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  Voice        : TTS ボイス設定                                              │
 │  Category     : チャンネルカテゴリ                                           │
-│  SoundEffect  : 効果音 ── Audio                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -115,9 +113,9 @@ AI 専用のポッドキャストを作成・配信できるプラットフォ�
 |------|------|------|
 | エンティティ | User, Channel, Character, Episode, ScriptLine | 一意の識別子を持ち、ライフサイクルを通じて追跡される |
 | エンティティ | Like, Bookmark, PlaybackHistory, Follow | ユーザーとエピソードの関連を表す |
-| エンティティ | Voice, Category, SoundEffect | システム管理のマスタデータ |
+| エンティティ | Voice, Category | システム管理のマスタデータ |
 | エンティティ | Audio, Image | メディアファイル（外部ストレージへの参照） |
-| 値オブジェクト | Email, Username, OAuthProvider, LineType, Gender, Volume, MimeType | ドメイン固有のルール・制約を持つ値 |
+| 値オブジェクト | Email, Username, OAuthProvider, Gender, MimeType | ドメイン固有のルール・制約を持つ値 |
 
 ### 値オブジェクト定義
 
@@ -128,9 +126,7 @@ AI 専用のポッドキャストを作成・配信できるプラットフォ�
 | Email | String | メールアドレス形式、255文字以内、小文字正規化 |
 | Username | String | 20文字以内、一意、`__` 始まり禁止、日本語可 |
 | OAuthProvider | Enum | `google`（将来的に `apple`, `github` など追加可能） |
-| LineType | Enum | `speech` / `silence` / `sfx` |
 | Gender | Enum | `male` / `female` / `neutral` |
-| Volume | Decimal | 0.00〜1.00 の範囲 |
 | MimeType | String | 有効な MIME タイプ形式（例: `audio/mpeg`, `image/png`） |
 | Role | Enum | `user` / `admin` |
 
@@ -141,7 +137,7 @@ AI 専用のポッドキャストを作成・配信できるプラットフォ�
 - `displayName` - 文字数制限のみ（20文字以内）
 - `description` - 自由入力テキスト
 - `persona` - キャラクター設定（自由記述）
-- `name`（Channel, Character, SoundEffect など）- 一意性は DB 制約で担保
+- `name`（Channel, Character など）- 一意性は DB 制約で担保
 
 ---
 
@@ -167,7 +163,7 @@ Channel と Episode は公開状態（`publishedAt`）を持つ。
 | ロール | 権限 |
 |--------|------|
 | user | 自分のコンテンツのみ管理可能 |
-| admin | マスタデータ（Voice, Category, SoundEffect）の CRUD、全ユーザーのコンテンツ管理 |
+| admin | マスタデータ（Voice, Category）の CRUD、全ユーザーのコンテンツ管理 |
 
 ---
 
@@ -319,28 +315,16 @@ OAuth プロバイダとの連携情報。
 
 ### ScriptLine（台本行）
 
-台本の各行（イベント）。lineType によって必須属性が異なる。
+台本の各行（セリフ）。
 
 | 属性 | 型 | 必須 | 説明 |
 |------|-----|:----:|------|
 | id | UUID | ◯ | 識別子（= lineId）。並び替え・編集後も追跡可能 |
 | episodeId | UUID | ◯ | 所属する Episode |
 | lineOrder | Int | ◯ | 行の順序（0 始まり） |
-| lineType | LineType | ◯ | 行の種類（`speech` / `silence` / `sfx`） |
-| speaker | Character | △ | 話者（speech 時のみ必須） |
-| text | String | △ | セリフ（speech 時のみ必須、空禁止） |
-| emotion | String | | 感情・喋り方（speech 時のみ）例: 嬉しい、悲しい、笑いながら |
-| durationMs | Int | △ | 無音時間 ms（silence 時のみ必須、0〜10000） |
-| sfx | SoundEffect | △ | 効果音（sfx 時のみ必須） |
-| volume | Decimal | | 音量 0.0〜1.0（sfx 時のみ、デフォルト 1.0） |
-
-#### lineType 別の必須属性
-
-| lineType | 必須属性 | 説明 |
-|----------|----------|------|
-| speech | speaker, text | キャラクターのセリフ |
-| silence | durationMs | 無音区間 |
-| sfx | sfx | 効果音 |
+| speaker | Character | ◯ | 話者 |
+| text | String | ◯ | セリフ（空禁止） |
+| emotion | String | | 感情・喋り方。例: 嬉しい、悲しい、笑いながら |
 
 #### emotion の反映
 
@@ -372,20 +356,13 @@ emotion は TTS 生成時に text の先頭にカッコで付けて表現する�
 ### 基本ルール
 
 - 区切りは半角 `:` のみ
-- 1 行 = 1 イベント
+- 1 行 = 1 セリフ
 - 複数行のセリフは同キャラを連続して記述
 
 ### 構文
 
 ```
-# speech 行
 <speakerName>: <text>
-
-# silence 行（予約語）
-__SILENCE__: <ms>
-
-# sfx 行（予約語）
-__SFX__: <sfxId>
 ```
 
 ### 例
@@ -393,18 +370,9 @@ __SFX__: <sfxId>
 ```
 太郎: こんにちは
 花子: やあ、元気？
-__SILENCE__: 800
-__SFX__: chime
 太郎: うん、元気だよ
 花子: それは良かった
 ```
-
-### 予約語
-
-| 予約語 | 説明 |
-|--------|------|
-| `__SILENCE__` | 無音時間（ms） |
-| `__SFX__` | 効果音（sfxId を指定） |
 
 ---
 
@@ -414,7 +382,6 @@ __SFX__: chime
 
 - 台本テキスト
 - allowedSpeakers（Channel の登場人物名リスト）
-- availableSfx（利用可能な効果音 ID リスト）
 
 ### 出力
 
@@ -427,10 +394,6 @@ __SFX__: chime
 |------|------|
 | `:` が無い行 | エラー |
 | lhs / rhs を trim 後に処理 | - |
-| lhs == `__SILENCE__` かつ rhs が 0〜10000 の整数 | silence 行として OK |
-| lhs == `__SILENCE__` かつ rhs が不正 | エラー |
-| lhs == `__SFX__` かつ rhs が availableSfx に存在 | sfx 行として OK |
-| lhs == `__SFX__` かつ rhs が不正 | エラー |
 | lhs が allowedSpeakers に存在しない | エラー |
 | rhs（セリフ）が空 | エラー |
 
@@ -443,12 +406,10 @@ __SFX__: chime
 ### 生成フロー
 
 1. 台本の全行を取得
-2. speech 行のテキストを結合（emotion は `[感情]` 形式で先頭に付与）
+2. 各行のテキストを結合（emotion は `[感情]` 形式で先頭に付与）
 3. TTS API で音声を一括生成
-4. silence 行は指定時間の無音を挿入
-5. sfx 行は効果音を挿入
-6. BGM が設定されている場合はミックス
-7. 結果を `Episode.fullAudio` に保存
+4. BGM が設定されている場合はミックス
+5. 結果を `Episode.fullAudio` に保存
 
 ### 出力形式
 
@@ -595,23 +556,6 @@ TTS ボイスの設定情報。
 - 既存チャンネルは isActive = false のカテゴリを継続利用可能
 - 物理削除は行わず、isActive フラグで無効化
 
-### SoundEffect（効果音）
-
-台本で使用できる効果音。
-
-| 属性 | 型 | 必須 | 説明 |
-|------|-----|:----:|------|
-| id | UUID | ◯ | 識別子 |
-| name | String | ◯ | 効果音の識別名（例: chime, applause） |
-| description | String | | 効果音の説明 |
-| audio | Audio | ◯ | 音声ファイル |
-
-#### 制約
-
-- name は一意
-- 台本テキストの `__SFX__: <name>` で参照
-- 使用中の効果音は削除不可（RESTRICT）
-
 ---
 
 ## メディア
@@ -634,7 +578,6 @@ TTS ボイスの設定情報。
 | 用途 | 説明 |
 |------|------|
 | BGM | エピソードの背景音楽 |
-| 効果音 | SoundEffect の音源 |
 | エピソード全体音声 | 全台本 + BGM を結合した完成形音声 |
 
 #### 制約

@@ -65,8 +65,6 @@ POST /admin/cleanup/orphaned-media
 **audios（以下すべてに該当しないもの）:**
 - `episodes.bgm_id`
 - `episodes.full_audio_id`
-- `script_lines.audio_id`
-- `sound_effects.audio_id`
 
 **images（以下すべてに該当しないもの）:**
 - `users.avatar_id`

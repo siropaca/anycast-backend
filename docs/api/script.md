@@ -45,7 +45,7 @@ POST /channels/:channelId/episodes/:episodeId/script/import
 **リクエスト:**
 ```json
 {
-  "text": "太郎: こんにちは\n花子: [嬉しそうに] やあ\n__SILENCE__: 800\n__SFX__: chime"
+  "text": "太郎: こんにちは\n花子: [嬉しそうに] やあ"
 }
 ```
 
@@ -55,21 +55,25 @@ POST /channels/:channelId/episodes/:episodeId/script/import
 
 **テキストフォーマット:**
 
-| 行タイプ | 形式 | 例 |
-|----------|------|-----|
-| speech | `話者名: [感情] セリフ` | `太郎: [嬉しそうに] こんにちは` |
-| silence | `__SILENCE__: ミリ秒` | `__SILENCE__: 800` |
-| sfx | `__SFX__: 効果音名` | `__SFX__: chime` |
+```
+話者名: [感情] セリフ
+```
 
 - `[感情]` は省略可能
 - 話者名はチャンネルに登録されているキャラクター名のみ使用可能
-- 効果音名は登録済みの効果音名のみ使用可能
+
+**例:**
+```
+太郎: こんにちは
+花子: [嬉しそうに] やあ
+太郎: 今日はいい天気だね
+```
 
 **レスポンス（成功時）:**
 ```json
 {
   "data": [
-    { "id": "uuid", "lineOrder": 0, "lineType": "speech", ... }
+    { "id": "uuid", "lineOrder": 0, "speaker": { ... }, "text": "...", ... }
   ]
 }
 ```
@@ -81,8 +85,7 @@ POST /channels/:channelId/episodes/:episodeId/script/import
     "code": "SCRIPT_PARSE_ERROR",
     "message": "台本のパースに失敗しました",
     "details": [
-      { "line": 3, "reason": "不明な話者: 三郎" },
-      { "line": 5, "reason": "__SFX__ の値が不正です" }
+      { "line": 3, "reason": "不明な話者: 三郎" }
     ]
   }
 }
@@ -105,8 +108,6 @@ GET /channels/:channelId/episodes/:episodeId/script/export
 ```
 太郎: こんにちは
 花子: [嬉しそうに] やあ
-__SILENCE__: 800
-__SFX__: chime
 ```
 
 ---
@@ -128,8 +129,12 @@ GET /channels/:channelId/episodes/:episodeId/script/lines
     {
       "id": "uuid",
       "lineOrder": 0,
-      "lineType": "speech",
-      "speaker": { "id": "uuid", "name": "太郎" },
+      "speaker": {
+        "id": "uuid",
+        "name": "太郎",
+        "persona": "明るく元気な性格",
+        "voice": { "id": "uuid", "name": "Voice1", "provider": "google", "gender": "male" }
+      },
       "text": "こんにちは",
       "emotion": null,
       "createdAt": "2025-01-01T00:00:00Z",
@@ -138,66 +143,20 @@ GET /channels/:channelId/episodes/:episodeId/script/lines
     {
       "id": "uuid",
       "lineOrder": 1,
-      "lineType": "silence",
-      "durationMs": 800,
-      "createdAt": "2025-01-01T00:00:00Z",
-      "updatedAt": "2025-01-01T00:00:00Z"
-    },
-    {
-      "id": "uuid",
-      "lineOrder": 2,
-      "lineType": "sfx",
-      "sfx": { "id": "uuid", "name": "chime" },
-      "volume": 0.8,
+      "speaker": {
+        "id": "uuid",
+        "name": "花子",
+        "persona": "落ち着いた知的な性格",
+        "voice": { "id": "uuid", "name": "Voice2", "provider": "google", "gender": "female" }
+      },
+      "text": "やあ",
+      "emotion": "嬉しそうに",
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2025-01-01T00:00:00Z"
     }
   ]
 }
 ```
-
----
-
-## 行追加
-
-```
-POST /channels/:channelId/episodes/:episodeId/script/lines
-```
-
-**リクエスト（speech）:**
-```json
-{
-  "lineType": "speech",
-  "speakerId": "uuid",
-  "text": "こんにちは",
-  "emotion": "嬉しい",
-  "insertAfter": "uuid"
-}
-```
-
-- `speakerId`: 同じ Channel に属する Character の ID を指定
-- `emotion`: 感情・喋り方の指定（任意）
-
-**リクエスト（silence）:**
-```json
-{
-  "lineType": "silence",
-  "durationMs": 800,
-  "insertAfter": "uuid"
-}
-```
-
-**リクエスト（sfx）:**
-```json
-{
-  "lineType": "sfx",
-  "sfxId": "uuid",
-  "volume": 0.8,
-  "insertAfter": "uuid"
-}
-```
-
-- `insertAfter`: 指定した行の後に挿入。null の場合は先頭に挿入。
 
 ---
 
@@ -229,18 +188,3 @@ DELETE /channels/:channelId/episodes/:episodeId/script/lines/:lineId
 - `204 No Content`: 削除成功
 - `403 Forbidden`: チャンネルのオーナーでない場合
 - `404 Not Found`: 台本行が存在しない場合
-
----
-
-## 行並び替え
-
-```
-POST /channels/:channelId/episodes/:episodeId/script/reorder
-```
-
-**リクエスト:**
-```json
-{
-  "lineIds": ["uuid1", "uuid2", "uuid3"]
-}
-```

@@ -61,7 +61,6 @@ GET /channels/:channelId/episodes/:episodeId
       {
         "id": "uuid",
         "lineOrder": 0,
-        "lineType": "speech",
         "speaker": { "id": "uuid", "name": "太郎" },
         "text": "こんにちは",
         "emotion": null
@@ -69,15 +68,9 @@ GET /channels/:channelId/episodes/:episodeId
       {
         "id": "uuid",
         "lineOrder": 1,
-        "lineType": "silence",
-        "durationMs": 800
-      },
-      {
-        "id": "uuid",
-        "lineOrder": 2,
-        "lineType": "sfx",
-        "sfx": { "id": "uuid", "name": "chime" },
-        "volume": 0.8
+        "speaker": { "id": "uuid", "name": "花子" },
+        "text": "やあ、元気？",
+        "emotion": "嬉しそうに"
       }
     ],
     "publishedAt": "2025-01-01T00:00:00Z",

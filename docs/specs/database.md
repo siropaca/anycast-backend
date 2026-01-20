@@ -28,9 +28,7 @@ erDiagram
     episodes ||--o| images : artwork
     episodes ||--o| audios : bgm
     episodes ||--o| audios : full_audio
-    script_lines ||--o| characters : speaker
-    script_lines ||--o| sound_effects : sfx
-    sound_effects ||--|| audios : audio
+    script_lines ||--|| characters : speaker
 
     likes {
         uuid id PK
@@ -166,22 +164,9 @@ erDiagram
         uuid id PK
         uuid episode_id FK
         integer line_order
-        varchar line_type
         uuid speaker_id FK
         text text
         text emotion
-        integer duration_ms
-        uuid sfx_id FK
-        decimal volume
-        timestamp created_at
-        timestamp updated_at
-    }
-
-    sound_effects {
-        uuid id PK
-        varchar name
-        text description
-        uuid audio_id FK
         timestamp created_at
         timestamp updated_at
     }
@@ -513,20 +498,16 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 
 #### script_lines
 
-台本の各行（イベント）を管理する。
+台本の各行（セリフ）を管理する。
 
 | カラム名 | 型 | NULLABLE | デフォルト | 説明 |
 |----------|-----|:--------:|------------|------|
 | id | UUID | | gen_random_uuid() | 主キー（= lineId） |
 | episode_id | UUID | | - | 所属エピソード |
 | line_order | INTEGER | | - | 行の順序（0 始まり） |
-| line_type | line_type | | - | 行種別: `speech` / `silence` / `sfx` |
-| speaker_id | UUID | ◯ | - | 話者（speech 時のみ、characters 参照） |
-| text | TEXT | ◯ | - | セリフ（speech 時のみ） |
-| emotion | TEXT | ◯ | - | 感情・喋り方（speech 時のみ）例: 嬉しい、悲しい、笑いながら |
-| duration_ms | INTEGER | ◯ | - | 無音時間 ms（silence 時のみ） |
-| sfx_id | UUID | ◯ | - | 効果音（sfx 時のみ、sound_effects 参照） |
-| volume | DECIMAL(3,2) | ◯ | 1.00 | 音量 0.00〜1.00（sfx 時のみ） |
+| speaker_id | UUID | | - | 話者（characters 参照） |
+| text | TEXT | | - | セリフ |
+| emotion | TEXT | ◯ | - | 感情・喋り方。例: 嬉しい、悲しい、笑いながら |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
 
@@ -538,15 +519,9 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 **外部キー:**
 - episode_id → episodes(id) ON DELETE CASCADE
 - speaker_id → characters(id) ON DELETE CASCADE
-- sfx_id → sound_effects(id) ON DELETE CASCADE
 
 **制約:**
-- line_type が `speech` の場合: speaker_id, text は NOT NULL
-- line_type が `silence` の場合: duration_ms は NOT NULL、0〜10000 の範囲
-- line_type が `sfx` の場合: sfx_id は NOT NULL
-- volume は 0.00〜1.00 の範囲
-- speaker_id は同じ Channel に属する Character のみ指定可能
-- （アプリケーション層で検証）
+- speaker_id は同じ Channel に属する Character のみ指定可能（アプリケーション層で検証）
 
 ---
 
@@ -638,28 +613,6 @@ TTS ボイスのマスタデータを管理する。システム管理テーブ�
 
 ---
 
-#### sound_effects
-
-効果音のマスタデータを管理する。
-
-| カラム名 | 型 | NULLABLE | デフォルト | 説明 |
-|----------|-----|:--------:|------------|------|
-| id | UUID | | gen_random_uuid() | 主キー |
-| name | VARCHAR(100) | | - | 効果音の識別名（例: chime, applause） |
-| description | TEXT | | - | 効果音の説明 |
-| audio_id | UUID | | - | 音声ファイル（audios 参照） |
-| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
-| updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
-
-**インデックス:**
-- PRIMARY KEY (id)
-- UNIQUE (name)
-
-**外部キー:**
-- audio_id → audios(id) ON DELETE RESTRICT
-
----
-
 ## 補足
 
 ### Enum 型
@@ -669,7 +622,6 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 | 型名 | 値 | 用途 |
 |------|-----|------|
 | oauth_provider | `google` | OAuth プロバイダ |
-| line_type | `speech`, `silence`, `sfx` | 台本行の種別 |
 | gender | `male`, `female`, `neutral` | ボイスの性別 |
 | user_role | `user`, `admin` | ユーザーのロール |
 
@@ -685,7 +637,6 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 - Channel 削除時: 関連する channel_characters, Episodes, ScriptLines が削除
 - Episode 削除時: 関連する ScriptLines が削除
 - Character 削除時: channel_characters で使用中の場合は RESTRICT（削除不可）
-- SoundEffect 削除時: 関連する ScriptLines（効果音参照）が削除
 - Audio / Image 削除時: 参照元は SET NULL（ファイルが消えても親レコードは残る）
 - Voice 削除時: 使用中の場合は RESTRICT（削除不可）
 
@@ -696,12 +647,6 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 - API レスポンス時に署名付き URL を動的生成してクライアントに返す
 - 同一ファイルを複数箇所から参照可能（BGM の使い回しなど）
 - 未使用ファイルのクリーンアップはアプリケーション層で実施
-
-### 効果音の管理
-
-- sound_effects テーブルで効果音マスタを管理
-- name は一意で、台本テキストの `__SFX__: <name>` で参照
-- 効果音の実体は audios テーブルで管理
 
 ### ボイスの管理
 

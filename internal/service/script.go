@@ -115,14 +115,13 @@ type ScriptService interface {
 }
 
 type scriptService struct {
-	db              *gorm.DB
-	userRepo        repository.UserRepository
-	channelRepo     repository.ChannelRepository
-	episodeRepo     repository.EpisodeRepository
-	scriptLineRepo  repository.ScriptLineRepository
-	soundEffectRepo repository.SoundEffectRepository
-	llmClient       llm.Client
-	storageClient   storage.Client
+	db             *gorm.DB
+	userRepo       repository.UserRepository
+	channelRepo    repository.ChannelRepository
+	episodeRepo    repository.EpisodeRepository
+	scriptLineRepo repository.ScriptLineRepository
+	llmClient      llm.Client
+	storageClient  storage.Client
 }
 
 // ScriptService の実装を返す
@@ -132,19 +131,17 @@ func NewScriptService(
 	channelRepo repository.ChannelRepository,
 	episodeRepo repository.EpisodeRepository,
 	scriptLineRepo repository.ScriptLineRepository,
-	soundEffectRepo repository.SoundEffectRepository,
 	llmClient llm.Client,
 	storageClient storage.Client,
 ) ScriptService {
 	return &scriptService{
-		db:              db,
-		userRepo:        userRepo,
-		channelRepo:     channelRepo,
-		episodeRepo:     episodeRepo,
-		scriptLineRepo:  scriptLineRepo,
-		soundEffectRepo: soundEffectRepo,
-		llmClient:       llmClient,
-		storageClient:   storageClient,
+		db:             db,
+		userRepo:       userRepo,
+		channelRepo:    channelRepo,
+		episodeRepo:    episodeRepo,
+		scriptLineRepo: scriptLineRepo,
+		llmClient:      llmClient,
+		storageClient:  storageClient,
 	}
 }
 
@@ -220,8 +217,8 @@ func (s *scriptService) GenerateScript(ctx context.Context, userID, channelID, e
 		speakerMap[cc.Character.Name] = &channel.ChannelCharacters[i].Character
 	}
 
-	// 生成されたテキストをパース（AI 生成なので SFX チェックは不要）
-	parseResult := script.Parse(generatedText, allowedSpeakers, nil)
+	// 生成されたテキストをパース
+	parseResult := script.Parse(generatedText, allowedSpeakers)
 
 	// パースエラーがある場合（全行失敗の場合のみエラー）
 	if len(parseResult.Lines) == 0 && parseResult.HasErrors() {
@@ -235,9 +232,8 @@ func (s *scriptService) GenerateScript(ctx context.Context, userID, channelID, e
 		scriptLines[i] = model.ScriptLine{
 			EpisodeID: eid,
 			LineOrder: i,
-			LineType:  model.LineTypeSpeech,
-			SpeakerID: &speaker.ID,
-			Text:      &line.Text,
+			SpeakerID: speaker.ID,
+			Text:      line.Text,
 			Emotion:   line.Emotion,
 		}
 	}
@@ -302,25 +298,10 @@ func (s *scriptService) toScriptLineResponses(scriptLines []model.ScriptLine) ([
 
 // ScriptLine モデルをレスポンス DTO に変換する
 func (s *scriptService) toScriptLineResponse(sl *model.ScriptLine) (response.ScriptLineResponse, error) {
-	resp := response.ScriptLineResponse{
-		ID:         sl.ID,
-		LineOrder:  sl.LineOrder,
-		LineType:   string(sl.LineType),
-		Text:       sl.Text,
-		Emotion:    sl.Emotion,
-		DurationMs: sl.DurationMs,
-		CreatedAt:  sl.CreatedAt,
-		UpdatedAt:  sl.UpdatedAt,
-	}
-
-	// decimal.Decimal から float64 に変換
-	if sl.Volume != nil {
-		v, _ := sl.Volume.Float64()
-		resp.Volume = &v
-	}
-
-	if sl.Speaker != nil {
-		resp.Speaker = &response.SpeakerResponse{
+	return response.ScriptLineResponse{
+		ID:        sl.ID,
+		LineOrder: sl.LineOrder,
+		Speaker: response.SpeakerResponse{
 			ID:      sl.Speaker.ID,
 			Name:    sl.Speaker.Name,
 			Persona: sl.Speaker.Persona,
@@ -330,17 +311,12 @@ func (s *scriptService) toScriptLineResponse(sl *model.ScriptLine) (response.Scr
 				Provider: sl.Speaker.Voice.Provider,
 				Gender:   string(sl.Speaker.Voice.Gender),
 			},
-		}
-	}
-
-	if sl.Sfx != nil {
-		resp.Sfx = &response.SfxResponse{
-			ID:   sl.Sfx.ID,
-			Name: sl.Sfx.Name,
-		}
-	}
-
-	return resp, nil
+		},
+		Text:      sl.Text,
+		Emotion:   sl.Emotion,
+		CreatedAt: sl.CreatedAt,
+		UpdatedAt: sl.UpdatedAt,
+	}, nil
 }
 
 // LLM 用のユーザープロンプトを構築する
@@ -445,20 +421,8 @@ func (s *scriptService) ImportScript(ctx context.Context, userID, channelID, epi
 		speakerMap[cc.Character.Name] = &channel.ChannelCharacters[i].Character
 	}
 
-	// 許可された効果音のリストを取得
-	sfxList, err := s.soundEffectRepo.FindAll(ctx)
-	if err != nil {
-		return nil, err
-	}
-	allowedSfx := make([]string, len(sfxList))
-	sfxMap := make(map[string]*model.SoundEffect, len(sfxList))
-	for i, sfx := range sfxList {
-		allowedSfx[i] = sfx.Name
-		sfxMap[sfx.Name] = &sfxList[i]
-	}
-
 	// テキストをパース
-	parseResult := script.Parse(text, allowedSpeakers, allowedSfx)
+	parseResult := script.Parse(text, allowedSpeakers)
 
 	// パースエラーがある場合
 	if parseResult.HasErrors() {
@@ -475,28 +439,14 @@ func (s *scriptService) ImportScript(ctx context.Context, userID, channelID, epi
 	// ScriptLine モデルに変換
 	scriptLines := make([]model.ScriptLine, len(parseResult.Lines))
 	for i, line := range parseResult.Lines {
-		sl := model.ScriptLine{
+		speaker := speakerMap[line.SpeakerName]
+		scriptLines[i] = model.ScriptLine{
 			EpisodeID: eid,
 			LineOrder: i,
-			LineType:  model.LineType(line.LineType),
+			SpeakerID: speaker.ID,
+			Text:      line.Text,
+			Emotion:   line.Emotion,
 		}
-
-		switch line.LineType {
-		case script.LineTypeSpeech:
-			speaker := speakerMap[line.SpeakerName]
-			sl.SpeakerID = &speaker.ID
-			sl.Text = &line.Text
-			sl.Emotion = line.Emotion
-
-		case script.LineTypeSilence:
-			sl.DurationMs = &line.DurationMs
-
-		case script.LineTypeSfx:
-			sfx := sfxMap[line.SfxName]
-			sl.SfxID = &sfx.ID
-		}
-
-		scriptLines[i] = sl
 	}
 
 	// トランザクションで既存行削除・新規作成を実行
@@ -580,32 +530,11 @@ func (s *scriptService) ExportScript(ctx context.Context, userID, channelID, epi
 	// テキスト形式に変換
 	formatLines := make([]script.FormatLine, len(scriptLines))
 	for i, sl := range scriptLines {
-		fl := script.FormatLine{
-			LineType: script.LineType(sl.LineType),
+		formatLines[i] = script.FormatLine{
+			SpeakerName: sl.Speaker.Name,
+			Text:        sl.Text,
+			Emotion:     sl.Emotion,
 		}
-
-		switch sl.LineType {
-		case model.LineTypeSpeech:
-			if sl.Speaker != nil {
-				fl.SpeakerName = sl.Speaker.Name
-			}
-			if sl.Text != nil {
-				fl.Text = *sl.Text
-			}
-			fl.Emotion = sl.Emotion
-
-		case model.LineTypeSilence:
-			if sl.DurationMs != nil {
-				fl.DurationMs = *sl.DurationMs
-			}
-
-		case model.LineTypeSfx:
-			if sl.Sfx != nil {
-				fl.SfxName = sl.Sfx.Name
-			}
-		}
-
-		formatLines[i] = fl
 	}
 
 	text := script.Format(formatLines)

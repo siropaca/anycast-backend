@@ -38,7 +38,6 @@ func (r *scriptLineRepository) FindByID(ctx context.Context, id uuid.UUID) (*mod
 	if err := r.db.WithContext(ctx).
 		Preload("Speaker").
 		Preload("Speaker.Voice").
-		Preload("Sfx").
 		First(&scriptLine, "id = ?", id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, apperror.ErrNotFound.WithMessage("Script line not found")
@@ -57,7 +56,6 @@ func (r *scriptLineRepository) FindByEpisodeID(ctx context.Context, episodeID uu
 	if err := r.db.WithContext(ctx).
 		Preload("Speaker").
 		Preload("Speaker.Voice").
-		Preload("Sfx").
 		Where("episode_id = ?", episodeID).
 		Order("line_order ASC").
 		Find(&scriptLines).Error; err != nil {
@@ -75,7 +73,6 @@ func (r *scriptLineRepository) FindByEpisodeIDWithVoice(ctx context.Context, epi
 	if err := r.db.WithContext(ctx).
 		Preload("Speaker").
 		Preload("Speaker.Voice").
-		Preload("Sfx").
 		Where("episode_id = ?", episodeID).
 		Order("line_order ASC").
 		Find(&scriptLines).Error; err != nil {
@@ -128,7 +125,7 @@ func (r *scriptLineRepository) CreateBatch(ctx context.Context, scriptLines []mo
 	var created []model.ScriptLine
 	if err := r.db.WithContext(ctx).
 		Preload("Speaker").
-		Preload("Sfx").
+		Preload("Speaker.Voice").
 		Where("episode_id = ?", scriptLines[0].EpisodeID).
 		Order("line_order ASC").
 		Find(&created).Error; err != nil {

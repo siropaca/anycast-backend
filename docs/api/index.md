@@ -93,9 +93,6 @@
 | GET | `/api/v1/voices/:voiceId` | ボイス取得 | ✅ | [詳細](./master.md#ボイス取得) |
 | **Categories（カテゴリ）** | - | - | - | [master.md](./master.md#categoriesカテゴリ) |
 | GET | `/api/v1/categories` | カテゴリ一覧取得 | ✅ | [詳細](./master.md#カテゴリ一覧取得) |
-| **Sound Effects（効果音）** | - | - | - | [master.md](./master.md#sound-effects効果音) |
-| GET | `/api/v1/sound-effects` | 効果音一覧取得 | | [詳細](./master.md#効果音一覧取得) |
-| GET | `/api/v1/sound-effects/:sfxId` | 効果音取得 | | [詳細](./master.md#効果音取得) |
 | **Admin（管理者）** | - | - | - | [admin.md](./admin.md) |
 | POST | `/admin/cleanup/orphaned-media` | 孤児メディアファイル削除 | ✅ | [詳細](./admin.md#孤児メディアファイル削除) |
 
@@ -170,7 +167,6 @@
 | Images（アップロード） | Owner | Owner | - | Owner |
 | Voices | Public | Admin | Admin | Admin |
 | Categories | Public | Admin | Admin | Admin |
-| Sound Effects | Public | Admin | Admin | Admin |
 
 ### 公開状態によるアクセス制御
 
@@ -211,7 +207,6 @@
 | ALREADY_BOOKMARKED | 409 | 既にブックマーク済み |
 | ALREADY_FOLLOWED | 409 | 既にフォロー済み |
 | SELF_FOLLOW_NOT_ALLOWED | 400 | 自分のエピソードはフォロー不可 |
-| SFX_IN_USE | 409 | 効果音が使用中のため削除不可 |
 | CHARACTER_IN_USE | 409 | キャラクターが使用中のため削除不可 |
 | INTERNAL_ERROR | 500 | サーバー内部エラー |
 | GENERATION_FAILED | 500 | 音声/台本の生成に失敗 |
