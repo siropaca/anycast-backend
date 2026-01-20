@@ -744,16 +744,7 @@ func (s *episodeService) GenerateAudio(ctx context.Context, userID, channelID, e
 	speakerIndex := 1
 
 	for _, line := range scriptLines {
-		if line.LineType != model.LineTypeSpeech {
-			continue
-		}
-
-		if line.Text == nil || *line.Text == "" {
-			continue
-		}
-
-		if line.Speaker == nil {
-			log.Warn("speech line has no speaker", "line_id", line.ID)
+		if line.Text == "" {
 			continue
 		}
 
@@ -769,7 +760,7 @@ func (s *episodeService) GenerateAudio(ctx context.Context, userID, channelID, e
 		// Turn を追加
 		turns = append(turns, tts.SpeakerTurn{
 			Speaker: alias,
-			Text:    *line.Text,
+			Text:    line.Text,
 			Emotion: line.Emotion,
 		})
 	}

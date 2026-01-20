@@ -6,7 +6,6 @@
 -- ===========================================
 
 CREATE TYPE oauth_provider AS ENUM ('google');
-CREATE TYPE line_type AS ENUM ('speech', 'silence', 'sfx');
 CREATE TYPE gender AS ENUM ('male', 'female', 'neutral');
 CREATE TYPE user_role AS ENUM ('user', 'admin');
 
@@ -56,16 +55,6 @@ CREATE TABLE voices (
 
 CREATE INDEX idx_voices_provider ON voices (provider);
 CREATE INDEX idx_voices_is_active ON voices (is_active);
-
--- 効果音
-CREATE TABLE sound_effects (
-	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-	name VARCHAR(100) NOT NULL UNIQUE,
-	description TEXT NOT NULL,
-	audio_id UUID NOT NULL REFERENCES audios (id) ON DELETE RESTRICT,
-	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
 
 -- カテゴリ
 CREATE TABLE categories (
@@ -196,13 +185,9 @@ CREATE TABLE script_lines (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 	episode_id UUID NOT NULL REFERENCES episodes (id) ON DELETE CASCADE,
 	line_order INTEGER NOT NULL,
-	line_type line_type NOT NULL,
-	speaker_id UUID REFERENCES characters (id) ON DELETE CASCADE,
-	text TEXT,
+	speaker_id UUID NOT NULL REFERENCES characters (id) ON DELETE CASCADE,
+	text TEXT NOT NULL,
 	emotion TEXT,
-	duration_ms INTEGER,
-	sfx_id UUID REFERENCES sound_effects (id) ON DELETE CASCADE,
-	volume DECIMAL(3,2) DEFAULT 1.00,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	UNIQUE (episode_id, line_order)

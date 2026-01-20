@@ -76,19 +76,13 @@ func setupAuthenticatedScriptLineRouter(h *ScriptLineHandler, userID string) *gi
 // テスト用の台本行レスポンスを生成する
 func createTestScriptLineResponse() response.ScriptLineResponse {
 	now := time.Now()
-	text := "テストテキスト"
 	emotion := "happy"
-	durationMs := 3000
-	volume := 0.75
 	return response.ScriptLineResponse{
-		ID:         uuid.New(),
-		LineOrder:  1,
-		LineType:   "speech",
-		Text:       &text,
-		Emotion:    &emotion,
-		DurationMs: &durationMs,
-		Volume:     &volume,
-		Speaker: &response.SpeakerResponse{
+		ID:        uuid.New(),
+		LineOrder: 1,
+		Text:      "テストテキスト",
+		Emotion:   &emotion,
+		Speaker: response.SpeakerResponse{
 			ID:      uuid.New(),
 			Name:    "テストスピーカー",
 			Persona: "テスト用のペルソナ",
@@ -130,7 +124,7 @@ func TestScriptLineHandler_ListScriptLines(t *testing.T) {
 		err := json.Unmarshal(w.Body.Bytes(), &resp)
 		assert.NoError(t, err)
 		assert.Len(t, resp.Data, 1)
-		assert.Equal(t, "speech", resp.Data[0].LineType)
+		assert.Equal(t, "テストテキスト", resp.Data[0].Text)
 		mockSvc.AssertExpectations(t)
 	})
 

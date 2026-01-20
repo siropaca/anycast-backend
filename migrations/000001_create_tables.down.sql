@@ -13,7 +13,6 @@ DROP TABLE IF EXISTS oauth_accounts;
 DROP TABLE IF EXISTS credentials;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS categories;
-DROP TABLE IF EXISTS sound_effects;
 DROP TABLE IF EXISTS voices;
 DROP TABLE IF EXISTS audios;
 DROP TABLE IF EXISTS images;
@@ -21,5 +20,4 @@ DROP TABLE IF EXISTS images;
 -- ENUM 型を削除
 DROP TYPE IF EXISTS user_role;
 DROP TYPE IF EXISTS gender;
-DROP TYPE IF EXISTS line_type;
 DROP TYPE IF EXISTS oauth_provider;

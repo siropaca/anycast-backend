@@ -140,14 +140,9 @@ func (s *scriptLineService) Update(ctx context.Context, userID, channelID, episo
 		return nil, apperror.ErrNotFound.WithMessage("Script line not found in this episode")
 	}
 
-	// speech 行のみ更新可能
-	if scriptLine.LineType != model.LineTypeSpeech {
-		return nil, apperror.ErrValidation.WithMessage("Only speech lines can be updated")
-	}
-
 	// フィールドを更新
 	if req.Text != nil {
-		scriptLine.Text = req.Text
+		scriptLine.Text = *req.Text
 	}
 
 	if req.Emotion != nil {
@@ -237,25 +232,10 @@ func (s *scriptLineService) toScriptLineResponses(scriptLines []model.ScriptLine
 
 // ScriptLine モデルをレスポンス DTO に変換する
 func (s *scriptLineService) toScriptLineResponse(sl *model.ScriptLine) response.ScriptLineResponse {
-	resp := response.ScriptLineResponse{
-		ID:         sl.ID,
-		LineOrder:  sl.LineOrder,
-		LineType:   string(sl.LineType),
-		Text:       sl.Text,
-		Emotion:    sl.Emotion,
-		DurationMs: sl.DurationMs,
-		CreatedAt:  sl.CreatedAt,
-		UpdatedAt:  sl.UpdatedAt,
-	}
-
-	// decimal.Decimal から float64 に変換
-	if sl.Volume != nil {
-		v, _ := sl.Volume.Float64()
-		resp.Volume = &v
-	}
-
-	if sl.Speaker != nil {
-		resp.Speaker = &response.SpeakerResponse{
+	return response.ScriptLineResponse{
+		ID:        sl.ID,
+		LineOrder: sl.LineOrder,
+		Speaker: response.SpeakerResponse{
 			ID:      sl.Speaker.ID,
 			Name:    sl.Speaker.Name,
 			Persona: sl.Speaker.Persona,
@@ -265,15 +245,10 @@ func (s *scriptLineService) toScriptLineResponse(sl *model.ScriptLine) response.
 				Provider: sl.Speaker.Voice.Provider,
 				Gender:   string(sl.Speaker.Voice.Gender),
 			},
-		}
+		},
+		Text:      sl.Text,
+		Emotion:   sl.Emotion,
+		CreatedAt: sl.CreatedAt,
+		UpdatedAt: sl.UpdatedAt,
 	}
-
-	if sl.Sfx != nil {
-		resp.Sfx = &response.SfxResponse{
-			ID:   sl.Sfx.ID,
-			Name: sl.Sfx.Name,
-		}
-	}
-
-	return resp
 }
