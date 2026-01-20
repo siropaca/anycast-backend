@@ -321,8 +321,15 @@ func (s *scriptService) toScriptLineResponse(sl *model.ScriptLine) (response.Scr
 
 	if sl.Speaker != nil {
 		resp.Speaker = &response.SpeakerResponse{
-			ID:   sl.Speaker.ID,
-			Name: sl.Speaker.Name,
+			ID:      sl.Speaker.ID,
+			Name:    sl.Speaker.Name,
+			Persona: sl.Speaker.Persona,
+			Voice: response.CharacterVoiceResponse{
+				ID:       sl.Speaker.Voice.ID,
+				Name:     sl.Speaker.Voice.Name,
+				Provider: sl.Speaker.Voice.Provider,
+				Gender:   string(sl.Speaker.Voice.Gender),
+			},
 		}
 	}
 
