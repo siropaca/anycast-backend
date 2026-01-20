@@ -770,6 +770,7 @@ func (s *episodeService) GenerateAudio(ctx context.Context, userID, channelID, e
 		turns = append(turns, tts.SpeakerTurn{
 			Speaker: alias,
 			Text:    *line.Text,
+			Emotion: line.Emotion,
 		})
 	}
 

@@ -38,7 +38,15 @@ func (h *devHandler) Enabled(_ context.Context, level slog.Level) bool {
 func (h *devHandler) Handle(_ context.Context, r slog.Record) error {
 	color := levelColor(r.Level)
 	reset := "\033[0m"
-	fmt.Printf("%s[%s]%s %s\n", color, r.Level.String(), reset, r.Message)
+
+	// 属性を文字列に変換
+	var attrs string
+	r.Attrs(func(a slog.Attr) bool {
+		attrs += fmt.Sprintf(" %s=%v", a.Key, a.Value.Any())
+		return true
+	})
+
+	fmt.Printf("%s[%s]%s %s%s\n", color, r.Level.String(), reset, r.Message, attrs)
 	return nil
 }
 
