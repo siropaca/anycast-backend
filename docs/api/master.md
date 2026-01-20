@@ -66,36 +66,3 @@ GET /categories
 }
 ```
 
----
-
-# Sound Effects（効果音）
-
-システム管理のマスタデータ。参照のみ可能。
-
-## 効果音一覧取得
-
-```
-GET /sound-effects
-```
-
-**レスポンス:**
-```json
-{
-  "data": [
-    {
-      "id": "uuid",
-      "name": "chime",
-      "description": "チャイム音",
-      "audio": { "id": "uuid", "url": "...", "durationMs": 1500 }
-    }
-  ]
-}
-```
-
----
-
-## 効果音取得
-
-```
-GET /sound-effects/:sfxId
-```

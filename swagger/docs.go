@@ -1406,7 +1406,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "指定した台本行を更新します。speech 行のみ対応しています。",
+                "description": "指定した台本行を更新します。",
                 "consumes": [
                     "application/json"
                 ],
@@ -3618,15 +3618,13 @@ const docTemplate = `{
                 "createdAt",
                 "id",
                 "lineOrder",
-                "lineType",
+                "speaker",
+                "text",
                 "updatedAt"
             ],
             "properties": {
                 "createdAt": {
                     "type": "string"
-                },
-                "durationMs": {
-                    "type": "integer"
                 },
                 "emotion": {
                     "type": "string"
@@ -3637,12 +3635,6 @@ const docTemplate = `{
                 "lineOrder": {
                     "type": "integer"
                 },
-                "lineType": {
-                    "type": "string"
-                },
-                "sfx": {
-                    "$ref": "#/definitions/response.SfxResponse"
-                },
                 "speaker": {
                     "$ref": "#/definitions/response.SpeakerResponse"
                 },
@@ -3650,24 +3642,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updatedAt": {
-                    "type": "string"
-                },
-                "volume": {
-                    "type": "number"
-                }
-            }
-        },
-        "response.SfxResponse": {
-            "type": "object",
-            "required": [
-                "id",
-                "name"
-            ],
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "name": {
                     "type": "string"
                 }
             }
