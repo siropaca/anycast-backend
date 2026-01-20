@@ -751,6 +751,14 @@ const docTemplate = `{
                         "name": "episodeId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "音声生成リクエスト",
+                        "name": "request",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/request.GenerateAudioRequest"
+                        }
                     }
                 ],
                 "responses": {
@@ -2686,6 +2694,15 @@ const docTemplate = `{
                 }
             }
         },
+        "request.GenerateAudioRequest": {
+            "type": "object",
+            "properties": {
+                "voiceStyle": {
+                    "type": "string",
+                    "maxLength": 500
+                }
+            }
+        },
         "request.GenerateScriptRequest": {
             "type": "object",
             "required": [
@@ -3331,7 +3348,8 @@ const docTemplate = `{
                 "id",
                 "title",
                 "updatedAt",
-                "userPrompt"
+                "userPrompt",
+                "voiceStyle"
             ],
             "properties": {
                 "artwork": {
@@ -3378,6 +3396,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "userPrompt": {
+                    "type": "string"
+                },
+                "voiceStyle": {
                     "type": "string"
                 }
             }
