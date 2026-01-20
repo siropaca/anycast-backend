@@ -12,6 +12,7 @@ type EpisodeResponse struct {
 	Title       string           `json:"title" validate:"required"`
 	Description string           `json:"description" validate:"required"`
 	UserPrompt  string           `json:"userPrompt" validate:"required"`
+	VoiceStyle  string           `json:"voiceStyle" validate:"required"`
 	Artwork     *ArtworkResponse `json:"artwork" extensions:"x-nullable"`
 	FullAudio   *AudioResponse   `json:"fullAudio" extensions:"x-nullable"`
 	Bgm         *AudioResponse   `json:"bgm" extensions:"x-nullable"`

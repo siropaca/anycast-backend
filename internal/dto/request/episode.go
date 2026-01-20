@@ -29,3 +29,8 @@ type SetEpisodeBgmRequest struct {
 type PublishEpisodeRequest struct {
 	PublishedAt *string `json:"publishedAt"` // RFC3339 形式。省略時は現在時刻
 }
+
+// エピソード音声生成リクエスト
+type GenerateAudioRequest struct {
+	VoiceStyle *string `json:"voiceStyle" binding:"omitempty,max=500"`
+}

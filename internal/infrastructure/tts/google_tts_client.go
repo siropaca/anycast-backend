@@ -39,7 +39,7 @@ type SpeakerVoiceConfig struct {
 // TTS クライアントのインターフェース
 type Client interface {
 	Synthesize(ctx context.Context, text string, emotion *string, voiceID string, gender model.Gender) ([]byte, error)
-	SynthesizeMultiSpeaker(ctx context.Context, turns []SpeakerTurn, voiceConfigs []SpeakerVoiceConfig) ([]byte, error)
+	SynthesizeMultiSpeaker(ctx context.Context, turns []SpeakerTurn, voiceConfigs []SpeakerVoiceConfig, voiceStyle *string) ([]byte, error)
 }
 
 type googleTTSClient struct {
@@ -136,7 +136,7 @@ func (c *googleTTSClient) Synthesize(ctx context.Context, text string, emotion *
 
 // 複数話者のテキストから音声を合成する
 // Gemini-TTS の multi-speaker 機能を使用
-func (c *googleTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []SpeakerTurn, voiceConfigs []SpeakerVoiceConfig) ([]byte, error) {
+func (c *googleTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []SpeakerTurn, voiceConfigs []SpeakerVoiceConfig, voiceStyle *string) ([]byte, error) {
 	log := logger.FromContext(ctx)
 
 	if len(turns) == 0 {
@@ -170,6 +170,13 @@ func (c *googleTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 				Turns: markupTurns,
 			},
 		},
+	}
+
+	// voiceStyle が指定されている場合は Prompt に設定
+	// AI Studio では Style Instructions と呼ばれる
+	if voiceStyle != nil && *voiceStyle != "" {
+		input.Prompt = voiceStyle
+		log.Debug("using voice style", "voiceStyle", *voiceStyle)
 	}
 
 	// SpeakerVoiceConfigs を構築

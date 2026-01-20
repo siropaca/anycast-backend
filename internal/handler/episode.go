@@ -459,6 +459,7 @@ func (h *EpisodeHandler) RemoveEpisodeBgm(c *gin.Context) {
 // @Produce json
 // @Param channelId path string true "チャンネル ID"
 // @Param episodeId path string true "エピソード ID"
+// @Param request body request.GenerateAudioRequest false "音声生成リクエスト"
 // @Success 200 {object} response.GenerateAudioResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
@@ -486,7 +487,14 @@ func (h *EpisodeHandler) GenerateAudio(c *gin.Context) {
 		return
 	}
 
-	result, err := h.episodeService.GenerateAudio(c.Request.Context(), userID, channelID, episodeID)
+	var req request.GenerateAudioRequest
+	// ボディが空でもエラーにならないよう ShouldBindJSON を使用
+	if err := c.ShouldBindJSON(&req); err != nil && err.Error() != "EOF" {
+		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		return
+	}
+
+	result, err := h.episodeService.GenerateAudio(c.Request.Context(), userID, channelID, episodeID, req.VoiceStyle)
 	if err != nil {
 		Error(c, err)
 		return

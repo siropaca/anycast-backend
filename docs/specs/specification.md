@@ -293,6 +293,7 @@ OAuth プロバイダとの連携情報。
 | title | String | ◯ | エピソードタイトル |
 | description | String | | エピソードの説明（公開情報） |
 | userPrompt | String | | エピソード固有の台本生成設定（台本生成時に自動保存、内部管理用） |
+| voiceStyle | String | | 音声生成のスタイル指示（音声生成時に自動保存、例: "Read aloud in a warm, welcoming tone"） |
 | script | ScriptLine[] | | 台本（順序付きの ScriptLine 配列） |
 | bgm | Audio | | BGM 音声ファイル |
 | fullAudio | Audio | | 結合済み音声（全 ScriptLine + BGM） |

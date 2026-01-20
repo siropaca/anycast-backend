@@ -28,7 +28,7 @@ type EpisodeService interface {
 	UnpublishEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error)
 	SetEpisodeBgm(ctx context.Context, userID, channelID, episodeID, bgmAudioID string) (*response.EpisodeDataResponse, error)
 	RemoveEpisodeBgm(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error)
-	GenerateAudio(ctx context.Context, userID, channelID, episodeID string) (*response.GenerateAudioResponse, error)
+	GenerateAudio(ctx context.Context, userID, channelID, episodeID string, voiceStyle *string) (*response.GenerateAudioResponse, error)
 }
 
 type episodeService struct {
@@ -199,6 +199,7 @@ func (s *episodeService) CreateEpisode(ctx context.Context, userID, channelID, t
 		Title:       episode.Title,
 		Description: episode.Description,
 		UserPrompt:  episode.UserPrompt,
+		VoiceStyle:  episode.VoiceStyle,
 		PublishedAt: episode.PublishedAt,
 		CreatedAt:   episode.CreatedAt,
 		UpdatedAt:   episode.UpdatedAt,
@@ -505,6 +506,7 @@ func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode
 		Title:       e.Title,
 		Description: e.Description,
 		UserPrompt:  e.UserPrompt,
+		VoiceStyle:  e.VoiceStyle,
 		PublishedAt: e.PublishedAt,
 		CreatedAt:   e.CreatedAt,
 		UpdatedAt:   e.UpdatedAt,
@@ -687,7 +689,7 @@ func (s *episodeService) RemoveEpisodeBgm(ctx context.Context, userID, channelID
 }
 
 // エピソードの音声を生成する
-func (s *episodeService) GenerateAudio(ctx context.Context, userID, channelID, episodeID string) (*response.GenerateAudioResponse, error) {
+func (s *episodeService) GenerateAudio(ctx context.Context, userID, channelID, episodeID string, voiceStyle *string) (*response.GenerateAudioResponse, error) {
 	log := logger.FromContext(ctx)
 
 	uid, err := uuid.Parse(userID)
@@ -779,7 +781,7 @@ func (s *episodeService) GenerateAudio(ctx context.Context, userID, channelID, e
 	}
 
 	// Multi-speaker TTS で音声を生成
-	combinedAudio, err := s.ttsClient.SynthesizeMultiSpeaker(ctx, turns, voiceConfigs)
+	combinedAudio, err := s.ttsClient.SynthesizeMultiSpeaker(ctx, turns, voiceConfigs, voiceStyle)
 	if err != nil {
 		log.Error("failed to synthesize multi-speaker audio", "error", err)
 		return nil, apperror.ErrGenerationFailed.WithMessage("Failed to generate audio").WithError(err)
@@ -810,9 +812,12 @@ func (s *episodeService) GenerateAudio(ctx context.Context, userID, channelID, e
 		return nil, apperror.ErrInternal.WithMessage("Failed to save audio record").WithError(err)
 	}
 
-	// エピソードの FullAudioID を更新
+	// エピソードの FullAudioID と voiceStyle を更新
 	episode.FullAudioID = &audioID
 	episode.FullAudio = nil
+	if voiceStyle != nil {
+		episode.VoiceStyle = *voiceStyle
+	}
 
 	if err := s.episodeRepo.Update(ctx, episode); err != nil {
 		return nil, err
