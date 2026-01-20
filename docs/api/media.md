@@ -8,12 +8,31 @@
 POST /channels/:channelId/episodes/:episodeId/audio/generate
 ```
 
+**リクエスト:**
+```json
+{
+  "voiceStyle": "Read aloud in a warm, welcoming tone"
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| voiceStyle | string | | 音声生成のスタイル指示（500文字以内） |
+
 **処理内容:**
 
-1. エピソードの全台本行を取得（speech 行のみ対象）
+1. エピソードの全台本行を取得
 2. 各キャラクターの Voice 設定を収集
-3. Gemini TTS multi-speaker API で 1 つの音声ファイルを生成
-4. エピソードの `fullAudio` として保存
+3. リクエストの `voiceStyle` をスタイル指示として適用
+4. Gemini TTS multi-speaker API で 1 つの音声ファイルを生成
+5. エピソードの `fullAudio` として保存
+6. `voiceStyle` をエピソードに保存
+
+**voiceStyle について:**
+
+リクエストで `voiceStyle` が指定された場合、音声生成時のスタイル指示として使用され、エピソードに保存されます。
+
+例: `"Read aloud in a warm, welcoming tone"`
 
 **レスポンス:**
 ```json
