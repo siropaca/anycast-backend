@@ -8,8 +8,10 @@ import (
 
 // 話者情報のレスポンス
 type SpeakerResponse struct {
-	ID   uuid.UUID `json:"id" validate:"required"`
-	Name string    `json:"name" validate:"required"`
+	ID      uuid.UUID              `json:"id" validate:"required"`
+	Name    string                 `json:"name" validate:"required"`
+	Persona string                 `json:"persona" validate:"required"`
+	Voice   CharacterVoiceResponse `json:"voice" validate:"required"`
 }
 
 // 効果音情報のレスポンス

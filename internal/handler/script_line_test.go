@@ -89,8 +89,15 @@ func createTestScriptLineResponse() response.ScriptLineResponse {
 		DurationMs: &durationMs,
 		Volume:     &volume,
 		Speaker: &response.SpeakerResponse{
-			ID:   uuid.New(),
-			Name: "テストスピーカー",
+			ID:      uuid.New(),
+			Name:    "テストスピーカー",
+			Persona: "テスト用のペルソナ",
+			Voice: response.CharacterVoiceResponse{
+				ID:       uuid.New(),
+				Name:     "テストボイス",
+				Provider: "google",
+				Gender:   "female",
+			},
 		},
 		CreatedAt: now,
 		UpdatedAt: now,

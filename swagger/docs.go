@@ -3676,7 +3676,9 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "id",
-                "name"
+                "name",
+                "persona",
+                "voice"
             ],
             "properties": {
                 "id": {
@@ -3684,6 +3686,12 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "persona": {
+                    "type": "string"
+                },
+                "voice": {
+                    "$ref": "#/definitions/response.CharacterVoiceResponse"
                 }
             }
         },

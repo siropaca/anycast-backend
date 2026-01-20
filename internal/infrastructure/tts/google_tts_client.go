@@ -63,20 +63,23 @@ func NewGoogleTTSClient(ctx context.Context, credentialsJSON string) (Client, er
 }
 
 // テキストから音声を合成する
-// Gemini-TTS を使用し、emotion を Prompt フィールドでスタイル指示として渡す
+// Gemini-TTS を使用し、emotion がある場合は [emotion] をテキストの先頭に付加する
 func (c *googleTTSClient) Synthesize(ctx context.Context, text string, emotion *string, voiceID string, gender model.Gender) ([]byte, error) {
 	log := logger.FromContext(ctx)
 
+	// emotion がある場合は [emotion] 形式でテキストの先頭に付加
+	synthesisText := text
+	if emotion != nil && *emotion != "" {
+		synthesisText = fmt.Sprintf("[%s] %s", *emotion, text)
+	}
+
 	input := &texttospeechpb.SynthesisInput{
 		InputSource: &texttospeechpb.SynthesisInput_Text{
-			Text: text,
+			Text: synthesisText,
 		},
 	}
 
-	// emotion がある場合は Prompt フィールドに設定
-	if emotion != nil && *emotion != "" {
-		input.Prompt = emotion
-	}
+	log.Debug("tts input", "text", synthesisText, "voiceID", voiceID)
 
 	req := &texttospeechpb.SynthesizeSpeechRequest{
 		Input: input,

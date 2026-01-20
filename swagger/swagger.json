@@ -3670,7 +3670,9 @@
             "type": "object",
             "required": [
                 "id",
-                "name"
+                "name",
+                "persona",
+                "voice"
             ],
             "properties": {
                 "id": {
@@ -3678,6 +3680,12 @@
                 },
                 "name": {
                     "type": "string"
+                },
+                "persona": {
+                    "type": "string"
+                },
+                "voice": {
+                    "$ref": "#/definitions/response.CharacterVoiceResponse"
                 }
             }
         },
