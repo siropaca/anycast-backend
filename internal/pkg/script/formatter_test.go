@@ -106,11 +106,7 @@ func TestFormat_RoundTrip(t *testing.T) {
 	// 再度フォーマット用に変換
 	formatted := make([]FormatLine, len(parseResult.Lines))
 	for i, line := range parseResult.Lines {
-		formatted[i] = FormatLine{
-			SpeakerName: line.SpeakerName,
-			Text:        line.Text,
-			Emotion:     line.Emotion,
-		}
+		formatted[i] = FormatLine(line)
 	}
 
 	// 再フォーマット
