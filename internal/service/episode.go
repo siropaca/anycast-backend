@@ -28,6 +28,7 @@ type EpisodeService interface {
 	UnpublishEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error)
 	GenerateAudio(ctx context.Context, userID, channelID, episodeID string, voiceStyle *string) (*response.GenerateAudioResponse, error)
 	SetEpisodeBgm(ctx context.Context, userID, channelID, episodeID string, req request.SetEpisodeBgmRequest) (*response.EpisodeDataResponse, error)
+	DeleteEpisodeBgm(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error)
 }
 
 type episodeService struct {
@@ -823,6 +824,70 @@ func (s *episodeService) SetEpisodeBgm(ctx context.Context, userID, channelID, e
 
 		episode.DefaultBgmID = &defaultBgmID
 	}
+
+	// エピソードを更新
+	if err := s.episodeRepo.Update(ctx, episode); err != nil {
+		return nil, err
+	}
+
+	// リレーションをプリロードして取得
+	updated, err := s.episodeRepo.FindByID(ctx, episode.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := s.toEpisodeResponse(ctx, updated)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.EpisodeDataResponse{
+		Data: resp,
+	}, nil
+}
+
+// エピソードの BGM を削除する
+func (s *episodeService) DeleteEpisodeBgm(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("このエピソードの BGM 削除権限がありません")
+	}
+
+	// エピソードの存在確認とチャンネルの一致チェック
+	episode, err := s.episodeRepo.FindByID(ctx, eid)
+	if err != nil {
+		return nil, err
+	}
+
+	if episode.ChannelID != cid {
+		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
+	}
+
+	// BGM 設定をクリア
+	episode.BgmID = nil
+	episode.DefaultBgmID = nil
+	episode.Bgm = nil
+	episode.DefaultBgm = nil
 
 	// エピソードを更新
 	if err := s.episodeRepo.Update(ctx, episode); err != nil {
