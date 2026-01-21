@@ -29,6 +29,7 @@ type Container struct {
 	ScriptHandler     *handler.ScriptHandler
 	CleanupHandler    *handler.CleanupHandler
 	ImageHandler      *handler.ImageHandler
+	AudioHandler      *handler.AudioHandler
 	BgmHandler        *handler.BgmHandler
 	TokenManager      jwt.TokenManager
 	UserRepository    repository.UserRepository
@@ -81,6 +82,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	scriptService := service.NewScriptService(db, userRepo, channelRepo, episodeRepo, scriptLineRepo, llmClient, storageClient)
 	cleanupService := service.NewCleanupService(audioRepo, imageRepo, storageClient)
 	imageService := service.NewImageService(imageRepo, storageClient)
+	audioService := service.NewAudioService(audioRepo, storageClient)
 	bgmService := service.NewBgmService(bgmRepo, defaultBgmRepo, audioRepo, storageClient)
 
 	// Handler 層
@@ -94,6 +96,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	scriptHandler := handler.NewScriptHandler(scriptService)
 	cleanupHandler := handler.NewCleanupHandler(cleanupService, storageClient)
 	imageHandler := handler.NewImageHandler(imageService)
+	audioHandler := handler.NewAudioHandler(audioService)
 	bgmHandler := handler.NewBgmHandler(bgmService)
 
 	return &Container{
@@ -107,6 +110,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		ScriptHandler:     scriptHandler,
 		CleanupHandler:    cleanupHandler,
 		ImageHandler:      imageHandler,
+		AudioHandler:      audioHandler,
 		BgmHandler:        bgmHandler,
 		TokenManager:      tokenManager,
 		UserRepository:    userRepo,

@@ -64,6 +64,61 @@ const docTemplate = `{
                 }
             }
         },
+        "/audios": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "音声ファイルをアップロードします",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "audios"
+                ],
+                "summary": "音声アップロード",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "アップロードする音声ファイル（mp3, wav, ogg, aac, m4a）",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.AudioUploadDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "description": "メールアドレスとパスワードで認証します",
@@ -3138,6 +3193,48 @@ const docTemplate = `{
                 },
                 "fileSize": {
                     "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "mimeType": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.AudioUploadDataResponse": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.AudioUploadResponse"
+                }
+            }
+        },
+        "response.AudioUploadResponse": {
+            "type": "object",
+            "required": [
+                "durationMs",
+                "fileSize",
+                "filename",
+                "id",
+                "mimeType",
+                "url"
+            ],
+            "properties": {
+                "durationMs": {
+                    "type": "integer"
+                },
+                "fileSize": {
+                    "type": "integer"
+                },
+                "filename": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"

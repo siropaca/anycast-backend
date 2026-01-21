@@ -117,6 +117,9 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	// Images
 	authenticated.POST("/images", container.ImageHandler.UploadImage)
 
+	// Audios
+	authenticated.POST("/audios", container.AudioHandler.UploadAudio)
+
 	// Admin（認証必須 + 管理者権限必須）
 	admin := r.Group("/admin")
 	admin.Use(middleware.Auth(container.TokenManager))
