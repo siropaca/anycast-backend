@@ -3515,6 +3515,9 @@ const docTemplate = `{
                 "emotion": {
                     "type": "string"
                 },
+                "speakerId": {
+                    "type": "string"
+                },
                 "text": {
                     "type": "string"
                 }

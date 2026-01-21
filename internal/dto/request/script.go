@@ -14,8 +14,9 @@ type ImportScriptRequest struct {
 
 // 台本行更新リクエスト
 type UpdateScriptLineRequest struct {
-	Text    *string `json:"text"`
-	Emotion *string `json:"emotion"`
+	SpeakerID *string `json:"speakerId" binding:"omitempty,uuid"`
+	Text      *string `json:"text"`
+	Emotion   *string `json:"emotion"`
 }
 
 // 台本行作成リクエスト

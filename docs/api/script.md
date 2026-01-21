@@ -219,10 +219,40 @@ PATCH /channels/:channelId/episodes/:episodeId/script/lines/:lineId
 **リクエスト:**
 ```json
 {
+  "speakerId": "uuid",
   "text": "新しいセリフ",
   "emotion": "笑いながら"
 }
 ```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| speakerId | string | | 話者（キャラクター）の ID。チャンネルに紐づいたキャラクターのみ指定可能 |
+| text | string | | セリフのテキスト |
+| emotion | string | | 感情表現。空文字を指定すると削除 |
+
+**レスポンス:**
+```json
+{
+  "id": "uuid",
+  "lineOrder": 1,
+  "speaker": {
+    "id": "uuid",
+    "name": "太郎",
+    "persona": "明るく元気な性格",
+    "voice": { "id": "uuid", "name": "Voice1", "provider": "google", "gender": "male" }
+  },
+  "text": "新しいセリフ",
+  "emotion": "笑いながら",
+  "createdAt": "2025-01-01T00:00:00Z",
+  "updatedAt": "2025-01-01T00:00:00Z"
+}
+```
+
+**エラー:**
+- `400 Bad Request`: バリデーションエラー（指定されたspeakerIdがチャンネルに紐づいていない等）
+- `403 Forbidden`: チャンネルのオーナーでない場合
+- `404 Not Found`: 台本行が存在しない場合
 
 ---
 

@@ -269,6 +269,28 @@ func (s *scriptLineService) Update(ctx context.Context, userID, channelID, episo
 	}
 
 	// フィールドを更新
+	if req.SpeakerID != nil {
+		speakerID, err := uuid.Parse(*req.SpeakerID)
+		if err != nil {
+			return nil, apperror.ErrValidation.WithMessage("speakerId の形式が無効です")
+		}
+
+		// speakerId がチャンネルに紐づいているキャラクターか確認
+		var validSpeaker bool
+		for _, cc := range channel.ChannelCharacters {
+			if cc.CharacterID == speakerID {
+				validSpeaker = true
+				break
+			}
+		}
+
+		if !validSpeaker {
+			return nil, apperror.ErrValidation.WithMessage("指定された話者はこのチャンネルに紐づいていません")
+		}
+
+		scriptLine.SpeakerID = speakerID
+	}
+
 	if req.Text != nil {
 		scriptLine.Text = *req.Text
 	}
@@ -282,6 +304,12 @@ func (s *scriptLineService) Update(ctx context.Context, userID, channelID, episo
 	}
 
 	if err := s.scriptLineRepo.Update(ctx, scriptLine); err != nil {
+		return nil, err
+	}
+
+	// 更新した行を再取得（Speaker 情報を含める）
+	scriptLine, err = s.scriptLineRepo.FindByID(ctx, lid)
+	if err != nil {
 		return nil, err
 	}
 
