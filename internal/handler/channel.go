@@ -89,7 +89,7 @@ func (h *ChannelHandler) GetMyChannel(c *gin.Context) {
 
 	channelID := c.Param("channelId")
 	if channelID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
 		return
 	}
 
@@ -161,7 +161,7 @@ func (h *ChannelHandler) GetChannel(c *gin.Context) {
 
 	channelID := c.Param("channelId")
 	if channelID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
 		return
 	}
 
@@ -199,7 +199,7 @@ func (h *ChannelHandler) UpdateChannel(c *gin.Context) {
 
 	channelID := c.Param("channelId")
 	if channelID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
 		return
 	}
 
@@ -239,7 +239,7 @@ func (h *ChannelHandler) DeleteChannel(c *gin.Context) {
 
 	channelID := c.Param("channelId")
 	if channelID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
 		return
 	}
 
@@ -276,7 +276,7 @@ func (h *ChannelHandler) PublishChannel(c *gin.Context) {
 
 	channelID := c.Param("channelId")
 	if channelID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
 		return
 	}
 
@@ -319,7 +319,7 @@ func (h *ChannelHandler) UnpublishChannel(c *gin.Context) {
 
 	channelID := c.Param("channelId")
 	if channelID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
 		return
 	}
 

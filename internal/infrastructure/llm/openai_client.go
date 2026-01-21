@@ -73,7 +73,7 @@ func (c *openAIClient) GenerateScript(ctx context.Context, systemPrompt, userPro
 			}
 
 			log.Error("openai api failed after retries", "error", err)
-			return "", apperror.ErrGenerationFailed.WithMessage("Failed to generate script").WithError(err)
+			return "", apperror.ErrGenerationFailed.WithMessage("台本の生成に失敗しました").WithError(err)
 		}
 
 		if len(resp.Choices) == 0 {
@@ -86,7 +86,7 @@ func (c *openAIClient) GenerateScript(ctx context.Context, systemPrompt, userPro
 			}
 
 			log.Error("openai returned no choices after retries")
-			return "", apperror.ErrGenerationFailed.WithMessage("Failed to generate script: no response")
+			return "", apperror.ErrGenerationFailed.WithMessage("台本の生成に失敗しました: レスポンスがありません")
 		}
 
 		content := resp.Choices[0].Message.Content
@@ -95,5 +95,5 @@ func (c *openAIClient) GenerateScript(ctx context.Context, systemPrompt, userPro
 		return content, nil
 	}
 
-	return "", apperror.ErrGenerationFailed.WithMessage("Failed to generate script").WithError(lastErr)
+	return "", apperror.ErrGenerationFailed.WithMessage("台本の生成に失敗しました").WithError(lastErr)
 }

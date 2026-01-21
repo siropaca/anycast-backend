@@ -36,14 +36,14 @@ func (h *ImageHandler) UploadImage(c *gin.Context) {
 	// ファイルの取得
 	fileHeader, err := c.FormFile("file")
 	if err != nil {
-		Error(c, apperror.ErrValidation.WithMessage("file is required"))
+		Error(c, apperror.ErrValidation.WithMessage("ファイルは必須です"))
 		return
 	}
 
 	// ファイルを開く
 	file, err := fileHeader.Open()
 	if err != nil {
-		Error(c, apperror.ErrInternal.WithMessage("Failed to open file").WithError(err))
+		Error(c, apperror.ErrInternal.WithMessage("ファイルを開けませんでした").WithError(err))
 		return
 	}
 	defer file.Close()

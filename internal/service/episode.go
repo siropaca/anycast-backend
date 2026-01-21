@@ -86,7 +86,7 @@ func (s *episodeService) GetMyChannelEpisode(ctx context.Context, userID, channe
 	}
 
 	if channel.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
+		return nil, apperror.ErrForbidden.WithMessage("このチャンネルへのアクセス権限がありません")
 	}
 
 	// エピソードの存在確認とチャンネルの一致チェック
@@ -96,7 +96,7 @@ func (s *episodeService) GetMyChannelEpisode(ctx context.Context, userID, channe
 	}
 
 	if episode.ChannelID != cid {
-		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
 	}
 
 	resp, err := s.toEpisodeResponse(ctx, episode)
@@ -128,7 +128,7 @@ func (s *episodeService) ListMyChannelEpisodes(ctx context.Context, userID, chan
 	}
 
 	if channel.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
+		return nil, apperror.ErrForbidden.WithMessage("このチャンネルへのアクセス権限がありません")
 	}
 
 	// エピソード一覧を取得
@@ -167,7 +167,7 @@ func (s *episodeService) CreateEpisode(ctx context.Context, userID, channelID, t
 	}
 
 	if channel.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
+		return nil, apperror.ErrForbidden.WithMessage("このチャンネルへのアクセス権限がありません")
 	}
 
 	// エピソードを作成
@@ -230,7 +230,7 @@ func (s *episodeService) UpdateEpisode(ctx context.Context, userID, channelID, e
 	}
 
 	if channel.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to update this episode")
+		return nil, apperror.ErrForbidden.WithMessage("このエピソードの更新権限がありません")
 	}
 
 	// エピソードの存在確認とチャンネルの一致チェック
@@ -240,7 +240,7 @@ func (s *episodeService) UpdateEpisode(ctx context.Context, userID, channelID, e
 	}
 
 	if episode.ChannelID != cid {
-		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
 	}
 
 	// 各フィールドを更新
@@ -311,7 +311,7 @@ func (s *episodeService) DeleteEpisode(ctx context.Context, userID, channelID, e
 	}
 
 	if channel.UserID != uid {
-		return apperror.ErrForbidden.WithMessage("You do not have permission to delete this episode")
+		return apperror.ErrForbidden.WithMessage("このエピソードの削除権限がありません")
 	}
 
 	// エピソードの存在確認とチャンネルの一致チェック
@@ -321,7 +321,7 @@ func (s *episodeService) DeleteEpisode(ctx context.Context, userID, channelID, e
 	}
 
 	if episode.ChannelID != cid {
-		return apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+		return apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
 	}
 
 	// 削除前に GCS ファイルのパスを収集
@@ -375,7 +375,7 @@ func (s *episodeService) PublishEpisode(ctx context.Context, userID, channelID, 
 	}
 
 	if channel.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to publish this episode")
+		return nil, apperror.ErrForbidden.WithMessage("このエピソードの公開権限がありません")
 	}
 
 	// エピソードの存在確認とチャンネルの一致チェック
@@ -385,7 +385,7 @@ func (s *episodeService) PublishEpisode(ctx context.Context, userID, channelID, 
 	}
 
 	if episode.ChannelID != cid {
-		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
 	}
 
 	// 公開日時を設定
@@ -397,7 +397,7 @@ func (s *episodeService) PublishEpisode(ctx context.Context, userID, channelID, 
 		// 指定された日時でパース
 		parsedTime, err := time.Parse(time.RFC3339, *publishedAt)
 		if err != nil {
-			return nil, apperror.ErrValidation.WithMessage("Invalid publishedAt format. Use RFC3339 format.")
+			return nil, apperror.ErrValidation.WithMessage("公開日時の形式が無効です。RFC3339 形式で指定してください")
 		}
 		episode.PublishedAt = &parsedTime
 	}
@@ -447,7 +447,7 @@ func (s *episodeService) UnpublishEpisode(ctx context.Context, userID, channelID
 	}
 
 	if channel.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to unpublish this episode")
+		return nil, apperror.ErrForbidden.WithMessage("このエピソードの非公開権限がありません")
 	}
 
 	// エピソードの存在確認とチャンネルの一致チェック
@@ -457,7 +457,7 @@ func (s *episodeService) UnpublishEpisode(ctx context.Context, userID, channelID
 	}
 
 	if episode.ChannelID != cid {
-		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
 	}
 
 	// 公開日時を null に設定（非公開化）
@@ -583,7 +583,7 @@ func (s *episodeService) SetEpisodeBgm(ctx context.Context, userID, channelID, e
 	}
 
 	if channel.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to update this episode")
+		return nil, apperror.ErrForbidden.WithMessage("このエピソードの更新権限がありません")
 	}
 
 	// エピソードの存在確認とチャンネルの一致チェック
@@ -593,7 +593,7 @@ func (s *episodeService) SetEpisodeBgm(ctx context.Context, userID, channelID, e
 	}
 
 	if episode.ChannelID != cid {
-		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
 	}
 
 	// BGM 音声の存在確認
@@ -650,7 +650,7 @@ func (s *episodeService) RemoveEpisodeBgm(ctx context.Context, userID, channelID
 	}
 
 	if channel.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to update this episode")
+		return nil, apperror.ErrForbidden.WithMessage("このエピソードの更新権限がありません")
 	}
 
 	// エピソードの存在確認とチャンネルの一致チェック
@@ -660,7 +660,7 @@ func (s *episodeService) RemoveEpisodeBgm(ctx context.Context, userID, channelID
 	}
 
 	if episode.ChannelID != cid {
-		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
 	}
 
 	// BGM を削除
@@ -714,7 +714,7 @@ func (s *episodeService) GenerateAudio(ctx context.Context, userID, channelID, e
 	}
 
 	if channel.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to generate audio for this episode")
+		return nil, apperror.ErrForbidden.WithMessage("このエピソードの音声生成権限がありません")
 	}
 
 	// エピソードの存在確認とチャンネルの一致チェック
@@ -724,7 +724,7 @@ func (s *episodeService) GenerateAudio(ctx context.Context, userID, channelID, e
 	}
 
 	if episode.ChannelID != cid {
-		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
 	}
 
 	// 台本行を取得（Voice 情報を含む）
@@ -734,7 +734,7 @@ func (s *episodeService) GenerateAudio(ctx context.Context, userID, channelID, e
 	}
 
 	if len(scriptLines) == 0 {
-		return nil, apperror.ErrValidation.WithMessage("No script lines found for this episode")
+		return nil, apperror.ErrValidation.WithMessage("このエピソードには台本行がありません")
 	}
 
 	// speech 行から turns と voiceConfigs を構築
@@ -768,7 +768,7 @@ func (s *episodeService) GenerateAudio(ctx context.Context, userID, channelID, e
 	}
 
 	if len(turns) == 0 {
-		return nil, apperror.ErrValidation.WithMessage("No speech lines found for audio generation")
+		return nil, apperror.ErrValidation.WithMessage("音声生成に使用できる台本行がありません")
 	}
 
 	// voiceConfigs を構築
@@ -784,7 +784,7 @@ func (s *episodeService) GenerateAudio(ctx context.Context, userID, channelID, e
 	combinedAudio, err := s.ttsClient.SynthesizeMultiSpeaker(ctx, turns, voiceConfigs, voiceStyle)
 	if err != nil {
 		log.Error("failed to synthesize multi-speaker audio", "error", err)
-		return nil, apperror.ErrGenerationFailed.WithMessage("Failed to generate audio").WithError(err)
+		return nil, apperror.ErrGenerationFailed.WithMessage("音声の生成に失敗しました").WithError(err)
 	}
 
 	// 新しい Audio ID を生成してパスを作成
@@ -794,7 +794,7 @@ func (s *episodeService) GenerateAudio(ctx context.Context, userID, channelID, e
 	// GCS にアップロード
 	if _, err := s.storageClient.Upload(ctx, combinedAudio, audioPath, "audio/mpeg"); err != nil {
 		log.Error("failed to upload audio", "error", err)
-		return nil, apperror.ErrInternal.WithMessage("Failed to upload audio").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("音声のアップロードに失敗しました").WithError(err)
 	}
 
 	// Audio レコードを作成
@@ -809,7 +809,7 @@ func (s *episodeService) GenerateAudio(ctx context.Context, userID, channelID, e
 
 	if err := s.audioRepo.Create(ctx, audioRecord); err != nil {
 		log.Error("failed to create audio record", "error", err)
-		return nil, apperror.ErrInternal.WithMessage("Failed to save audio record").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("音声レコードの保存に失敗しました").WithError(err)
 	}
 
 	// エピソードの FullAudioID と voiceStyle を更新
@@ -827,7 +827,7 @@ func (s *episodeService) GenerateAudio(ctx context.Context, userID, channelID, e
 	signedURL, err := s.storageClient.GenerateSignedURL(ctx, audioPath, storage.SignedURLExpirationAudio)
 	if err != nil {
 		log.Error("failed to generate signed URL for audio", "error", err)
-		return nil, apperror.ErrInternal.WithMessage("Failed to generate audio URL").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("音声 URL の生成に失敗しました").WithError(err)
 	}
 
 	return &response.GenerateAudioResponse{

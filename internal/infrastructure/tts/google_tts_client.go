@@ -111,7 +111,7 @@ func (c *googleTTSClient) Synthesize(ctx context.Context, text string, emotion *
 			}
 
 			log.Error("tts api failed after retries", "error", err, "voiceID", voiceID)
-			return nil, apperror.ErrGenerationFailed.WithMessage("Failed to synthesize speech").WithError(err)
+			return nil, apperror.ErrGenerationFailed.WithMessage("音声合成に失敗しました").WithError(err)
 		}
 
 		if len(resp.AudioContent) == 0 {
@@ -124,7 +124,7 @@ func (c *googleTTSClient) Synthesize(ctx context.Context, text string, emotion *
 			}
 
 			log.Error("tts returned empty audio after retries")
-			return nil, apperror.ErrGenerationFailed.WithMessage("Failed to synthesize speech: empty audio")
+			return nil, apperror.ErrGenerationFailed.WithMessage("音声合成に失敗しました: 音声データが空です")
 		}
 
 		log.Debug("speech synthesized successfully", "audio_size", len(resp.AudioContent))
@@ -140,11 +140,11 @@ func (c *googleTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 	log := logger.FromContext(ctx)
 
 	if len(turns) == 0 {
-		return nil, apperror.ErrValidation.WithMessage("No turns provided for multi-speaker synthesis")
+		return nil, apperror.ErrValidation.WithMessage("複数話者合成用のターンが指定されていません")
 	}
 
 	if len(voiceConfigs) == 0 {
-		return nil, apperror.ErrValidation.WithMessage("No voice configs provided for multi-speaker synthesis")
+		return nil, apperror.ErrValidation.WithMessage("複数話者合成用のボイス設定が指定されていません")
 	}
 
 	// MultiSpeakerMarkup を構築
@@ -217,7 +217,7 @@ func (c *googleTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 			}
 
 			log.Error("multi-speaker tts api failed after retries", "error", err)
-			return nil, apperror.ErrGenerationFailed.WithMessage("Failed to synthesize multi-speaker speech").WithError(err)
+			return nil, apperror.ErrGenerationFailed.WithMessage("複数話者の音声合成に失敗しました").WithError(err)
 		}
 
 		if len(resp.AudioContent) == 0 {
@@ -230,7 +230,7 @@ func (c *googleTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 			}
 
 			log.Error("multi-speaker tts returned empty audio after retries")
-			return nil, apperror.ErrGenerationFailed.WithMessage("Failed to synthesize multi-speaker speech: empty audio")
+			return nil, apperror.ErrGenerationFailed.WithMessage("複数話者の音声合成に失敗しました: 音声データが空です")
 		}
 
 		log.Debug("multi-speaker speech synthesized successfully", "audio_size", len(resp.AudioContent))

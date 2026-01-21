@@ -86,7 +86,7 @@ func (s *channelService) GetChannel(ctx context.Context, userID, channelID strin
 
 	// オーナーでなく、かつ公開されていない場合は 404
 	if !isOwner && !isPublished {
-		return nil, apperror.ErrNotFound.WithMessage("Channel not found")
+		return nil, apperror.ErrNotFound.WithMessage("チャンネルが見つかりません")
 	}
 
 	resp, err := s.toChannelResponse(ctx, channel, isOwner)
@@ -118,7 +118,7 @@ func (s *channelService) GetMyChannel(ctx context.Context, userID, channelID str
 
 	// オーナーでない場合は 403
 	if channel.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
+		return nil, apperror.ErrForbidden.WithMessage("このチャンネルへのアクセス権限がありません")
 	}
 
 	resp, err := s.toChannelResponse(ctx, channel, true)
@@ -186,7 +186,7 @@ func (s *channelService) CreateChannel(ctx context.Context, userID string, req r
 
 	// キャラクター数のバリデーション（1〜2件）
 	if req.Characters.Total() < 1 || req.Characters.Total() > 2 {
-		return nil, apperror.ErrValidation.WithMessage("Characters must have 1 to 2 items")
+		return nil, apperror.ErrValidation.WithMessage("キャラクターは 1〜2 人で設定してください")
 	}
 
 	var created *model.Channel
@@ -265,7 +265,7 @@ func (s *channelService) UpdateChannel(ctx context.Context, userID, channelID st
 	}
 
 	if channel.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to update this channel")
+		return nil, apperror.ErrForbidden.WithMessage("このチャンネルの更新権限がありません")
 	}
 
 	// 各フィールドを更新
@@ -341,7 +341,7 @@ func (s *channelService) DeleteChannel(ctx context.Context, userID, channelID st
 	}
 
 	if channel.UserID != uid {
-		return apperror.ErrForbidden.WithMessage("You do not have permission to delete this channel")
+		return apperror.ErrForbidden.WithMessage("このチャンネルの削除権限がありません")
 	}
 
 	// 削除前に GCS ファイルのパスを収集
@@ -404,7 +404,7 @@ func (s *channelService) PublishChannel(ctx context.Context, userID, channelID s
 	}
 
 	if channel.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to publish this channel")
+		return nil, apperror.ErrForbidden.WithMessage("このチャンネルの公開権限がありません")
 	}
 
 	// 公開日時を設定
@@ -416,7 +416,7 @@ func (s *channelService) PublishChannel(ctx context.Context, userID, channelID s
 		// 指定された日時でパース
 		parsedTime, err := time.Parse(time.RFC3339, *publishedAt)
 		if err != nil {
-			return nil, apperror.ErrValidation.WithMessage("Invalid publishedAt format. Use RFC3339 format.")
+			return nil, apperror.ErrValidation.WithMessage("公開日時の形式が無効です。RFC3339 形式で指定してください")
 		}
 		channel.PublishedAt = &parsedTime
 	}
@@ -461,7 +461,7 @@ func (s *channelService) UnpublishChannel(ctx context.Context, userID, channelID
 	}
 
 	if channel.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to unpublish this channel")
+		return nil, apperror.ErrForbidden.WithMessage("このチャンネルの非公開権限がありません")
 	}
 
 	// 公開日時を null に設定（非公開化）
@@ -506,7 +506,7 @@ func (s *channelService) processCharacterInputs(ctx context.Context, userID uuid
 			return nil, err
 		}
 		if character.UserID != userID {
-			return nil, apperror.ErrForbidden.WithMessage("You do not own the specified character")
+			return nil, apperror.ErrForbidden.WithMessage("指定されたキャラクターの所有権がありません")
 		}
 
 		characterIDs = append(characterIDs, cid)
@@ -516,7 +516,7 @@ func (s *channelService) processCharacterInputs(ctx context.Context, userID uuid
 	for _, create := range input.Create {
 		// 予約語チェック
 		if strings.HasPrefix(create.Name, "__") {
-			return nil, apperror.ErrReservedName.WithMessage("Character name cannot start with '__'")
+			return nil, apperror.ErrReservedName.WithMessage("キャラクター名は '__' で始めることはできません")
 		}
 
 		// 同一ユーザー内での名前重複チェック
@@ -525,7 +525,7 @@ func (s *channelService) processCharacterInputs(ctx context.Context, userID uuid
 			return nil, err
 		}
 		if exists {
-			return nil, apperror.ErrDuplicateName.WithMessage("Character with this name already exists")
+			return nil, apperror.ErrDuplicateName.WithMessage("同じ名前のキャラクターが既に存在します")
 		}
 
 		voiceID, err := uuid.Parse(create.VoiceID)

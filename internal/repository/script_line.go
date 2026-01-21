@@ -44,10 +44,10 @@ func (r *scriptLineRepository) FindByID(ctx context.Context, id uuid.UUID) (*mod
 		Preload("Speaker.Voice").
 		First(&scriptLine, "id = ?", id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return nil, apperror.ErrNotFound.WithMessage("Script line not found")
+			return nil, apperror.ErrNotFound.WithMessage("台本行が見つかりません")
 		}
 		logger.FromContext(ctx).Error("failed to fetch script line", "error", err, "id", id)
-		return nil, apperror.ErrInternal.WithMessage("Failed to fetch script line").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("台本行の取得に失敗しました").WithError(err)
 	}
 
 	return &scriptLine, nil
@@ -64,7 +64,7 @@ func (r *scriptLineRepository) FindByEpisodeID(ctx context.Context, episodeID uu
 		Order("line_order ASC").
 		Find(&scriptLines).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to fetch script lines", "error", err, "episode_id", episodeID)
-		return nil, apperror.ErrInternal.WithMessage("Failed to fetch script lines").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("台本行一覧の取得に失敗しました").WithError(err)
 	}
 
 	return scriptLines, nil
@@ -81,7 +81,7 @@ func (r *scriptLineRepository) FindByEpisodeIDWithVoice(ctx context.Context, epi
 		Order("line_order ASC").
 		Find(&scriptLines).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to fetch script lines with voice", "error", err, "episode_id", episodeID)
-		return nil, apperror.ErrInternal.WithMessage("Failed to fetch script lines").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("台本行一覧の取得に失敗しました").WithError(err)
 	}
 
 	return scriptLines, nil
@@ -92,11 +92,11 @@ func (r *scriptLineRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	result := r.db.WithContext(ctx).Delete(&model.ScriptLine{}, "id = ?", id)
 	if result.Error != nil {
 		logger.FromContext(ctx).Error("failed to delete script line", "error", result.Error, "id", id)
-		return apperror.ErrInternal.WithMessage("Failed to delete script line").WithError(result.Error)
+		return apperror.ErrInternal.WithMessage("台本行の削除に失敗しました").WithError(result.Error)
 	}
 
 	if result.RowsAffected == 0 {
-		return apperror.ErrNotFound.WithMessage("Script line not found")
+		return apperror.ErrNotFound.WithMessage("台本行が見つかりません")
 	}
 
 	return nil
@@ -108,7 +108,7 @@ func (r *scriptLineRepository) DeleteByEpisodeID(ctx context.Context, episodeID 
 		Where("episode_id = ?", episodeID).
 		Delete(&model.ScriptLine{}).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to delete script lines", "error", err, "episode_id", episodeID)
-		return apperror.ErrInternal.WithMessage("Failed to delete script lines").WithError(err)
+		return apperror.ErrInternal.WithMessage("台本行の一括削除に失敗しました").WithError(err)
 	}
 
 	return nil
@@ -122,7 +122,7 @@ func (r *scriptLineRepository) CreateBatch(ctx context.Context, scriptLines []mo
 
 	if err := r.db.WithContext(ctx).Create(&scriptLines).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to create script lines", "error", err)
-		return nil, apperror.ErrInternal.WithMessage("Failed to create script lines").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("台本行の一括作成に失敗しました").WithError(err)
 	}
 
 	// 作成した行を再取得して Speaker 情報を含める
@@ -134,7 +134,7 @@ func (r *scriptLineRepository) CreateBatch(ctx context.Context, scriptLines []mo
 		Order("line_order ASC").
 		Find(&created).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to fetch created script lines", "error", err)
-		return nil, apperror.ErrInternal.WithMessage("Failed to fetch created script lines").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("作成した台本行の取得に失敗しました").WithError(err)
 	}
 
 	return created, nil
@@ -144,7 +144,7 @@ func (r *scriptLineRepository) CreateBatch(ctx context.Context, scriptLines []mo
 func (r *scriptLineRepository) Update(ctx context.Context, scriptLine *model.ScriptLine) error {
 	if err := r.db.WithContext(ctx).Save(scriptLine).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to update script line", "error", err, "id", scriptLine.ID)
-		return apperror.ErrInternal.WithMessage("Failed to update script line").WithError(err)
+		return apperror.ErrInternal.WithMessage("台本行の更新に失敗しました").WithError(err)
 	}
 
 	return nil
@@ -154,7 +154,7 @@ func (r *scriptLineRepository) Update(ctx context.Context, scriptLine *model.Scr
 func (r *scriptLineRepository) Create(ctx context.Context, scriptLine *model.ScriptLine) error {
 	if err := r.db.WithContext(ctx).Create(scriptLine).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to create script line", "error", err)
-		return apperror.ErrInternal.WithMessage("Failed to create script line").WithError(err)
+		return apperror.ErrInternal.WithMessage("台本行の作成に失敗しました").WithError(err)
 	}
 
 	return nil
@@ -167,7 +167,7 @@ func (r *scriptLineRepository) IncrementLineOrderFrom(ctx context.Context, episo
 		Where("episode_id = ? AND line_order >= ?", episodeID, fromLineOrder).
 		UpdateColumn("line_order", gorm.Expr("line_order + 1")).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to increment line order", "error", err, "episode_id", episodeID)
-		return apperror.ErrInternal.WithMessage("Failed to increment line order").WithError(err)
+		return apperror.ErrInternal.WithMessage("行順序の更新に失敗しました").WithError(err)
 	}
 
 	return nil
@@ -187,7 +187,7 @@ func (r *scriptLineRepository) FindByIDs(ctx context.Context, ids []uuid.UUID) (
 		Where("id IN ?", ids).
 		Find(&scriptLines).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to fetch script lines by ids", "error", err)
-		return nil, apperror.ErrInternal.WithMessage("Failed to fetch script lines").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("台本行一覧の取得に失敗しました").WithError(err)
 	}
 
 	return scriptLines, nil
@@ -201,7 +201,7 @@ func (r *scriptLineRepository) UpdateLineOrders(ctx context.Context, lineOrders 
 			Where("id = ?", id).
 			UpdateColumn("line_order", order).Error; err != nil {
 			logger.FromContext(ctx).Error("failed to update line order", "error", err, "id", id)
-			return apperror.ErrInternal.WithMessage("Failed to update line order").WithError(err)
+			return apperror.ErrInternal.WithMessage("行順序の更新に失敗しました").WithError(err)
 		}
 	}
 

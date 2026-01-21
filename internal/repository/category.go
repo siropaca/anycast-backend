@@ -33,7 +33,7 @@ func (r *categoryRepository) FindAllActive(ctx context.Context) ([]model.Categor
 
 	if err := r.db.WithContext(ctx).Where("is_active = ?", true).Order("sort_order ASC").Find(&categories).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to fetch categories", "error", err)
-		return nil, apperror.ErrInternal.WithMessage("Failed to fetch categories").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("カテゴリ一覧の取得に失敗しました").WithError(err)
 	}
 
 	return categories, nil
@@ -45,10 +45,10 @@ func (r *categoryRepository) FindByID(ctx context.Context, id uuid.UUID) (*model
 
 	if err := r.db.WithContext(ctx).First(&category, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, apperror.ErrNotFound.WithMessage("Category not found")
+			return nil, apperror.ErrNotFound.WithMessage("カテゴリが見つかりません")
 		}
 		logger.FromContext(ctx).Error("failed to fetch category", "error", err, "category_id", id)
-		return nil, apperror.ErrInternal.WithMessage("Failed to fetch category").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("カテゴリの取得に失敗しました").WithError(err)
 	}
 
 	return &category, nil

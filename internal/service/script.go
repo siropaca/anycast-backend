@@ -169,7 +169,7 @@ func (s *scriptService) GenerateScript(ctx context.Context, userID, channelID, e
 	}
 
 	if channel.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
+		return nil, apperror.ErrForbidden.WithMessage("このチャンネルへのアクセス権限がありません")
 	}
 
 	// エピソードの存在確認とチャンネルの一致チェック
@@ -179,7 +179,7 @@ func (s *scriptService) GenerateScript(ctx context.Context, userID, channelID, e
 	}
 
 	if episode.ChannelID != cid {
-		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
 	}
 
 	// ユーザー情報を取得（userPrompt 用）
@@ -222,7 +222,7 @@ func (s *scriptService) GenerateScript(ctx context.Context, userID, channelID, e
 
 	// パースエラーがある場合（全行失敗の場合のみエラー）
 	if len(parseResult.Lines) == 0 && parseResult.HasErrors() {
-		return nil, apperror.ErrGenerationFailed.WithMessage("Failed to parse generated script")
+		return nil, apperror.ErrGenerationFailed.WithMessage("生成された台本のパースに失敗しました")
 	}
 
 	// ScriptLine モデルに変換
@@ -400,7 +400,7 @@ func (s *scriptService) ImportScript(ctx context.Context, userID, channelID, epi
 	}
 
 	if channel.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
+		return nil, apperror.ErrForbidden.WithMessage("このチャンネルへのアクセス権限がありません")
 	}
 
 	// エピソードの存在確認とチャンネルの一致チェック
@@ -410,7 +410,7 @@ func (s *scriptService) ImportScript(ctx context.Context, userID, channelID, epi
 	}
 
 	if episode.ChannelID != cid {
-		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
 	}
 
 	// 許可された話者名のリストを作成
@@ -508,7 +508,7 @@ func (s *scriptService) ExportScript(ctx context.Context, userID, channelID, epi
 	}
 
 	if channel.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
+		return nil, apperror.ErrForbidden.WithMessage("このチャンネルへのアクセス権限がありません")
 	}
 
 	// エピソードの存在確認とチャンネルの一致チェック
@@ -518,7 +518,7 @@ func (s *scriptService) ExportScript(ctx context.Context, userID, channelID, epi
 	}
 
 	if episode.ChannelID != cid {
-		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
 	}
 
 	// 台本行を取得

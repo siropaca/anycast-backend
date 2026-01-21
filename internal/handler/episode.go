@@ -49,7 +49,7 @@ func (h *EpisodeHandler) ListMyChannelEpisodes(c *gin.Context) {
 
 	channelID := c.Param("channelId")
 	if channelID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
 		return
 	}
 
@@ -99,13 +99,13 @@ func (h *EpisodeHandler) GetMyChannelEpisode(c *gin.Context) {
 
 	channelID := c.Param("channelId")
 	if channelID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
 		return
 	}
 
 	episodeID := c.Param("episodeId")
 	if episodeID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("episodeId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
 		return
 	}
 
@@ -143,7 +143,7 @@ func (h *EpisodeHandler) CreateEpisode(c *gin.Context) {
 
 	channelID := c.Param("channelId")
 	if channelID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
 		return
 	}
 
@@ -195,13 +195,13 @@ func (h *EpisodeHandler) UpdateEpisode(c *gin.Context) {
 
 	channelID := c.Param("channelId")
 	if channelID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
 		return
 	}
 
 	episodeID := c.Param("episodeId")
 	if episodeID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("episodeId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
 		return
 	}
 
@@ -244,13 +244,13 @@ func (h *EpisodeHandler) DeleteEpisode(c *gin.Context) {
 
 	channelID := c.Param("channelId")
 	if channelID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
 		return
 	}
 
 	episodeID := c.Param("episodeId")
 	if episodeID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("episodeId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
 		return
 	}
 
@@ -288,13 +288,13 @@ func (h *EpisodeHandler) PublishEpisode(c *gin.Context) {
 
 	channelID := c.Param("channelId")
 	if channelID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
 		return
 	}
 
 	episodeID := c.Param("episodeId")
 	if episodeID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("episodeId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
 		return
 	}
 
@@ -338,13 +338,13 @@ func (h *EpisodeHandler) UnpublishEpisode(c *gin.Context) {
 
 	channelID := c.Param("channelId")
 	if channelID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
 		return
 	}
 
 	episodeID := c.Param("episodeId")
 	if episodeID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("episodeId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
 		return
 	}
 
@@ -383,13 +383,13 @@ func (h *EpisodeHandler) SetEpisodeBgm(c *gin.Context) {
 
 	channelID := c.Param("channelId")
 	if channelID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
 		return
 	}
 
 	episodeID := c.Param("episodeId")
 	if episodeID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("episodeId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
 		return
 	}
 
@@ -432,13 +432,13 @@ func (h *EpisodeHandler) RemoveEpisodeBgm(c *gin.Context) {
 
 	channelID := c.Param("channelId")
 	if channelID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
 		return
 	}
 
 	episodeID := c.Param("episodeId")
 	if episodeID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("episodeId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
 		return
 	}
 
@@ -477,13 +477,13 @@ func (h *EpisodeHandler) GenerateAudio(c *gin.Context) {
 
 	channelID := c.Param("channelId")
 	if channelID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
 		return
 	}
 
 	episodeID := c.Param("episodeId")
 	if episodeID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("episodeId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
 		return
 	}
 

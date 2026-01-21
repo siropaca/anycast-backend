@@ -83,7 +83,7 @@ func (s *authService) Register(ctx context.Context, req request.RegisterRequest)
 	hashedPassword, err := s.passwordHasher.Hash(req.Password)
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to hash password", "error", err)
-		return nil, apperror.ErrInternal.WithMessage("Failed to hash password").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("パスワードのハッシュ化に失敗しました").WithError(err)
 	}
 
 	// ユーザーを作成
@@ -263,7 +263,7 @@ func (s *authService) generateUniqueUsername(ctx context.Context, displayName st
 	}
 
 	logger.FromContext(ctx).Error("failed to generate unique username after retries", "display_name", displayName)
-	return "", apperror.ErrInternal.WithMessage("ユーザー名の生成に失敗しました")
+	return "", apperror.ErrInternal.WithMessage("ユニークなユーザー名の生成に失敗しました")
 }
 
 // model.User を response.UserResponse に変換する
