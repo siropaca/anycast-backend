@@ -191,7 +191,7 @@ CREATE TABLE script_lines (
 	emotion TEXT,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	UNIQUE (episode_id, line_order)
+	UNIQUE (episode_id, line_order) DEFERRABLE INITIALLY DEFERRED
 );
 
 CREATE INDEX idx_script_lines_episode_id ON script_lines (episode_id);
