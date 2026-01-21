@@ -160,6 +160,56 @@ GET /channels/:channelId/episodes/:episodeId/script/lines
 
 ---
 
+## 行追加
+
+```
+POST /channels/:channelId/episodes/:episodeId/script/lines
+```
+
+指定した位置に新しい台本行を追加する。
+
+**リクエスト:**
+```json
+{
+  "speakerId": "uuid",
+  "text": "セリフのテキスト",
+  "emotion": "嬉しそうに",
+  "afterLineId": "uuid"
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| speakerId | string | ◯ | 話者（キャラクター）の ID |
+| text | string | ◯ | セリフのテキスト |
+| emotion | string | | 感情表現（省略可） |
+| afterLineId | string | | この行の後に挿入する。`null` または省略時は先頭に挿入 |
+
+**レスポンス:**
+```json
+{
+  "id": "uuid",
+  "lineOrder": 1,
+  "speaker": {
+    "id": "uuid",
+    "name": "太郎",
+    "persona": "明るく元気な性格",
+    "voice": { "id": "uuid", "name": "Voice1", "provider": "google", "gender": "male" }
+  },
+  "text": "セリフのテキスト",
+  "emotion": "嬉しそうに",
+  "createdAt": "2025-01-01T00:00:00Z",
+  "updatedAt": "2025-01-01T00:00:00Z"
+}
+```
+
+**エラー:**
+- `400 Bad Request`: バリデーションエラー
+- `403 Forbidden`: チャンネルのオーナーでない場合
+- `404 Not Found`: `afterLineId` で指定した行が存在しない場合
+
+---
+
 ## 行更新
 
 ```
@@ -188,3 +238,59 @@ DELETE /channels/:channelId/episodes/:episodeId/script/lines/:lineId
 - `204 No Content`: 削除成功
 - `403 Forbidden`: チャンネルのオーナーでない場合
 - `404 Not Found`: 台本行が存在しない場合
+
+---
+
+## 行並び替え
+
+```
+POST /channels/:channelId/episodes/:episodeId/script/reorder
+```
+
+台本行の順序を変更する。指定された順序で `lineOrder` を再割り当てする。
+
+**リクエスト:**
+```json
+{
+  "lineIds": ["uuid-1", "uuid-2", "uuid-3"]
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| lineIds | string[] | ◯ | 並び替え後の順序で台本行 ID を指定 |
+
+**処理内容:**
+1. `lineIds` の配列順に `lineOrder` を 0, 1, 2, ... と再割り当て
+2. 指定された全ての行が対象エピソードに属していることを検証
+
+**レスポンス:**
+```json
+{
+  "data": [
+    {
+      "id": "uuid-1",
+      "lineOrder": 0,
+      "speaker": { ... },
+      "text": "...",
+      "emotion": null,
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": "uuid-2",
+      "lineOrder": 1,
+      "speaker": { ... },
+      "text": "...",
+      "emotion": "嬉しそうに",
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+**エラー:**
+- `400 Bad Request`: バリデーションエラー（空配列、重複 ID など）
+- `403 Forbidden`: チャンネルのオーナーでない場合
+- `404 Not Found`: 指定した行が存在しない、または対象エピソードに属していない場合
