@@ -25,3 +25,8 @@ type CreateScriptLineRequest struct {
 	Emotion     *string `json:"emotion"`
 	AfterLineID *string `json:"afterLineId" binding:"omitempty,uuid"`
 }
+
+// 台本行並び替えリクエスト
+type ReorderScriptLinesRequest struct {
+	LineIDs []string `json:"lineIds" binding:"required,min=1,dive,uuid"`
+}

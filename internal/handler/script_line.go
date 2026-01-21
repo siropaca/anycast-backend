@@ -221,3 +221,54 @@ func (h *ScriptLineHandler) DeleteScriptLine(c *gin.Context) {
 
 	c.Status(http.StatusNoContent)
 }
+
+// ReorderScriptLines godoc
+// @Summary 台本行並び替え
+// @Description 台本行の順序を並び替えます
+// @Tags script
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param episodeId path string true "エピソード ID"
+// @Param request body request.ReorderScriptLinesRequest true "並び替えリクエスト"
+// @Success 200 {object} response.ScriptLineListResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/episodes/{episodeId}/script/reorder [post]
+func (h *ScriptLineHandler) ReorderScriptLines(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		return
+	}
+
+	episodeID := c.Param("episodeId")
+	if episodeID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("episodeId is required"))
+		return
+	}
+
+	var req request.ReorderScriptLinesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		return
+	}
+
+	result, err := h.scriptLineService.Reorder(c.Request.Context(), userID, channelID, episodeID, req)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}

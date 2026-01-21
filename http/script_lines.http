@@ -124,6 +124,15 @@ Content-Type: application/json
 DELETE {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/lines/YOUR_LINE_ID_HERE
 Authorization: Bearer {{token}}
 
+### 台本行並び替え
+POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/reorder
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "lineIds": ["LINE_ID_1", "LINE_ID_2", "LINE_ID_3"]
+}
+
 ### 台本行の音声を生成
 POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/lines/YOUR_LINE_ID_HERE/audio/generate
 Authorization: Bearer {{token}}
