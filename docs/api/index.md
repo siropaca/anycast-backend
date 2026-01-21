@@ -208,7 +208,6 @@
 | コード | HTTP Status | 説明 |
 |--------|-------------|------|
 | VALIDATION_ERROR | 400 | バリデーションエラー |
-| RESERVED_NAME | 400 | 予約語を使用している |
 | SCRIPT_PARSE_ERROR | 400 | 台本のパースに失敗 |
 | UNAUTHORIZED | 401 | 認証が必要 |
 | INVALID_CREDENTIALS | 401 | メールアドレスまたはパスワードが正しくない |

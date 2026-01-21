@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -514,11 +513,6 @@ func (s *channelService) processCharacterInputs(ctx context.Context, userID uuid
 
 	// 新規キャラクターの作成処理
 	for _, create := range input.Create {
-		// 予約語チェック
-		if strings.HasPrefix(create.Name, "__") {
-			return nil, apperror.ErrReservedName.WithMessage("キャラクター名は '__' で始めることはできません")
-		}
-
 		// 同一ユーザー内での名前重複チェック
 		exists, err := characterRepo.ExistsByUserIDAndName(ctx, userID, create.Name, nil)
 		if err != nil {

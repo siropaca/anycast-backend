@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"strings"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/request"
@@ -159,11 +158,6 @@ func (s *characterService) CreateCharacter(ctx context.Context, userID string, r
 		return nil, err
 	}
 
-	// 名前が __ で始まる場合は禁止
-	if strings.HasPrefix(req.Name, "__") {
-		return nil, apperror.ErrValidation.WithMessage("名前は '__' で始めることはできません")
-	}
-
 	// 同一ユーザー内で同じ名前のキャラクターが存在するかチェック
 	exists, err := s.characterRepo.ExistsByUserIDAndName(ctx, uid, req.Name, nil)
 	if err != nil {
@@ -246,11 +240,6 @@ func (s *characterService) UpdateCharacter(ctx context.Context, userID, characte
 
 	// 名前の更新
 	if req.Name != nil {
-		// 名前が __ で始まる場合は禁止
-		if strings.HasPrefix(*req.Name, "__") {
-			return nil, apperror.ErrValidation.WithMessage("名前は '__' で始めることはできません")
-		}
-
 		// 同一ユーザー内で同じ名前のキャラクターが存在するかチェック（自分自身は除外）
 		exists, err := s.characterRepo.ExistsByUserIDAndName(ctx, uid, *req.Name, &cid)
 		if err != nil {

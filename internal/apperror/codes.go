@@ -8,7 +8,6 @@ type ErrorCode string
 // エラーコード定数
 const (
 	CodeValidation           ErrorCode = "VALIDATION_ERROR"        // 400
-	CodeReservedName         ErrorCode = "RESERVED_NAME"           // 400
 	CodeScriptParse          ErrorCode = "SCRIPT_PARSE_ERROR"      // 400
 	CodeSelfFollowNotAllowed ErrorCode = "SELF_FOLLOW_NOT_ALLOWED" // 400
 	CodeUnauthorized         ErrorCode = "UNAUTHORIZED"            // 401
@@ -36,7 +35,6 @@ func newError(code ErrorCode, message string, status int) *AppError {
 var (
 	// 400 Bad Request
 	ErrValidation           = newError(CodeValidation, "入力内容に誤りがあります", http.StatusBadRequest)
-	ErrReservedName         = newError(CodeReservedName, "予約された名前は使用できません", http.StatusBadRequest)
 	ErrScriptParse          = newError(CodeScriptParse, "台本の解析に失敗しました", http.StatusBadRequest)
 	ErrSelfFollowNotAllowed = newError(CodeSelfFollowNotAllowed, "自分のエピソードはフォローできません", http.StatusBadRequest)
 
