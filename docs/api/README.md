@@ -44,7 +44,7 @@
 | DELETE | `/api/v1/me/characters/:characterId` | キャラクター削除 | ✅ | [詳細](./characters.md#キャラクター削除) |
 | PUT | `/api/v1/channels/:channelId/characters` | チャンネルのキャラクター紐づけ更新 | | [詳細](./channels.md#チャンネルのキャラクター紐づけ更新) |
 | **BGMs（BGM）** | - | - | - | [bgms.md](./bgms.md) |
-| GET | `/api/v1/me/bgms` | BGM 一覧取得 | | [詳細](./bgms.md#bgm-一覧取得) |
+| GET | `/api/v1/me/bgms` | BGM 一覧取得 | ✅ | [詳細](./bgms.md#bgm-一覧取得) |
 | GET | `/api/v1/me/bgms/:bgmId` | BGM 取得 | | [詳細](./bgms.md#bgm-取得) |
 | POST | `/api/v1/me/bgms` | BGM 作成 | | [詳細](./bgms.md#bgm-作成) |
 | PATCH | `/api/v1/me/bgms/:bgmId` | BGM 更新 | | [詳細](./bgms.md#bgm-更新) |

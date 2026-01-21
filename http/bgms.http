@@ -1,0 +1,20 @@
+@baseUrl = http://localhost:8081/api/v1
+
+# トークン生成: make token
+@token = YOUR_TOKEN_HERE
+
+### 自分の BGM 一覧取得
+GET {{baseUrl}}/me/bgms
+Authorization: Bearer {{token}}
+
+### 自分の BGM 一覧取得（ページネーション）
+GET {{baseUrl}}/me/bgms?limit=10&offset=0
+Authorization: Bearer {{token}}
+
+### 自分の BGM 一覧取得（デフォルト BGM を含む）
+GET {{baseUrl}}/me/bgms?include_default=true
+Authorization: Bearer {{token}}
+
+### 自分の BGM 一覧取得（デフォルト BGM を含む + ページネーション）
+GET {{baseUrl}}/me/bgms?include_default=true&limit=10&offset=0
+Authorization: Bearer {{token}}
