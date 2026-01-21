@@ -15,7 +15,7 @@
 本プロジェクトではドメインモデル駆動で設計を行います。
 
 ```
-1. ドメインモデル設計（specs/specification.md）
+1. ドメインモデル設計（specs/domain-model.md）
    ↓
 2. API 設計（api/）
    ↓
@@ -24,6 +24,6 @@
 
 ## ドキュメント更新ルール
 
-- ドメインモデルの変更時は `specification.md` → `api/` → `database.md` の順で更新
+- ドメインモデルの変更時は `domain-model.md` → `api/` → `database.md` の順で更新
 - ADR を追加した際は `adr/README.md` の一覧にも追記
 - DB のみの変更（インデックス追加など）は `database.md` のみ更新可

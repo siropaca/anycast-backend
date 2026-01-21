@@ -4,7 +4,7 @@
 
 | ファイル | 説明 |
 |----------|------|
-| [docs/specs/specification.md](docs/specs/specification.md) | 仕様書（DDD ベースのドメインモデル定義） |
+| [docs/specs/domain-model.md](docs/specs/domain-model.md) | 仕様書（DDD ベースのドメインモデル定義） |
 | [docs/specs/database.md](docs/specs/database.md) | データベース設計 |
 | [docs/specs/system.md](docs/specs/system.md) | システム設定（タイムアウト、外部サービス連携など） |
 | [docs/specs/script-generate-api.md](docs/specs/script-generate-api.md) | 台本生成 API 詳細設計 |
@@ -16,10 +16,10 @@
 本プロジェクトでは **ドメインモデル駆動** で設計を行う。
 
 ```
-ドメインモデル設計（specs/specification.md） → API 設計（api/） → DB 設計（specs/database.md）
+ドメインモデル設計（specs/domain-model.md） → API 設計（api/） → DB 設計（specs/database.md）
 ```
 
-- 新しい機能を追加する際は、まず specification.md のドメインモデルを設計する
+- 新しい機能を追加する際は、まず domain-model.md のドメインモデルを設計する
 - DB スキーマや API は、ドメインモデルを永続化・公開するための手段として設計する
 - ドメインモデルの変更時は上記の順序でドキュメントを更新する
 

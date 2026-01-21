@@ -48,7 +48,7 @@ Handler → Service → Repository → DB
 ドメインモデル設計 → API 設計 → DB 設計
 ```
 
-新しい機能を追加する際は、まずドメインモデルを設計し、それを永続化・公開するための手段として API と DB を設計します。詳細は [docs/specs/specification.md](docs/specs/specification.md) を参照。
+新しい機能を追加する際は、まずドメインモデルを設計し、それを永続化・公開するための手段として API と DB を設計します。詳細は [docs/specs/domain-model.md](docs/specs/domain-model.md) を参照。
 
 アーキテクチャ決定の詳細は [docs/adr/](docs/adr/) を参照。
 
