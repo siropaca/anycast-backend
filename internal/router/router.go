@@ -100,6 +100,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/script/lines", container.ScriptLineHandler.CreateScriptLine)
 	authenticated.PATCH("/channels/:channelId/episodes/:episodeId/script/lines/:lineId", container.ScriptLineHandler.UpdateScriptLine)
 	authenticated.DELETE("/channels/:channelId/episodes/:episodeId/script/lines/:lineId", container.ScriptLineHandler.DeleteScriptLine)
+	authenticated.POST("/channels/:channelId/episodes/:episodeId/script/reorder", container.ScriptLineHandler.ReorderScriptLines)
 
 	// Script（台本）
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/script/generate", container.ScriptHandler.GenerateScript)

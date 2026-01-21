@@ -19,6 +19,7 @@ type ScriptLineService interface {
 	Create(ctx context.Context, userID, channelID, episodeID string, req request.CreateScriptLineRequest) (*response.ScriptLineResponse, error)
 	Update(ctx context.Context, userID, channelID, episodeID, lineID string, req request.UpdateScriptLineRequest) (*response.ScriptLineResponse, error)
 	Delete(ctx context.Context, userID, channelID, episodeID, lineID string) error
+	Reorder(ctx context.Context, userID, channelID, episodeID string, req request.ReorderScriptLinesRequest) (*response.ScriptLineListResponse, error)
 }
 
 type scriptLineService struct {
@@ -344,6 +345,110 @@ func (s *scriptLineService) Delete(ctx context.Context, userID, channelID, episo
 
 	// 台本行を削除
 	return s.scriptLineRepo.Delete(ctx, lid)
+}
+
+// 台本行の順序を並び替える
+func (s *scriptLineService) Reorder(ctx context.Context, userID, channelID, episodeID string, req request.ReorderScriptLinesRequest) (*response.ScriptLineListResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
+	}
+
+	// エピソードの存在確認とチャンネルの一致チェック
+	episode, err := s.episodeRepo.FindByID(ctx, eid)
+	if err != nil {
+		return nil, err
+	}
+
+	if episode.ChannelID != cid {
+		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+	}
+
+	// 重複チェック
+	lineIDSet := make(map[string]struct{}, len(req.LineIDs))
+	for _, id := range req.LineIDs {
+		if _, exists := lineIDSet[id]; exists {
+			return nil, apperror.ErrValidation.WithMessage("Duplicate lineId in request")
+		}
+		lineIDSet[id] = struct{}{}
+	}
+
+	// lineIDs を uuid.UUID に変換
+	lineUUIDs := make([]uuid.UUID, len(req.LineIDs))
+	for i, id := range req.LineIDs {
+		lineUUID, err := uuid.Parse(id)
+		if err != nil {
+			return nil, apperror.ErrValidation.WithMessage("Invalid lineId format")
+		}
+		lineUUIDs[i] = lineUUID
+	}
+
+	// 指定された行を取得
+	scriptLines, err := s.scriptLineRepo.FindByIDs(ctx, lineUUIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	// 全ての行が見つかったか確認
+	if len(scriptLines) != len(req.LineIDs) {
+		return nil, apperror.ErrNotFound.WithMessage("Some script lines not found")
+	}
+
+	// 全ての行が対象エピソードに属しているか確認
+	for _, sl := range scriptLines {
+		if sl.EpisodeID != eid {
+			return nil, apperror.ErrNotFound.WithMessage("Script line not found in this episode")
+		}
+	}
+
+	// lineOrder のマッピングを作成
+	lineOrders := make(map[uuid.UUID]int, len(lineUUIDs))
+	for i, id := range lineUUIDs {
+		lineOrders[id] = i
+	}
+
+	// トランザクションで lineOrder を更新
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		txScriptLineRepo := repository.NewScriptLineRepository(tx)
+		return txScriptLineRepo.UpdateLineOrders(ctx, lineOrders)
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// 更新後の台本行一覧を取得
+	updatedLines, err := s.scriptLineRepo.FindByEpisodeID(ctx, eid)
+	if err != nil {
+		return nil, err
+	}
+
+	// レスポンスに変換
+	responses := s.toScriptLineResponses(updatedLines)
+
+	return &response.ScriptLineListResponse{
+		Data: responses,
+	}, nil
 }
 
 // ScriptLine モデルのスライスをレスポンス DTO のスライスに変換する

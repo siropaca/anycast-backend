@@ -14,6 +14,7 @@ import (
 // 台本行データへのアクセスインターフェース
 type ScriptLineRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*model.ScriptLine, error)
+	FindByIDs(ctx context.Context, ids []uuid.UUID) ([]model.ScriptLine, error)
 	FindByEpisodeID(ctx context.Context, episodeID uuid.UUID) ([]model.ScriptLine, error)
 	FindByEpisodeIDWithVoice(ctx context.Context, episodeID uuid.UUID) ([]model.ScriptLine, error)
 	Create(ctx context.Context, scriptLine *model.ScriptLine) error
@@ -22,6 +23,7 @@ type ScriptLineRepository interface {
 	CreateBatch(ctx context.Context, scriptLines []model.ScriptLine) ([]model.ScriptLine, error)
 	Update(ctx context.Context, scriptLine *model.ScriptLine) error
 	IncrementLineOrderFrom(ctx context.Context, episodeID uuid.UUID, fromLineOrder int) error
+	UpdateLineOrders(ctx context.Context, lineOrders map[uuid.UUID]int) error
 }
 
 type scriptLineRepository struct {
@@ -166,6 +168,41 @@ func (r *scriptLineRepository) IncrementLineOrderFrom(ctx context.Context, episo
 		UpdateColumn("line_order", gorm.Expr("line_order + 1")).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to increment line order", "error", err, "episode_id", episodeID)
 		return apperror.ErrInternal.WithMessage("Failed to increment line order").WithError(err)
+	}
+
+	return nil
+}
+
+// 複数の ID で台本行を取得する
+func (r *scriptLineRepository) FindByIDs(ctx context.Context, ids []uuid.UUID) ([]model.ScriptLine, error) {
+	var scriptLines []model.ScriptLine
+
+	if len(ids) == 0 {
+		return scriptLines, nil
+	}
+
+	if err := r.db.WithContext(ctx).
+		Preload("Speaker").
+		Preload("Speaker.Voice").
+		Where("id IN ?", ids).
+		Find(&scriptLines).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to fetch script lines by ids", "error", err)
+		return nil, apperror.ErrInternal.WithMessage("Failed to fetch script lines").WithError(err)
+	}
+
+	return scriptLines, nil
+}
+
+// 複数の台本行の lineOrder を一括更新する
+func (r *scriptLineRepository) UpdateLineOrders(ctx context.Context, lineOrders map[uuid.UUID]int) error {
+	for id, order := range lineOrders {
+		if err := r.db.WithContext(ctx).
+			Model(&model.ScriptLine{}).
+			Where("id = ?", id).
+			UpdateColumn("line_order", order).Error; err != nil {
+			logger.FromContext(ctx).Error("failed to update line order", "error", err, "id", id)
+			return apperror.ErrInternal.WithMessage("Failed to update line order").WithError(err)
+		}
 	}
 
 	return nil

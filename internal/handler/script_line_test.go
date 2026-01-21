@@ -53,6 +53,14 @@ func (m *mockScriptLineService) Delete(ctx context.Context, userID, channelID, e
 	return args.Error(0)
 }
 
+func (m *mockScriptLineService) Reorder(ctx context.Context, userID, channelID, episodeID string, req request.ReorderScriptLinesRequest) (*response.ScriptLineListResponse, error) {
+	args := m.Called(ctx, userID, channelID, episodeID, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.ScriptLineListResponse), args.Error(1)
+}
+
 // テスト用のルーターをセットアップする
 func setupScriptLineRouter(h *ScriptLineHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)

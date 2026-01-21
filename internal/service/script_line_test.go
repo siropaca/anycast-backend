@@ -69,6 +69,19 @@ func (m *mockScriptLineRepository) IncrementLineOrderFrom(ctx context.Context, e
 	return args.Error(0)
 }
 
+func (m *mockScriptLineRepository) FindByIDs(ctx context.Context, ids []uuid.UUID) ([]model.ScriptLine, error) {
+	args := m.Called(ctx, ids)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]model.ScriptLine), args.Error(1)
+}
+
+func (m *mockScriptLineRepository) UpdateLineOrders(ctx context.Context, lineOrders map[uuid.UUID]int) error {
+	args := m.Called(ctx, lineOrders)
+	return args.Error(0)
+}
+
 func TestToScriptLineResponse(t *testing.T) {
 	now := time.Now()
 	lineID := uuid.New()
