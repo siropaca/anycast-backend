@@ -1,0 +1,22 @@
+# エラーコード一覧
+
+| コード | HTTP Status | 説明 |
+|--------|-------------|------|
+| VALIDATION_ERROR | 400 | バリデーションエラー |
+| SCRIPT_PARSE_ERROR | 400 | 台本のパースに失敗 |
+| UNAUTHORIZED | 401 | 認証が必要 |
+| INVALID_CREDENTIALS | 401 | メールアドレスまたはパスワードが正しくない |
+| FORBIDDEN | 403 | アクセス権限がない |
+| NOT_FOUND | 404 | リソースが見つからない |
+| DUPLICATE_EMAIL | 409 | メールアドレスが既に登録済み |
+| DUPLICATE_USERNAME | 409 | ユーザー名が既に使用されている |
+| DUPLICATE_NAME | 409 | 名前が重複している |
+| ALREADY_LIKED | 409 | 既にお気に入り済み |
+| ALREADY_BOOKMARKED | 409 | 既にブックマーク済み |
+| ALREADY_FOLLOWED | 409 | 既にフォロー済み |
+| SELF_FOLLOW_NOT_ALLOWED | 400 | 自分のエピソードはフォロー不可 |
+| CHARACTER_IN_USE | 409 | キャラクターが使用中のため削除不可 |
+| BGM_IN_USE | 409 | BGM が使用中のため削除不可 |
+| INTERNAL_ERROR | 500 | サーバー内部エラー |
+| GENERATION_FAILED | 500 | 音声/台本の生成に失敗 |
+| MEDIA_UPLOAD_FAILED | 500 | メディアアップロードに失敗 |

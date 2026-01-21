@@ -126,7 +126,7 @@ make swagger
 
 ### API エンドポイント
 
-詳細は [docs/api/index.md](docs/api/index.md) を参照。
+詳細は [docs/api/](docs/api/) を参照。
 
 ## コマンド一覧
 

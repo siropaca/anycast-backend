@@ -8,7 +8,7 @@
 | [docs/specs/database.md](docs/specs/database.md) | データベース設計 |
 | [docs/specs/system.md](docs/specs/system.md) | システム設定（タイムアウト、外部サービス連携など） |
 | [docs/specs/script-generate-api.md](docs/specs/script-generate-api.md) | 台本生成 API 詳細設計 |
-| [docs/api/index.md](docs/api/index.md) | API 設計 |
+| [docs/api/README.md](docs/api/README.md) | API 設計 |
 | [docs/adr/](docs/adr/) | Architecture Decision Records |
 
 ### 設計アプローチ
@@ -116,7 +116,7 @@
 8. **ドキュメント更新**
    - `make swagger` で Swagger ドキュメントを再生成
    - `http/` ディレクトリ内の対応する `.http` ファイルを更新
-   - `docs/api/index.md` の実装欄を ✅ に更新
+   - `docs/api/README.md` の実装欄を ✅ に更新
 
 ### API ドキュメント
 
