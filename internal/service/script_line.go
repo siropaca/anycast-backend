@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 
+	"gorm.io/gorm"
+
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/request"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
@@ -14,11 +16,13 @@ import (
 // 台本行関連のビジネスロジックインターフェース
 type ScriptLineService interface {
 	ListByEpisodeID(ctx context.Context, userID, channelID, episodeID string) (*response.ScriptLineListResponse, error)
+	Create(ctx context.Context, userID, channelID, episodeID string, req request.CreateScriptLineRequest) (*response.ScriptLineResponse, error)
 	Update(ctx context.Context, userID, channelID, episodeID, lineID string, req request.UpdateScriptLineRequest) (*response.ScriptLineResponse, error)
 	Delete(ctx context.Context, userID, channelID, episodeID, lineID string) error
 }
 
 type scriptLineService struct {
+	db             *gorm.DB
 	scriptLineRepo repository.ScriptLineRepository
 	episodeRepo    repository.EpisodeRepository
 	channelRepo    repository.ChannelRepository
@@ -26,11 +30,13 @@ type scriptLineService struct {
 
 // ScriptLineService の実装を返す
 func NewScriptLineService(
+	db *gorm.DB,
 	scriptLineRepo repository.ScriptLineRepository,
 	episodeRepo repository.EpisodeRepository,
 	channelRepo repository.ChannelRepository,
 ) ScriptLineService {
 	return &scriptLineService{
+		db:             db,
 		scriptLineRepo: scriptLineRepo,
 		episodeRepo:    episodeRepo,
 		channelRepo:    channelRepo,
@@ -86,6 +92,127 @@ func (s *scriptLineService) ListByEpisodeID(ctx context.Context, userID, channel
 	return &response.ScriptLineListResponse{
 		Data: responses,
 	}, nil
+}
+
+// 新しい台本行を作成する
+func (s *scriptLineService) Create(ctx context.Context, userID, channelID, episodeID string, req request.CreateScriptLineRequest) (*response.ScriptLineResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	speakerID, err := uuid.Parse(req.SpeakerID)
+	if err != nil {
+		return nil, apperror.ErrValidation.WithMessage("Invalid speakerId format")
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
+	}
+
+	// エピソードの存在確認とチャンネルの一致チェック
+	episode, err := s.episodeRepo.FindByID(ctx, eid)
+	if err != nil {
+		return nil, err
+	}
+
+	if episode.ChannelID != cid {
+		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+	}
+
+	// speakerId がチャンネルに紐づいているキャラクターか確認
+	var validSpeaker bool
+	for _, cc := range channel.ChannelCharacters {
+		if cc.CharacterID == speakerID {
+			validSpeaker = true
+			break
+		}
+	}
+	if !validSpeaker {
+		return nil, apperror.ErrValidation.WithMessage("Speaker is not associated with this channel")
+	}
+
+	// 挿入位置（lineOrder）を決定
+	var newLineOrder int
+	if req.AfterLineID != nil {
+		afterLineID, err := uuid.Parse(*req.AfterLineID)
+		if err != nil {
+			return nil, apperror.ErrValidation.WithMessage("Invalid afterLineId format")
+		}
+
+		// afterLineId で指定された行を取得
+		afterLine, err := s.scriptLineRepo.FindByID(ctx, afterLineID)
+		if err != nil {
+			return nil, err
+		}
+
+		// 指定された行がこのエピソードに属しているか確認
+		if afterLine.EpisodeID != eid {
+			return nil, apperror.ErrNotFound.WithMessage("Specified afterLineId not found in this episode")
+		}
+
+		newLineOrder = afterLine.LineOrder + 1
+	} else {
+		// afterLineId が指定されていない場合は先頭（lineOrder = 0）に挿入
+		newLineOrder = 0
+	}
+
+	// 新しい台本行を作成
+	scriptLine := &model.ScriptLine{
+		EpisodeID: eid,
+		LineOrder: newLineOrder,
+		SpeakerID: speakerID,
+		Text:      req.Text,
+		Emotion:   req.Emotion,
+	}
+
+	// トランザクションで lineOrder のインクリメントと作成を実行
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		txScriptLineRepo := repository.NewScriptLineRepository(tx)
+
+		// 挿入位置以降の行の lineOrder を +1
+		if err := txScriptLineRepo.IncrementLineOrderFrom(ctx, eid, newLineOrder); err != nil {
+			return err
+		}
+
+		// 新しい行を作成
+		if err := txScriptLineRepo.Create(ctx, scriptLine); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// 作成した行を再取得（Speaker 情報を含める）
+	createdLine, err := s.scriptLineRepo.FindByID(ctx, scriptLine.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	// レスポンスに変換
+	resp := s.toScriptLineResponse(createdLine)
+
+	return &resp, nil
 }
 
 // 指定された台本行を更新する
