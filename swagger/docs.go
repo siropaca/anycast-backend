@@ -856,6 +856,89 @@ const docTemplate = `{
                 }
             }
         },
+        "/channels/{channelId}/episodes/{episodeId}/bgm": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したエピソードに BGM を設定します。ユーザー BGM またはデフォルト BGM のどちらかを指定します。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "episodes"
+                ],
+                "summary": "エピソード BGM 設定",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "チャンネル ID",
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "エピソード ID",
+                        "name": "episodeId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "BGM 設定リクエスト",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SetEpisodeBgmRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.EpisodeDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/channels/{channelId}/episodes/{episodeId}/publish": {
             "post": {
                 "security": [
@@ -3076,6 +3159,17 @@ const docTemplate = `{
                 }
             }
         },
+        "request.SetEpisodeBgmRequest": {
+            "type": "object",
+            "properties": {
+                "bgmId": {
+                    "type": "string"
+                },
+                "defaultBgmId": {
+                    "type": "string"
+                }
+            }
+        },
         "request.UpdateChannelRequest": {
             "type": "object",
             "required": [
@@ -3676,6 +3770,29 @@ const docTemplate = `{
                 }
             }
         },
+        "response.EpisodeBgmResponse": {
+            "type": "object",
+            "required": [
+                "audio",
+                "id",
+                "isDefault",
+                "name"
+            ],
+            "properties": {
+                "audio": {
+                    "$ref": "#/definitions/response.BgmAudioResponse"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isDefault": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "response.EpisodeDataResponse": {
             "type": "object",
             "required": [
@@ -3728,7 +3845,7 @@ const docTemplate = `{
                 "bgm": {
                     "allOf": [
                         {
-                            "$ref": "#/definitions/response.AudioResponse"
+                            "$ref": "#/definitions/response.EpisodeBgmResponse"
                         }
                     ],
                     "x-nullable": true

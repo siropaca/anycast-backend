@@ -408,3 +408,54 @@ func (h *EpisodeHandler) GenerateAudio(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+
+// SetEpisodeBgm godoc
+// @Summary エピソード BGM 設定
+// @Description 指定したエピソードに BGM を設定します。ユーザー BGM またはデフォルト BGM のどちらかを指定します。
+// @Tags episodes
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param episodeId path string true "エピソード ID"
+// @Param request body request.SetEpisodeBgmRequest true "BGM 設定リクエスト"
+// @Success 200 {object} response.EpisodeDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/episodes/{episodeId}/bgm [put]
+func (h *EpisodeHandler) SetEpisodeBgm(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
+		return
+	}
+
+	episodeID := c.Param("episodeId")
+	if episodeID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
+		return
+	}
+
+	var req request.SetEpisodeBgmRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		return
+	}
+
+	result, err := h.episodeService.SetEpisodeBgm(c.Request.Context(), userID, channelID, episodeID, req)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}

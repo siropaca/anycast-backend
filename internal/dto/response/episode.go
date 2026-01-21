@@ -8,17 +8,25 @@ import (
 
 // エピソード情報のレスポンス
 type EpisodeResponse struct {
-	ID          uuid.UUID        `json:"id" validate:"required"`
-	Title       string           `json:"title" validate:"required"`
-	Description string           `json:"description" validate:"required"`
-	UserPrompt  string           `json:"userPrompt" validate:"required"`
-	VoiceStyle  string           `json:"voiceStyle" validate:"required"`
-	Artwork     *ArtworkResponse `json:"artwork" extensions:"x-nullable"`
-	FullAudio   *AudioResponse   `json:"fullAudio" extensions:"x-nullable"`
-	Bgm         *AudioResponse   `json:"bgm" extensions:"x-nullable"`
-	PublishedAt *time.Time       `json:"publishedAt" extensions:"x-nullable"`
-	CreatedAt   time.Time        `json:"createdAt" validate:"required"`
-	UpdatedAt   time.Time        `json:"updatedAt" validate:"required"`
+	ID          uuid.UUID           `json:"id" validate:"required"`
+	Title       string              `json:"title" validate:"required"`
+	Description string              `json:"description" validate:"required"`
+	UserPrompt  string              `json:"userPrompt" validate:"required"`
+	VoiceStyle  string              `json:"voiceStyle" validate:"required"`
+	Artwork     *ArtworkResponse    `json:"artwork" extensions:"x-nullable"`
+	FullAudio   *AudioResponse      `json:"fullAudio" extensions:"x-nullable"`
+	Bgm         *EpisodeBgmResponse `json:"bgm" extensions:"x-nullable"`
+	PublishedAt *time.Time          `json:"publishedAt" extensions:"x-nullable"`
+	CreatedAt   time.Time           `json:"createdAt" validate:"required"`
+	UpdatedAt   time.Time           `json:"updatedAt" validate:"required"`
+}
+
+// エピソードに設定された BGM のレスポンス
+type EpisodeBgmResponse struct {
+	ID        uuid.UUID        `json:"id" validate:"required"`
+	Name      string           `json:"name" validate:"required"`
+	IsDefault bool             `json:"isDefault" validate:"required"`
+	Audio     BgmAudioResponse `json:"audio" validate:"required"`
 }
 
 // エピソード一覧（ページネーション付き）のレスポンス

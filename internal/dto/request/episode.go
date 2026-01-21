@@ -29,3 +29,9 @@ type PublishEpisodeRequest struct {
 type GenerateAudioRequest struct {
 	VoiceStyle *string `json:"voiceStyle" binding:"omitempty,max=500"`
 }
+
+// エピソード BGM 設定リクエスト
+type SetEpisodeBgmRequest struct {
+	BgmID        *string `json:"bgmId" binding:"omitempty,uuid"`
+	DefaultBgmID *string `json:"defaultBgmId" binding:"omitempty,uuid"`
+}
