@@ -16,10 +16,12 @@ type ScriptLineRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*model.ScriptLine, error)
 	FindByEpisodeID(ctx context.Context, episodeID uuid.UUID) ([]model.ScriptLine, error)
 	FindByEpisodeIDWithVoice(ctx context.Context, episodeID uuid.UUID) ([]model.ScriptLine, error)
+	Create(ctx context.Context, scriptLine *model.ScriptLine) error
 	Delete(ctx context.Context, id uuid.UUID) error
 	DeleteByEpisodeID(ctx context.Context, episodeID uuid.UUID) error
 	CreateBatch(ctx context.Context, scriptLines []model.ScriptLine) ([]model.ScriptLine, error)
 	Update(ctx context.Context, scriptLine *model.ScriptLine) error
+	IncrementLineOrderFrom(ctx context.Context, episodeID uuid.UUID, fromLineOrder int) error
 }
 
 type scriptLineRepository struct {
@@ -141,6 +143,29 @@ func (r *scriptLineRepository) Update(ctx context.Context, scriptLine *model.Scr
 	if err := r.db.WithContext(ctx).Save(scriptLine).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to update script line", "error", err, "id", scriptLine.ID)
 		return apperror.ErrInternal.WithMessage("Failed to update script line").WithError(err)
+	}
+
+	return nil
+}
+
+// 台本行を作成する
+func (r *scriptLineRepository) Create(ctx context.Context, scriptLine *model.ScriptLine) error {
+	if err := r.db.WithContext(ctx).Create(scriptLine).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to create script line", "error", err)
+		return apperror.ErrInternal.WithMessage("Failed to create script line").WithError(err)
+	}
+
+	return nil
+}
+
+// 指定した lineOrder 以上の行の lineOrder を +1 する
+func (r *scriptLineRepository) IncrementLineOrderFrom(ctx context.Context, episodeID uuid.UUID, fromLineOrder int) error {
+	if err := r.db.WithContext(ctx).
+		Model(&model.ScriptLine{}).
+		Where("episode_id = ? AND line_order >= ?", episodeID, fromLineOrder).
+		UpdateColumn("line_order", gorm.Expr("line_order + 1")).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to increment line order", "error", err, "episode_id", episodeID)
+		return apperror.ErrInternal.WithMessage("Failed to increment line order").WithError(err)
 	}
 
 	return nil

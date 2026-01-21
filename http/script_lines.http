@@ -7,6 +7,39 @@
 GET {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/lines
 Authorization: Bearer {{token}}
 
+### 台本行追加（先頭に挿入）
+POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/lines
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "speakerId": "YOUR_SPEAKER_ID_HERE",
+  "text": "新しいセリフです"
+}
+
+### 台本行追加（指定行の後に挿入）
+POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/lines
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "speakerId": "YOUR_SPEAKER_ID_HERE",
+  "text": "挿入するセリフです",
+  "afterLineId": "YOUR_LINE_ID_HERE"
+}
+
+### 台本行追加（感情付き）
+POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/lines
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "speakerId": "YOUR_SPEAKER_ID_HERE",
+  "text": "感情付きのセリフです",
+  "emotion": "嬉しそうに",
+  "afterLineId": "YOUR_LINE_ID_HERE"
+}
+
 ### 台本を AI で生成
 POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/generate
 Authorization: Bearer {{token}}

@@ -40,17 +40,17 @@ func (m *mockScriptLineService) Update(ctx context.Context, userID, channelID, e
 	return args.Get(0).(*response.ScriptLineResponse), args.Error(1)
 }
 
-func (m *mockScriptLineService) Delete(ctx context.Context, userID, channelID, episodeID, lineID string) error {
-	args := m.Called(ctx, userID, channelID, episodeID, lineID)
-	return args.Error(0)
-}
-
-func (m *mockScriptLineService) GenerateAudio(ctx context.Context, userID, channelID, episodeID, lineID string) (*response.GenerateAudioResponse, error) {
-	args := m.Called(ctx, userID, channelID, episodeID, lineID)
+func (m *mockScriptLineService) Create(ctx context.Context, userID, channelID, episodeID string, req request.CreateScriptLineRequest) (*response.ScriptLineResponse, error) {
+	args := m.Called(ctx, userID, channelID, episodeID, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*response.GenerateAudioResponse), args.Error(1)
+	return args.Get(0).(*response.ScriptLineResponse), args.Error(1)
+}
+
+func (m *mockScriptLineService) Delete(ctx context.Context, userID, channelID, episodeID, lineID string) error {
+	args := m.Called(ctx, userID, channelID, episodeID, lineID)
+	return args.Error(0)
 }
 
 // テスト用のルーターをセットアップする

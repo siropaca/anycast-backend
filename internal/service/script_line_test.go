@@ -59,6 +59,16 @@ func (m *mockScriptLineRepository) Update(ctx context.Context, scriptLine *model
 	return args.Error(0)
 }
 
+func (m *mockScriptLineRepository) Create(ctx context.Context, scriptLine *model.ScriptLine) error {
+	args := m.Called(ctx, scriptLine)
+	return args.Error(0)
+}
+
+func (m *mockScriptLineRepository) IncrementLineOrderFrom(ctx context.Context, episodeID uuid.UUID, fromLineOrder int) error {
+	args := m.Called(ctx, episodeID, fromLineOrder)
+	return args.Error(0)
+}
+
 func TestToScriptLineResponse(t *testing.T) {
 	now := time.Now()
 	lineID := uuid.New()
