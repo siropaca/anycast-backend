@@ -87,6 +87,22 @@ func (m *mockEpisodeService) GenerateAudio(ctx context.Context, userID, channelI
 	return args.Get(0).(*response.GenerateAudioResponse), args.Error(1)
 }
 
+func (m *mockEpisodeService) SetEpisodeBgm(ctx context.Context, userID, channelID, episodeID string, req request.SetEpisodeBgmRequest) (*response.EpisodeDataResponse, error) {
+	args := m.Called(ctx, userID, channelID, episodeID, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.EpisodeDataResponse), args.Error(1)
+}
+
+func (m *mockEpisodeService) DeleteEpisodeBgm(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error) {
+	args := m.Called(ctx, userID, channelID, episodeID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.EpisodeDataResponse), args.Error(1)
+}
+
 // テスト用のルーターをセットアップする
 func setupEpisodeRouter(h *EpisodeHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)

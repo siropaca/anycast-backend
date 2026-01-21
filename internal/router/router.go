@@ -76,6 +76,8 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.POST("/me/characters", container.CharacterHandler.CreateCharacter)
 	authenticated.PATCH("/me/characters/:characterId", container.CharacterHandler.UpdateCharacter)
 	authenticated.DELETE("/me/characters/:characterId", container.CharacterHandler.DeleteCharacter)
+	authenticated.GET("/me/bgms", container.BgmHandler.ListMyBgms)
+	authenticated.POST("/me/bgms", container.BgmHandler.CreateBgm)
 
 	// Channels
 	authenticated.GET("/channels/:channelId", container.ChannelHandler.GetChannel)
@@ -91,6 +93,8 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.DELETE("/channels/:channelId/episodes/:episodeId", container.EpisodeHandler.DeleteEpisode)
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/publish", container.EpisodeHandler.PublishEpisode)
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/unpublish", container.EpisodeHandler.UnpublishEpisode)
+	authenticated.PUT("/channels/:channelId/episodes/:episodeId/bgm", container.EpisodeHandler.SetEpisodeBgm)
+	authenticated.DELETE("/channels/:channelId/episodes/:episodeId/bgm", container.EpisodeHandler.DeleteEpisodeBgm)
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/audio/generate", container.EpisodeHandler.GenerateAudio)
 
 	// Script Lines
@@ -114,6 +118,9 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 
 	// Images
 	authenticated.POST("/images", container.ImageHandler.UploadImage)
+
+	// Audios
+	authenticated.POST("/audios", container.AudioHandler.UploadAudio)
 
 	// Admin（認証必須 + 管理者権限必須）
 	admin := r.Group("/admin")

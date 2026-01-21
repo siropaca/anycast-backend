@@ -1,0 +1,13 @@
+package request
+
+// 自分の BGM 一覧取得リクエスト
+type ListMyBgmsRequest struct {
+	PaginationRequest
+	IncludeDefault bool `form:"include_default,default=false"`
+}
+
+// BGM 作成リクエスト
+type CreateBgmRequest struct {
+	Name    string `json:"name" binding:"required,max=255"`
+	AudioID string `json:"audioId" binding:"required,uuid"`
+}

@@ -26,9 +26,15 @@ type Client interface {
 	Delete(ctx context.Context, path string) error
 }
 
-// 音声ファイルの GCS パスを生成する
+// 音声ファイルの GCS パスを生成する（TTS 生成用、常に MP3）
 func GenerateAudioPath(audioID string) string {
 	return fmt.Sprintf("audios/%s.mp3", audioID)
+}
+
+// 音声ファイルの GCS パスを生成する（アップロード用、拡張子指定）
+// ext は拡張子（例: ".mp3", ".wav"）
+func GenerateAudioPathWithExt(audioID, ext string) string {
+	return fmt.Sprintf("audios/%s%s", audioID, ext)
 }
 
 // 画像ファイルの GCS パスを生成する

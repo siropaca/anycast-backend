@@ -364,8 +364,8 @@ func (s *channelService) DeleteChannel(ctx context.Context, userID, channelID st
 		if episode.FullAudio != nil {
 			filesToDelete = append(filesToDelete, episode.FullAudio.Path)
 		}
-		if episode.Bgm != nil {
-			filesToDelete = append(filesToDelete, episode.Bgm.Path)
+		if episode.Bgm != nil && episode.Bgm.Audio.ID != uuid.Nil {
+			filesToDelete = append(filesToDelete, episode.Bgm.Audio.Path)
 		}
 	}
 

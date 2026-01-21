@@ -56,6 +56,36 @@ POST /channels/:channelId/episodes/:episodeId/audio/generate
 
 ---
 
+## 音声アップロード
+
+```
+POST /audios
+```
+
+**リクエスト:** `multipart/form-data`
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| file | File | ◯ | アップロードする音声ファイル（mp3, wav, ogg, aac, m4a） |
+
+**レスポンス:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "mimeType": "audio/mpeg",
+    "url": "https://storage.example.com/audio.mp3",
+    "filename": "bgm.mp3",
+    "fileSize": 1024000,
+    "durationMs": 180000
+  }
+}
+```
+
+> **Note:** `durationMs` は MP3 形式の場合のみビットレートベースで推定されます。その他の形式では 0 が返されます。
+
+---
+
 # Images（画像ファイル）
 
 ## 画像アップロード

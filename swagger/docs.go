@@ -64,6 +64,61 @@ const docTemplate = `{
                 }
             }
         },
+        "/audios": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "音声ファイルをアップロードします",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "audios"
+                ],
+                "summary": "音声アップロード",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "アップロードする音声ファイル（mp3, wav, ogg, aac, m4a）",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.AudioUploadDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "description": "メールアドレスとパスワードで認証します",
@@ -772,6 +827,155 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/channels/{channelId}/episodes/{episodeId}/bgm": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したエピソードに BGM を設定します。ユーザー BGM またはデフォルト BGM のどちらかを指定します。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "episodes"
+                ],
+                "summary": "エピソード BGM 設定",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "チャンネル ID",
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "エピソード ID",
+                        "name": "episodeId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "BGM 設定リクエスト",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SetEpisodeBgmRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.EpisodeDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したエピソードに設定されている BGM を削除します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "episodes"
+                ],
+                "summary": "エピソード BGM 削除",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "チャンネル ID",
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "エピソード ID",
+                        "name": "episodeId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.EpisodeDataResponse"
                         }
                     },
                     "401": {
@@ -1808,6 +2012,139 @@ const docTemplate = `{
                 }
             }
         },
+        "/me/bgms": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "認証ユーザーの所有する BGM 一覧を取得します。include_default=true の場合はデフォルト BGM も含めます。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "me"
+                ],
+                "summary": "自分の BGM 一覧取得",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "デフォルト BGM を含めるかどうか（デフォルト: false）",
+                        "name": "include_default",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "取得件数（デフォルト: 20、最大: 100）",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "オフセット（デフォルト: 0）",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.BgmListWithPaginationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "新しい BGM を作成します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "me"
+                ],
+                "summary": "BGM 作成",
+                "parameters": [
+                    {
+                        "description": "BGM 作成リクエスト",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreateBgmRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.BgmDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "指定された音声ファイルが見つからない場合",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "同じ名前の BGM が既に存在する場合",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/me/channels": {
             "get": {
                 "security": [
@@ -2610,6 +2947,22 @@ const docTemplate = `{
                 }
             }
         },
+        "request.CreateBgmRequest": {
+            "type": "object",
+            "required": [
+                "audioId",
+                "name"
+            ],
+            "properties": {
+                "audioId": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 255
+                }
+            }
+        },
         "request.CreateChannelRequest": {
             "type": "object",
             "required": [
@@ -2872,6 +3225,17 @@ const docTemplate = `{
                 }
             }
         },
+        "request.SetEpisodeBgmRequest": {
+            "type": "object",
+            "properties": {
+                "bgmId": {
+                    "type": "string"
+                },
+                "defaultBgmId": {
+                    "type": "string"
+                }
+            }
+        },
         "request.UpdateChannelRequest": {
             "type": "object",
             "required": [
@@ -3001,6 +3365,48 @@ const docTemplate = `{
                 }
             }
         },
+        "response.AudioUploadDataResponse": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.AudioUploadResponse"
+                }
+            }
+        },
+        "response.AudioUploadResponse": {
+            "type": "object",
+            "required": [
+                "durationMs",
+                "fileSize",
+                "filename",
+                "id",
+                "mimeType",
+                "url"
+            ],
+            "properties": {
+                "durationMs": {
+                    "type": "integer"
+                },
+                "fileSize": {
+                    "type": "integer"
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "mimeType": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "response.AuthDataResponse": {
             "type": "object",
             "required": [
@@ -3038,6 +3444,85 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.BgmAudioResponse": {
+            "type": "object",
+            "required": [
+                "durationMs",
+                "id",
+                "url"
+            ],
+            "properties": {
+                "durationMs": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.BgmDataResponse": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.BgmResponse"
+                }
+            }
+        },
+        "response.BgmListWithPaginationResponse": {
+            "type": "object",
+            "required": [
+                "data",
+                "pagination"
+            ],
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.BgmResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/response.PaginationResponse"
+                }
+            }
+        },
+        "response.BgmResponse": {
+            "type": "object",
+            "required": [
+                "audio",
+                "createdAt",
+                "id",
+                "isDefault",
+                "name",
+                "updatedAt"
+            ],
+            "properties": {
+                "audio": {
+                    "$ref": "#/definitions/response.BgmAudioResponse"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isDefault": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -3351,6 +3836,29 @@ const docTemplate = `{
                 }
             }
         },
+        "response.EpisodeBgmResponse": {
+            "type": "object",
+            "required": [
+                "audio",
+                "id",
+                "isDefault",
+                "name"
+            ],
+            "properties": {
+                "audio": {
+                    "$ref": "#/definitions/response.BgmAudioResponse"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isDefault": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "response.EpisodeDataResponse": {
             "type": "object",
             "required": [
@@ -3403,7 +3911,7 @@ const docTemplate = `{
                 "bgm": {
                     "allOf": [
                         {
-                            "$ref": "#/definitions/response.AudioResponse"
+                            "$ref": "#/definitions/response.EpisodeBgmResponse"
                         }
                     ],
                     "x-nullable": true

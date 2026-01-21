@@ -53,6 +53,8 @@
 
 | リソース | 参照 | 作成 | 更新 | 削除 |
 |----------|:----:|:----:|:----:|:----:|
+| Auth（登録・ログイン） | - | Guest | - | - |
+| Auth（パスワード更新） | - | - | Owner | - |
 | Users | Owner | - | Owner | Owner |
 | Channels | Public | Owner | Owner | Owner |
 | Characters | Owner | Owner | Owner | Owner |
@@ -67,8 +69,10 @@
 | Audio（生成） | - | Owner | - | - |
 | Audios（アップロード） | Owner | Owner | - | Owner |
 | Images（アップロード） | Owner | Owner | - | Owner |
+| Search | Public | - | - | - |
 | Voices | Public | Admin | Admin | Admin |
 | Categories | Public | Admin | Admin | Admin |
+| Admin（孤児メディア削除） | - | Admin | - | - |
 
 ## 公開状態によるアクセス制御
 
