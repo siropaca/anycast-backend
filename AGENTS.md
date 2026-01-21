@@ -101,6 +101,22 @@
 - Go コミュニティで広く使われているライブラリを優先的に選択する
 - 新しいライブラリを導入する際は ADR を作成して決定理由を記録する
 
+### API 実装の流れ
+
+新しい API エンドポイントを実装する際は、以下の順序で作業する。
+
+1. **Request DTO 追加** - `internal/dto/request/` に新しいリクエスト構造体を追加
+2. **Repository** - `internal/repository/` に必要なメソッドを追加（インターフェースと実装）
+3. **Service** - `internal/service/` にビジネスロジックを追加（インターフェースと実装）
+4. **Handler** - `internal/handler/` にハンドラーメソッドを追加（Swagger コメント含む）
+5. **Router** - `internal/router/router.go` にエンドポイントを追加
+6. **DI Container** - `internal/di/container.go` の依存関係を更新（必要な場合）
+7. **テスト** - モックの更新とテスト実行（`go test ./...`）
+8. **ドキュメント更新**
+   - `make swagger` で Swagger ドキュメントを再生成
+   - `http/` ディレクトリ内の対応する `.http` ファイルを更新
+   - `docs/api/index.md` の実装欄を ✅ に更新
+
 ### API ドキュメント
 
 - ハンドラー（`internal/handler/`）を追加・変更した際は `make swagger` で Swagger ドキュメントを再生成する
