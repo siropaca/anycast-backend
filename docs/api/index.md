@@ -43,6 +43,18 @@
 | PATCH | `/api/v1/me/characters/:characterId` | キャラクター更新 | ✅ | [詳細](./characters.md#キャラクター更新) |
 | DELETE | `/api/v1/me/characters/:characterId` | キャラクター削除 | ✅ | [詳細](./characters.md#キャラクター削除) |
 | PUT | `/api/v1/channels/:channelId/characters` | チャンネルのキャラクター紐づけ更新 | | [詳細](./channels.md#チャンネルのキャラクター紐づけ更新) |
+| **BGMs（BGM）** | - | - | - | [bgms.md](./bgms.md) |
+| GET | `/api/v1/me/bgms` | BGM 一覧取得 | | [詳細](./bgms.md#bgm-一覧取得) |
+| GET | `/api/v1/me/bgms/:bgmId` | BGM 取得 | | [詳細](./bgms.md#bgm-取得) |
+| POST | `/api/v1/me/bgms` | BGM 作成 | | [詳細](./bgms.md#bgm-作成) |
+| PATCH | `/api/v1/me/bgms/:bgmId` | BGM 更新 | | [詳細](./bgms.md#bgm-更新) |
+| DELETE | `/api/v1/me/bgms/:bgmId` | BGM 削除 | | [詳細](./bgms.md#bgm-削除) |
+| **Default BGMs（デフォルト BGM）** | - | - | - | [bgms.md](./bgms.md#default-bgmsデフォルト-bgm) |
+| GET | `/api/v1/default-bgms` | デフォルト BGM 一覧取得 | | [詳細](./bgms.md#デフォルト-bgm-一覧取得) |
+| GET | `/api/v1/default-bgms/:bgmId` | デフォルト BGM 取得 | | [詳細](./bgms.md#デフォルト-bgm-取得) |
+| POST | `/api/v1/default-bgms` | デフォルト BGM 作成 | | [詳細](./bgms.md#デフォルト-bgm-作成) |
+| PATCH | `/api/v1/default-bgms/:bgmId` | デフォルト BGM 更新 | | [詳細](./bgms.md#デフォルト-bgm-更新) |
+| DELETE | `/api/v1/default-bgms/:bgmId` | デフォルト BGM 削除 | | [詳細](./bgms.md#デフォルト-bgm-削除) |
 | **Episodes** | - | - | - | [episodes.md](./episodes.md) |
 | GET | `/api/v1/channels/:channelId/episodes` | エピソード一覧取得 | | [詳細](./episodes.md#エピソード一覧取得公開用) |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード取得 | | [詳細](./episodes.md#エピソード取得) |
@@ -51,8 +63,8 @@
 | DELETE | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード削除 | ✅ | [詳細](./episodes.md#エピソード削除) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/publish` | エピソード公開 | ✅ | [詳細](./episodes.md#エピソード公開) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/unpublish` | エピソード非公開 | ✅ | [詳細](./episodes.md#エピソード非公開) |
-| PUT | `/api/v1/channels/:channelId/episodes/:episodeId/bgm` | エピソード BGM 設定 | ✅ | [詳細](./episodes.md#エピソード-bgm-設定) |
-| DELETE | `/api/v1/channels/:channelId/episodes/:episodeId/bgm` | エピソード BGM 削除 | ✅ | [詳細](./episodes.md#エピソード-bgm-削除) |
+| PUT | `/api/v1/channels/:channelId/episodes/:episodeId/bgm` | エピソード BGM 設定 | | [詳細](./episodes.md#エピソード-bgm-設定) |
+| DELETE | `/api/v1/channels/:channelId/episodes/:episodeId/bgm` | エピソード BGM 削除 | | [詳細](./episodes.md#エピソード-bgm-削除) |
 | GET | `/api/v1/me/channels/:channelId/episodes` | 自分のチャンネルのエピソード一覧 | ✅ | [詳細](./episodes.md#自分のチャンネルのエピソード一覧取得) |
 | GET | `/api/v1/me/channels/:channelId/episodes/:episodeId` | 自分のチャンネルのエピソード取得 | ✅ | [詳細](./episodes.md#自分のチャンネルのエピソード取得) |
 | **Script（台本）** | - | - | - | [script.md](./script.md) |
@@ -156,6 +168,8 @@
 | Users | Owner | - | Owner | Owner |
 | Channels | Public | Owner | Owner | Owner |
 | Characters | Owner | Owner | Owner | Owner |
+| BGMs | Owner | Owner | Owner | Owner |
+| Default BGMs | Public | Admin | Admin | Admin |
 | Episodes | Public | Owner | Owner | Owner |
 | Script / ScriptLines | Owner | Owner | Owner | Owner |
 | Likes | Owner | Owner | - | Owner |
@@ -208,6 +222,7 @@
 | ALREADY_FOLLOWED | 409 | 既にフォロー済み |
 | SELF_FOLLOW_NOT_ALLOWED | 400 | 自分のエピソードはフォロー不可 |
 | CHARACTER_IN_USE | 409 | キャラクターが使用中のため削除不可 |
+| BGM_IN_USE | 409 | BGM が使用中のため削除不可 |
 | INTERNAL_ERROR | 500 | サーバー内部エラー |
 | GENERATION_FAILED | 500 | 音声/台本の生成に失敗 |
 | MEDIA_UPLOAD_FAILED | 500 | メディアアップロードに失敗 |

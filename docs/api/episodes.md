@@ -210,18 +210,35 @@ POST /channels/:channelId/episodes/:episodeId/unpublish
 PUT /channels/:channelId/episodes/:episodeId/bgm
 ```
 
-エピソードに BGM を設定する。既に BGM が設定されている場合は上書きされる。
+エピソードに BGM を設定する。既に BGM が設定されている場合は上書きされる。ユーザー BGM またはデフォルト BGM のどちらかを指定する。
 
-**リクエスト:**
+**リクエスト（ユーザー BGM の場合）:**
 ```json
 {
-  "bgmAudioId": "uuid"
+  "bgmId": "uuid"
+}
+```
+
+**リクエスト（デフォルト BGM の場合）:**
+```json
+{
+  "defaultBgmId": "uuid"
 }
 ```
 
 | フィールド | 型 | 必須 | 説明 |
 |------------|-----|:----:|------|
-| bgmAudioId | uuid | ◯ | BGM 音声ファイル ID |
+| bgmId | uuid | - | ユーザー BGM ID（bgms.id）。defaultBgmId と同時指定不可 |
+| defaultBgmId | uuid | - | デフォルト BGM ID（default_bgms.id）。bgmId と同時指定不可 |
+
+> **Note:** bgmId と defaultBgmId のどちらか一方のみを指定する。
+
+**バリデーション:**
+
+| フィールド | ルール |
+|------------|--------|
+| bgmId | UUID 形式、自分の BGM のみ指定可能 |
+| defaultBgmId | UUID 形式、is_active = true のデフォルト BGM のみ指定可能 |
 
 **レスポンス（200 OK）:**
 ```json
@@ -230,9 +247,29 @@ PUT /channels/:channelId/episodes/:episodeId/bgm
     "id": "uuid",
     "title": "エピソードタイトル",
     "description": "エピソードの説明",
+    "bgm": {
+      "id": "uuid",
+      "name": "明るいポップ",
+      "isDefault": true,
+      "audio": {
+        "id": "uuid",
+        "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
+        "durationMs": 180000
+      }
+    },
     "publishedAt": "2025-01-01T00:00:00Z",
     "createdAt": "2025-01-01T00:00:00Z",
     "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+**エラー（400 Bad Request）:**
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "bgmId と defaultBgmId は同時に指定できません"
   }
 }
 ```
@@ -254,6 +291,7 @@ DELETE /channels/:channelId/episodes/:episodeId/bgm
     "id": "uuid",
     "title": "エピソードタイトル",
     "description": "エピソードの説明",
+    "bgm": null,
     "publishedAt": "2025-01-01T00:00:00Z",
     "createdAt": "2025-01-01T00:00:00Z",
     "updatedAt": "2025-01-01T00:00:00Z"

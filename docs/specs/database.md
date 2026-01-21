@@ -8,6 +8,7 @@ erDiagram
     users ||--o{ oauth_accounts : has
     users ||--o{ channels : owns
     users ||--o{ characters : owns
+    users ||--o{ bgms : owns
     users ||--o{ likes : has
     users ||--o{ bookmarks : has
     users ||--o{ playback_histories : has
@@ -26,8 +27,11 @@ erDiagram
     episodes ||--o{ playback_histories : has
     episodes ||--o{ follows : has
     episodes ||--o| images : artwork
-    episodes ||--o| audios : bgm
+    episodes ||--o| bgms : user_bgm
+    episodes ||--o| default_bgms : default_bgm
     episodes ||--o| audios : full_audio
+    bgms ||--|| audios : has
+    default_bgms ||--|| audios : has
     script_lines ||--|| characters : speaker
 
     likes {
@@ -155,8 +159,28 @@ erDiagram
         text voice_style
         uuid artwork_id FK
         uuid bgm_id FK
+        uuid default_bgm_id FK
         uuid full_audio_id FK
         timestamp published_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    bgms {
+        uuid id PK
+        uuid user_id FK
+        uuid audio_id FK
+        varchar name
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    default_bgms {
+        uuid id PK
+        uuid audio_id FK
+        varchar name
+        integer sort_order
+        boolean is_active
         timestamp created_at
         timestamp updated_at
     }
@@ -339,6 +363,31 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 
 ---
 
+#### bgms
+
+ユーザーが所有する BGM を管理する。複数のエピソードで使い回すことができる。
+
+| カラム名 | 型 | NULLABLE | デフォルト | 説明 |
+|----------|-----|:--------:|------------|------|
+| id | UUID | | gen_random_uuid() | 主キー |
+| user_id | UUID | | - | 所有ユーザー（users 参照） |
+| audio_id | UUID | | - | 音声ファイル（audios 参照） |
+| name | VARCHAR(255) | | - | BGM 名 |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
+| updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
+
+**インデックス:**
+- PRIMARY KEY (id)
+- UNIQUE (user_id, name)
+- INDEX (user_id)
+- INDEX (audio_id)
+
+**外部キー:**
+- user_id → users(id) ON DELETE CASCADE
+- audio_id → audios(id) ON DELETE RESTRICT
+
+---
+
 #### channel_characters
 
 チャンネルとキャラクターの紐づけを管理する中間テーブル。
@@ -379,7 +428,8 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | user_prompt | TEXT | | '' | エピソード固有の台本生成設定（台本生成時に自動保存、内部管理用） |
 | voice_style | TEXT | | '' | 音声生成のスタイル指示（音声生成時に自動保存、例: "Read aloud in a warm, welcoming tone"） |
 | artwork_id | UUID | ◯ | - | カバー画像（images 参照） |
-| bgm_id | UUID | ◯ | - | BGM（audios 参照） |
+| bgm_id | UUID | ◯ | - | ユーザー BGM（bgms 参照） |
+| default_bgm_id | UUID | ◯ | - | デフォルト BGM（default_bgms 参照） |
 | full_audio_id | UUID | ◯ | - | 結合済み音声（audios 参照） |
 | published_at | TIMESTAMP | ◯ | - | 公開日時（NULL = 下書き） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
@@ -393,8 +443,12 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 **外部キー:**
 - channel_id → channels(id) ON DELETE CASCADE
 - artwork_id → images(id) ON DELETE SET NULL
-- bgm_id → audios(id) ON DELETE SET NULL
+- bgm_id → bgms(id) ON DELETE SET NULL
+- default_bgm_id → default_bgms(id) ON DELETE SET NULL
 - full_audio_id → audios(id) ON DELETE SET NULL
+
+**制約:**
+- bgm_id と default_bgm_id は同時に設定不可（CHECK 制約）
 
 ---
 
@@ -615,6 +669,32 @@ TTS ボイスのマスタデータを管理する。システム管理テーブ�
 
 ---
 
+#### default_bgms
+
+デフォルト BGM のマスタデータを管理する。システム管理テーブルのため、ユーザーは参照のみ可能。
+
+| カラム名 | 型 | NULLABLE | デフォルト | 説明 |
+|----------|-----|:--------:|------------|------|
+| id | UUID | | gen_random_uuid() | 主キー |
+| audio_id | UUID | | - | 音声ファイル（audios 参照） |
+| name | VARCHAR(255) | | - | BGM 名 |
+| sort_order | INTEGER | | 0 | 表示順 |
+| is_active | BOOLEAN | | true | 有効フラグ（false で新規選択不可） |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
+| updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
+
+**インデックス:**
+- PRIMARY KEY (id)
+- UNIQUE (name)
+- INDEX (sort_order)
+- INDEX (is_active)
+- INDEX (audio_id)
+
+**外部キー:**
+- audio_id → audios(id) ON DELETE RESTRICT
+
+---
+
 ## 補足
 
 ### Enum 型
@@ -635,11 +715,14 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 
 ### カスケード削除
 
-- User 削除時: 関連する Characters, Channels, Episodes, ScriptLines が削除
+- User 削除時: 関連する Characters, BGMs, Channels, Episodes, ScriptLines が削除
 - Channel 削除時: 関連する channel_characters, Episodes, ScriptLines が削除
 - Episode 削除時: 関連する ScriptLines が削除
 - Character 削除時: channel_characters で使用中の場合は RESTRICT（削除不可）
-- Audio / Image 削除時: 参照元は SET NULL（ファイルが消えても親レコードは残る）
+- BGM 削除時: Episodes で使用中の場合は SET NULL
+- Default BGM 削除時: Episodes で使用中の場合は SET NULL
+- Audio 削除時: BGMs / Default BGMs で使用中の場合は RESTRICT（削除不可）、Episodes からは SET NULL
+- Image 削除時: 参照元は SET NULL（ファイルが消えても親レコードは残る）
 - Voice 削除時: 使用中の場合は RESTRICT（削除不可）
 
 ### メディアファイルの管理
@@ -668,3 +751,13 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 - チャンネルは 1 つのカテゴリを持つ（任意）
 - 初期データとして Apple Podcasts 準拠のカテゴリをシードで投入
 - 物理削除は行わず、is_active フラグで無効化
+
+### BGM の管理
+
+- bgms テーブルでユーザーが所有する BGM を管理
+- default_bgms テーブルで管理者が提供するデフォルト BGM を管理（システム管理、ユーザーは参照のみ）
+- エピソードには bgm_id（ユーザー BGM）または default_bgm_id（デフォルト BGM）のどちらか一方のみ設定可能
+- 同一ユーザー内で BGM 名は一意、デフォルト BGM 名もシステム全体で一意
+- is_active = false のデフォルト BGM は新規設定時に選択不可（既存エピソードは継続利用可）
+- ユーザー BGM は User 削除時にカスケード削除
+- デフォルト BGM は物理削除は行わず、is_active フラグで無効化
