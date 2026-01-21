@@ -303,6 +303,9 @@ func (s *scriptLineService) Update(ctx context.Context, userID, channelID, episo
 		}
 	}
 
+	// Save 前にリレーションをクリア（GORMが外部キーを上書きしないようにする）
+	scriptLine.Speaker = model.Character{}
+
 	if err := s.scriptLineRepo.Update(ctx, scriptLine); err != nil {
 		return nil, err
 	}
