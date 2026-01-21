@@ -21,6 +21,7 @@ const (
 	CodeAlreadyBookmarked    ErrorCode = "ALREADY_BOOKMARKED"      // 409
 	CodeAlreadyFollowed      ErrorCode = "ALREADY_FOLLOWED"        // 409
 	CodeCharacterInUse       ErrorCode = "CHARACTER_IN_USE"        // 409
+	CodeBgmInUse             ErrorCode = "BGM_IN_USE"              // 409
 	CodeInternal             ErrorCode = "INTERNAL_ERROR"          // 500
 	CodeGenerationFailed     ErrorCode = "GENERATION_FAILED"       // 500
 	CodeMediaUploadFailed    ErrorCode = "MEDIA_UPLOAD_FAILED"     // 500
@@ -56,6 +57,7 @@ var (
 	ErrAlreadyBookmarked = newError(CodeAlreadyBookmarked, "既にブックマークに追加されています", http.StatusConflict)
 	ErrAlreadyFollowed   = newError(CodeAlreadyFollowed, "既にフォローしています", http.StatusConflict)
 	ErrCharacterInUse    = newError(CodeCharacterInUse, "このキャラクターは使用中です", http.StatusConflict)
+	ErrBgmInUse          = newError(CodeBgmInUse, "この BGM は使用中です", http.StatusConflict)
 
 	// 500 Internal Server Error
 	ErrInternal          = newError(CodeInternal, "サーバーエラーが発生しました", http.StatusInternalServerError)

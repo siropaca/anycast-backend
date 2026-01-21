@@ -94,3 +94,107 @@ func (h *BgmHandler) CreateBgm(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, result)
 }
+
+// GetMyBgm godoc
+// @Summary 自分の BGM 詳細取得
+// @Description 認証ユーザーが所有する指定された BGM の詳細を取得します
+// @Tags me
+// @Accept json
+// @Produce json
+// @Param bgmId path string true "BGM ID"
+// @Success 200 {object} response.BgmDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /me/bgms/{bgmId} [get]
+func (h *BgmHandler) GetMyBgm(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	bgmID := c.Param("bgmId")
+
+	result, err := h.bgmService.GetMyBgm(c.Request.Context(), userID, bgmID)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+// UpdateMyBgm godoc
+// @Summary 自分の BGM 更新
+// @Description 認証ユーザーが所有する指定された BGM を更新します
+// @Tags me
+// @Accept json
+// @Produce json
+// @Param bgmId path string true "BGM ID"
+// @Param request body request.UpdateBgmRequest true "BGM 更新リクエスト"
+// @Success 200 {object} response.BgmDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse "同じ名前の BGM が既に存在する場合"
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /me/bgms/{bgmId} [patch]
+func (h *BgmHandler) UpdateMyBgm(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	bgmID := c.Param("bgmId")
+
+	var req request.UpdateBgmRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		return
+	}
+
+	result, err := h.bgmService.UpdateMyBgm(c.Request.Context(), userID, bgmID, req)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+// DeleteMyBgm godoc
+// @Summary 自分の BGM 削除
+// @Description 認証ユーザーが所有する指定された BGM を削除します。エピソードで使用中の場合は削除できません。
+// @Tags me
+// @Accept json
+// @Produce json
+// @Param bgmId path string true "BGM ID"
+// @Success 204 "No Content"
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse "BGM がエピソードで使用中の場合"
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /me/bgms/{bgmId} [delete]
+func (h *BgmHandler) DeleteMyBgm(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	bgmID := c.Param("bgmId")
+
+	if err := h.bgmService.DeleteMyBgm(c.Request.Context(), userID, bgmID); err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}

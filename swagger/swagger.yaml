@@ -1,0 +1,2977 @@
+basePath: /api/v1
+definitions:
+  request.ChannelCharactersInput:
+    properties:
+      connect:
+        items:
+          $ref: '#/definitions/request.ConnectCharacterInput'
+        type: array
+      create:
+        items:
+          $ref: '#/definitions/request.CreateCharacterInput'
+        type: array
+    type: object
+  request.ConnectCharacterInput:
+    properties:
+      id:
+        type: string
+    required:
+    - id
+    type: object
+  request.CreateBgmRequest:
+    properties:
+      audioId:
+        type: string
+      name:
+        maxLength: 255
+        type: string
+    required:
+    - audioId
+    - name
+    type: object
+  request.CreateChannelRequest:
+    properties:
+      artworkImageId:
+        type: string
+      categoryId:
+        type: string
+      characters:
+        $ref: '#/definitions/request.ChannelCharactersInput'
+      description:
+        maxLength: 2000
+        type: string
+      name:
+        maxLength: 255
+        type: string
+      userPrompt:
+        maxLength: 2000
+        type: string
+    required:
+    - categoryId
+    - characters
+    - description
+    - name
+    - userPrompt
+    type: object
+  request.CreateCharacterInput:
+    properties:
+      avatarId:
+        type: string
+      name:
+        maxLength: 255
+        type: string
+      persona:
+        maxLength: 2000
+        type: string
+      voiceId:
+        type: string
+    required:
+    - name
+    - voiceId
+    type: object
+  request.CreateCharacterRequest:
+    properties:
+      avatarId:
+        type: string
+      name:
+        maxLength: 255
+        type: string
+      persona:
+        maxLength: 2000
+        type: string
+      voiceId:
+        type: string
+    required:
+    - name
+    - voiceId
+    type: object
+  request.CreateEpisodeRequest:
+    properties:
+      artworkImageId:
+        type: string
+      description:
+        maxLength: 2000
+        type: string
+      title:
+        maxLength: 255
+        type: string
+    required:
+    - description
+    - title
+    type: object
+  request.CreateScriptLineRequest:
+    properties:
+      afterLineId:
+        type: string
+      emotion:
+        type: string
+      speakerId:
+        type: string
+      text:
+        type: string
+    required:
+    - speakerId
+    type: object
+  request.GenerateAudioRequest:
+    properties:
+      voiceStyle:
+        maxLength: 500
+        type: string
+    type: object
+  request.GenerateScriptRequest:
+    properties:
+      durationMinutes:
+        maximum: 30
+        minimum: 3
+        type: integer
+      prompt:
+        description: Episode の UserPrompt になる
+        maxLength: 2000
+        type: string
+      withEmotion:
+        description: 感情を付与するかどうか
+        type: boolean
+    required:
+    - prompt
+    type: object
+  request.ImportScriptRequest:
+    properties:
+      text:
+        type: string
+    required:
+    - text
+    type: object
+  request.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  request.OAuthGoogleRequest:
+    properties:
+      accessToken:
+        type: string
+      displayName:
+        maxLength: 20
+        type: string
+      email:
+        type: string
+      expiresAt:
+        type: integer
+      providerUserId:
+        type: string
+      refreshToken:
+        type: string
+    required:
+    - accessToken
+    - displayName
+    - email
+    - providerUserId
+    type: object
+  request.PublishChannelRequest:
+    properties:
+      publishedAt:
+        description: RFC3339 形式。省略時は現在時刻
+        type: string
+    type: object
+  request.PublishEpisodeRequest:
+    properties:
+      publishedAt:
+        description: RFC3339 形式。省略時は現在時刻
+        type: string
+    type: object
+  request.RegisterRequest:
+    properties:
+      displayName:
+        maxLength: 20
+        type: string
+      email:
+        type: string
+      password:
+        maxLength: 100
+        minLength: 8
+        type: string
+    required:
+    - displayName
+    - email
+    - password
+    type: object
+  request.ReorderScriptLinesRequest:
+    properties:
+      lineIds:
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - lineIds
+    type: object
+  request.SetEpisodeBgmRequest:
+    properties:
+      bgmId:
+        type: string
+      defaultBgmId:
+        type: string
+    type: object
+  request.UpdateBgmRequest:
+    properties:
+      name:
+        maxLength: 255
+        type: string
+    type: object
+  request.UpdateChannelRequest:
+    properties:
+      artworkImageId:
+        type: string
+      categoryId:
+        type: string
+      description:
+        maxLength: 2000
+        type: string
+      name:
+        maxLength: 255
+        type: string
+      userPrompt:
+        maxLength: 2000
+        type: string
+    required:
+    - categoryId
+    - description
+    - name
+    - userPrompt
+    type: object
+  request.UpdateCharacterRequest:
+    properties:
+      avatarId:
+        type: string
+      name:
+        maxLength: 255
+        type: string
+      persona:
+        maxLength: 2000
+        type: string
+      voiceId:
+        type: string
+    type: object
+  request.UpdateEpisodeRequest:
+    properties:
+      artworkImageId:
+        type: string
+      description:
+        maxLength: 2000
+        type: string
+      title:
+        maxLength: 255
+        type: string
+    required:
+    - description
+    - title
+    type: object
+  request.UpdateScriptLineRequest:
+    properties:
+      emotion:
+        type: string
+      text:
+        type: string
+    type: object
+  request.UpdateUserPromptRequest:
+    properties:
+      userPrompt:
+        type: string
+    type: object
+  response.ArtworkResponse:
+    properties:
+      id:
+        type: string
+      url:
+        type: string
+    required:
+    - id
+    - url
+    type: object
+  response.AudioResponse:
+    properties:
+      durationMs:
+        type: integer
+      fileSize:
+        type: integer
+      id:
+        type: string
+      mimeType:
+        type: string
+      url:
+        type: string
+    required:
+    - durationMs
+    - fileSize
+    - id
+    - mimeType
+    - url
+    type: object
+  response.AudioUploadDataResponse:
+    properties:
+      data:
+        $ref: '#/definitions/response.AudioUploadResponse'
+    required:
+    - data
+    type: object
+  response.AudioUploadResponse:
+    properties:
+      durationMs:
+        type: integer
+      fileSize:
+        type: integer
+      filename:
+        type: string
+      id:
+        type: string
+      mimeType:
+        type: string
+      url:
+        type: string
+    required:
+    - durationMs
+    - fileSize
+    - filename
+    - id
+    - mimeType
+    - url
+    type: object
+  response.AuthDataResponse:
+    properties:
+      data:
+        $ref: '#/definitions/response.AuthResponse'
+    required:
+    - data
+    type: object
+  response.AuthResponse:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/response.UserResponse'
+    required:
+    - token
+    - user
+    type: object
+  response.AvatarResponse:
+    properties:
+      id:
+        type: string
+      url:
+        type: string
+    required:
+    - id
+    - url
+    type: object
+  response.BgmAudioResponse:
+    properties:
+      durationMs:
+        type: integer
+      id:
+        type: string
+      url:
+        type: string
+    required:
+    - durationMs
+    - id
+    - url
+    type: object
+  response.BgmDataResponse:
+    properties:
+      data:
+        $ref: '#/definitions/response.BgmResponse'
+    required:
+    - data
+    type: object
+  response.BgmListWithPaginationResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/response.BgmResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/response.PaginationResponse'
+    required:
+    - data
+    - pagination
+    type: object
+  response.BgmResponse:
+    properties:
+      audio:
+        $ref: '#/definitions/response.BgmAudioResponse'
+      createdAt:
+        type: string
+      id:
+        type: string
+      isDefault:
+        type: boolean
+      name:
+        type: string
+      updatedAt:
+        type: string
+    required:
+    - audio
+    - createdAt
+    - id
+    - isDefault
+    - name
+    - updatedAt
+    type: object
+  response.CategoryListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/response.CategoryResponse'
+        type: array
+    required:
+    - data
+    type: object
+  response.CategoryResponse:
+    properties:
+      id:
+        type: string
+      isActive:
+        type: boolean
+      name:
+        type: string
+      slug:
+        type: string
+      sortOrder:
+        type: integer
+    required:
+    - id
+    - isActive
+    - name
+    - slug
+    - sortOrder
+    type: object
+  response.ChannelDataResponse:
+    properties:
+      data:
+        $ref: '#/definitions/response.ChannelResponse'
+    required:
+    - data
+    type: object
+  response.ChannelListWithPaginationResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/response.ChannelResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/response.PaginationResponse'
+    required:
+    - data
+    - pagination
+    type: object
+  response.ChannelResponse:
+    properties:
+      artwork:
+        allOf:
+        - $ref: '#/definitions/response.ArtworkResponse'
+        x-nullable: true
+      category:
+        $ref: '#/definitions/response.CategoryResponse'
+      characters:
+        items:
+          $ref: '#/definitions/response.CharacterResponse'
+        type: array
+      createdAt:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      publishedAt:
+        type: string
+        x-nullable: true
+      updatedAt:
+        type: string
+      userPrompt:
+        type: string
+    required:
+    - category
+    - characters
+    - createdAt
+    - description
+    - id
+    - name
+    - updatedAt
+    - userPrompt
+    type: object
+  response.CharacterChannelResponse:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    required:
+    - id
+    - name
+    type: object
+  response.CharacterDataResponse:
+    properties:
+      data:
+        $ref: '#/definitions/response.CharacterWithChannelsResponse'
+    required:
+    - data
+    type: object
+  response.CharacterListWithPaginationResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/response.CharacterWithChannelsResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/response.PaginationResponse'
+    required:
+    - data
+    - pagination
+    type: object
+  response.CharacterResponse:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      persona:
+        type: string
+      updatedAt:
+        type: string
+      voice:
+        $ref: '#/definitions/response.CharacterVoiceResponse'
+    required:
+    - createdAt
+    - id
+    - name
+    - persona
+    - updatedAt
+    - voice
+    type: object
+  response.CharacterVoiceResponse:
+    properties:
+      gender:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      provider:
+        type: string
+    required:
+    - gender
+    - id
+    - name
+    - provider
+    type: object
+  response.CharacterWithChannelsResponse:
+    properties:
+      avatar:
+        allOf:
+        - $ref: '#/definitions/response.AvatarResponse'
+        x-nullable: true
+      channels:
+        items:
+          $ref: '#/definitions/response.CharacterChannelResponse'
+        type: array
+      createdAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      persona:
+        type: string
+      updatedAt:
+        type: string
+      voice:
+        $ref: '#/definitions/response.CharacterVoiceResponse'
+    required:
+    - channels
+    - createdAt
+    - id
+    - name
+    - persona
+    - updatedAt
+    - voice
+    type: object
+  response.CleanupOrphanedMediaResponse:
+    properties:
+      deletedAudioCount:
+        type: integer
+      deletedImageCount:
+        type: integer
+      dryRun:
+        type: boolean
+      failedAudioCount:
+        type: integer
+      failedImageCount:
+        type: integer
+      orphanedAudios:
+        items:
+          $ref: '#/definitions/response.OrphanedAudioResponse'
+        type: array
+      orphanedImages:
+        items:
+          $ref: '#/definitions/response.OrphanedImageResponse'
+        type: array
+    required:
+    - deletedAudioCount
+    - deletedImageCount
+    - dryRun
+    - failedAudioCount
+    - failedImageCount
+    - orphanedAudios
+    - orphanedImages
+    type: object
+  response.EpisodeBgmResponse:
+    properties:
+      audio:
+        $ref: '#/definitions/response.BgmAudioResponse'
+      id:
+        type: string
+      isDefault:
+        type: boolean
+      name:
+        type: string
+    required:
+    - audio
+    - id
+    - isDefault
+    - name
+    type: object
+  response.EpisodeDataResponse:
+    properties:
+      data:
+        $ref: '#/definitions/response.EpisodeResponse'
+    required:
+    - data
+    type: object
+  response.EpisodeListWithPaginationResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/response.EpisodeResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/response.PaginationResponse'
+    required:
+    - data
+    - pagination
+    type: object
+  response.EpisodeResponse:
+    properties:
+      artwork:
+        allOf:
+        - $ref: '#/definitions/response.ArtworkResponse'
+        x-nullable: true
+      bgm:
+        allOf:
+        - $ref: '#/definitions/response.EpisodeBgmResponse'
+        x-nullable: true
+      createdAt:
+        type: string
+      description:
+        type: string
+      fullAudio:
+        allOf:
+        - $ref: '#/definitions/response.AudioResponse'
+        x-nullable: true
+      id:
+        type: string
+      publishedAt:
+        type: string
+        x-nullable: true
+      title:
+        type: string
+      updatedAt:
+        type: string
+      userPrompt:
+        type: string
+      voiceStyle:
+        type: string
+    required:
+    - createdAt
+    - description
+    - id
+    - title
+    - updatedAt
+    - userPrompt
+    - voiceStyle
+    type: object
+  response.ErrorDetail:
+    properties:
+      code:
+        example: VALIDATION_ERROR
+        type: string
+      details: {}
+      message:
+        example: Invalid request parameters
+        type: string
+    required:
+    - code
+    - message
+    type: object
+  response.ErrorResponse:
+    properties:
+      error:
+        $ref: '#/definitions/response.ErrorDetail'
+    required:
+    - error
+    type: object
+  response.GenerateAudioResponse:
+    properties:
+      data:
+        $ref: '#/definitions/response.AudioResponse'
+    required:
+    - data
+    type: object
+  response.ImageUploadDataResponse:
+    properties:
+      data:
+        $ref: '#/definitions/response.ImageUploadResponse'
+    required:
+    - data
+    type: object
+  response.ImageUploadResponse:
+    properties:
+      fileSize:
+        type: integer
+      filename:
+        type: string
+      id:
+        type: string
+      mimeType:
+        type: string
+      url:
+        type: string
+    required:
+    - fileSize
+    - filename
+    - id
+    - mimeType
+    - url
+    type: object
+  response.MeDataResponse:
+    properties:
+      data:
+        $ref: '#/definitions/response.MeResponse'
+    required:
+    - data
+    type: object
+  response.MeResponse:
+    properties:
+      avatar:
+        allOf:
+        - $ref: '#/definitions/response.AvatarResponse'
+        x-nullable: true
+      createdAt:
+        type: string
+      displayName:
+        type: string
+      email:
+        type: string
+      hasPassword:
+        type: boolean
+      id:
+        type: string
+      oauthProviders:
+        items:
+          type: string
+        type: array
+      role:
+        type: string
+      userPrompt:
+        type: string
+      username:
+        type: string
+    required:
+    - createdAt
+    - displayName
+    - email
+    - hasPassword
+    - id
+    - oauthProviders
+    - role
+    - userPrompt
+    - username
+    type: object
+  response.OrphanedAudioResponse:
+    properties:
+      createdAt:
+        type: string
+      fileSize:
+        type: integer
+      filename:
+        type: string
+      id:
+        type: string
+      url:
+        type: string
+    required:
+    - createdAt
+    - fileSize
+    - filename
+    - id
+    - url
+    type: object
+  response.OrphanedImageResponse:
+    properties:
+      createdAt:
+        type: string
+      fileSize:
+        type: integer
+      filename:
+        type: string
+      id:
+        type: string
+      url:
+        type: string
+    required:
+    - createdAt
+    - fileSize
+    - filename
+    - id
+    - url
+    type: object
+  response.PaginationResponse:
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+    required:
+    - limit
+    - offset
+    - total
+    type: object
+  response.ScriptLineListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/response.ScriptLineResponse'
+        type: array
+    required:
+    - data
+    type: object
+  response.ScriptLineResponse:
+    properties:
+      createdAt:
+        type: string
+      emotion:
+        type: string
+      id:
+        type: string
+      lineOrder:
+        type: integer
+      speaker:
+        $ref: '#/definitions/response.SpeakerResponse'
+      text:
+        type: string
+      updatedAt:
+        type: string
+    required:
+    - createdAt
+    - id
+    - lineOrder
+    - speaker
+    - text
+    - updatedAt
+    type: object
+  response.SpeakerResponse:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      persona:
+        type: string
+      voice:
+        $ref: '#/definitions/response.CharacterVoiceResponse'
+    required:
+    - id
+    - name
+    - persona
+    - voice
+    type: object
+  response.UserResponse:
+    properties:
+      avatarUrl:
+        type: string
+        x-nullable: true
+      displayName:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      role:
+        type: string
+      username:
+        type: string
+    required:
+    - displayName
+    - email
+    - id
+    - role
+    - username
+    type: object
+  response.VoiceDataResponse:
+    properties:
+      data:
+        $ref: '#/definitions/response.VoiceResponse'
+    required:
+    - data
+    type: object
+  response.VoiceListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/response.VoiceResponse'
+        type: array
+    required:
+    - data
+    type: object
+  response.VoiceResponse:
+    properties:
+      gender:
+        type: string
+      id:
+        type: string
+      isActive:
+        type: boolean
+      name:
+        type: string
+      provider:
+        type: string
+      providerVoiceId:
+        type: string
+    required:
+    - gender
+    - id
+    - isActive
+    - name
+    - provider
+    - providerVoiceId
+    type: object
+host: localhost:8081
+info:
+  contact: {}
+  description: AI ポッドキャスト作成・配信プラットフォーム API
+  title: Anycast API
+  version: "1.0"
+paths:
+  /admin/cleanup/orphaned-media:
+    post:
+      consumes:
+      - application/json
+      description: どのテーブルからも参照されていない audios / images レコードを検出し、GCS ファイルと DB レコードを削除する
+      parameters:
+      - description: true の場合、削除対象の一覧を返すのみで実際の削除は行わない
+        in: query
+        name: dry_run
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.CleanupOrphanedMediaResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: 孤児メディアファイル削除
+      tags:
+      - admin
+  /audios:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 音声ファイルをアップロードします
+      parameters:
+      - description: アップロードする音声ファイル（mp3, wav, ogg, aac, m4a）
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.AudioUploadDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 音声アップロード
+      tags:
+      - audios
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: メールアドレスとパスワードで認証します
+      parameters:
+      - description: 認証情報
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.AuthDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: メール/パスワード認証
+      tags:
+      - auth
+  /auth/oauth/google:
+    post:
+      consumes:
+      - application/json
+      description: Google OAuth でユーザーを認証/作成します
+      parameters:
+      - description: OAuth 情報
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.OAuthGoogleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 既存ユーザー
+          schema:
+            $ref: '#/definitions/response.AuthDataResponse'
+        "201":
+          description: 新規ユーザー
+          schema:
+            $ref: '#/definitions/response.AuthDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Google OAuth 認証
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: 新規ユーザーを登録します
+      parameters:
+      - description: 登録情報
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.AuthDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: ユーザー登録
+      tags:
+      - auth
+  /categories:
+    get:
+      consumes:
+      - application/json
+      description: カテゴリの一覧を取得します
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.CategoryListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: カテゴリ一覧取得
+      tags:
+      - categories
+  /channels:
+    post:
+      consumes:
+      - application/json
+      description: 新しいチャンネルを作成します
+      parameters:
+      - description: チャンネル作成リクエスト
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateChannelRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.ChannelDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: チャンネル作成
+      tags:
+      - channels
+  /channels/{channelId}:
+    delete:
+      description: チャンネルを削除します（オーナーのみ）
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: チャンネル削除
+      tags:
+      - channels
+    get:
+      consumes:
+      - application/json
+      description: チャンネルを取得します（公開中、または自分のチャンネルのみ）
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ChannelDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: チャンネル取得
+      tags:
+      - channels
+    patch:
+      consumes:
+      - application/json
+      description: チャンネルを更新します（オーナーのみ）
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      - description: チャンネル更新リクエスト
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateChannelRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ChannelDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: チャンネル更新
+      tags:
+      - channels
+  /channels/{channelId}/episodes:
+    post:
+      consumes:
+      - application/json
+      description: 指定したチャンネルにエピソードを作成します
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      - description: エピソード作成リクエスト
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateEpisodeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.EpisodeDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: エピソード作成
+      tags:
+      - episodes
+  /channels/{channelId}/episodes/{episodeId}:
+    delete:
+      consumes:
+      - application/json
+      description: 指定したエピソードを削除します
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      - description: エピソード ID
+        in: path
+        name: episodeId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: エピソード削除
+      tags:
+      - episodes
+    patch:
+      consumes:
+      - application/json
+      description: 指定したエピソードを更新します
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      - description: エピソード ID
+        in: path
+        name: episodeId
+        required: true
+        type: string
+      - description: エピソード更新リクエスト
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateEpisodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.EpisodeDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: エピソード更新
+      tags:
+      - episodes
+  /channels/{channelId}/episodes/{episodeId}/audio/generate:
+    post:
+      consumes:
+      - application/json
+      description: 指定したエピソードの台本から音声を生成します
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      - description: エピソード ID
+        in: path
+        name: episodeId
+        required: true
+        type: string
+      - description: 音声生成リクエスト
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/request.GenerateAudioRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.GenerateAudioResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: エピソード音声生成
+      tags:
+      - episodes
+  /channels/{channelId}/episodes/{episodeId}/bgm:
+    delete:
+      consumes:
+      - application/json
+      description: 指定したエピソードに設定されている BGM を削除します
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      - description: エピソード ID
+        in: path
+        name: episodeId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.EpisodeDataResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: エピソード BGM 削除
+      tags:
+      - episodes
+    put:
+      consumes:
+      - application/json
+      description: 指定したエピソードに BGM を設定します。ユーザー BGM またはデフォルト BGM のどちらかを指定します。
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      - description: エピソード ID
+        in: path
+        name: episodeId
+        required: true
+        type: string
+      - description: BGM 設定リクエスト
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.SetEpisodeBgmRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.EpisodeDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: エピソード BGM 設定
+      tags:
+      - episodes
+  /channels/{channelId}/episodes/{episodeId}/publish:
+    post:
+      consumes:
+      - application/json
+      description: 指定したエピソードを公開します。publishedAt を省略すると現在時刻で即時公開、指定すると予約公開になります。
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      - description: エピソード ID
+        in: path
+        name: episodeId
+        required: true
+        type: string
+      - description: 公開リクエスト
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/request.PublishEpisodeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.EpisodeDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: エピソード公開
+      tags:
+      - episodes
+  /channels/{channelId}/episodes/{episodeId}/script/export:
+    get:
+      description: 台本をテキストファイルとしてダウンロードします。
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      - description: エピソード ID
+        in: path
+        name: episodeId
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: 台本テキスト
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 台本テキストを出力
+      tags:
+      - script
+  /channels/{channelId}/episodes/{episodeId}/script/generate:
+    post:
+      consumes:
+      - application/json
+      description: 指定したエピソードの台本を AI を使って生成します。既存の台本がある場合は全て削除されます。
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      - description: エピソード ID
+        in: path
+        name: episodeId
+        required: true
+        type: string
+      - description: 台本生成リクエスト
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.GenerateScriptRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ScriptLineListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 台本を AI で生成
+      tags:
+      - script
+  /channels/{channelId}/episodes/{episodeId}/script/import:
+    post:
+      consumes:
+      - application/json
+      description: テキスト形式の台本をインポートします。既存の台本がある場合は全て削除されます。
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      - description: エピソード ID
+        in: path
+        name: episodeId
+        required: true
+        type: string
+      - description: 台本インポートリクエスト
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.ImportScriptRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ScriptLineListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 台本テキストを取り込み
+      tags:
+      - script
+  /channels/{channelId}/episodes/{episodeId}/script/lines:
+    get:
+      consumes:
+      - application/json
+      description: 指定したエピソードの台本行一覧を取得します
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      - description: エピソード ID
+        in: path
+        name: episodeId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ScriptLineListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 台本行一覧取得
+      tags:
+      - script
+    post:
+      consumes:
+      - application/json
+      description: 指定した位置に新しい台本行を追加します
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      - description: エピソード ID
+        in: path
+        name: episodeId
+        required: true
+        type: string
+      - description: 台本行作成リクエスト
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateScriptLineRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.ScriptLineResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 台本行作成
+      tags:
+      - script
+  /channels/{channelId}/episodes/{episodeId}/script/lines/{lineId}:
+    delete:
+      consumes:
+      - application/json
+      description: 指定した台本行を削除します
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      - description: エピソード ID
+        in: path
+        name: episodeId
+        required: true
+        type: string
+      - description: 台本行 ID
+        in: path
+        name: lineId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 台本行削除
+      tags:
+      - script
+    patch:
+      consumes:
+      - application/json
+      description: 指定した台本行を更新します。
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      - description: エピソード ID
+        in: path
+        name: episodeId
+        required: true
+        type: string
+      - description: 台本行 ID
+        in: path
+        name: lineId
+        required: true
+        type: string
+      - description: 台本行更新リクエスト
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateScriptLineRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ScriptLineResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 台本行更新
+      tags:
+      - script
+  /channels/{channelId}/episodes/{episodeId}/script/reorder:
+    post:
+      consumes:
+      - application/json
+      description: 台本行の順序を並び替えます
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      - description: エピソード ID
+        in: path
+        name: episodeId
+        required: true
+        type: string
+      - description: 並び替えリクエスト
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.ReorderScriptLinesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ScriptLineListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 台本行並び替え
+      tags:
+      - script
+  /channels/{channelId}/episodes/{episodeId}/unpublish:
+    post:
+      consumes:
+      - application/json
+      description: 指定したエピソードを非公開（下書き）状態に戻します
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      - description: エピソード ID
+        in: path
+        name: episodeId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.EpisodeDataResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: エピソード非公開
+      tags:
+      - episodes
+  /channels/{channelId}/publish:
+    post:
+      consumes:
+      - application/json
+      description: 指定したチャンネルを公開します。publishedAt を省略すると現在時刻で即時公開、指定すると予約公開になります。
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      - description: 公開リクエスト
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/request.PublishChannelRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ChannelDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: チャンネル公開
+      tags:
+      - channels
+  /channels/{channelId}/unpublish:
+    post:
+      consumes:
+      - application/json
+      description: 指定したチャンネルを非公開（下書き）状態に戻します
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ChannelDataResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: チャンネル非公開
+      tags:
+      - channels
+  /images:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 画像ファイルをアップロードします
+      parameters:
+      - description: アップロードする画像ファイル（png, jpeg, gif, webp）
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.ImageUploadDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 画像アップロード
+      tags:
+      - images
+  /me:
+    get:
+      description: 認証済みユーザーの情報を取得します
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MeDataResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 現在のユーザー取得
+      tags:
+      - me
+  /me/bgms:
+    get:
+      consumes:
+      - application/json
+      description: 認証ユーザーの所有する BGM 一覧を取得します。include_default=true の場合はデフォルト BGM も含めます。
+      parameters:
+      - description: 'デフォルト BGM を含めるかどうか（デフォルト: false）'
+        in: query
+        name: include_default
+        type: boolean
+      - description: '取得件数（デフォルト: 20、最大: 100）'
+        in: query
+        name: limit
+        type: integer
+      - description: 'オフセット（デフォルト: 0）'
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.BgmListWithPaginationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 自分の BGM 一覧取得
+      tags:
+      - me
+    post:
+      consumes:
+      - application/json
+      description: 新しい BGM を作成します
+      parameters:
+      - description: BGM 作成リクエスト
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateBgmRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.BgmDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: 指定された音声ファイルが見つからない場合
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: 同じ名前の BGM が既に存在する場合
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: BGM 作成
+      tags:
+      - me
+  /me/bgms/{bgmId}:
+    delete:
+      consumes:
+      - application/json
+      description: 認証ユーザーが所有する指定された BGM を削除します。エピソードで使用中の場合は削除できません。
+      parameters:
+      - description: BGM ID
+        in: path
+        name: bgmId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: BGM がエピソードで使用中の場合
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 自分の BGM 削除
+      tags:
+      - me
+    get:
+      consumes:
+      - application/json
+      description: 認証ユーザーが所有する指定された BGM の詳細を取得します
+      parameters:
+      - description: BGM ID
+        in: path
+        name: bgmId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.BgmDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 自分の BGM 詳細取得
+      tags:
+      - me
+    patch:
+      consumes:
+      - application/json
+      description: 認証ユーザーが所有する指定された BGM を更新します
+      parameters:
+      - description: BGM ID
+        in: path
+        name: bgmId
+        required: true
+        type: string
+      - description: BGM 更新リクエスト
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateBgmRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.BgmDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: 同じ名前の BGM が既に存在する場合
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 自分の BGM 更新
+      tags:
+      - me
+  /me/channels:
+    get:
+      consumes:
+      - application/json
+      description: 認証ユーザーの所有するチャンネル一覧を取得します（非公開含む）
+      parameters:
+      - description: 公開状態でフィルタ（published / draft）
+        in: query
+        name: status
+        type: string
+      - description: '取得件数（デフォルト: 20、最大: 100）'
+        in: query
+        name: limit
+        type: integer
+      - description: 'オフセット（デフォルト: 0）'
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ChannelListWithPaginationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 自分のチャンネル一覧取得
+      tags:
+      - me
+  /me/channels/{channelId}:
+    get:
+      consumes:
+      - application/json
+      description: 認証ユーザーの所有するチャンネルを取得します（非公開含む）
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ChannelDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 自分のチャンネル取得
+      tags:
+      - me
+  /me/channels/{channelId}/episodes:
+    get:
+      consumes:
+      - application/json
+      description: 自分のチャンネルに紐付くエピソード一覧を取得します（非公開含む）
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      - description: 公開状態でフィルタ（published / draft）
+        in: query
+        name: status
+        type: string
+      - description: '取得件数（デフォルト: 20、最大: 100）'
+        in: query
+        name: limit
+        type: integer
+      - description: 'オフセット（デフォルト: 0）'
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.EpisodeListWithPaginationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 自分のチャンネルのエピソード一覧取得
+      tags:
+      - me
+  /me/channels/{channelId}/episodes/{episodeId}:
+    get:
+      consumes:
+      - application/json
+      description: 自分のチャンネルに紐付くエピソードを取得します（非公開含む）
+      parameters:
+      - description: チャンネル ID
+        in: path
+        name: channelId
+        required: true
+        type: string
+      - description: エピソード ID
+        in: path
+        name: episodeId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.EpisodeDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 自分のチャンネルのエピソード取得
+      tags:
+      - me
+  /me/characters:
+    get:
+      consumes:
+      - application/json
+      description: 認証ユーザーの所有するキャラクター一覧を取得します
+      parameters:
+      - description: '取得件数（デフォルト: 20、最大: 100）'
+        in: query
+        name: limit
+        type: integer
+      - description: 'オフセット（デフォルト: 0）'
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.CharacterListWithPaginationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 自分のキャラクター一覧取得
+      tags:
+      - me
+    post:
+      consumes:
+      - application/json
+      description: 新しいキャラクターを作成します
+      parameters:
+      - description: キャラクター作成リクエスト
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateCharacterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/response.CharacterDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: 指定されたボイスまたは画像が見つからない場合
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: 同じ名前のキャラクターが既に存在する場合
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: キャラクター作成
+      tags:
+      - me
+  /me/characters/{characterId}:
+    delete:
+      consumes:
+      - application/json
+      description: キャラクターを削除します
+      parameters:
+      - description: キャラクター ID
+        in: path
+        name: characterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: キャラクターが見つからない場合
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: キャラクターが使用中の場合
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: キャラクター削除
+      tags:
+      - me
+    get:
+      consumes:
+      - application/json
+      description: 認証ユーザーの所有するキャラクターを取得します
+      parameters:
+      - description: キャラクター ID
+        in: path
+        name: characterId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.CharacterDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: 自分のキャラクター取得
+      tags:
+      - me
+    patch:
+      consumes:
+      - application/json
+      description: キャラクターを更新します
+      parameters:
+      - description: キャラクター ID
+        in: path
+        name: characterId
+        required: true
+        type: string
+      - description: キャラクター更新リクエスト
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateCharacterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.CharacterDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: キャラクター、ボイス、または画像が見つからない場合
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: 同じ名前のキャラクターが既に存在する場合
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: キャラクター更新
+      tags:
+      - me
+  /me/prompt:
+    patch:
+      consumes:
+      - application/json
+      description: ユーザーの台本生成用プロンプト（基本方針）を更新します
+      parameters:
+      - description: プロンプト更新リクエスト
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateUserPromptRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.MeDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: ユーザープロンプト更新
+      tags:
+      - me
+  /voices:
+    get:
+      consumes:
+      - application/json
+      description: 利用可能なボイスの一覧を取得します
+      parameters:
+      - description: 'プロバイダでフィルタ（例: google）'
+        in: query
+        name: provider
+        type: string
+      - description: 性別でフィルタ（male / female / neutral）
+        in: query
+        name: gender
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.VoiceListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: ボイス一覧取得
+      tags:
+      - voices
+  /voices/{voiceId}:
+    get:
+      consumes:
+      - application/json
+      description: 指定された ID のボイスを取得します
+      parameters:
+      - description: ボイス ID（UUID 形式）
+        in: path
+        name: voiceId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.VoiceDataResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: ボイス取得
+      tags:
+      - voices
+swagger: "2.0"
