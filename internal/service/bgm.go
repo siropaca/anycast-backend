@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/request"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
@@ -14,11 +15,13 @@ import (
 // BGM 関連のビジネスロジックインターフェース
 type BgmService interface {
 	ListMyBgms(ctx context.Context, userID string, req request.ListMyBgmsRequest) (*response.BgmListWithPaginationResponse, error)
+	CreateBgm(ctx context.Context, userID string, req request.CreateBgmRequest) (*response.BgmDataResponse, error)
 }
 
 type bgmService struct {
 	bgmRepo        repository.BgmRepository
 	defaultBgmRepo repository.DefaultBgmRepository
+	audioRepo      repository.AudioRepository
 	storageClient  storage.Client
 }
 
@@ -26,11 +29,13 @@ type bgmService struct {
 func NewBgmService(
 	bgmRepo repository.BgmRepository,
 	defaultBgmRepo repository.DefaultBgmRepository,
+	audioRepo repository.AudioRepository,
 	storageClient storage.Client,
 ) BgmService {
 	return &bgmService{
 		bgmRepo:        bgmRepo,
 		defaultBgmRepo: defaultBgmRepo,
+		audioRepo:      audioRepo,
 		storageClient:  storageClient,
 	}
 }
@@ -232,4 +237,53 @@ func (s *bgmService) toAudioResponse(ctx context.Context, audio model.Audio) (re
 		URL:        url,
 		DurationMs: audio.DurationMs,
 	}, nil
+}
+
+// BGM を作成する
+func (s *bgmService) CreateBgm(ctx context.Context, userID string, req request.CreateBgmRequest) (*response.BgmDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 同一ユーザー内で同じ名前の BGM が存在するかチェック
+	exists, err := s.bgmRepo.ExistsByUserIDAndName(ctx, uid, req.Name, nil)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, apperror.ErrDuplicateName.WithMessage("同じ名前の BGM が既に存在します")
+	}
+
+	// 音声ファイルの存在確認
+	audioID, err := uuid.Parse(req.AudioID)
+	if err != nil {
+		return nil, err
+	}
+	audio, err := s.audioRepo.FindByID(ctx, audioID)
+	if err != nil {
+		return nil, err
+	}
+
+	// BGM を作成
+	bgm := &model.Bgm{
+		ID:      uuid.New(),
+		UserID:  uid,
+		AudioID: audioID,
+		Name:    req.Name,
+	}
+
+	if err := s.bgmRepo.Create(ctx, bgm); err != nil {
+		return nil, err
+	}
+
+	// レスポンス用にリレーションを設定
+	bgm.Audio = *audio
+
+	res, err := s.toBgmResponse(ctx, *bgm)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.BgmDataResponse{Data: res}, nil
 }

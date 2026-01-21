@@ -18,3 +18,13 @@ Authorization: Bearer {{token}}
 ### 自分の BGM 一覧取得（デフォルト BGM を含む + ページネーション）
 GET {{baseUrl}}/me/bgms?include_default=true&limit=10&offset=0
 Authorization: Bearer {{token}}
+
+### BGM 作成
+POST {{baseUrl}}/me/bgms
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "お気に入り曲",
+  "audioId": "YOUR_AUDIO_ID_HERE"
+}

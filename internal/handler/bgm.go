@@ -57,3 +57,40 @@ func (h *BgmHandler) ListMyBgms(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+
+// CreateBgm godoc
+// @Summary BGM 作成
+// @Description 新しい BGM を作成します
+// @Tags me
+// @Accept json
+// @Produce json
+// @Param request body request.CreateBgmRequest true "BGM 作成リクエスト"
+// @Success 201 {object} response.BgmDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse "指定された音声ファイルが見つからない場合"
+// @Failure 409 {object} response.ErrorResponse "同じ名前の BGM が既に存在する場合"
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /me/bgms [post]
+func (h *BgmHandler) CreateBgm(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	var req request.CreateBgmRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		return
+	}
+
+	result, err := h.bgmService.CreateBgm(c.Request.Context(), userID, req)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, result)
+}
