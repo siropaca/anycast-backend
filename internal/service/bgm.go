@@ -292,7 +292,7 @@ func (s *bgmService) CreateBgm(ctx context.Context, userID string, req request.C
 }
 
 // 自分の BGM を取得する
-func (s *bgmService) GetMyBgm(ctx context.Context, userID string, bgmID string) (*response.BgmDataResponse, error) {
+func (s *bgmService) GetMyBgm(ctx context.Context, userID, bgmID string) (*response.BgmDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
 		return nil, err
@@ -322,7 +322,7 @@ func (s *bgmService) GetMyBgm(ctx context.Context, userID string, bgmID string) 
 }
 
 // 自分の BGM を更新する
-func (s *bgmService) UpdateMyBgm(ctx context.Context, userID string, bgmID string, req request.UpdateBgmRequest) (*response.BgmDataResponse, error) {
+func (s *bgmService) UpdateMyBgm(ctx context.Context, userID, bgmID string, req request.UpdateBgmRequest) (*response.BgmDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
 		return nil, err
@@ -369,7 +369,7 @@ func (s *bgmService) UpdateMyBgm(ctx context.Context, userID string, bgmID strin
 }
 
 // 自分の BGM を削除する
-func (s *bgmService) DeleteMyBgm(ctx context.Context, userID string, bgmID string) error {
+func (s *bgmService) DeleteMyBgm(ctx context.Context, userID, bgmID string) error {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
 		return err
