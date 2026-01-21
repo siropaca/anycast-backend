@@ -70,6 +70,21 @@ CREATE TABLE categories (
 CREATE INDEX idx_categories_sort_order ON categories (sort_order);
 CREATE INDEX idx_categories_is_active ON categories (is_active);
 
+-- デフォルト BGM（マスタ）
+CREATE TABLE default_bgms (
+	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+	audio_id UUID NOT NULL REFERENCES audios (id) ON DELETE RESTRICT,
+	name VARCHAR(255) NOT NULL UNIQUE,
+	sort_order INTEGER NOT NULL DEFAULT 0,
+	is_active BOOLEAN NOT NULL DEFAULT true,
+	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_default_bgms_sort_order ON default_bgms (sort_order);
+CREATE INDEX idx_default_bgms_is_active ON default_bgms (is_active);
+CREATE INDEX idx_default_bgms_audio_id ON default_bgms (audio_id);
+
 -- ===========================================
 -- 認証関連テーブル
 -- ===========================================
@@ -150,6 +165,20 @@ CREATE TABLE characters (
 CREATE INDEX idx_characters_user_id ON characters (user_id);
 CREATE INDEX idx_characters_avatar_id ON characters (avatar_id);
 
+-- BGM（ユーザー所有）
+CREATE TABLE bgms (
+	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+	user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+	audio_id UUID NOT NULL REFERENCES audios (id) ON DELETE RESTRICT,
+	name VARCHAR(255) NOT NULL,
+	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	UNIQUE (user_id, name)
+);
+
+CREATE INDEX idx_bgms_user_id ON bgms (user_id);
+CREATE INDEX idx_bgms_audio_id ON bgms (audio_id);
+
 -- チャンネルとキャラクターの中間テーブル
 CREATE TABLE channel_characters (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -168,14 +197,17 @@ CREATE TABLE episodes (
 	channel_id UUID NOT NULL REFERENCES channels (id) ON DELETE CASCADE,
 	title VARCHAR(255) NOT NULL,
 	description TEXT NOT NULL,
-	bgm_id UUID REFERENCES audios (id) ON DELETE SET NULL,
+	bgm_id UUID REFERENCES bgms (id) ON DELETE SET NULL,
+	default_bgm_id UUID REFERENCES default_bgms (id) ON DELETE SET NULL,
 	full_audio_id UUID REFERENCES audios (id) ON DELETE SET NULL,
 	published_at TIMESTAMP,
 	user_prompt TEXT NOT NULL DEFAULT '',
 	voice_style TEXT NOT NULL DEFAULT '',
 	artwork_id UUID REFERENCES images (id) ON DELETE SET NULL,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	-- bgm_id と default_bgm_id は同時に設定不可
+	CONSTRAINT chk_episodes_bgm_exclusive CHECK (NOT (bgm_id IS NOT NULL AND default_bgm_id IS NOT NULL))
 );
 
 CREATE INDEX idx_episodes_channel_id ON episodes (channel_id);
