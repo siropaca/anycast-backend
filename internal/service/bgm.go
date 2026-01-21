@@ -15,7 +15,10 @@ import (
 // BGM 関連のビジネスロジックインターフェース
 type BgmService interface {
 	ListMyBgms(ctx context.Context, userID string, req request.ListMyBgmsRequest) (*response.BgmListWithPaginationResponse, error)
+	GetMyBgm(ctx context.Context, userID string, bgmID string) (*response.BgmDataResponse, error)
 	CreateBgm(ctx context.Context, userID string, req request.CreateBgmRequest) (*response.BgmDataResponse, error)
+	UpdateMyBgm(ctx context.Context, userID string, bgmID string, req request.UpdateBgmRequest) (*response.BgmDataResponse, error)
+	DeleteMyBgm(ctx context.Context, userID string, bgmID string) error
 }
 
 type bgmService struct {
@@ -286,4 +289,115 @@ func (s *bgmService) CreateBgm(ctx context.Context, userID string, req request.C
 	}
 
 	return &response.BgmDataResponse{Data: res}, nil
+}
+
+// 自分の BGM を取得する
+func (s *bgmService) GetMyBgm(ctx context.Context, userID, bgmID string) (*response.BgmDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	bid, err := uuid.Parse(bgmID)
+	if err != nil {
+		return nil, err
+	}
+
+	bgm, err := s.bgmRepo.FindByID(ctx, bid)
+	if err != nil {
+		return nil, err
+	}
+
+	// 所有者チェック
+	if bgm.UserID != uid {
+		return nil, apperror.ErrNotFound.WithMessage("BGM が見つかりません")
+	}
+
+	res, err := s.toBgmResponse(ctx, *bgm)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.BgmDataResponse{Data: res}, nil
+}
+
+// 自分の BGM を更新する
+func (s *bgmService) UpdateMyBgm(ctx context.Context, userID, bgmID string, req request.UpdateBgmRequest) (*response.BgmDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	bid, err := uuid.Parse(bgmID)
+	if err != nil {
+		return nil, err
+	}
+
+	bgm, err := s.bgmRepo.FindByID(ctx, bid)
+	if err != nil {
+		return nil, err
+	}
+
+	// 所有者チェック
+	if bgm.UserID != uid {
+		return nil, apperror.ErrNotFound.WithMessage("BGM が見つかりません")
+	}
+
+	// 名前の更新
+	if req.Name != nil {
+		// 同一ユーザー内で同じ名前の BGM が存在するかチェック（自分自身を除く）
+		exists, err := s.bgmRepo.ExistsByUserIDAndName(ctx, uid, *req.Name, &bid)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			return nil, apperror.ErrDuplicateName.WithMessage("同じ名前の BGM が既に存在します")
+		}
+		bgm.Name = *req.Name
+	}
+
+	if err := s.bgmRepo.Update(ctx, bgm); err != nil {
+		return nil, err
+	}
+
+	res, err := s.toBgmResponse(ctx, *bgm)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.BgmDataResponse{Data: res}, nil
+}
+
+// 自分の BGM を削除する
+func (s *bgmService) DeleteMyBgm(ctx context.Context, userID, bgmID string) error {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+
+	bid, err := uuid.Parse(bgmID)
+	if err != nil {
+		return err
+	}
+
+	bgm, err := s.bgmRepo.FindByID(ctx, bid)
+	if err != nil {
+		return err
+	}
+
+	// 所有者チェック
+	if bgm.UserID != uid {
+		return apperror.ErrNotFound.WithMessage("BGM が見つかりません")
+	}
+
+	// 使用中チェック
+	isUsed, err := s.bgmRepo.IsUsedInAnyEpisode(ctx, bid)
+	if err != nil {
+		return err
+	}
+	if isUsed {
+		return apperror.ErrBgmInUse.WithMessage("この BGM はエピソードで使用中のため削除できません")
+	}
+
+	return s.bgmRepo.Delete(ctx, bid)
 }

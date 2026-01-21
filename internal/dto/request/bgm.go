@@ -11,3 +11,8 @@ type CreateBgmRequest struct {
 	Name    string `json:"name" binding:"required,max=255"`
 	AudioID string `json:"audioId" binding:"required,uuid"`
 }
+
+// BGM 更新リクエスト
+type UpdateBgmRequest struct {
+	Name *string `json:"name" binding:"omitempty,max=255"`
+}

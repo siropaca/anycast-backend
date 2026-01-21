@@ -14,14 +14,15 @@ type ImportScriptRequest struct {
 
 // 台本行更新リクエスト
 type UpdateScriptLineRequest struct {
-	Text    *string `json:"text"`
-	Emotion *string `json:"emotion"`
+	SpeakerID *string `json:"speakerId" binding:"omitempty,uuid"`
+	Text      *string `json:"text"`
+	Emotion   *string `json:"emotion"`
 }
 
 // 台本行作成リクエスト
 type CreateScriptLineRequest struct {
 	SpeakerID   string  `json:"speakerId" binding:"required,uuid"`
-	Text        string  `json:"text" binding:"required"`
+	Text        string  `json:"text"`
 	Emotion     *string `json:"emotion"`
 	AfterLineID *string `json:"afterLineId" binding:"omitempty,uuid"`
 }

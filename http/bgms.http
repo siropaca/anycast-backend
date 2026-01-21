@@ -40,3 +40,20 @@ Authorization: Bearer {{token}}
   "name": "お気に入り曲",
   "audioId": "YOUR_AUDIO_ID_HERE"
 }
+
+### 自分の BGM 詳細取得
+GET {{baseUrl}}/me/bgms/YOUR_BGM_ID_HERE
+Authorization: Bearer {{token}}
+
+### 自分の BGM 更新
+PATCH {{baseUrl}}/me/bgms/YOUR_BGM_ID_HERE
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "新しい名前"
+}
+
+### 自分の BGM 削除
+DELETE {{baseUrl}}/me/bgms/YOUR_BGM_ID_HERE
+Authorization: Bearer {{token}}

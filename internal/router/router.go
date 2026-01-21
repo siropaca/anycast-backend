@@ -78,6 +78,9 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.DELETE("/me/characters/:characterId", container.CharacterHandler.DeleteCharacter)
 	authenticated.GET("/me/bgms", container.BgmHandler.ListMyBgms)
 	authenticated.POST("/me/bgms", container.BgmHandler.CreateBgm)
+	authenticated.GET("/me/bgms/:bgmId", container.BgmHandler.GetMyBgm)
+	authenticated.PATCH("/me/bgms/:bgmId", container.BgmHandler.UpdateMyBgm)
+	authenticated.DELETE("/me/bgms/:bgmId", container.BgmHandler.DeleteMyBgm)
 
 	// Channels
 	authenticated.GET("/channels/:channelId", container.ChannelHandler.GetChannel)

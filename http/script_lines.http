@@ -120,6 +120,15 @@ Content-Type: application/json
   "emotion": ""
 }
 
+### 台本行更新（話者変更）
+PATCH {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/lines/YOUR_LINE_ID_HERE
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "speakerId": "YOUR_NEW_SPEAKER_ID_HERE"
+}
+
 ### 台本行削除
 DELETE {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/lines/YOUR_LINE_ID_HERE
 Authorization: Bearer {{token}}
