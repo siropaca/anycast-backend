@@ -47,7 +47,7 @@ func (r *voiceRepository) FindAll(ctx context.Context, filter VoiceFilter) ([]mo
 
 	if err := tx.Find(&voices).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to fetch voices", "error", err)
-		return nil, apperror.ErrInternal.WithMessage("Failed to fetch voices").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("ボイス一覧の取得に失敗しました").WithError(err)
 	}
 
 	return voices, nil
@@ -59,10 +59,10 @@ func (r *voiceRepository) FindByID(ctx context.Context, id string) (*model.Voice
 
 	if err := r.db.WithContext(ctx).First(&voice, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, apperror.ErrNotFound.WithMessage("Voice not found")
+			return nil, apperror.ErrNotFound.WithMessage("ボイスが見つかりません")
 		}
 		logger.FromContext(ctx).Error("failed to fetch voice", "error", err, "voice_id", id)
-		return nil, apperror.ErrInternal.WithMessage("Failed to fetch voice").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("ボイスの取得に失敗しました").WithError(err)
 	}
 
 	return &voice, nil
@@ -74,10 +74,10 @@ func (r *voiceRepository) FindActiveByID(ctx context.Context, id string) (*model
 
 	if err := r.db.WithContext(ctx).Where("is_active = ?", true).First(&voice, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, apperror.ErrNotFound.WithMessage("Voice not found or inactive")
+			return nil, apperror.ErrNotFound.WithMessage("ボイスが見つからないか、無効です")
 		}
 		logger.FromContext(ctx).Error("failed to fetch active voice", "error", err, "voice_id", id)
-		return nil, apperror.ErrInternal.WithMessage("Failed to fetch voice").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("ボイスの取得に失敗しました").WithError(err)
 	}
 
 	return &voice, nil

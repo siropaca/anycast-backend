@@ -68,7 +68,7 @@ func (s *scriptLineService) ListByEpisodeID(ctx context.Context, userID, channel
 	}
 
 	if channel.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
+		return nil, apperror.ErrForbidden.WithMessage("このチャンネルへのアクセス権限がありません")
 	}
 
 	// エピソードの存在確認とチャンネルの一致チェック
@@ -78,7 +78,7 @@ func (s *scriptLineService) ListByEpisodeID(ctx context.Context, userID, channel
 	}
 
 	if episode.ChannelID != cid {
-		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
 	}
 
 	// 台本行一覧を取得
@@ -114,7 +114,7 @@ func (s *scriptLineService) Create(ctx context.Context, userID, channelID, episo
 
 	speakerID, err := uuid.Parse(req.SpeakerID)
 	if err != nil {
-		return nil, apperror.ErrValidation.WithMessage("Invalid speakerId format")
+		return nil, apperror.ErrValidation.WithMessage("speakerId の形式が無効です")
 	}
 
 	// チャンネルの存在確認とオーナーチェック
@@ -124,7 +124,7 @@ func (s *scriptLineService) Create(ctx context.Context, userID, channelID, episo
 	}
 
 	if channel.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
+		return nil, apperror.ErrForbidden.WithMessage("このチャンネルへのアクセス権限がありません")
 	}
 
 	// エピソードの存在確認とチャンネルの一致チェック
@@ -134,7 +134,7 @@ func (s *scriptLineService) Create(ctx context.Context, userID, channelID, episo
 	}
 
 	if episode.ChannelID != cid {
-		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
 	}
 
 	// speakerId がチャンネルに紐づいているキャラクターか確認
@@ -146,7 +146,7 @@ func (s *scriptLineService) Create(ctx context.Context, userID, channelID, episo
 		}
 	}
 	if !validSpeaker {
-		return nil, apperror.ErrValidation.WithMessage("Speaker is not associated with this channel")
+		return nil, apperror.ErrValidation.WithMessage("指定された話者はこのチャンネルに紐づいていません")
 	}
 
 	// 挿入位置（lineOrder）を決定
@@ -154,7 +154,7 @@ func (s *scriptLineService) Create(ctx context.Context, userID, channelID, episo
 	if req.AfterLineID != nil {
 		afterLineID, err := uuid.Parse(*req.AfterLineID)
 		if err != nil {
-			return nil, apperror.ErrValidation.WithMessage("Invalid afterLineId format")
+			return nil, apperror.ErrValidation.WithMessage("afterLineId の形式が無効です")
 		}
 
 		// afterLineId で指定された行を取得
@@ -165,7 +165,7 @@ func (s *scriptLineService) Create(ctx context.Context, userID, channelID, episo
 
 		// 指定された行がこのエピソードに属しているか確認
 		if afterLine.EpisodeID != eid {
-			return nil, apperror.ErrNotFound.WithMessage("Specified afterLineId not found in this episode")
+			return nil, apperror.ErrNotFound.WithMessage("指定された afterLineId がこのエピソードに見つかりません")
 		}
 
 		newLineOrder = afterLine.LineOrder + 1
@@ -245,7 +245,7 @@ func (s *scriptLineService) Update(ctx context.Context, userID, channelID, episo
 	}
 
 	if channel.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
+		return nil, apperror.ErrForbidden.WithMessage("このチャンネルへのアクセス権限がありません")
 	}
 
 	// エピソードの存在確認とチャンネルの一致チェック
@@ -255,7 +255,7 @@ func (s *scriptLineService) Update(ctx context.Context, userID, channelID, episo
 	}
 
 	if episode.ChannelID != cid {
-		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
 	}
 
 	// 台本行の存在確認とエピソードの一致チェック
@@ -265,7 +265,7 @@ func (s *scriptLineService) Update(ctx context.Context, userID, channelID, episo
 	}
 
 	if scriptLine.EpisodeID != eid {
-		return nil, apperror.ErrNotFound.WithMessage("Script line not found in this episode")
+		return nil, apperror.ErrNotFound.WithMessage("このエピソードに台本行が見つかりません")
 	}
 
 	// フィールドを更新
@@ -320,7 +320,7 @@ func (s *scriptLineService) Delete(ctx context.Context, userID, channelID, episo
 	}
 
 	if channel.UserID != uid {
-		return apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
+		return apperror.ErrForbidden.WithMessage("このチャンネルへのアクセス権限がありません")
 	}
 
 	// エピソードの存在確認とチャンネルの一致チェック
@@ -330,7 +330,7 @@ func (s *scriptLineService) Delete(ctx context.Context, userID, channelID, episo
 	}
 
 	if episode.ChannelID != cid {
-		return apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+		return apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
 	}
 
 	// 台本行の存在確認とエピソードの一致チェック
@@ -340,7 +340,7 @@ func (s *scriptLineService) Delete(ctx context.Context, userID, channelID, episo
 	}
 
 	if scriptLine.EpisodeID != eid {
-		return apperror.ErrNotFound.WithMessage("Script line not found in this episode")
+		return apperror.ErrNotFound.WithMessage("このエピソードに台本行が見つかりません")
 	}
 
 	// 台本行を削除
@@ -371,7 +371,7 @@ func (s *scriptLineService) Reorder(ctx context.Context, userID, channelID, epis
 	}
 
 	if channel.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("You do not have permission to access this channel")
+		return nil, apperror.ErrForbidden.WithMessage("このチャンネルへのアクセス権限がありません")
 	}
 
 	// エピソードの存在確認とチャンネルの一致チェック
@@ -381,14 +381,14 @@ func (s *scriptLineService) Reorder(ctx context.Context, userID, channelID, epis
 	}
 
 	if episode.ChannelID != cid {
-		return nil, apperror.ErrNotFound.WithMessage("Episode not found in this channel")
+		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
 	}
 
 	// 重複チェック
 	lineIDSet := make(map[string]struct{}, len(req.LineIDs))
 	for _, id := range req.LineIDs {
 		if _, exists := lineIDSet[id]; exists {
-			return nil, apperror.ErrValidation.WithMessage("Duplicate lineId in request")
+			return nil, apperror.ErrValidation.WithMessage("リクエストに重複した lineId があります")
 		}
 		lineIDSet[id] = struct{}{}
 	}
@@ -398,7 +398,7 @@ func (s *scriptLineService) Reorder(ctx context.Context, userID, channelID, epis
 	for i, id := range req.LineIDs {
 		lineUUID, err := uuid.Parse(id)
 		if err != nil {
-			return nil, apperror.ErrValidation.WithMessage("Invalid lineId format")
+			return nil, apperror.ErrValidation.WithMessage("lineId の形式が無効です")
 		}
 		lineUUIDs[i] = lineUUID
 	}
@@ -411,13 +411,13 @@ func (s *scriptLineService) Reorder(ctx context.Context, userID, channelID, epis
 
 	// 全ての行が見つかったか確認
 	if len(scriptLines) != len(req.LineIDs) {
-		return nil, apperror.ErrNotFound.WithMessage("Some script lines not found")
+		return nil, apperror.ErrNotFound.WithMessage("一部の台本行が見つかりません")
 	}
 
 	// 全ての行が対象エピソードに属しているか確認
 	for _, sl := range scriptLines {
 		if sl.EpisodeID != eid {
-			return nil, apperror.ErrNotFound.WithMessage("Script line not found in this episode")
+			return nil, apperror.ErrNotFound.WithMessage("このエピソードに台本行が見つかりません")
 		}
 	}
 

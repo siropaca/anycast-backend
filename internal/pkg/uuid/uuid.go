@@ -22,7 +22,7 @@ func New() UUID {
 func Parse(s string) (UUID, error) {
 	id, err := googleuuid.Parse(s)
 	if err != nil {
-		return Nil, apperror.ErrValidation.WithMessage("Invalid UUID format")
+		return Nil, apperror.ErrValidation.WithMessage("無効な UUID 形式です")
 	}
 
 	return id, nil

@@ -33,7 +33,7 @@ func NewImageRepository(db *gorm.DB) ImageRepository {
 func (r *imageRepository) Create(ctx context.Context, image *model.Image) error {
 	if err := r.db.WithContext(ctx).Create(image).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to create image", "error", err)
-		return apperror.ErrInternal.WithMessage("Failed to create image").WithError(err)
+		return apperror.ErrInternal.WithMessage("画像の作成に失敗しました").WithError(err)
 	}
 
 	return nil
@@ -45,11 +45,11 @@ func (r *imageRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Im
 
 	if err := r.db.WithContext(ctx).First(&image, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, apperror.ErrNotFound.WithMessage("Image not found")
+			return nil, apperror.ErrNotFound.WithMessage("画像が見つかりません")
 		}
 
 		logger.FromContext(ctx).Error("failed to fetch image", "error", err, "image_id", id)
-		return nil, apperror.ErrInternal.WithMessage("Failed to fetch image").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("画像の取得に失敗しました").WithError(err)
 	}
 
 	return &image, nil
@@ -60,11 +60,11 @@ func (r *imageRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	result := r.db.WithContext(ctx).Delete(&model.Image{}, "id = ?", id)
 	if result.Error != nil {
 		logger.FromContext(ctx).Error("failed to delete image", "error", result.Error, "id", id)
-		return apperror.ErrInternal.WithMessage("Failed to delete image").WithError(result.Error)
+		return apperror.ErrInternal.WithMessage("画像の削除に失敗しました").WithError(result.Error)
 	}
 
 	if result.RowsAffected == 0 {
-		return apperror.ErrNotFound.WithMessage("Image not found")
+		return apperror.ErrNotFound.WithMessage("画像が見つかりません")
 	}
 
 	return nil
@@ -88,7 +88,7 @@ func (r *imageRepository) FindOrphaned(ctx context.Context) ([]model.Image, erro
 
 	if err := r.db.WithContext(ctx).Raw(query).Scan(&images).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to fetch orphaned images", "error", err)
-		return nil, apperror.ErrInternal.WithMessage("Failed to fetch orphaned images").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("孤立した画像の取得に失敗しました").WithError(err)
 	}
 
 	return images, nil

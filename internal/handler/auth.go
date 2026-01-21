@@ -60,7 +60,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	token, err := h.tokenManager.Generate(user.ID.String(), tokenExpiration)
 	if err != nil {
 		logger.FromContext(c.Request.Context()).Error("failed to generate token", "error", err, "user_id", user.ID)
-		Error(c, apperror.ErrInternal.WithMessage("Failed to generate token").WithError(err))
+		Error(c, apperror.ErrInternal.WithMessage("トークンの生成に失敗しました").WithError(err))
 		return
 	}
 
@@ -98,7 +98,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	token, err := h.tokenManager.Generate(user.ID.String(), tokenExpiration)
 	if err != nil {
 		logger.FromContext(c.Request.Context()).Error("failed to generate token", "error", err, "user_id", user.ID)
-		Error(c, apperror.ErrInternal.WithMessage("Failed to generate token").WithError(err))
+		Error(c, apperror.ErrInternal.WithMessage("トークンの生成に失敗しました").WithError(err))
 		return
 	}
 
@@ -136,7 +136,7 @@ func (h *AuthHandler) OAuthGoogle(c *gin.Context) {
 	token, err := h.tokenManager.Generate(result.User.ID.String(), tokenExpiration)
 	if err != nil {
 		logger.FromContext(c.Request.Context()).Error("failed to generate token", "error", err, "user_id", result.User.ID)
-		Error(c, apperror.ErrInternal.WithMessage("Failed to generate token").WithError(err))
+		Error(c, apperror.ErrInternal.WithMessage("トークンの生成に失敗しました").WithError(err))
 		return
 	}
 

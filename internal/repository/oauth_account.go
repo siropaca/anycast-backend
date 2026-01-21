@@ -33,7 +33,7 @@ func NewOAuthAccountRepository(db *gorm.DB) OAuthAccountRepository {
 func (r *oauthAccountRepository) Create(ctx context.Context, account *model.OAuthAccount) error {
 	if err := r.db.WithContext(ctx).Create(account).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to create oauth account", "error", err, "provider", account.Provider)
-		return apperror.ErrInternal.WithMessage("Failed to create OAuth account").WithError(err)
+		return apperror.ErrInternal.WithMessage("OAuth アカウントの作成に失敗しました").WithError(err)
 	}
 
 	return nil
@@ -43,7 +43,7 @@ func (r *oauthAccountRepository) Create(ctx context.Context, account *model.OAut
 func (r *oauthAccountRepository) Update(ctx context.Context, account *model.OAuthAccount) error {
 	if err := r.db.WithContext(ctx).Save(account).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to update oauth account", "error", err, "account_id", account.ID)
-		return apperror.ErrInternal.WithMessage("Failed to update OAuth account").WithError(err)
+		return apperror.ErrInternal.WithMessage("OAuth アカウントの更新に失敗しました").WithError(err)
 	}
 
 	return nil
@@ -55,11 +55,11 @@ func (r *oauthAccountRepository) FindByProviderAndProviderUserID(ctx context.Con
 
 	if err := r.db.WithContext(ctx).First(&account, "provider = ? AND provider_user_id = ?", provider, providerUserID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, apperror.ErrNotFound.WithMessage("OAuth account not found")
+			return nil, apperror.ErrNotFound.WithMessage("OAuth アカウントが見つかりません")
 		}
 
 		logger.FromContext(ctx).Error("failed to fetch oauth account", "error", err, "provider", provider)
-		return nil, apperror.ErrInternal.WithMessage("Failed to fetch OAuth account").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("OAuth アカウントの取得に失敗しました").WithError(err)
 	}
 
 	return &account, nil
@@ -71,7 +71,7 @@ func (r *oauthAccountRepository) FindByUserID(ctx context.Context, userID uuid.U
 
 	if err := r.db.WithContext(ctx).Where("user_id = ?", userID).Find(&accounts).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to fetch oauth accounts", "error", err, "user_id", userID)
-		return nil, apperror.ErrInternal.WithMessage("Failed to fetch OAuth accounts").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("OAuth アカウント一覧の取得に失敗しました").WithError(err)
 	}
 
 	return accounts, nil

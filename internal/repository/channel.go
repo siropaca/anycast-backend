@@ -59,7 +59,7 @@ func (r *channelRepository) FindByUserID(ctx context.Context, userID uuid.UUID, 
 	// 総件数を取得
 	if err := tx.Count(&total).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to count channels", "error", err, "user_id", userID)
-		return nil, 0, apperror.ErrInternal.WithMessage("Failed to count channels").WithError(err)
+		return nil, 0, apperror.ErrInternal.WithMessage("チャンネル数の取得に失敗しました").WithError(err)
 	}
 
 	// ページネーションとリレーションのプリロード
@@ -74,7 +74,7 @@ func (r *channelRepository) FindByUserID(ctx context.Context, userID uuid.UUID, 
 		Offset(filter.Offset).
 		Find(&channels).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to fetch channels", "error", err, "user_id", userID)
-		return nil, 0, apperror.ErrInternal.WithMessage("Failed to fetch channels").WithError(err)
+		return nil, 0, apperror.ErrInternal.WithMessage("チャンネル一覧の取得に失敗しました").WithError(err)
 	}
 
 	return channels, total, nil
@@ -93,11 +93,11 @@ func (r *channelRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.
 		First(&channel, "id = ?", id).Error; err != nil {
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, apperror.ErrNotFound.WithMessage("Channel not found")
+			return nil, apperror.ErrNotFound.WithMessage("チャンネルが見つかりません")
 		}
 
 		logger.FromContext(ctx).Error("failed to fetch channel", "error", err, "channel_id", id)
-		return nil, apperror.ErrInternal.WithMessage("Failed to fetch channel").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("チャンネルの取得に失敗しました").WithError(err)
 	}
 
 	return &channel, nil
@@ -107,7 +107,7 @@ func (r *channelRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.
 func (r *channelRepository) Create(ctx context.Context, channel *model.Channel) error {
 	if err := r.db.WithContext(ctx).Create(channel).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to create channel", "error", err)
-		return apperror.ErrInternal.WithMessage("Failed to create channel").WithError(err)
+		return apperror.ErrInternal.WithMessage("チャンネルの作成に失敗しました").WithError(err)
 	}
 
 	return nil
@@ -117,7 +117,7 @@ func (r *channelRepository) Create(ctx context.Context, channel *model.Channel) 
 func (r *channelRepository) Update(ctx context.Context, channel *model.Channel) error {
 	if err := r.db.WithContext(ctx).Save(channel).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to update channel", "error", err, "channel_id", channel.ID)
-		return apperror.ErrInternal.WithMessage("Failed to update channel").WithError(err)
+		return apperror.ErrInternal.WithMessage("チャンネルの更新に失敗しました").WithError(err)
 	}
 
 	return nil
@@ -128,10 +128,10 @@ func (r *channelRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	result := r.db.WithContext(ctx).Delete(&model.Channel{}, "id = ?", id)
 	if result.Error != nil {
 		logger.FromContext(ctx).Error("failed to delete channel", "error", result.Error, "channel_id", id)
-		return apperror.ErrInternal.WithMessage("Failed to delete channel").WithError(result.Error)
+		return apperror.ErrInternal.WithMessage("チャンネルの削除に失敗しました").WithError(result.Error)
 	}
 	if result.RowsAffected == 0 {
-		return apperror.ErrNotFound.WithMessage("Channel not found")
+		return apperror.ErrNotFound.WithMessage("チャンネルが見つかりません")
 	}
 
 	return nil
@@ -143,7 +143,7 @@ func (r *channelRepository) ReplaceChannelCharacters(ctx context.Context, channe
 		// 既存の紐づけを削除
 		if err := tx.Where("channel_id = ?", channelID).Delete(&model.ChannelCharacter{}).Error; err != nil {
 			logger.FromContext(ctx).Error("failed to delete channel characters", "error", err, "channel_id", channelID)
-			return apperror.ErrInternal.WithMessage("Failed to update channel characters").WithError(err)
+			return apperror.ErrInternal.WithMessage("チャンネルのキャラクター更新に失敗しました").WithError(err)
 		}
 
 		// 新しい紐づけを作成
@@ -154,7 +154,7 @@ func (r *channelRepository) ReplaceChannelCharacters(ctx context.Context, channe
 			}
 			if err := tx.Create(&channelCharacter).Error; err != nil {
 				logger.FromContext(ctx).Error("failed to create channel character", "error", err, "channel_id", channelID, "character_id", characterID)
-				return apperror.ErrInternal.WithMessage("Failed to update channel characters").WithError(err)
+				return apperror.ErrInternal.WithMessage("チャンネルのキャラクター更新に失敗しました").WithError(err)
 			}
 		}
 

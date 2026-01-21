@@ -49,7 +49,7 @@ func (r *characterRepository) FindByUserID(ctx context.Context, userID uuid.UUID
 	// 総件数を取得
 	if err := tx.Count(&total).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to count characters", "error", err, "user_id", userID)
-		return nil, 0, apperror.ErrInternal.WithMessage("Failed to count characters").WithError(err)
+		return nil, 0, apperror.ErrInternal.WithMessage("キャラクター数の取得に失敗しました").WithError(err)
 	}
 
 	// ページネーションとリレーションのプリロード
@@ -62,7 +62,7 @@ func (r *characterRepository) FindByUserID(ctx context.Context, userID uuid.UUID
 		Offset(filter.Offset).
 		Find(&characters).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to fetch characters", "error", err, "user_id", userID)
-		return nil, 0, apperror.ErrInternal.WithMessage("Failed to fetch characters").WithError(err)
+		return nil, 0, apperror.ErrInternal.WithMessage("キャラクター一覧の取得に失敗しました").WithError(err)
 	}
 
 	return characters, total, nil
@@ -81,11 +81,11 @@ func (r *characterRepository) FindByID(ctx context.Context, id uuid.UUID) (*mode
 		First(&character, "id = ?", id).Error; err != nil {
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, apperror.ErrNotFound.WithMessage("Character not found")
+			return nil, apperror.ErrNotFound.WithMessage("キャラクターが見つかりません")
 		}
 
 		logger.FromContext(ctx).Error("failed to fetch character", "error", err, "character_id", id)
-		return nil, apperror.ErrInternal.WithMessage("Failed to fetch character").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("キャラクターの取得に失敗しました").WithError(err)
 	}
 
 	return &character, nil
@@ -105,7 +105,7 @@ func (r *characterRepository) FindByIDs(ctx context.Context, ids []uuid.UUID) ([
 		Where("id IN ?", ids).
 		Find(&characters).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to fetch characters by ids", "error", err, "ids", ids)
-		return nil, apperror.ErrInternal.WithMessage("Failed to fetch characters").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("キャラクター一覧の取得に失敗しました").WithError(err)
 	}
 
 	return characters, nil
@@ -115,7 +115,7 @@ func (r *characterRepository) FindByIDs(ctx context.Context, ids []uuid.UUID) ([
 func (r *characterRepository) Create(ctx context.Context, character *model.Character) error {
 	if err := r.db.WithContext(ctx).Create(character).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to create character", "error", err)
-		return apperror.ErrInternal.WithMessage("Failed to create character").WithError(err)
+		return apperror.ErrInternal.WithMessage("キャラクターの作成に失敗しました").WithError(err)
 	}
 
 	return nil
@@ -125,7 +125,7 @@ func (r *characterRepository) Create(ctx context.Context, character *model.Chara
 func (r *characterRepository) Update(ctx context.Context, character *model.Character) error {
 	if err := r.db.WithContext(ctx).Save(character).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to update character", "error", err, "character_id", character.ID)
-		return apperror.ErrInternal.WithMessage("Failed to update character").WithError(err)
+		return apperror.ErrInternal.WithMessage("キャラクターの更新に失敗しました").WithError(err)
 	}
 
 	return nil
@@ -136,10 +136,10 @@ func (r *characterRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	result := r.db.WithContext(ctx).Delete(&model.Character{}, "id = ?", id)
 	if result.Error != nil {
 		logger.FromContext(ctx).Error("failed to delete character", "error", result.Error, "character_id", id)
-		return apperror.ErrInternal.WithMessage("Failed to delete character").WithError(result.Error)
+		return apperror.ErrInternal.WithMessage("キャラクターの削除に失敗しました").WithError(result.Error)
 	}
 	if result.RowsAffected == 0 {
-		return apperror.ErrNotFound.WithMessage("Character not found")
+		return apperror.ErrNotFound.WithMessage("キャラクターが見つかりません")
 	}
 
 	return nil
@@ -154,7 +154,7 @@ func (r *characterRepository) IsUsedInAnyChannel(ctx context.Context, id uuid.UU
 		Where("character_id = ?", id).
 		Count(&count).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to check character usage", "error", err, "character_id", id)
-		return false, apperror.ErrInternal.WithMessage("Failed to check character usage").WithError(err)
+		return false, apperror.ErrInternal.WithMessage("キャラクターの使用状況確認に失敗しました").WithError(err)
 	}
 
 	return count > 0, nil
@@ -174,7 +174,7 @@ func (r *characterRepository) ExistsByUserIDAndName(ctx context.Context, userID 
 
 	if err := tx.Count(&count).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to check character name", "error", err, "user_id", userID, "name", name)
-		return false, apperror.ErrInternal.WithMessage("Failed to check character name").WithError(err)
+		return false, apperror.ErrInternal.WithMessage("キャラクター名の確認に失敗しました").WithError(err)
 	}
 
 	return count > 0, nil

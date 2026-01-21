@@ -50,13 +50,13 @@ func (h *ScriptHandler) GenerateScript(c *gin.Context) {
 
 	channelID := c.Param("channelId")
 	if channelID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
 		return
 	}
 
 	episodeID := c.Param("episodeId")
 	if episodeID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("episodeId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
 		return
 	}
 
@@ -109,13 +109,13 @@ func (h *ScriptHandler) ImportScript(c *gin.Context) {
 
 	channelID := c.Param("channelId")
 	if channelID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
 		return
 	}
 
 	episodeID := c.Param("episodeId")
 	if episodeID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("episodeId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
 		return
 	}
 
@@ -164,13 +164,13 @@ func (h *ScriptHandler) ExportScript(c *gin.Context) {
 
 	channelID := c.Param("channelId")
 	if channelID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("channelId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
 		return
 	}
 
 	episodeID := c.Param("episodeId")
 	if episodeID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("episodeId is required"))
+		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
 		return
 	}
 

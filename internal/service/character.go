@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"strings"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/request"
@@ -86,7 +85,7 @@ func (s *characterService) GetMyCharacter(ctx context.Context, userID, character
 
 	// 所有者チェック
 	if character.UserID != uid {
-		return nil, apperror.ErrNotFound.WithMessage("Character not found")
+		return nil, apperror.ErrNotFound.WithMessage("キャラクターが見つかりません")
 	}
 
 	res, err := s.toCharacterWithChannelsResponse(ctx, *character)
@@ -159,18 +158,13 @@ func (s *characterService) CreateCharacter(ctx context.Context, userID string, r
 		return nil, err
 	}
 
-	// 名前が __ で始まる場合は禁止
-	if strings.HasPrefix(req.Name, "__") {
-		return nil, apperror.ErrValidation.WithMessage("Name cannot start with '__'")
-	}
-
 	// 同一ユーザー内で同じ名前のキャラクターが存在するかチェック
 	exists, err := s.characterRepo.ExistsByUserIDAndName(ctx, uid, req.Name, nil)
 	if err != nil {
 		return nil, err
 	}
 	if exists {
-		return nil, apperror.ErrDuplicateName.WithMessage("Character with the same name already exists")
+		return nil, apperror.ErrDuplicateName.WithMessage("同じ名前のキャラクターが既に存在します")
 	}
 
 	// ボイスの存在確認（アクティブなボイスのみ）
@@ -241,23 +235,18 @@ func (s *characterService) UpdateCharacter(ctx context.Context, userID, characte
 
 	// 所有者チェック
 	if character.UserID != uid {
-		return nil, apperror.ErrNotFound.WithMessage("Character not found")
+		return nil, apperror.ErrNotFound.WithMessage("キャラクターが見つかりません")
 	}
 
 	// 名前の更新
 	if req.Name != nil {
-		// 名前が __ で始まる場合は禁止
-		if strings.HasPrefix(*req.Name, "__") {
-			return nil, apperror.ErrValidation.WithMessage("Name cannot start with '__'")
-		}
-
 		// 同一ユーザー内で同じ名前のキャラクターが存在するかチェック（自分自身は除外）
 		exists, err := s.characterRepo.ExistsByUserIDAndName(ctx, uid, *req.Name, &cid)
 		if err != nil {
 			return nil, err
 		}
 		if exists {
-			return nil, apperror.ErrDuplicateName.WithMessage("Character with the same name already exists")
+			return nil, apperror.ErrDuplicateName.WithMessage("同じ名前のキャラクターが既に存在します")
 		}
 
 		character.Name = *req.Name
@@ -329,7 +318,7 @@ func (s *characterService) DeleteCharacter(ctx context.Context, userID, characte
 
 	// 所有者チェック
 	if character.UserID != uid {
-		return apperror.ErrNotFound.WithMessage("Character not found")
+		return apperror.ErrNotFound.WithMessage("キャラクターが見つかりません")
 	}
 
 	// いずれかのチャンネルで使用中かチェック
@@ -338,7 +327,7 @@ func (s *characterService) DeleteCharacter(ctx context.Context, userID, characte
 		return err
 	}
 	if inUse {
-		return apperror.ErrCharacterInUse.WithMessage("This character is in use and cannot be deleted")
+		return apperror.ErrCharacterInUse.WithMessage("このキャラクターは使用中のため削除できません")
 	}
 
 	return s.characterRepo.Delete(ctx, cid)

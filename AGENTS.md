@@ -4,11 +4,11 @@
 
 | ファイル | 説明 |
 |----------|------|
-| [docs/specs/specification.md](docs/specs/specification.md) | 仕様書（DDD ベースのドメインモデル定義） |
+| [docs/specs/domain-model.md](docs/specs/domain-model.md) | 仕様書（DDD ベースのドメインモデル定義） |
 | [docs/specs/database.md](docs/specs/database.md) | データベース設計 |
 | [docs/specs/system.md](docs/specs/system.md) | システム設定（タイムアウト、外部サービス連携など） |
 | [docs/specs/script-generate-api.md](docs/specs/script-generate-api.md) | 台本生成 API 詳細設計 |
-| [docs/api/index.md](docs/api/index.md) | API 設計 |
+| [docs/api/README.md](docs/api/README.md) | API 設計 |
 | [docs/adr/](docs/adr/) | Architecture Decision Records |
 
 ### 設計アプローチ
@@ -16,10 +16,10 @@
 本プロジェクトでは **ドメインモデル駆動** で設計を行う。
 
 ```
-ドメインモデル設計（specs/specification.md） → API 設計（api/） → DB 設計（specs/database.md）
+ドメインモデル設計（specs/domain-model.md） → API 設計（api/） → DB 設計（specs/database.md）
 ```
 
-- 新しい機能を追加する際は、まず specification.md のドメインモデルを設計する
+- 新しい機能を追加する際は、まず domain-model.md のドメインモデルを設計する
 - DB スキーマや API は、ドメインモデルを永続化・公開するための手段として設計する
 - ドメインモデルの変更時は上記の順序でドキュメントを更新する
 
@@ -58,6 +58,7 @@
 - `interface{}` ではなく `any` を使用する
 - エラーの型チェックには型アサーションではなく `errors.As` を使用する
 - 標準ライブラリの新しいパッケージ（`slices`, `maps`, `cmp` など）を積極的に活用する
+- エラーコードやエラーメッセージは日本語で記載する
 
 ### ディレクトリ構成
 
@@ -115,7 +116,7 @@
 8. **ドキュメント更新**
    - `make swagger` で Swagger ドキュメントを再生成
    - `http/` ディレクトリ内の対応する `.http` ファイルを更新
-   - `docs/api/index.md` の実装欄を ✅ に更新
+   - `docs/api/README.md` の実装欄を ✅ に更新
 
 ### API ドキュメント
 

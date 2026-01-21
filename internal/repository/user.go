@@ -35,7 +35,7 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 func (r *userRepository) Create(ctx context.Context, user *model.User) error {
 	if err := r.db.WithContext(ctx).Create(user).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to create user", "error", err)
-		return apperror.ErrInternal.WithMessage("Failed to create user").WithError(err)
+		return apperror.ErrInternal.WithMessage("ユーザーの作成に失敗しました").WithError(err)
 	}
 
 	return nil
@@ -45,7 +45,7 @@ func (r *userRepository) Create(ctx context.Context, user *model.User) error {
 func (r *userRepository) Update(ctx context.Context, user *model.User) error {
 	if err := r.db.WithContext(ctx).Save(user).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to update user", "error", err, "user_id", user.ID)
-		return apperror.ErrInternal.WithMessage("Failed to update user").WithError(err)
+		return apperror.ErrInternal.WithMessage("ユーザーの更新に失敗しました").WithError(err)
 	}
 
 	return nil
@@ -57,10 +57,10 @@ func (r *userRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Use
 
 	if err := r.db.WithContext(ctx).First(&user, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, apperror.ErrNotFound.WithMessage("User not found")
+			return nil, apperror.ErrNotFound.WithMessage("ユーザーが見つかりません")
 		}
 		logger.FromContext(ctx).Error("failed to fetch user by id", "error", err, "user_id", id)
-		return nil, apperror.ErrInternal.WithMessage("Failed to fetch user").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("ユーザーの取得に失敗しました").WithError(err)
 	}
 
 	return &user, nil
@@ -72,10 +72,10 @@ func (r *userRepository) FindByEmail(ctx context.Context, email string) (*model.
 
 	if err := r.db.WithContext(ctx).First(&user, "email = ?", email).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, apperror.ErrNotFound.WithMessage("User not found")
+			return nil, apperror.ErrNotFound.WithMessage("ユーザーが見つかりません")
 		}
 		logger.FromContext(ctx).Error("failed to fetch user by email", "error", err)
-		return nil, apperror.ErrInternal.WithMessage("Failed to fetch user").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("ユーザーの取得に失敗しました").WithError(err)
 	}
 
 	return &user, nil
@@ -87,7 +87,7 @@ func (r *userRepository) ExistsByEmail(ctx context.Context, email string) (bool,
 
 	if err := r.db.WithContext(ctx).Model(&model.User{}).Where("email = ?", email).Count(&count).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to check email existence", "error", err)
-		return false, apperror.ErrInternal.WithMessage("Failed to check email existence").WithError(err)
+		return false, apperror.ErrInternal.WithMessage("メールアドレスの重複確認に失敗しました").WithError(err)
 	}
 
 	return count > 0, nil
@@ -99,7 +99,7 @@ func (r *userRepository) ExistsByUsername(ctx context.Context, username string) 
 
 	if err := r.db.WithContext(ctx).Model(&model.User{}).Where("username = ?", username).Count(&count).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to check username existence", "error", err)
-		return false, apperror.ErrInternal.WithMessage("Failed to check username existence").WithError(err)
+		return false, apperror.ErrInternal.WithMessage("ユーザー名の重複確認に失敗しました").WithError(err)
 	}
 
 	return count > 0, nil

@@ -73,12 +73,12 @@ func (c *gcsClient) Upload(ctx context.Context, data []byte, path, contentType s
 
 	if _, err := writer.Write(data); err != nil {
 		log.Error("failed to write to GCS", "error", err)
-		return "", apperror.ErrMediaUploadFailed.WithMessage("Failed to upload file").WithError(err)
+		return "", apperror.ErrMediaUploadFailed.WithMessage("ファイルのアップロードに失敗しました").WithError(err)
 	}
 
 	if err := writer.Close(); err != nil {
 		log.Error("failed to close GCS writer", "error", err)
-		return "", apperror.ErrMediaUploadFailed.WithMessage("Failed to upload file").WithError(err)
+		return "", apperror.ErrMediaUploadFailed.WithMessage("ファイルのアップロードに失敗しました").WithError(err)
 	}
 
 	log.Debug("file uploaded successfully", "path", path)
@@ -100,7 +100,7 @@ func (c *gcsClient) GenerateSignedURL(ctx context.Context, path string, expirati
 	url, err := c.client.Bucket(c.bucketName).SignedURL(path, opts)
 	if err != nil {
 		log.Error("failed to generate signed URL", "error", err)
-		return "", apperror.ErrInternal.WithMessage("Failed to generate signed URL").WithError(err)
+		return "", apperror.ErrInternal.WithMessage("署名付き URL の生成に失敗しました").WithError(err)
 	}
 
 	log.Debug("signed URL generated successfully", "url", url)
@@ -122,7 +122,7 @@ func (c *gcsClient) Delete(ctx context.Context, path string) error {
 			return nil
 		}
 		log.Error("failed to delete from GCS", "error", err)
-		return apperror.ErrInternal.WithMessage("Failed to delete file").WithError(err)
+		return apperror.ErrInternal.WithMessage("ファイルの削除に失敗しました").WithError(err)
 	}
 
 	log.Debug("file deleted successfully", "path", path)
@@ -140,10 +140,10 @@ func (c *gcsClient) Download(ctx context.Context, path string) ([]byte, error) {
 	reader, err := obj.NewReader(ctx)
 	if err != nil {
 		if err == storage.ErrObjectNotExist {
-			return nil, apperror.ErrNotFound.WithMessage("File not found")
+			return nil, apperror.ErrNotFound.WithMessage("ファイルが見つかりません")
 		}
 		log.Error("failed to create GCS reader", "error", err)
-		return nil, apperror.ErrInternal.WithMessage("Failed to download file").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("ファイルのダウンロードに失敗しました").WithError(err)
 	}
 
 	defer func() {
@@ -155,7 +155,7 @@ func (c *gcsClient) Download(ctx context.Context, path string) ([]byte, error) {
 	data, err := io.ReadAll(reader)
 	if err != nil {
 		log.Error("failed to read from GCS", "error", err)
-		return nil, apperror.ErrInternal.WithMessage("Failed to download file").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("ファイルのダウンロードに失敗しました").WithError(err)
 	}
 
 	log.Debug("file downloaded successfully", "path", path, "size", len(data))

@@ -56,14 +56,14 @@ func (s *imageService) UploadImage(ctx context.Context, input UploadImageInput) 
 	// MIME タイプのバリデーション
 	ext, ok := allowedImageMimeTypes[input.ContentType]
 	if !ok {
-		return nil, apperror.ErrValidation.WithMessage("Invalid image type. Allowed types: png, jpeg, gif, webp")
+		return nil, apperror.ErrValidation.WithMessage("無効な画像形式です。使用可能な形式: png, jpeg, gif, webp")
 	}
 
 	// ファイルデータの読み込み
 	data, err := io.ReadAll(input.File)
 	if err != nil {
 		log.Error("failed to read image data", "error", err)
-		return nil, apperror.ErrInternal.WithMessage("Failed to read image data").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("画像データの読み込みに失敗しました").WithError(err)
 	}
 
 	// 画像 ID の生成

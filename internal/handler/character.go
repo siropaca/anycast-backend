@@ -86,7 +86,7 @@ func (h *CharacterHandler) GetMyCharacter(c *gin.Context) {
 
 	characterID := c.Param("characterId")
 	if characterID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("character ID is required"))
+		Error(c, apperror.ErrValidation.WithMessage("キャラクター ID は必須です"))
 		return
 	}
 
@@ -161,7 +161,7 @@ func (h *CharacterHandler) UpdateCharacter(c *gin.Context) {
 
 	characterID := c.Param("characterId")
 	if characterID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("character ID is required"))
+		Error(c, apperror.ErrValidation.WithMessage("キャラクター ID は必須です"))
 		return
 	}
 
@@ -204,7 +204,7 @@ func (h *CharacterHandler) DeleteCharacter(c *gin.Context) {
 
 	characterID := c.Param("characterId")
 	if characterID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("character ID is required"))
+		Error(c, apperror.ErrValidation.WithMessage("キャラクター ID は必須です"))
 		return
 	}
 

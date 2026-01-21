@@ -43,6 +43,18 @@
 | PATCH | `/api/v1/me/characters/:characterId` | キャラクター更新 | ✅ | [詳細](./characters.md#キャラクター更新) |
 | DELETE | `/api/v1/me/characters/:characterId` | キャラクター削除 | ✅ | [詳細](./characters.md#キャラクター削除) |
 | PUT | `/api/v1/channels/:channelId/characters` | チャンネルのキャラクター紐づけ更新 | | [詳細](./channels.md#チャンネルのキャラクター紐づけ更新) |
+| **BGMs（BGM）** | - | - | - | [bgms.md](./bgms.md) |
+| GET | `/api/v1/me/bgms` | BGM 一覧取得 | | [詳細](./bgms.md#bgm-一覧取得) |
+| GET | `/api/v1/me/bgms/:bgmId` | BGM 取得 | | [詳細](./bgms.md#bgm-取得) |
+| POST | `/api/v1/me/bgms` | BGM 作成 | | [詳細](./bgms.md#bgm-作成) |
+| PATCH | `/api/v1/me/bgms/:bgmId` | BGM 更新 | | [詳細](./bgms.md#bgm-更新) |
+| DELETE | `/api/v1/me/bgms/:bgmId` | BGM 削除 | | [詳細](./bgms.md#bgm-削除) |
+| **Default BGMs（デフォルト BGM）** | - | - | - | [bgms.md](./bgms.md#default-bgmsデフォルト-bgm) |
+| GET | `/api/v1/default-bgms` | デフォルト BGM 一覧取得 | | [詳細](./bgms.md#デフォルト-bgm-一覧取得) |
+| GET | `/api/v1/default-bgms/:bgmId` | デフォルト BGM 取得 | | [詳細](./bgms.md#デフォルト-bgm-取得) |
+| POST | `/api/v1/default-bgms` | デフォルト BGM 作成 | | [詳細](./bgms.md#デフォルト-bgm-作成) |
+| PATCH | `/api/v1/default-bgms/:bgmId` | デフォルト BGM 更新 | | [詳細](./bgms.md#デフォルト-bgm-更新) |
+| DELETE | `/api/v1/default-bgms/:bgmId` | デフォルト BGM 削除 | | [詳細](./bgms.md#デフォルト-bgm-削除) |
 | **Episodes** | - | - | - | [episodes.md](./episodes.md) |
 | GET | `/api/v1/channels/:channelId/episodes` | エピソード一覧取得 | | [詳細](./episodes.md#エピソード一覧取得公開用) |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード取得 | | [詳細](./episodes.md#エピソード取得) |
@@ -51,8 +63,8 @@
 | DELETE | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード削除 | ✅ | [詳細](./episodes.md#エピソード削除) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/publish` | エピソード公開 | ✅ | [詳細](./episodes.md#エピソード公開) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/unpublish` | エピソード非公開 | ✅ | [詳細](./episodes.md#エピソード非公開) |
-| PUT | `/api/v1/channels/:channelId/episodes/:episodeId/bgm` | エピソード BGM 設定 | ✅ | [詳細](./episodes.md#エピソード-bgm-設定) |
-| DELETE | `/api/v1/channels/:channelId/episodes/:episodeId/bgm` | エピソード BGM 削除 | ✅ | [詳細](./episodes.md#エピソード-bgm-削除) |
+| PUT | `/api/v1/channels/:channelId/episodes/:episodeId/bgm` | エピソード BGM 設定 | | [詳細](./episodes.md#エピソード-bgm-設定) |
+| DELETE | `/api/v1/channels/:channelId/episodes/:episodeId/bgm` | エピソード BGM 削除 | | [詳細](./episodes.md#エピソード-bgm-削除) |
 | GET | `/api/v1/me/channels/:channelId/episodes` | 自分のチャンネルのエピソード一覧 | ✅ | [詳細](./episodes.md#自分のチャンネルのエピソード一覧取得) |
 | GET | `/api/v1/me/channels/:channelId/episodes/:episodeId` | 自分のチャンネルのエピソード取得 | ✅ | [詳細](./episodes.md#自分のチャンネルのエピソード取得) |
 | **Script（台本）** | - | - | - | [script.md](./script.md) |
@@ -98,116 +110,7 @@
 
 ---
 
-## 共通仕様
+## 関連ドキュメント
 
-### レスポンス形式
-
-**成功時:**
-```json
-{
-  "data": { ... }
-}
-```
-
-**エラー時:**
-```json
-{
-  "error": {
-    "code": "ERROR_CODE",
-    "message": "エラーメッセージ"
-  }
-}
-```
-
-### ページネーション
-
-一覧取得 API は以下のクエリパラメータをサポート:
-
-| パラメータ | 型 | デフォルト | 説明 |
-|------------|-----|------------|------|
-| limit | int | 20 | 取得件数（最大 100） |
-| offset | int | 0 | オフセット |
-
-**レスポンス:**
-```json
-{
-  "data": [ ... ],
-  "pagination": {
-    "total": 100,
-    "limit": 20,
-    "offset": 0
-  }
-}
-```
-
-### 権限
-
-| 権限レベル | 説明 |
-|------------|------|
-| Guest | ログインなしでアクセス可能（現時点では該当なし） |
-| Public | ログイン済みユーザーであれば誰でもアクセス可能 |
-| Owner | 自身のリソースのみ操作可能 |
-| Admin | 運営のみ操作可能 |
-
-**エンドポイント別権限:**
-
-| リソース | 参照 | 作成 | 更新 | 削除 |
-|----------|:----:|:----:|:----:|:----:|
-| Users | Owner | - | Owner | Owner |
-| Channels | Public | Owner | Owner | Owner |
-| Characters | Owner | Owner | Owner | Owner |
-| Episodes | Public | Owner | Owner | Owner |
-| Script / ScriptLines | Owner | Owner | Owner | Owner |
-| Likes | Owner | Owner | - | Owner |
-| Bookmarks | Owner | Owner | - | Owner |
-| Playback History | Owner | Owner | Owner | Owner |
-| Follows | Owner | Owner | - | Owner |
-| Audio（生成） | - | Owner | - | - |
-| Audios（アップロード） | Owner | Owner | - | Owner |
-| Images（アップロード） | Owner | Owner | - | Owner |
-| Voices | Public | Admin | Admin | Admin |
-| Categories | Public | Admin | Admin | Admin |
-
-### 公開状態によるアクセス制御
-
-チャンネルとエピソードには公開状態（`publishedAt`）があり、参照時のアクセス制御に影響する。
-
-| エンドポイント | オーナー | 他ユーザー |
-|---------------|----------|------------|
-| `GET /channels` | - | 公開中のみ |
-| `GET /channels/:channelId` | 全て | 公開中のみ |
-| `GET /channels/:channelId/episodes` | - | 公開中のみ |
-| `GET /channels/:channelId/episodes/:episodeId` | 全て | 公開中のみ |
-| `GET /search/channels` | - | 公開中のみ |
-| `GET /search/episodes` | - | 公開中のみ |
-| `GET /me/channels` | 全て | - |
-| `GET /me/channels/:channelId/episodes` | 全て | - |
-
-- **公開中**: `publishedAt IS NOT NULL AND publishedAt <= NOW()`
-- **非公開（下書き）**: `publishedAt IS NULL`
-- **予約公開**: `publishedAt > NOW()`（将来的に対応可能）
-
----
-
-## エラーコード一覧
-
-| コード | HTTP Status | 説明 |
-|--------|-------------|------|
-| VALIDATION_ERROR | 400 | バリデーションエラー |
-| RESERVED_NAME | 400 | 予約語を使用している |
-| SCRIPT_PARSE_ERROR | 400 | 台本のパースに失敗 |
-| UNAUTHORIZED | 401 | 認証が必要 |
-| INVALID_CREDENTIALS | 401 | メールアドレスまたはパスワードが正しくない |
-| FORBIDDEN | 403 | アクセス権限がない |
-| NOT_FOUND | 404 | リソースが見つからない |
-| DUPLICATE_EMAIL | 409 | メールアドレスが既に登録済み |
-| DUPLICATE_USERNAME | 409 | ユーザー名が既に使用されている |
-| DUPLICATE_NAME | 409 | 名前が重複している |
-| ALREADY_LIKED | 409 | 既にお気に入り済み |
-| ALREADY_BOOKMARKED | 409 | 既にブックマーク済み |
-| ALREADY_FOLLOWED | 409 | 既にフォロー済み |
-| SELF_FOLLOW_NOT_ALLOWED | 400 | 自分のエピソードはフォロー不可 |
-| CHARACTER_IN_USE | 409 | キャラクターが使用中のため削除不可 |
-| INTERNAL_ERROR | 500 | サーバー内部エラー |
-| GENERATION_FAILED | 500 | 音声/台本の生成に失敗 |
-| MEDIA_UPLOAD_FAILED | 500 | メディアアップロードに失敗 |
+- [共通仕様](./common.md) - レスポンス形式、ページネーション、権限、公開状態によるアクセス制御
+- [エラーコード一覧](./error-codes.md) - API で返却されるエラーコード一覧
