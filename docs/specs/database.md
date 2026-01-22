@@ -18,6 +18,8 @@ erDiagram
     channels ||--o{ channel_characters : has
     channels ||--o{ episodes : has
     channels ||--o| images : artwork
+    channels ||--o| bgms : default_bgm
+    channels ||--o| system_bgms : default_system_bgm
     characters ||--o{ channel_characters : assigned_to
     characters ||--|| voices : uses
     characters ||--o| images : avatar
@@ -116,6 +118,8 @@ erDiagram
         text description
         text user_prompt
         uuid artwork_id FK
+        uuid default_bgm_id FK
+        uuid default_system_bgm_id FK
         timestamp published_at
         timestamp created_at
         timestamp updated_at
@@ -318,6 +322,8 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | description | TEXT | | - | チャンネルの説明（公開情報） |
 | user_prompt | TEXT | | - | 台本生成の全体方針（AI への指示、内部管理用） |
 | artwork_id | UUID | ◯ | - | カバー画像（images 参照） |
+| default_bgm_id | UUID | ◯ | - | デフォルト BGM（bgms 参照） |
+| default_system_bgm_id | UUID | ◯ | - | デフォルトシステム BGM（system_bgms 参照） |
 | published_at | TIMESTAMP | ◯ | - | 公開日時（NULL = 下書き） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
@@ -327,11 +333,18 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 - INDEX (user_id)
 - INDEX (category_id)
 - INDEX (published_at)
+- INDEX (default_bgm_id)
+- INDEX (default_system_bgm_id)
 
 **外部キー:**
 - user_id → users(id) ON DELETE CASCADE
 - category_id → categories(id) ON DELETE RESTRICT
 - artwork_id → images(id) ON DELETE SET NULL
+- default_bgm_id → bgms(id) ON DELETE SET NULL
+- default_system_bgm_id → system_bgms(id) ON DELETE SET NULL
+
+**制約:**
+- default_bgm_id と default_system_bgm_id は同時に設定不可（CHECK 制約）
 
 ---
 

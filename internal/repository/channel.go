@@ -66,6 +66,10 @@ func (r *channelRepository) FindByUserID(ctx context.Context, userID uuid.UUID, 
 	if err := tx.
 		Preload("Category").
 		Preload("Artwork").
+		Preload("DefaultBgm").
+		Preload("DefaultBgm.Audio").
+		Preload("DefaultSystemBgm").
+		Preload("DefaultSystemBgm.Audio").
 		Preload("ChannelCharacters").
 		Preload("ChannelCharacters.Character").
 		Preload("ChannelCharacters.Character.Voice").
@@ -87,6 +91,10 @@ func (r *channelRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.
 	if err := r.db.WithContext(ctx).
 		Preload("Category").
 		Preload("Artwork").
+		Preload("DefaultBgm").
+		Preload("DefaultBgm.Audio").
+		Preload("DefaultSystemBgm").
+		Preload("DefaultSystemBgm.Audio").
 		Preload("ChannelCharacters").
 		Preload("ChannelCharacters.Character").
 		Preload("ChannelCharacters.Character.Voice").

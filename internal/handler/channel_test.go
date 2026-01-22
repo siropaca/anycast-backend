@@ -87,6 +87,14 @@ func (m *mockChannelService) UnpublishChannel(ctx context.Context, userID, chann
 	return args.Get(0).(*response.ChannelDataResponse), args.Error(1)
 }
 
+func (m *mockChannelService) DeleteDefaultBgm(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error) {
+	args := m.Called(ctx, userID, channelID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.ChannelDataResponse), args.Error(1)
+}
+
 // テスト用のルーターをセットアップする
 func setupChannelRouter(h *ChannelHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)

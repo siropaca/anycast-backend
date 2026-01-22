@@ -54,6 +54,16 @@ GET /channels/:channelId
     "userPrompt": "明るく楽しい雰囲気で...",
     "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
     "artwork": { "id": "uuid", "url": "..." },
+    "defaultBgm": {
+      "id": "uuid",
+      "name": "Chill BGM",
+      "isDefault": false,
+      "audio": {
+        "id": "uuid",
+        "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
+        "durationMs": 180000
+      }
+    },
     "characters": [
       {
         "id": "uuid",
@@ -78,7 +88,9 @@ GET /channels/:channelId
 }
 ```
 
-> **Note:** `userPrompt` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
+> **Note:**
+> - `userPrompt` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
+> - `defaultBgm.isDefault` が `true` の場合はシステム BGM、`false` の場合はユーザー所有の BGM です。
 
 ---
 
@@ -96,6 +108,8 @@ POST /channels
   "userPrompt": "明るく楽しい雰囲気で...",
   "categoryId": "uuid",
   "artworkImageId": "uuid",
+  "defaultBgmId": "uuid",
+  "defaultSystemBgmId": "uuid",
   "characters": {
     "connect": [
       { "id": "uuid" }
@@ -124,12 +138,16 @@ POST /channels
 | description | 必須、2000文字以内 |
 | userPrompt | 必須、2000文字以内 |
 | categoryId | 必須、UUID 形式 |
+| defaultBgmId | UUID 形式、自分が所有する BGM のみ |
+| defaultSystemBgmId | UUID 形式、is_active = true のシステム BGM のみ |
 | characters | 必須、connect と create の合計が 1〜2 件 |
 | characters.connect[].id | 必須、UUID 形式、自分が所有するキャラクターのみ |
 | characters.create[].name | 必須、255文字以内、同一ユーザー内で一意、`__` 始まり禁止 |
 | characters.create[].persona | 2000文字以内 |
 | characters.create[].avatarId | UUID 形式 |
 | characters.create[].voiceId | 必須、UUID 形式、is_active = true のボイスのみ |
+
+> **Note:** `defaultBgmId` と `defaultSystemBgmId` は同時に指定できません。
 
 ---
 
@@ -146,7 +164,9 @@ PATCH /channels/:channelId
   "description": "新しい説明",
   "userPrompt": "明るく楽しい雰囲気で...",
   "categoryId": "uuid",
-  "artworkImageId": "uuid"
+  "artworkImageId": "uuid",
+  "defaultBgmId": "uuid",
+  "defaultSystemBgmId": "uuid"
 }
 ```
 
@@ -157,8 +177,13 @@ PATCH /channels/:channelId
 | description | 必須、2000文字以内 |
 | userPrompt | 必須、2000文字以内 |
 | categoryId | 必須、UUID 形式 |
+| defaultBgmId | UUID 形式、自分が所有する BGM のみ、空文字で削除 |
+| defaultSystemBgmId | UUID 形式、is_active = true のシステム BGM のみ、空文字で削除 |
 
-> **Note:** 公開状態の変更は専用エンドポイント（[チャンネル公開](#チャンネル公開) / [チャンネル非公開](#チャンネル非公開)）を使用してください。
+> **Note:**
+> - 公開状態の変更は専用エンドポイント（[チャンネル公開](#チャンネル公開) / [チャンネル非公開](#チャンネル非公開)）を使用してください。
+> - `defaultBgmId` と `defaultSystemBgmId` は同時に指定できません。
+> - デフォルト BGM の削除は専用エンドポイント（[デフォルト BGM 削除](#デフォルト-bgm-削除)）または空文字を指定してください。
 
 ---
 
@@ -223,6 +248,40 @@ POST /channels/:channelId/unpublish
     "publishedAt": null,
     "createdAt": "2025-01-01T00:00:00Z",
     "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+---
+
+## デフォルト BGM 削除
+
+```
+DELETE /channels/:channelId/default-bgm
+```
+
+チャンネルのデフォルト BGM 設定を削除する。エピソード作成時の BGM 自動継承が無効になる。
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "name": "チャンネル名",
+    "description": "説明",
+    "defaultBgm": null,
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+**エラー（403 Forbidden）:**
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "このチャンネルのデフォルト BGM 削除権限がありません"
   }
 }
 ```
@@ -295,6 +354,16 @@ GET /me/channels/:channelId
     "userPrompt": "明るく楽しい雰囲気で...",
     "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
     "artwork": { "id": "uuid", "url": "..." },
+    "defaultBgm": {
+      "id": "uuid",
+      "name": "Chill BGM",
+      "isDefault": false,
+      "audio": {
+        "id": "uuid",
+        "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
+        "durationMs": 180000
+      }
+    },
     "characters": [
       {
         "id": "uuid",

@@ -331,3 +331,39 @@ func (h *ChannelHandler) UnpublishChannel(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+
+// DeleteDefaultBgm godoc
+// @Summary チャンネルのデフォルト BGM 削除
+// @Description 指定したチャンネルのデフォルト BGM 設定を削除します
+// @Tags channels
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Success 200 {object} response.ChannelDataResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/default-bgm [delete]
+func (h *ChannelHandler) DeleteDefaultBgm(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
+		return
+	}
+
+	result, err := h.channelService.DeleteDefaultBgm(c.Request.Context(), userID, channelID)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
