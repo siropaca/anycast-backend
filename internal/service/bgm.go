@@ -97,7 +97,7 @@ func (s *bgmService) listBgmsWithDefault(ctx context.Context, userID uuid.UUID, 
 
 	total := defaultTotal + userTotal
 
-	var responses []response.BgmResponse
+	responses := make([]response.BgmResponse, 0)
 
 	// オフセットがデフォルト BGM の範囲内の場合
 	if int64(req.Offset) < defaultTotal {
