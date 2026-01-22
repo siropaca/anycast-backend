@@ -26,6 +26,7 @@ type ChannelService interface {
 	DeleteChannel(ctx context.Context, userID, channelID string) error
 	PublishChannel(ctx context.Context, userID, channelID string, publishedAt *string) (*response.ChannelDataResponse, error)
 	UnpublishChannel(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error)
+	DeleteDefaultBgm(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error)
 }
 
 type channelService struct {
@@ -36,6 +37,8 @@ type channelService struct {
 	imageRepo     repository.ImageRepository
 	voiceRepo     repository.VoiceRepository
 	episodeRepo   repository.EpisodeRepository
+	bgmRepo       repository.BgmRepository
+	systemBgmRepo repository.SystemBgmRepository
 	storageClient storage.Client
 }
 
@@ -48,6 +51,8 @@ func NewChannelService(
 	imageRepo repository.ImageRepository,
 	voiceRepo repository.VoiceRepository,
 	episodeRepo repository.EpisodeRepository,
+	bgmRepo repository.BgmRepository,
+	systemBgmRepo repository.SystemBgmRepository,
 	storageClient storage.Client,
 ) ChannelService {
 	return &channelService{
@@ -58,6 +63,8 @@ func NewChannelService(
 		imageRepo:     imageRepo,
 		voiceRepo:     voiceRepo,
 		episodeRepo:   episodeRepo,
+		bgmRepo:       bgmRepo,
+		systemBgmRepo: systemBgmRepo,
 		storageClient: storageClient,
 	}
 }
@@ -188,6 +195,45 @@ func (s *channelService) CreateChannel(ctx context.Context, userID string, req r
 		return nil, apperror.ErrValidation.WithMessage("キャラクターは 1〜2 人で設定してください")
 	}
 
+	// デフォルト BGM のバリデーション（同時指定不可）
+	if req.DefaultBgmID != nil && req.DefaultSystemBgmID != nil {
+		return nil, apperror.ErrValidation.WithMessage("defaultBgmId と defaultSystemBgmId は同時に指定できません")
+	}
+
+	// ユーザー BGM の存在確認とオーナーチェック
+	var defaultBgmID *uuid.UUID
+	if req.DefaultBgmID != nil {
+		bgmID, err := uuid.Parse(*req.DefaultBgmID)
+		if err != nil {
+			return nil, err
+		}
+		bgm, err := s.bgmRepo.FindByID(ctx, bgmID)
+		if err != nil {
+			return nil, err
+		}
+		if bgm.UserID != uid {
+			return nil, apperror.ErrForbidden.WithMessage("この BGM へのアクセス権限がありません")
+		}
+		defaultBgmID = &bgmID
+	}
+
+	// システム BGM の存在確認とアクティブチェック
+	var defaultSystemBgmID *uuid.UUID
+	if req.DefaultSystemBgmID != nil {
+		systemBgmID, err := uuid.Parse(*req.DefaultSystemBgmID)
+		if err != nil {
+			return nil, err
+		}
+		systemBgm, err := s.systemBgmRepo.FindByID(ctx, systemBgmID)
+		if err != nil {
+			return nil, err
+		}
+		if !systemBgm.IsActive {
+			return nil, apperror.ErrNotFound.WithMessage("このシステム BGM は利用できません")
+		}
+		defaultSystemBgmID = &systemBgmID
+	}
+
 	var created *model.Channel
 
 	// トランザクションでキャラクター作成・チャンネル作成・紐づけを実行
@@ -204,12 +250,14 @@ func (s *channelService) CreateChannel(ctx context.Context, userID string, req r
 
 		// チャンネルモデルを作成
 		channel := &model.Channel{
-			UserID:      uid,
-			Name:        req.Name,
-			Description: req.Description,
-			UserPrompt:  req.UserPrompt,
-			CategoryID:  categoryID,
-			ArtworkID:   artworkID,
+			UserID:             uid,
+			Name:               req.Name,
+			Description:        req.Description,
+			UserPrompt:         req.UserPrompt,
+			CategoryID:         categoryID,
+			ArtworkID:          artworkID,
+			DefaultBgmID:       defaultBgmID,
+			DefaultSystemBgmID: defaultSystemBgmID,
 		}
 
 		// チャンネルを保存
@@ -298,6 +346,61 @@ func (s *channelService) UpdateChannel(ctx context.Context, userID, channelID st
 			channel.ArtworkID = &artworkID
 		}
 		channel.Artwork = nil
+	}
+
+	// デフォルト BGM の更新（同時指定不可）
+	if req.DefaultBgmID != nil && req.DefaultSystemBgmID != nil {
+		return nil, apperror.ErrValidation.WithMessage("defaultBgmId と defaultSystemBgmId は同時に指定できません")
+	}
+
+	// ユーザー BGM の更新
+	if req.DefaultBgmID != nil {
+		if *req.DefaultBgmID == "" {
+			// 空文字の場合は null に設定
+			channel.DefaultBgmID = nil
+		} else {
+			bgmID, err := uuid.Parse(*req.DefaultBgmID)
+			if err != nil {
+				return nil, err
+			}
+			bgm, err := s.bgmRepo.FindByID(ctx, bgmID)
+			if err != nil {
+				return nil, err
+			}
+			if bgm.UserID != uid {
+				return nil, apperror.ErrForbidden.WithMessage("この BGM へのアクセス権限がありません")
+			}
+			channel.DefaultBgmID = &bgmID
+			// ユーザー BGM を設定する場合はシステム BGM をクリア
+			channel.DefaultSystemBgmID = nil
+		}
+		channel.DefaultBgm = nil
+		channel.DefaultSystemBgm = nil
+	}
+
+	// システム BGM の更新
+	if req.DefaultSystemBgmID != nil {
+		if *req.DefaultSystemBgmID == "" {
+			// 空文字の場合は null に設定
+			channel.DefaultSystemBgmID = nil
+		} else {
+			systemBgmID, err := uuid.Parse(*req.DefaultSystemBgmID)
+			if err != nil {
+				return nil, err
+			}
+			systemBgm, err := s.systemBgmRepo.FindByID(ctx, systemBgmID)
+			if err != nil {
+				return nil, err
+			}
+			if !systemBgm.IsActive {
+				return nil, apperror.ErrNotFound.WithMessage("このシステム BGM は利用できません")
+			}
+			channel.DefaultSystemBgmID = &systemBgmID
+			// システム BGM を設定する場合はユーザー BGM をクリア
+			channel.DefaultBgmID = nil
+		}
+		channel.DefaultBgm = nil
+		channel.DefaultSystemBgm = nil
 	}
 
 	// チャンネルを更新
@@ -487,6 +590,55 @@ func (s *channelService) UnpublishChannel(ctx context.Context, userID, channelID
 	}, nil
 }
 
+// チャンネルのデフォルト BGM を削除する
+func (s *channelService) DeleteDefaultBgm(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("このチャンネルのデフォルト BGM 削除権限がありません")
+	}
+
+	// デフォルト BGM をクリア
+	channel.DefaultBgmID = nil
+	channel.DefaultSystemBgmID = nil
+	channel.DefaultBgm = nil
+	channel.DefaultSystemBgm = nil
+
+	// チャンネルを更新
+	if err := s.channelRepo.Update(ctx, channel); err != nil {
+		return nil, err
+	}
+
+	// リレーションをプリロードして取得
+	updated, err := s.channelRepo.FindByID(ctx, channel.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := s.toChannelResponse(ctx, updated, true)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.ChannelDataResponse{
+		Data: resp,
+	}, nil
+}
+
 // キャラクター入力を処理して、キャラクター ID のスライスを返す
 // connect は既存キャラクターの紐づけ、create は新規キャラクターの作成
 func (s *channelService) processCharacterInputs(ctx context.Context, userID uuid.UUID, input request.ChannelCharactersInput, characterRepo repository.CharacterRepository) ([]uuid.UUID, error) {
@@ -613,6 +765,39 @@ func (s *channelService) toChannelResponse(ctx context.Context, c *model.Channel
 		resp.Artwork = &response.ArtworkResponse{
 			ID:  c.Artwork.ID,
 			URL: signedURL,
+		}
+	}
+
+	// デフォルト BGM のレスポンス生成
+	if c.DefaultBgm != nil && c.DefaultBgm.Audio.ID != uuid.Nil {
+		signedURL, err := s.storageClient.GenerateSignedURL(ctx, c.DefaultBgm.Audio.Path, storage.SignedURLExpirationAudio)
+		if err != nil {
+			return response.ChannelResponse{}, err
+		}
+		resp.DefaultBgm = &response.ChannelDefaultBgmResponse{
+			ID:        c.DefaultBgm.ID,
+			Name:      c.DefaultBgm.Name,
+			IsDefault: false,
+			Audio: response.BgmAudioResponse{
+				ID:         c.DefaultBgm.Audio.ID,
+				URL:        signedURL,
+				DurationMs: c.DefaultBgm.Audio.DurationMs,
+			},
+		}
+	} else if c.DefaultSystemBgm != nil && c.DefaultSystemBgm.Audio.ID != uuid.Nil {
+		signedURL, err := s.storageClient.GenerateSignedURL(ctx, c.DefaultSystemBgm.Audio.Path, storage.SignedURLExpirationAudio)
+		if err != nil {
+			return response.ChannelResponse{}, err
+		}
+		resp.DefaultBgm = &response.ChannelDefaultBgmResponse{
+			ID:        c.DefaultSystemBgm.ID,
+			Name:      c.DefaultSystemBgm.Name,
+			IsDefault: true,
+			Audio: response.BgmAudioResponse{
+				ID:         c.DefaultSystemBgm.Audio.ID,
+				URL:        signedURL,
+				DurationMs: c.DefaultSystemBgm.Audio.DurationMs,
+			},
 		}
 	}
 

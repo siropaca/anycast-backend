@@ -183,6 +183,13 @@ func (s *episodeService) CreateEpisode(ctx context.Context, userID, channelID, t
 		Description: description,
 	}
 
+	// チャンネルのデフォルト BGM を継承
+	if channel.DefaultBgmID != nil {
+		episode.BgmID = channel.DefaultBgmID
+	} else if channel.DefaultSystemBgmID != nil {
+		episode.SystemBgmID = channel.DefaultSystemBgmID
+	}
+
 	// アートワークが指定されている場合
 	if artworkImageID != nil {
 		artworkID, err := uuid.Parse(*artworkImageID)

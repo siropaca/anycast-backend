@@ -131,6 +131,21 @@ CREATE INDEX idx_oauth_accounts_user_id ON oauth_accounts (user_id);
 -- ユーザーデータテーブル
 -- ===========================================
 
+-- BGM（ユーザー所有）
+-- channels テーブルが参照するため、channels より先に作成
+CREATE TABLE bgms (
+	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+	user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+	audio_id UUID NOT NULL REFERENCES audios (id) ON DELETE RESTRICT,
+	name VARCHAR(255) NOT NULL,
+	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	UNIQUE (user_id, name)
+);
+
+CREATE INDEX idx_bgms_user_id ON bgms (user_id);
+CREATE INDEX idx_bgms_audio_id ON bgms (audio_id);
+
 -- チャンネル
 CREATE TABLE channels (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -139,15 +154,21 @@ CREATE TABLE channels (
 	description TEXT NOT NULL,
 	artwork_id UUID REFERENCES images (id) ON DELETE SET NULL,
 	category_id UUID NOT NULL REFERENCES categories (id) ON DELETE RESTRICT,
+	default_bgm_id UUID REFERENCES bgms (id) ON DELETE SET NULL,
+	default_system_bgm_id UUID REFERENCES system_bgms (id) ON DELETE SET NULL,
 	published_at TIMESTAMP,
 	user_prompt TEXT,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	-- default_bgm_id と default_system_bgm_id は同時に設定不可
+	CONSTRAINT chk_channels_default_bgm_exclusive CHECK (NOT (default_bgm_id IS NOT NULL AND default_system_bgm_id IS NOT NULL))
 );
 
 CREATE INDEX idx_channels_user_id ON channels (user_id);
 CREATE INDEX idx_channels_category_id ON channels (category_id);
 CREATE INDEX idx_channels_published_at ON channels (published_at);
+CREATE INDEX idx_channels_default_bgm_id ON channels (default_bgm_id);
+CREATE INDEX idx_channels_default_system_bgm_id ON channels (default_system_bgm_id);
 
 -- キャラクター（ユーザー所有）
 CREATE TABLE characters (
@@ -164,20 +185,6 @@ CREATE TABLE characters (
 
 CREATE INDEX idx_characters_user_id ON characters (user_id);
 CREATE INDEX idx_characters_avatar_id ON characters (avatar_id);
-
--- BGM（ユーザー所有）
-CREATE TABLE bgms (
-	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-	user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-	audio_id UUID NOT NULL REFERENCES audios (id) ON DELETE RESTRICT,
-	name VARCHAR(255) NOT NULL,
-	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	UNIQUE (user_id, name)
-);
-
-CREATE INDEX idx_bgms_user_id ON bgms (user_id);
-CREATE INDEX idx_bgms_audio_id ON bgms (audio_id);
 
 -- チャンネルとキャラクターの中間テーブル
 CREATE TABLE channel_characters (

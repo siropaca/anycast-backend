@@ -269,12 +269,15 @@ OAuth プロバイダとの連携情報。
 | category | Category | ◯ | カテゴリ |
 | artwork | Image | | カバー画像（ポッドキャストのアートワーク） |
 | characters | Character[] | ◯ | 登場人物（1〜2 人、User が所有するキャラクターへの参照） |
+| defaultBgm | Bgm | | デフォルト BGM（ユーザー所有） |
+| defaultSystemBgm | SystemBgm | | デフォルト BGM（システム提供） |
 | publishedAt | DateTime | | 公開日時（NULL = 下書き） |
 
 #### 不変条件
 
 - characters は 1〜2 人（最小 1 人、最大 2 人）
 - characters は同一 User が所有するキャラクターのみ紐づけ可能
+- defaultBgm と defaultSystemBgm は同時に設定不可（排他的）
 - 公開中のチャンネルは削除不可（先に非公開化が必要、将来的に検討）
 
 ---
