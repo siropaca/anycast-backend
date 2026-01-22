@@ -47,7 +47,7 @@ CREATE TABLE voices (
 	provider_voice_id VARCHAR(100) NOT NULL,
 	name VARCHAR(100) NOT NULL,
 	gender gender,
-	sample_audio_id UUID NOT NULL REFERENCES audios (id) ON DELETE RESTRICT,
+	sample_audio_url VARCHAR(1024) NOT NULL,
 	is_active BOOLEAN NOT NULL DEFAULT true,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -56,7 +56,6 @@ CREATE TABLE voices (
 
 CREATE INDEX idx_voices_provider ON voices (provider);
 CREATE INDEX idx_voices_is_active ON voices (is_active);
-CREATE INDEX idx_voices_sample_audio_id ON voices (sample_audio_id);
 
 -- カテゴリ
 CREATE TABLE categories (

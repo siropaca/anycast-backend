@@ -13,11 +13,8 @@ type Voice struct {
 	ProviderVoiceID string    `gorm:"type:varchar(100);not null;column:provider_voice_id" json:"providerVoiceId"`
 	Name            string    `gorm:"type:varchar(100);not null" json:"name"`
 	Gender          Gender    `gorm:"type:gender;not null" json:"gender"`
-	SampleAudioID   uuid.UUID `gorm:"type:uuid;not null;column:sample_audio_id" json:"-"`
+	SampleAudioURL  string    `gorm:"type:varchar(1024);not null;column:sample_audio_url" json:"sampleAudioUrl"`
 	IsActive        bool      `gorm:"not null;default:true" json:"isActive"`
 	CreatedAt       time.Time `gorm:"not null;default:CURRENT_TIMESTAMP" json:"-"`
 	UpdatedAt       time.Time `gorm:"not null;default:CURRENT_TIMESTAMP" json:"-"`
-
-	// リレーション
-	SampleAudio Audio `gorm:"foreignKey:SampleAudioID"`
 }
