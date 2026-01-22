@@ -101,11 +101,11 @@ func toVoiceResponses(voices []model.Voice, storageClient storage.Client, c *gin
 
 // Voice モデルをレスポンス DTO に変換する
 func toVoiceResponse(v *model.Voice, storageClient storage.Client, c *gin.Context) response.VoiceResponse {
-	sampleAudioUrl := ""
+	sampleAudioURL := ""
 	if storageClient != nil {
 		signedURL, err := storageClient.GenerateSignedURL(c.Request.Context(), v.SampleAudio.Path, 1*time.Hour)
 		if err == nil {
-			sampleAudioUrl = signedURL
+			sampleAudioURL = signedURL
 		}
 	}
 
@@ -115,7 +115,7 @@ func toVoiceResponse(v *model.Voice, storageClient storage.Client, c *gin.Contex
 		ProviderVoiceID: v.ProviderVoiceID,
 		Name:            v.Name,
 		Gender:          string(v.Gender),
-		SampleAudioUrl:  sampleAudioUrl,
+		SampleAudioURL:  sampleAudioURL,
 		IsActive:        v.IsActive,
 	}
 }

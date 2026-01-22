@@ -205,7 +205,7 @@ func TestToVoiceResponse(t *testing.T) {
 		assert.Equal(t, "en-US-Neural2-A", resp.ProviderVoiceID)
 		assert.Equal(t, "American English Female", resp.Name)
 		assert.Equal(t, "female", resp.Gender)
-		assert.Equal(t, "", resp.SampleAudioUrl)
+		assert.Equal(t, "", resp.SampleAudioURL)
 		assert.True(t, resp.IsActive)
 	})
 
