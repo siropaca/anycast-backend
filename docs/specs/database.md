@@ -23,6 +23,7 @@ erDiagram
     characters ||--o{ channel_characters : assigned_to
     characters ||--|| voices : uses
     characters ||--o| images : avatar
+    voices ||--o| audios : sample_audio
     episodes ||--o{ script_lines : has
     episodes ||--o{ likes : has
     episodes ||--o{ bookmarks : has
@@ -149,6 +150,7 @@ erDiagram
         varchar provider_voice_id
         varchar name
         varchar gender
+        uuid sample_audio_id FK
         boolean is_active
         timestamp created_at
         timestamp updated_at
@@ -670,6 +672,7 @@ TTS ボイスのマスタデータを管理する。システム管理テーブ�
 | provider_voice_id | VARCHAR(100) | | - | プロバイダの音声 ID（例: ja-JP-Wavenet-C） |
 | name | VARCHAR(100) | | - | 表示名（デフォルトは provider_voice_id） |
 | gender | gender | | - | 性別: `male` / `female` / `neutral` |
+| sample_audio_id | UUID | | - | サンプルボイス音声（audios 参照） |
 | is_active | BOOLEAN | | true | 有効フラグ（false で新規選択不可） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
@@ -679,6 +682,10 @@ TTS ボイスのマスタデータを管理する。システム管理テーブ�
 - UNIQUE (provider, provider_voice_id)
 - INDEX (provider)
 - INDEX (is_active)
+- INDEX (sample_audio_id)
+
+**外部キー:**
+- sample_audio_id → audios(id) ON DELETE RESTRICT
 
 ---
 
@@ -751,6 +758,7 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 - voices テーブルで TTS ボイスのマスタを管理（システム管理、ユーザーは参照のみ）
 - provider + provider_voice_id の組み合わせで一意
 - name はデフォルトで provider_voice_id と同じ値を設定
+- sample_audio_id でサンプルボイス音声を紐づけ可能（任意）
 - is_active = false のボイスは新規キャラクター作成時に選択不可（既存キャラクターは継続利用可）
 - 初期データとして各プロバイダのボイス一覧をシードで投入
 - 物理削除は行わず、is_active フラグで無効化

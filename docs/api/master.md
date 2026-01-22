@@ -25,6 +25,7 @@ GET /voices
       "providerVoiceId": "ja-JP-Wavenet-C",
       "name": "ja-JP-Wavenet-C",
       "gender": "male",
+      "sampleAudioUrl": "https://storage.example.com/...",
       "isActive": true
     }
   ]
