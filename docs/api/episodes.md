@@ -210,7 +210,7 @@ POST /channels/:channelId/episodes/:episodeId/unpublish
 PUT /channels/:channelId/episodes/:episodeId/bgm
 ```
 
-エピソードに BGM を設定する。既に BGM が設定されている場合は上書きされる。ユーザー BGM またはデフォルト BGM のどちらかを指定する。
+エピソードに BGM を設定する。既に BGM が設定されている場合は上書きされる。ユーザー BGM またはシステム BGM のどちらかを指定する。
 
 **リクエスト（ユーザー BGM の場合）:**
 ```json
@@ -219,26 +219,26 @@ PUT /channels/:channelId/episodes/:episodeId/bgm
 }
 ```
 
-**リクエスト（デフォルト BGM の場合）:**
+**リクエスト（システム BGM の場合）:**
 ```json
 {
-  "defaultBgmId": "uuid"
+  "systemBgmId": "uuid"
 }
 ```
 
 | フィールド | 型 | 必須 | 説明 |
 |------------|-----|:----:|------|
-| bgmId | uuid | - | ユーザー BGM ID（bgms.id）。defaultBgmId と同時指定不可 |
-| defaultBgmId | uuid | - | デフォルト BGM ID（default_bgms.id）。bgmId と同時指定不可 |
+| bgmId | uuid | - | ユーザー BGM ID（bgms.id）。systemBgmId と同時指定不可 |
+| systemBgmId | uuid | - | システム BGM ID（system_bgms.id）。bgmId と同時指定不可 |
 
-> **Note:** bgmId と defaultBgmId のどちらか一方のみを指定する。
+> **Note:** bgmId と systemBgmId のどちらか一方のみを指定する。
 
 **バリデーション:**
 
 | フィールド | ルール |
 |------------|--------|
 | bgmId | UUID 形式、自分の BGM のみ指定可能 |
-| defaultBgmId | UUID 形式、is_active = true のデフォルト BGM のみ指定可能 |
+| systemBgmId | UUID 形式、is_active = true のシステム BGM のみ指定可能 |
 
 **レスポンス（200 OK）:**
 ```json
@@ -269,7 +269,7 @@ PUT /channels/:channelId/episodes/:episodeId/bgm
 {
   "error": {
     "code": "VALIDATION_ERROR",
-    "message": "bgmId と defaultBgmId は同時に指定できません"
+    "message": "bgmId と systemBgmId は同時に指定できません"
   }
 }
 ```

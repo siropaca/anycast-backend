@@ -38,7 +38,7 @@ type episodeService struct {
 	audioRepo      repository.AudioRepository
 	imageRepo      repository.ImageRepository
 	bgmRepo        repository.BgmRepository
-	defaultBgmRepo repository.DefaultBgmRepository
+	systemBgmRepo  repository.SystemBgmRepository
 	storageClient  storage.Client
 	ttsClient      tts.Client
 }
@@ -51,7 +51,7 @@ func NewEpisodeService(
 	audioRepo repository.AudioRepository,
 	imageRepo repository.ImageRepository,
 	bgmRepo repository.BgmRepository,
-	defaultBgmRepo repository.DefaultBgmRepository,
+	systemBgmRepo repository.SystemBgmRepository,
 	storageClient storage.Client,
 	ttsClient tts.Client,
 ) EpisodeService {
@@ -62,7 +62,7 @@ func NewEpisodeService(
 		audioRepo:      audioRepo,
 		imageRepo:      imageRepo,
 		bgmRepo:        bgmRepo,
-		defaultBgmRepo: defaultBgmRepo,
+		systemBgmRepo:  systemBgmRepo,
 		storageClient:  storageClient,
 		ttsClient:      ttsClient,
 	}
@@ -559,19 +559,19 @@ func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode
 				DurationMs: e.Bgm.Audio.DurationMs,
 			},
 		}
-	} else if e.DefaultBgm != nil && e.DefaultBgm.Audio.ID != uuid.Nil {
-		signedURL, err := s.storageClient.GenerateSignedURL(ctx, e.DefaultBgm.Audio.Path, storage.SignedURLExpirationAudio)
+	} else if e.SystemBgm != nil && e.SystemBgm.Audio.ID != uuid.Nil {
+		signedURL, err := s.storageClient.GenerateSignedURL(ctx, e.SystemBgm.Audio.Path, storage.SignedURLExpirationAudio)
 		if err != nil {
 			return response.EpisodeResponse{}, err
 		}
 		resp.Bgm = &response.EpisodeBgmResponse{
-			ID:        e.DefaultBgm.ID,
-			Name:      e.DefaultBgm.Name,
+			ID:        e.SystemBgm.ID,
+			Name:      e.SystemBgm.Name,
 			IsDefault: true,
 			Audio: response.BgmAudioResponse{
-				ID:         e.DefaultBgm.Audio.ID,
+				ID:         e.SystemBgm.Audio.ID,
 				URL:        signedURL,
-				DurationMs: e.DefaultBgm.Audio.DurationMs,
+				DurationMs: e.SystemBgm.Audio.DurationMs,
 			},
 		}
 	}
@@ -749,14 +749,14 @@ func (s *episodeService) SetEpisodeBgm(ctx context.Context, userID, channelID, e
 		return nil, err
 	}
 
-	// bgmId と defaultBgmId の同時指定チェック
-	if req.BgmID != nil && req.DefaultBgmID != nil {
-		return nil, apperror.ErrValidation.WithMessage("bgmId と defaultBgmId は同時に指定できません")
+	// bgmId と systemBgmId の同時指定チェック
+	if req.BgmID != nil && req.SystemBgmID != nil {
+		return nil, apperror.ErrValidation.WithMessage("bgmId と systemBgmId は同時に指定できません")
 	}
 
 	// どちらも指定されていない場合
-	if req.BgmID == nil && req.DefaultBgmID == nil {
-		return nil, apperror.ErrValidation.WithMessage("bgmId または defaultBgmId のいずれかを指定してください")
+	if req.BgmID == nil && req.SystemBgmID == nil {
+		return nil, apperror.ErrValidation.WithMessage("bgmId または systemBgmId のいずれかを指定してください")
 	}
 
 	// チャンネルの存在確認とオーナーチェック
@@ -781,9 +781,9 @@ func (s *episodeService) SetEpisodeBgm(ctx context.Context, userID, channelID, e
 
 	// 前の BGM 設定をクリア
 	episode.BgmID = nil
-	episode.DefaultBgmID = nil
+	episode.SystemBgmID = nil
 	episode.Bgm = nil
-	episode.DefaultBgm = nil
+	episode.SystemBgm = nil
 
 	// ユーザー BGM を設定
 	if req.BgmID != nil {
@@ -805,24 +805,24 @@ func (s *episodeService) SetEpisodeBgm(ctx context.Context, userID, channelID, e
 		episode.BgmID = &bgmID
 	}
 
-	// デフォルト BGM を設定
-	if req.DefaultBgmID != nil {
-		defaultBgmID, err := uuid.Parse(*req.DefaultBgmID)
+	// システム BGM を設定
+	if req.SystemBgmID != nil {
+		systemBgmID, err := uuid.Parse(*req.SystemBgmID)
 		if err != nil {
-			return nil, apperror.ErrValidation.WithMessage("無効な defaultBgmId です")
+			return nil, apperror.ErrValidation.WithMessage("無効な systemBgmId です")
 		}
 
-		// デフォルト BGM の存在確認とアクティブチェック
-		defaultBgm, err := s.defaultBgmRepo.FindByID(ctx, defaultBgmID)
+		// システム BGM の存在確認とアクティブチェック
+		systemBgm, err := s.systemBgmRepo.FindByID(ctx, systemBgmID)
 		if err != nil {
 			return nil, err
 		}
 
-		if !defaultBgm.IsActive {
-			return nil, apperror.ErrNotFound.WithMessage("このデフォルト BGM は利用できません")
+		if !systemBgm.IsActive {
+			return nil, apperror.ErrNotFound.WithMessage("このシステム BGM は利用できません")
 		}
 
-		episode.DefaultBgmID = &defaultBgmID
+		episode.SystemBgmID = &systemBgmID
 	}
 
 	// エピソードを更新
@@ -885,9 +885,9 @@ func (s *episodeService) DeleteEpisodeBgm(ctx context.Context, userID, channelID
 
 	// BGM 設定をクリア
 	episode.BgmID = nil
-	episode.DefaultBgmID = nil
+	episode.SystemBgmID = nil
 	episode.Bgm = nil
-	episode.DefaultBgm = nil
+	episode.SystemBgm = nil
 
 	// エピソードを更新
 	if err := s.episodeRepo.Update(ctx, episode); err != nil {

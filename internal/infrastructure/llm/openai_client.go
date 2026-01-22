@@ -49,6 +49,9 @@ func NewOpenAIClient(apiKey string) Client {
 func (c *openAIClient) GenerateScript(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
 	log := logger.FromContext(ctx)
 
+	log.Debug("GenerateScript called", "systemPrompt", systemPrompt)
+	log.Debug("GenerateScript called", "userPrompt", userPrompt)
+
 	var lastErr error
 	for attempt := 1; attempt <= maxRetries; attempt++ {
 		log.Debug("generating script", "attempt", attempt)

@@ -6,8 +6,8 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// デフォルト BGM（管理者が提供）
-type DefaultBgm struct {
+// システム BGM（管理者が提供）
+type SystemBgm struct {
 	ID        uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	AudioID   uuid.UUID `gorm:"type:uuid;not null;column:audio_id"`
 	Name      string    `gorm:"type:varchar(255);not null"`
@@ -18,4 +18,9 @@ type DefaultBgm struct {
 
 	// リレーション
 	Audio Audio `gorm:"foreignKey:AudioID"`
+}
+
+// TableName はテーブル名を返す（マイグレーション後の新テーブル名）
+func (SystemBgm) TableName() string {
+	return "system_bgms"
 }

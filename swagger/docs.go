@@ -3427,7 +3427,7 @@ const docTemplate = `{
                 "bgmId": {
                     "type": "string"
                 },
-                "defaultBgmId": {
+                "systemBgmId": {
                     "type": "string"
                 }
             }

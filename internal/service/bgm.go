@@ -22,24 +22,24 @@ type BgmService interface {
 }
 
 type bgmService struct {
-	bgmRepo        repository.BgmRepository
-	defaultBgmRepo repository.DefaultBgmRepository
-	audioRepo      repository.AudioRepository
-	storageClient  storage.Client
+	bgmRepo       repository.BgmRepository
+	systemBgmRepo repository.SystemBgmRepository
+	audioRepo     repository.AudioRepository
+	storageClient storage.Client
 }
 
 // BgmService の実装を返す
 func NewBgmService(
 	bgmRepo repository.BgmRepository,
-	defaultBgmRepo repository.DefaultBgmRepository,
+	systemBgmRepo repository.SystemBgmRepository,
 	audioRepo repository.AudioRepository,
 	storageClient storage.Client,
 ) BgmService {
 	return &bgmService{
-		bgmRepo:        bgmRepo,
-		defaultBgmRepo: defaultBgmRepo,
-		audioRepo:      audioRepo,
-		storageClient:  storageClient,
+		bgmRepo:       bgmRepo,
+		systemBgmRepo: systemBgmRepo,
+		audioRepo:     audioRepo,
+		storageClient: storageClient,
 	}
 }
 
@@ -80,10 +80,10 @@ func (s *bgmService) listUserBgmsOnly(ctx context.Context, userID uuid.UUID, req
 	}, nil
 }
 
-// デフォルト BGM とユーザー BGM を結合して取得する
+// システム BGM とユーザー BGM を結合して取得する
 func (s *bgmService) listBgmsWithDefault(ctx context.Context, userID uuid.UUID, req request.ListMyBgmsRequest) (*response.BgmListWithPaginationResponse, error) {
-	// デフォルト BGM の総件数を取得
-	defaultTotal, err := s.defaultBgmRepo.CountActive(ctx)
+	// システム BGM の総件数を取得
+	systemTotal, err := s.systemBgmRepo.CountActive(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -95,29 +95,29 @@ func (s *bgmService) listBgmsWithDefault(ctx context.Context, userID uuid.UUID, 
 	}
 	_ = userBgms // 総件数のみ使用
 
-	total := defaultTotal + userTotal
+	total := systemTotal + userTotal
 
-	var responses []response.BgmResponse
+	responses := make([]response.BgmResponse, 0)
 
-	// オフセットがデフォルト BGM の範囲内の場合
-	if int64(req.Offset) < defaultTotal {
-		// デフォルト BGM を取得
-		defaultFilter := repository.DefaultBgmFilter{
+	// オフセットがシステム BGM の範囲内の場合
+	if int64(req.Offset) < systemTotal {
+		// システム BGM を取得
+		systemFilter := repository.SystemBgmFilter{
 			Limit:  req.Limit,
 			Offset: req.Offset,
 		}
-		defaultBgms, _, err := s.defaultBgmRepo.FindActive(ctx, defaultFilter)
+		systemBgms, _, err := s.systemBgmRepo.FindActive(ctx, systemFilter)
 		if err != nil {
 			return nil, err
 		}
 
-		defaultResponses, err := s.toDefaultBgmResponses(ctx, defaultBgms)
+		systemResponses, err := s.toSystemBgmResponses(ctx, systemBgms)
 		if err != nil {
 			return nil, err
 		}
-		responses = append(responses, defaultResponses...)
+		responses = append(responses, systemResponses...)
 
-		// デフォルト BGM だけで limit を満たさない場合、ユーザー BGM も取得
+		// システム BGM だけで limit を満たさない場合、ユーザー BGM も取得
 		remaining := req.Limit - len(responses)
 		if remaining > 0 {
 			userFilter := repository.BgmFilter{
@@ -136,8 +136,8 @@ func (s *bgmService) listBgmsWithDefault(ctx context.Context, userID uuid.UUID, 
 			responses = append(responses, userResponses...)
 		}
 	} else {
-		// オフセットがデフォルト BGM の範囲外の場合、ユーザー BGM のみ取得
-		userOffset := req.Offset - int(defaultTotal)
+		// オフセットがシステム BGM の範囲外の場合、ユーザー BGM のみ取得
+		userOffset := req.Offset - int(systemTotal)
 		userFilter := repository.BgmFilter{
 			Limit:  req.Limit,
 			Offset: userOffset,
@@ -192,12 +192,12 @@ func (s *bgmService) toBgmResponse(ctx context.Context, b model.Bgm) (response.B
 	}, nil
 }
 
-// DefaultBgm モデルのスライスをレスポンス DTO のスライスに変換する
-func (s *bgmService) toDefaultBgmResponses(ctx context.Context, bgms []model.DefaultBgm) ([]response.BgmResponse, error) {
+// SystemBgm モデルのスライスをレスポンス DTO のスライスに変換する
+func (s *bgmService) toSystemBgmResponses(ctx context.Context, bgms []model.SystemBgm) ([]response.BgmResponse, error) {
 	result := make([]response.BgmResponse, len(bgms))
 
 	for i, b := range bgms {
-		res, err := s.toDefaultBgmResponse(ctx, b)
+		res, err := s.toSystemBgmResponse(ctx, b)
 		if err != nil {
 			return nil, err
 		}
@@ -207,8 +207,8 @@ func (s *bgmService) toDefaultBgmResponses(ctx context.Context, bgms []model.Def
 	return result, nil
 }
 
-// DefaultBgm モデルをレスポンス DTO に変換する
-func (s *bgmService) toDefaultBgmResponse(ctx context.Context, b model.DefaultBgm) (response.BgmResponse, error) {
+// SystemBgm モデルをレスポンス DTO に変換する
+func (s *bgmService) toSystemBgmResponse(ctx context.Context, b model.SystemBgm) (response.BgmResponse, error) {
 	audioResponse, err := s.toAudioResponse(ctx, b.Audio)
 	if err != nil {
 		return response.BgmResponse{}, err

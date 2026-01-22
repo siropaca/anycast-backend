@@ -70,8 +70,8 @@ CREATE TABLE categories (
 CREATE INDEX idx_categories_sort_order ON categories (sort_order);
 CREATE INDEX idx_categories_is_active ON categories (is_active);
 
--- デフォルト BGM（マスタ）
-CREATE TABLE default_bgms (
+-- システム BGM（マスタ）
+CREATE TABLE system_bgms (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 	audio_id UUID NOT NULL REFERENCES audios (id) ON DELETE RESTRICT,
 	name VARCHAR(255) NOT NULL UNIQUE,
@@ -81,9 +81,9 @@ CREATE TABLE default_bgms (
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_default_bgms_sort_order ON default_bgms (sort_order);
-CREATE INDEX idx_default_bgms_is_active ON default_bgms (is_active);
-CREATE INDEX idx_default_bgms_audio_id ON default_bgms (audio_id);
+CREATE INDEX idx_system_bgms_sort_order ON system_bgms (sort_order);
+CREATE INDEX idx_system_bgms_is_active ON system_bgms (is_active);
+CREATE INDEX idx_system_bgms_audio_id ON system_bgms (audio_id);
 
 -- ===========================================
 -- 認証関連テーブル
@@ -198,7 +198,7 @@ CREATE TABLE episodes (
 	title VARCHAR(255) NOT NULL,
 	description TEXT NOT NULL,
 	bgm_id UUID REFERENCES bgms (id) ON DELETE SET NULL,
-	default_bgm_id UUID REFERENCES default_bgms (id) ON DELETE SET NULL,
+	system_bgm_id UUID REFERENCES system_bgms (id) ON DELETE SET NULL,
 	full_audio_id UUID REFERENCES audios (id) ON DELETE SET NULL,
 	published_at TIMESTAMP,
 	user_prompt TEXT NOT NULL DEFAULT '',
@@ -206,8 +206,8 @@ CREATE TABLE episodes (
 	artwork_id UUID REFERENCES images (id) ON DELETE SET NULL,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	-- bgm_id と default_bgm_id は同時に設定不可
-	CONSTRAINT chk_episodes_bgm_exclusive CHECK (NOT (bgm_id IS NOT NULL AND default_bgm_id IS NOT NULL))
+	-- bgm_id と system_bgm_id は同時に設定不可
+	CONSTRAINT chk_episodes_bgm_exclusive CHECK (NOT (bgm_id IS NOT NULL AND system_bgm_id IS NOT NULL))
 );
 
 CREATE INDEX idx_episodes_channel_id ON episodes (channel_id);
