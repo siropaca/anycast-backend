@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -56,7 +55,7 @@ func TestVoiceHandler_ListVoices(t *testing.T) {
 		}
 		mockSvc.On("ListVoices", mock.Anything, repository.VoiceFilter{}).Return(voices, nil)
 
-		handler := NewVoiceHandler(mockSvc, nil)
+		handler := NewVoiceHandler(mockSvc)
 		router := setupRouter(handler)
 
 		w := httptest.NewRecorder()
@@ -82,7 +81,7 @@ func TestVoiceHandler_ListVoices(t *testing.T) {
 		}
 		mockSvc.On("ListVoices", mock.Anything, filter).Return(voices, nil)
 
-		handler := NewVoiceHandler(mockSvc, nil)
+		handler := NewVoiceHandler(mockSvc)
 		router := setupRouter(handler)
 
 		w := httptest.NewRecorder()
@@ -97,7 +96,7 @@ func TestVoiceHandler_ListVoices(t *testing.T) {
 		mockSvc := new(mockVoiceService)
 		mockSvc.On("ListVoices", mock.Anything, repository.VoiceFilter{}).Return(nil, apperror.ErrInternal)
 
-		handler := NewVoiceHandler(mockSvc, nil)
+		handler := NewVoiceHandler(mockSvc)
 		router := setupRouter(handler)
 
 		w := httptest.NewRecorder()
@@ -116,7 +115,7 @@ func TestVoiceHandler_GetVoice(t *testing.T) {
 		voice := &model.Voice{ID: id, Provider: "google", Name: "Test Voice", Gender: "male", IsActive: true}
 		mockSvc.On("GetVoice", mock.Anything, id.String()).Return(voice, nil)
 
-		handler := NewVoiceHandler(mockSvc, nil)
+		handler := NewVoiceHandler(mockSvc)
 		router := setupRouter(handler)
 
 		w := httptest.NewRecorder()
@@ -135,7 +134,7 @@ func TestVoiceHandler_GetVoice(t *testing.T) {
 	t.Run("無効な UUID 形式の場合は 400 を返す", func(t *testing.T) {
 		mockSvc := new(mockVoiceService)
 
-		handler := NewVoiceHandler(mockSvc, nil)
+		handler := NewVoiceHandler(mockSvc)
 		router := setupRouter(handler)
 
 		w := httptest.NewRecorder()
@@ -151,7 +150,7 @@ func TestVoiceHandler_GetVoice(t *testing.T) {
 		id := uuid.New()
 		mockSvc.On("GetVoice", mock.Anything, id.String()).Return(nil, apperror.ErrNotFound)
 
-		handler := NewVoiceHandler(mockSvc, nil)
+		handler := NewVoiceHandler(mockSvc)
 		router := setupRouter(handler)
 
 		w := httptest.NewRecorder()
@@ -167,7 +166,7 @@ func TestVoiceHandler_GetVoice(t *testing.T) {
 		id := uuid.New()
 		mockSvc.On("GetVoice", mock.Anything, id.String()).Return(nil, errors.New("unexpected error"))
 
-		handler := NewVoiceHandler(mockSvc, nil)
+		handler := NewVoiceHandler(mockSvc)
 		router := setupRouter(handler)
 
 		w := httptest.NewRecorder()
@@ -181,11 +180,6 @@ func TestVoiceHandler_GetVoice(t *testing.T) {
 
 func TestToVoiceResponse(t *testing.T) {
 	t.Run("Voice モデルを VoiceResponse に変換できる", func(t *testing.T) {
-		gin.SetMode(gin.TestMode)
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-		c.Request = httptest.NewRequest("GET", "/", http.NoBody)
-
 		id := uuid.MustParse("550e8400-e29b-41d4-a716-446655440000")
 		voice := &model.Voice{
 			ID:              id,
@@ -193,34 +187,28 @@ func TestToVoiceResponse(t *testing.T) {
 			ProviderVoiceID: "en-US-Neural2-A",
 			Name:            "American English Female",
 			Gender:          "female",
+			SampleAudioURL:  "/voice/sample.wav",
 			IsActive:        true,
-			CreatedAt:       time.Now(),
-			UpdatedAt:       time.Now(),
 		}
 
-		resp := toVoiceResponse(voice, nil, c)
+		resp := toVoiceResponse(voice)
 
 		assert.Equal(t, id, resp.ID)
 		assert.Equal(t, "google", resp.Provider)
 		assert.Equal(t, "en-US-Neural2-A", resp.ProviderVoiceID)
 		assert.Equal(t, "American English Female", resp.Name)
 		assert.Equal(t, "female", resp.Gender)
-		assert.Equal(t, "", resp.SampleAudioURL)
+		assert.Equal(t, "/voice/sample.wav", resp.SampleAudioURL)
 		assert.True(t, resp.IsActive)
 	})
 
 	t.Run("IsActive が false の場合も正しく変換される", func(t *testing.T) {
-		gin.SetMode(gin.TestMode)
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-		c.Request = httptest.NewRequest("GET", "/", http.NoBody)
-
 		voice := &model.Voice{
 			ID:       uuid.New(),
 			IsActive: false,
 		}
 
-		resp := toVoiceResponse(voice, nil, c)
+		resp := toVoiceResponse(voice)
 
 		assert.False(t, resp.IsActive)
 	})
@@ -228,24 +216,14 @@ func TestToVoiceResponse(t *testing.T) {
 
 func TestToVoiceResponses(t *testing.T) {
 	t.Run("空のスライスを変換すると空のスライスを返す", func(t *testing.T) {
-		gin.SetMode(gin.TestMode)
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-		c.Request = httptest.NewRequest("GET", "/", http.NoBody)
-
 		voices := []model.Voice{}
 
-		resp := toVoiceResponses(voices, nil, c)
+		resp := toVoiceResponses(voices)
 
 		assert.Empty(t, resp)
 	})
 
 	t.Run("複数の Voice を変換できる", func(t *testing.T) {
-		gin.SetMode(gin.TestMode)
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-		c.Request = httptest.NewRequest("GET", "/", http.NoBody)
-
 		id1 := uuid.MustParse("550e8400-e29b-41d4-a716-446655440001")
 		id2 := uuid.MustParse("550e8400-e29b-41d4-a716-446655440002")
 		voices := []model.Voice{
@@ -267,7 +245,7 @@ func TestToVoiceResponses(t *testing.T) {
 			},
 		}
 
-		resp := toVoiceResponses(voices, nil, c)
+		resp := toVoiceResponses(voices)
 
 		assert.Len(t, resp, 2)
 		assert.Equal(t, id1, resp[0].ID)
@@ -277,17 +255,12 @@ func TestToVoiceResponses(t *testing.T) {
 	})
 
 	t.Run("変換結果の長さが入力と一致する", func(t *testing.T) {
-		gin.SetMode(gin.TestMode)
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-		c.Request = httptest.NewRequest("GET", "/", http.NoBody)
-
 		voices := make([]model.Voice, 5)
 		for i := range voices {
 			voices[i] = model.Voice{ID: uuid.New()}
 		}
 
-		resp := toVoiceResponses(voices, nil, c)
+		resp := toVoiceResponses(voices)
 
 		assert.Len(t, resp, len(voices))
 	})
