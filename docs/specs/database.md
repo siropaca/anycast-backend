@@ -28,10 +28,10 @@ erDiagram
     episodes ||--o{ follows : has
     episodes ||--o| images : artwork
     episodes ||--o| bgms : user_bgm
-    episodes ||--o| default_bgms : default_bgm
+    episodes ||--o| system_bgms : system_bgm
     episodes ||--o| audios : full_audio
     bgms ||--|| audios : has
-    default_bgms ||--|| audios : has
+    system_bgms ||--|| audios : has
     script_lines ||--|| characters : speaker
 
     likes {
@@ -159,7 +159,7 @@ erDiagram
         text voice_style
         uuid artwork_id FK
         uuid bgm_id FK
-        uuid default_bgm_id FK
+        uuid system_bgm_id FK
         uuid full_audio_id FK
         timestamp published_at
         timestamp created_at
@@ -175,7 +175,7 @@ erDiagram
         timestamp updated_at
     }
 
-    default_bgms {
+    system_bgms {
         uuid id PK
         uuid audio_id FK
         varchar name
@@ -429,7 +429,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | voice_style | TEXT | | '' | 音声生成のスタイル指示（音声生成時に自動保存、例: "Read aloud in a warm, welcoming tone"） |
 | artwork_id | UUID | ◯ | - | カバー画像（images 参照） |
 | bgm_id | UUID | ◯ | - | ユーザー BGM（bgms 参照） |
-| default_bgm_id | UUID | ◯ | - | デフォルト BGM（default_bgms 参照） |
+| system_bgm_id | UUID | ◯ | - | システム BGM（system_bgms 参照） |
 | full_audio_id | UUID | ◯ | - | 結合済み音声（audios 参照） |
 | published_at | TIMESTAMP | ◯ | - | 公開日時（NULL = 下書き） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
@@ -444,11 +444,11 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 - channel_id → channels(id) ON DELETE CASCADE
 - artwork_id → images(id) ON DELETE SET NULL
 - bgm_id → bgms(id) ON DELETE SET NULL
-- default_bgm_id → default_bgms(id) ON DELETE SET NULL
+- system_bgm_id → system_bgms(id) ON DELETE SET NULL
 - full_audio_id → audios(id) ON DELETE SET NULL
 
 **制約:**
-- bgm_id と default_bgm_id は同時に設定不可（CHECK 制約）
+- bgm_id と system_bgm_id は同時に設定不可（CHECK 制約）
 
 ---
 
@@ -669,9 +669,9 @@ TTS ボイスのマスタデータを管理する。システム管理テーブ�
 
 ---
 
-#### default_bgms
+#### system_bgms
 
-デフォルト BGM のマスタデータを管理する。システム管理テーブルのため、ユーザーは参照のみ可能。
+システム BGM のマスタデータを管理する。システム管理テーブルのため、ユーザーは参照のみ可能。
 
 | カラム名 | 型 | NULLABLE | デフォルト | 説明 |
 |----------|-----|:--------:|------------|------|
@@ -720,8 +720,8 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 - Episode 削除時: 関連する ScriptLines が削除
 - Character 削除時: channel_characters で使用中の場合は RESTRICT（削除不可）
 - BGM 削除時: Episodes で使用中の場合は SET NULL
-- Default BGM 削除時: Episodes で使用中の場合は SET NULL
-- Audio 削除時: BGMs / Default BGMs で使用中の場合は RESTRICT（削除不可）、Episodes からは SET NULL
+- System BGM 削除時: Episodes で使用中の場合は SET NULL
+- Audio 削除時: BGMs / System BGMs で使用中の場合は RESTRICT（削除不可）、Episodes からは SET NULL
 - Image 削除時: 参照元は SET NULL（ファイルが消えても親レコードは残る）
 - Voice 削除時: 使用中の場合は RESTRICT（削除不可）
 
@@ -755,9 +755,9 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 ### BGM の管理
 
 - bgms テーブルでユーザーが所有する BGM を管理
-- default_bgms テーブルで管理者が提供するデフォルト BGM を管理（システム管理、ユーザーは参照のみ）
-- エピソードには bgm_id（ユーザー BGM）または default_bgm_id（デフォルト BGM）のどちらか一方のみ設定可能
-- 同一ユーザー内で BGM 名は一意、デフォルト BGM 名もシステム全体で一意
-- is_active = false のデフォルト BGM は新規設定時に選択不可（既存エピソードは継続利用可）
+- system_bgms テーブルで管理者が提供するシステム BGM を管理（システム管理、ユーザーは参照のみ）
+- エピソードには bgm_id（ユーザー BGM）または system_bgm_id（システム BGM）のどちらか一方のみ設定可能
+- 同一ユーザー内で BGM 名は一意、システム BGM 名もシステム全体で一意
+- is_active = false のシステム BGM は新規設定時に選択不可（既存エピソードは継続利用可）
 - ユーザー BGM は User 削除時にカスケード削除
-- デフォルト BGM は物理削除は行わず、is_active フラグで無効化
+- システム BGM は物理削除は行わず、is_active フラグで無効化

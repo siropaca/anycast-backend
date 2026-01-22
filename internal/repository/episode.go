@@ -67,8 +67,8 @@ func (r *episodeRepository) FindByChannelID(ctx context.Context, channelID uuid.
 		Preload("FullAudio").
 		Preload("Bgm").
 		Preload("Bgm.Audio").
-		Preload("DefaultBgm").
-		Preload("DefaultBgm.Audio").
+		Preload("SystemBgm").
+		Preload("SystemBgm.Audio").
 		Order("created_at DESC").
 		Limit(filter.Limit).
 		Offset(filter.Offset).
@@ -100,8 +100,8 @@ func (r *episodeRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.
 		Preload("FullAudio").
 		Preload("Bgm").
 		Preload("Bgm.Audio").
-		Preload("DefaultBgm").
-		Preload("DefaultBgm.Audio").
+		Preload("SystemBgm").
+		Preload("SystemBgm.Audio").
 		First(&episode, "id = ?", id).Error; err != nil {
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {

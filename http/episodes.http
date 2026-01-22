@@ -136,13 +136,13 @@ Authorization: Bearer {{token}}
   "bgmId": "YOUR_BGM_ID_HERE"
 }
 
-### エピソード BGM 設定（デフォルト BGM）
+### エピソード BGM 設定（システム BGM）
 PUT {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/bgm
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "defaultBgmId": "YOUR_DEFAULT_BGM_ID_HERE"
+  "systemBgmId": "YOUR_SYSTEM_BGM_ID_HERE"
 }
 
 ### エピソード BGM 削除

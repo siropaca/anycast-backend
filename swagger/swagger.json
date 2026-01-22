@@ -3421,7 +3421,7 @@
                 "bgmId": {
                     "type": "string"
                 },
-                "defaultBgmId": {
+                "systemBgmId": {
                     "type": "string"
                 }
             }

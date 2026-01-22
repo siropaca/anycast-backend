@@ -69,7 +69,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	scriptLineRepo := repository.NewScriptLineRepository(db)
 	audioRepo := repository.NewAudioRepository(db)
 	bgmRepo := repository.NewBgmRepository(db)
-	defaultBgmRepo := repository.NewDefaultBgmRepository(db)
+	systemBgmRepo := repository.NewSystemBgmRepository(db)
 
 	// Service 層
 	voiceService := service.NewVoiceService(voiceRepo)
@@ -77,13 +77,13 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	channelService := service.NewChannelService(db, channelRepo, characterRepo, categoryRepo, imageRepo, voiceRepo, episodeRepo, storageClient)
 	characterService := service.NewCharacterService(characterRepo, voiceRepo, imageRepo, storageClient)
 	categoryService := service.NewCategoryService(categoryRepo)
-	episodeService := service.NewEpisodeService(episodeRepo, channelRepo, scriptLineRepo, audioRepo, imageRepo, bgmRepo, defaultBgmRepo, storageClient, ttsClient)
+	episodeService := service.NewEpisodeService(episodeRepo, channelRepo, scriptLineRepo, audioRepo, imageRepo, bgmRepo, systemBgmRepo, storageClient, ttsClient)
 	scriptLineService := service.NewScriptLineService(db, scriptLineRepo, episodeRepo, channelRepo)
 	scriptService := service.NewScriptService(db, userRepo, channelRepo, episodeRepo, scriptLineRepo, llmClient, storageClient)
 	cleanupService := service.NewCleanupService(audioRepo, imageRepo, storageClient)
 	imageService := service.NewImageService(imageRepo, storageClient)
 	audioService := service.NewAudioService(audioRepo, storageClient)
-	bgmService := service.NewBgmService(bgmRepo, defaultBgmRepo, audioRepo, storageClient)
+	bgmService := service.NewBgmService(bgmRepo, systemBgmRepo, audioRepo, storageClient)
 
 	// Handler 層
 	voiceHandler := handler.NewVoiceHandler(voiceService)

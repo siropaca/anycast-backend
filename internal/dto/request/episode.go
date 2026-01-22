@@ -33,5 +33,5 @@ type GenerateAudioRequest struct {
 // エピソード BGM 設定リクエスト
 type SetEpisodeBgmRequest struct {
 	BgmID        *string `json:"bgmId" binding:"omitempty,uuid"`
-	DefaultBgmID *string `json:"defaultBgmId" binding:"omitempty,uuid"`
+	SystemBgmID *string `json:"systemBgmId" binding:"omitempty,uuid"`
 }
