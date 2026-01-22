@@ -34,6 +34,7 @@
 | DELETE | `/api/v1/channels/:channelId` | チャンネル削除 | Owner | ✅ | [詳細](./channels.md#チャンネル削除) |
 | POST | `/api/v1/channels/:channelId/publish` | チャンネル公開 | Owner | ✅ | [詳細](./channels.md#チャンネル公開) |
 | POST | `/api/v1/channels/:channelId/unpublish` | チャンネル非公開 | Owner | ✅ | [詳細](./channels.md#チャンネル非公開) |
+| DELETE | `/api/v1/channels/:channelId/default-bgm` | デフォルト BGM 削除 | Owner | ✅ | [詳細](./channels.md#デフォルト-bgm-削除) |
 | GET | `/api/v1/me/channels` | 自分のチャンネル一覧 | Owner | ✅ | [詳細](./channels.md#自分のチャンネル一覧取得) |
 | GET | `/api/v1/me/channels/:channelId` | 自分のチャンネル取得 | Owner | ✅ | [詳細](./channels.md#自分のチャンネル取得) |
 | **Characters** | - | - | - | - | [characters.md](./characters.md) |
