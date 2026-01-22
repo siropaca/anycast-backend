@@ -552,6 +552,67 @@ const docTemplate = `{
                 }
             }
         },
+        "/channels/{channelId}/default-bgm": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したチャンネルのデフォルト BGM 設定を削除します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "channels"
+                ],
+                "summary": "チャンネルのデフォルト BGM 削除",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "チャンネル ID",
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ChannelDataResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/channels/{channelId}/episodes": {
             "post": {
                 "security": [
@@ -3179,6 +3240,12 @@ const docTemplate = `{
                 "characters": {
                     "$ref": "#/definitions/request.ChannelCharactersInput"
                 },
+                "defaultBgmId": {
+                    "type": "string"
+                },
+                "defaultSystemBgmId": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string",
                     "maxLength": 2000
@@ -3454,6 +3521,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "categoryId": {
+                    "type": "string"
+                },
+                "defaultBgmId": {
+                    "type": "string"
+                },
+                "defaultSystemBgmId": {
                     "type": "string"
                 },
                 "description": {
@@ -3787,6 +3860,30 @@ const docTemplate = `{
                 }
             }
         },
+        "response.ChannelDefaultBgmResponse": {
+            "type": "object",
+            "required": [
+                "audio",
+                "id",
+                "isDefault",
+                "name"
+            ],
+            "properties": {
+                "audio": {
+                    "$ref": "#/definitions/response.BgmAudioResponse"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isDefault": {
+                    "description": "true=システムBGM",
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "response.ChannelListWithPaginationResponse": {
             "type": "object",
             "required": [
@@ -3837,6 +3934,14 @@ const docTemplate = `{
                 },
                 "createdAt": {
                     "type": "string"
+                },
+                "defaultBgm": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.ChannelDefaultBgmResponse"
+                        }
+                    ],
+                    "x-nullable": true
                 },
                 "description": {
                     "type": "string"
