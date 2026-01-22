@@ -4615,7 +4615,8 @@ const docTemplate = `{
                 "isActive",
                 "name",
                 "provider",
-                "providerVoiceId"
+                "providerVoiceId",
+                "sampleAudioUrl"
             ],
             "properties": {
                 "gender": {
@@ -4634,6 +4635,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "providerVoiceId": {
+                    "type": "string"
+                },
+                "sampleAudioUrl": {
                     "type": "string"
                 }
             }

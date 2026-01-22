@@ -86,7 +86,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	bgmService := service.NewBgmService(bgmRepo, systemBgmRepo, audioRepo, storageClient)
 
 	// Handler 層
-	voiceHandler := handler.NewVoiceHandler(voiceService)
+	voiceHandler := handler.NewVoiceHandler(voiceService, storageClient)
 	authHandler := handler.NewAuthHandler(authService, tokenManager)
 	channelHandler := handler.NewChannelHandler(channelService)
 	characterHandler := handler.NewCharacterHandler(characterService)

@@ -9,6 +9,7 @@ type VoiceResponse struct {
 	ProviderVoiceID string    `json:"providerVoiceId" validate:"required"`
 	Name            string    `json:"name" validate:"required"`
 	Gender          string    `json:"gender" validate:"required"`
+	SampleAudioURL  string    `json:"sampleAudioUrl" validate:"required"`
 	IsActive        bool      `json:"isActive" validate:"required"`
 }
 
