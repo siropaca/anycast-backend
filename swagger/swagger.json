@@ -4609,7 +4609,8 @@
                 "isActive",
                 "name",
                 "provider",
-                "providerVoiceId"
+                "providerVoiceId",
+                "sampleAudioUrl"
             ],
             "properties": {
                 "gender": {
@@ -4628,6 +4629,9 @@
                     "type": "string"
                 },
                 "providerVoiceId": {
+                    "type": "string"
+                },
+                "sampleAudioUrl": {
                     "type": "string"
                 }
             }
