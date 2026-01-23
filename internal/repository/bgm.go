@@ -12,7 +12,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// BGM データへのアクセスインターフェース
+// BgmRepository は BGM データへのアクセスインターフェース
 type BgmRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*model.Bgm, error)
 	FindByUserID(ctx context.Context, userID uuid.UUID, filter BgmFilter) ([]model.Bgm, int64, error)
@@ -23,7 +23,7 @@ type BgmRepository interface {
 	ExistsByUserIDAndName(ctx context.Context, userID uuid.UUID, name string, excludeID *uuid.UUID) (bool, error)
 }
 
-// BGM 検索のフィルタ条件
+// BgmFilter は BGM 検索のフィルタ条件を表す
 type BgmFilter struct {
 	Limit  int
 	Offset int
@@ -33,12 +33,12 @@ type bgmRepository struct {
 	db *gorm.DB
 }
 
-// BgmRepository の実装を返す
+// NewBgmRepository は BgmRepository の実装を返す
 func NewBgmRepository(db *gorm.DB) BgmRepository {
 	return &bgmRepository{db: db}
 }
 
-// 指定されたユーザーの BGM 一覧を取得する
+// FindByUserID は指定されたユーザーの BGM 一覧を取得する
 func (r *bgmRepository) FindByUserID(ctx context.Context, userID uuid.UUID, filter BgmFilter) ([]model.Bgm, int64, error) {
 	var bgms []model.Bgm
 	var total int64
@@ -67,7 +67,7 @@ func (r *bgmRepository) FindByUserID(ctx context.Context, userID uuid.UUID, filt
 	return bgms, total, nil
 }
 
-// 指定された ID の BGM を取得する
+// FindByID は指定された ID の BGM を取得する
 func (r *bgmRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Bgm, error) {
 	var bgm model.Bgm
 
@@ -87,7 +87,7 @@ func (r *bgmRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Bgm,
 	return &bgm, nil
 }
 
-// BGM を作成する
+// Create は BGM を作成する
 func (r *bgmRepository) Create(ctx context.Context, bgm *model.Bgm) error {
 	if err := r.db.WithContext(ctx).Create(bgm).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to create bgm", "error", err)
@@ -97,7 +97,7 @@ func (r *bgmRepository) Create(ctx context.Context, bgm *model.Bgm) error {
 	return nil
 }
 
-// BGM を更新する
+// Update は BGM を更新する
 func (r *bgmRepository) Update(ctx context.Context, bgm *model.Bgm) error {
 	if err := r.db.WithContext(ctx).Save(bgm).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to update bgm", "error", err, "bgm_id", bgm.ID)
@@ -107,7 +107,7 @@ func (r *bgmRepository) Update(ctx context.Context, bgm *model.Bgm) error {
 	return nil
 }
 
-// BGM を削除する
+// Delete は BGM を削除する
 func (r *bgmRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	result := r.db.WithContext(ctx).Delete(&model.Bgm{}, "id = ?", id)
 	if result.Error != nil {
@@ -121,7 +121,7 @@ func (r *bgmRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-// BGM がいずれかのエピソードで使用中かどうかを確認する
+// IsUsedInAnyEpisode は BGM がいずれかのエピソードで使用中かどうかを確認する
 func (r *bgmRepository) IsUsedInAnyEpisode(ctx context.Context, id uuid.UUID) (bool, error) {
 	var count int64
 
@@ -136,7 +136,7 @@ func (r *bgmRepository) IsUsedInAnyEpisode(ctx context.Context, id uuid.UUID) (b
 	return count > 0, nil
 }
 
-// 同一ユーザー内で同じ名前の BGM が存在するかどうかを確認する
+// ExistsByUserIDAndName は同一ユーザー内で同じ名前の BGM が存在するかどうかを確認する
 func (r *bgmRepository) ExistsByUserIDAndName(ctx context.Context, userID uuid.UUID, name string, excludeID *uuid.UUID) (bool, error) {
 	var count int64
 

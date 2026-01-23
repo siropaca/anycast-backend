@@ -13,7 +13,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// エピソードデータへのアクセスインターフェース
+// EpisodeRepository はエピソードデータへのアクセスインターフェース
 type EpisodeRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*model.Episode, error)
 	FindByChannelID(ctx context.Context, channelID uuid.UUID, filter EpisodeFilter) ([]model.Episode, int64, error)
@@ -22,7 +22,7 @@ type EpisodeRepository interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
-// エピソード検索のフィルタ条件
+// EpisodeFilter はエピソード検索のフィルタ条件を表す
 type EpisodeFilter struct {
 	Status *string // "published" or "draft"
 	Limit  int
@@ -33,12 +33,12 @@ type episodeRepository struct {
 	db *gorm.DB
 }
 
-// EpisodeRepository の実装を返す
+// NewEpisodeRepository は EpisodeRepository の実装を返す
 func NewEpisodeRepository(db *gorm.DB) EpisodeRepository {
 	return &episodeRepository{db: db}
 }
 
-// 指定されたチャンネルのエピソード一覧を取得する
+// FindByChannelID は指定されたチャンネルのエピソード一覧を取得する
 func (r *episodeRepository) FindByChannelID(ctx context.Context, channelID uuid.UUID, filter EpisodeFilter) ([]model.Episode, int64, error) {
 	var episodes []model.Episode
 	var total int64
@@ -80,7 +80,7 @@ func (r *episodeRepository) FindByChannelID(ctx context.Context, channelID uuid.
 	return episodes, total, nil
 }
 
-// エピソードを作成する
+// Create はエピソードを作成する
 func (r *episodeRepository) Create(ctx context.Context, episode *model.Episode) error {
 	if err := r.db.WithContext(ctx).Create(episode).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to create episode", "error", err)
@@ -90,7 +90,7 @@ func (r *episodeRepository) Create(ctx context.Context, episode *model.Episode) 
 	return nil
 }
 
-// 指定された ID のエピソードを取得する
+// FindByID は指定された ID のエピソードを取得する
 func (r *episodeRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Episode, error) {
 	var episode model.Episode
 
@@ -115,7 +115,7 @@ func (r *episodeRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.
 	return &episode, nil
 }
 
-// エピソードを更新する
+// Update はエピソードを更新する
 func (r *episodeRepository) Update(ctx context.Context, episode *model.Episode) error {
 	if err := r.db.WithContext(ctx).Save(episode).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to update episode", "error", err, "episode_id", episode.ID)
@@ -125,7 +125,7 @@ func (r *episodeRepository) Update(ctx context.Context, episode *model.Episode) 
 	return nil
 }
 
-// エピソードを削除する
+// Delete はエピソードを削除する
 func (r *episodeRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	result := r.db.WithContext(ctx).Delete(&model.Episode{}, "id = ?", id)
 	if result.Error != nil {

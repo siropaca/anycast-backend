@@ -11,7 +11,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// 台本行データへのアクセスインターフェース
+// ScriptLineRepository は台本行データへのアクセスインターフェース
 type ScriptLineRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*model.ScriptLine, error)
 	FindByIDs(ctx context.Context, ids []uuid.UUID) ([]model.ScriptLine, error)
@@ -30,12 +30,12 @@ type scriptLineRepository struct {
 	db *gorm.DB
 }
 
-// ScriptLineRepository の実装を返す
+// NewScriptLineRepository は ScriptLineRepository の実装を返す
 func NewScriptLineRepository(db *gorm.DB) ScriptLineRepository {
 	return &scriptLineRepository{db: db}
 }
 
-// ID で台本行を取得する
+// FindByID は ID で台本行を取得する
 func (r *scriptLineRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.ScriptLine, error) {
 	var scriptLine model.ScriptLine
 
@@ -53,7 +53,7 @@ func (r *scriptLineRepository) FindByID(ctx context.Context, id uuid.UUID) (*mod
 	return &scriptLine, nil
 }
 
-// 指定されたエピソードの台本行一覧を取得する
+// FindByEpisodeID は指定されたエピソードの台本行一覧を取得する
 func (r *scriptLineRepository) FindByEpisodeID(ctx context.Context, episodeID uuid.UUID) ([]model.ScriptLine, error) {
 	var scriptLines []model.ScriptLine
 
@@ -70,7 +70,7 @@ func (r *scriptLineRepository) FindByEpisodeID(ctx context.Context, episodeID uu
 	return scriptLines, nil
 }
 
-// 指定されたエピソードの台本行一覧を取得する（Voice 情報を含む）
+// FindByEpisodeIDWithVoice は指定されたエピソードの台本行一覧を取得する（Voice 情報を含む）
 func (r *scriptLineRepository) FindByEpisodeIDWithVoice(ctx context.Context, episodeID uuid.UUID) ([]model.ScriptLine, error) {
 	var scriptLines []model.ScriptLine
 
@@ -87,7 +87,7 @@ func (r *scriptLineRepository) FindByEpisodeIDWithVoice(ctx context.Context, epi
 	return scriptLines, nil
 }
 
-// 指定された台本行を削除する
+// Delete は指定された台本行を削除する
 func (r *scriptLineRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	result := r.db.WithContext(ctx).Delete(&model.ScriptLine{}, "id = ?", id)
 	if result.Error != nil {
@@ -102,7 +102,7 @@ func (r *scriptLineRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-// 指定されたエピソードの台本行を全て削除する
+// DeleteByEpisodeID は指定されたエピソードの台本行を全て削除する
 func (r *scriptLineRepository) DeleteByEpisodeID(ctx context.Context, episodeID uuid.UUID) error {
 	if err := r.db.WithContext(ctx).
 		Where("episode_id = ?", episodeID).
@@ -114,7 +114,7 @@ func (r *scriptLineRepository) DeleteByEpisodeID(ctx context.Context, episodeID 
 	return nil
 }
 
-// 複数の台本行を一括作成する
+// CreateBatch は複数の台本行を一括作成する
 func (r *scriptLineRepository) CreateBatch(ctx context.Context, scriptLines []model.ScriptLine) ([]model.ScriptLine, error) {
 	if len(scriptLines) == 0 {
 		return []model.ScriptLine{}, nil
@@ -140,7 +140,7 @@ func (r *scriptLineRepository) CreateBatch(ctx context.Context, scriptLines []mo
 	return created, nil
 }
 
-// 台本行を更新する
+// Update は台本行を更新する
 func (r *scriptLineRepository) Update(ctx context.Context, scriptLine *model.ScriptLine) error {
 	if err := r.db.WithContext(ctx).Save(scriptLine).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to update script line", "error", err, "id", scriptLine.ID)
@@ -150,7 +150,7 @@ func (r *scriptLineRepository) Update(ctx context.Context, scriptLine *model.Scr
 	return nil
 }
 
-// 台本行を作成する
+// Create は台本行を作成する
 func (r *scriptLineRepository) Create(ctx context.Context, scriptLine *model.ScriptLine) error {
 	if err := r.db.WithContext(ctx).Create(scriptLine).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to create script line", "error", err)
@@ -160,7 +160,7 @@ func (r *scriptLineRepository) Create(ctx context.Context, scriptLine *model.Scr
 	return nil
 }
 
-// 指定した lineOrder 以上の行の lineOrder を +1 する
+// IncrementLineOrderFrom は指定した lineOrder 以上の行の lineOrder を +1 する
 func (r *scriptLineRepository) IncrementLineOrderFrom(ctx context.Context, episodeID uuid.UUID, fromLineOrder int) error {
 	if err := r.db.WithContext(ctx).
 		Model(&model.ScriptLine{}).
@@ -173,7 +173,7 @@ func (r *scriptLineRepository) IncrementLineOrderFrom(ctx context.Context, episo
 	return nil
 }
 
-// 複数の ID で台本行を取得する
+// FindByIDs は複数の ID で台本行を取得する
 func (r *scriptLineRepository) FindByIDs(ctx context.Context, ids []uuid.UUID) ([]model.ScriptLine, error) {
 	var scriptLines []model.ScriptLine
 
@@ -193,7 +193,7 @@ func (r *scriptLineRepository) FindByIDs(ctx context.Context, ids []uuid.UUID) (
 	return scriptLines, nil
 }
 
-// 複数の台本行の lineOrder を一括更新する
+// UpdateLineOrders は複数の台本行の lineOrder を一括更新する
 func (r *scriptLineRepository) UpdateLineOrders(ctx context.Context, lineOrders map[uuid.UUID]int) error {
 	for id, order := range lineOrders {
 		if err := r.db.WithContext(ctx).

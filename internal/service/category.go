@@ -7,7 +7,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
-// カテゴリ関連のビジネスロジックインターフェース
+// CategoryService はカテゴリ関連のビジネスロジックインターフェースを表す
 type CategoryService interface {
 	ListCategories(ctx context.Context) ([]model.Category, error)
 }
@@ -16,12 +16,12 @@ type categoryService struct {
 	categoryRepo repository.CategoryRepository
 }
 
-// CategoryService の実装を返す
+// NewCategoryService は categoryService を生成して CategoryService として返す
 func NewCategoryService(categoryRepo repository.CategoryRepository) CategoryService {
 	return &categoryService{categoryRepo: categoryRepo}
 }
 
-// アクティブなカテゴリ一覧を取得する
+// ListCategories はアクティブなカテゴリ一覧を取得する
 func (s *categoryService) ListCategories(ctx context.Context) ([]model.Category, error) {
 	return s.categoryRepo.FindAllActive(ctx)
 }

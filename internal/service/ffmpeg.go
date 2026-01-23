@@ -14,13 +14,13 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/logger"
 )
 
-// FFmpegService は FFmpeg を使用した音声処理サービスのインターフェース
+// FFmpegService は FFmpeg を使用した音声処理サービスのインターフェースを表す
 type FFmpegService interface {
 	MixAudioWithBGM(ctx context.Context, params MixParams) ([]byte, error)
 	ConcatAudio(ctx context.Context, audioChunks [][]byte) ([]byte, error)
 }
 
-// MixParams は音声ミキシングのパラメータ
+// MixParams は音声ミキシングのパラメータを表す
 type MixParams struct {
 	VoiceData       []byte  // ナレーション音声データ
 	BGMData         []byte  // BGM 音声データ
@@ -33,7 +33,7 @@ type MixParams struct {
 
 type ffmpegService struct{}
 
-// NewFFmpegService は FFmpegService の実装を返す
+// NewFFmpegService は ffmpegService を生成して FFmpegService として返す
 func NewFFmpegService() FFmpegService {
 	return &ffmpegService{}
 }
@@ -152,7 +152,7 @@ func (s *ffmpegService) ConcatAudio(ctx context.Context, audioChunks [][]byte) (
 	return outputData, nil
 }
 
-// formatFloat は float64 を文字列に変換する（小数点以下3桁）
+// formatFloat は float64 を文字列に変換する（小数点以下 3 桁）
 func formatFloat(f float64) string {
 	return strconv.FormatFloat(f, 'f', 3, 64)
 }

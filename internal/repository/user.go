@@ -12,7 +12,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// ユーザーデータへのアクセスインターフェース
+// UserRepository はユーザーデータへのアクセスインターフェース
 type UserRepository interface {
 	Create(ctx context.Context, user *model.User) error
 	Update(ctx context.Context, user *model.User) error
@@ -26,12 +26,12 @@ type userRepository struct {
 	db *gorm.DB
 }
 
-// UserRepository の実装を返す
+// NewUserRepository は UserRepository の実装を返す
 func NewUserRepository(db *gorm.DB) UserRepository {
 	return &userRepository{db: db}
 }
 
-// ユーザーを作成する
+// Create はユーザーを作成する
 func (r *userRepository) Create(ctx context.Context, user *model.User) error {
 	if err := r.db.WithContext(ctx).Create(user).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to create user", "error", err)
@@ -41,7 +41,7 @@ func (r *userRepository) Create(ctx context.Context, user *model.User) error {
 	return nil
 }
 
-// ユーザーを更新する
+// Update はユーザーを更新する
 func (r *userRepository) Update(ctx context.Context, user *model.User) error {
 	if err := r.db.WithContext(ctx).Save(user).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to update user", "error", err, "user_id", user.ID)
@@ -51,7 +51,7 @@ func (r *userRepository) Update(ctx context.Context, user *model.User) error {
 	return nil
 }
 
-// 指定された ID のユーザーを取得する
+// FindByID は指定された ID のユーザーを取得する
 func (r *userRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	var user model.User
 
@@ -66,7 +66,7 @@ func (r *userRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Use
 	return &user, nil
 }
 
-// 指定されたメールアドレスのユーザーを取得する
+// FindByEmail は指定されたメールアドレスのユーザーを取得する
 func (r *userRepository) FindByEmail(ctx context.Context, email string) (*model.User, error) {
 	var user model.User
 
@@ -81,7 +81,7 @@ func (r *userRepository) FindByEmail(ctx context.Context, email string) (*model.
 	return &user, nil
 }
 
-// 指定されたメールアドレスのユーザーが存在するか確認する
+// ExistsByEmail は指定されたメールアドレスのユーザーが存在するか確認する
 func (r *userRepository) ExistsByEmail(ctx context.Context, email string) (bool, error) {
 	var count int64
 
@@ -93,7 +93,7 @@ func (r *userRepository) ExistsByEmail(ctx context.Context, email string) (bool,
 	return count > 0, nil
 }
 
-// 指定されたユーザー名のユーザーが存在するか確認する
+// ExistsByUsername は指定されたユーザー名のユーザーが存在するか確認する
 func (r *userRepository) ExistsByUsername(ctx context.Context, username string) (bool, error) {
 	var count int64
 

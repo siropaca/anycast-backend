@@ -12,14 +12,14 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// システム BGM データへのアクセスインターフェース
+// SystemBgmRepository はシステム BGM データへのアクセスインターフェース
 type SystemBgmRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*model.SystemBgm, error)
 	FindActive(ctx context.Context, filter SystemBgmFilter) ([]model.SystemBgm, int64, error)
 	CountActive(ctx context.Context) (int64, error)
 }
 
-// システム BGM 検索のフィルタ条件
+// SystemBgmFilter はシステム BGM 検索のフィルタ条件を表す
 type SystemBgmFilter struct {
 	Limit  int
 	Offset int
@@ -29,12 +29,12 @@ type systemBgmRepository struct {
 	db *gorm.DB
 }
 
-// SystemBgmRepository の実装を返す
+// NewSystemBgmRepository は SystemBgmRepository の実装を返す
 func NewSystemBgmRepository(db *gorm.DB) SystemBgmRepository {
 	return &systemBgmRepository{db: db}
 }
 
-// アクティブなシステム BGM 一覧を取得する
+// FindActive はアクティブなシステム BGM 一覧を取得する
 func (r *systemBgmRepository) FindActive(ctx context.Context, filter SystemBgmFilter) ([]model.SystemBgm, int64, error) {
 	var bgms []model.SystemBgm
 	var total int64
@@ -61,7 +61,7 @@ func (r *systemBgmRepository) FindActive(ctx context.Context, filter SystemBgmFi
 	return bgms, total, nil
 }
 
-// アクティブなシステム BGM の総件数を取得する
+// CountActive はアクティブなシステム BGM の総件数を取得する
 func (r *systemBgmRepository) CountActive(ctx context.Context) (int64, error) {
 	var total int64
 
@@ -76,7 +76,7 @@ func (r *systemBgmRepository) CountActive(ctx context.Context) (int64, error) {
 	return total, nil
 }
 
-// 指定された ID のシステム BGM を取得する
+// FindByID は指定された ID のシステム BGM を取得する
 func (r *systemBgmRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.SystemBgm, error) {
 	var bgm model.SystemBgm
 

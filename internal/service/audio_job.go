@@ -26,7 +26,7 @@ const (
 	maxTTSInputBytes = 3500
 )
 
-// AudioJobService は非同期音声生成ジョブを管理するインターフェース
+// AudioJobService は非同期音声生成ジョブを管理するインターフェースを表す
 type AudioJobService interface {
 	CreateJob(ctx context.Context, userID, channelID, episodeID string, req request.GenerateAudioAsyncRequest) (*response.AudioJobResponse, error)
 	GetJob(ctx context.Context, userID, jobID string) (*response.AudioJobResponse, error)
@@ -49,7 +49,7 @@ type audioJobService struct {
 	wsHub          *websocket.Hub
 }
 
-// NewAudioJobService は AudioJobService の実装を返す
+// NewAudioJobService は audioJobService を生成して AudioJobService として返す
 func NewAudioJobService(
 	audioJobRepo repository.AudioJobRepository,
 	episodeRepo repository.EpisodeRepository,
@@ -80,7 +80,7 @@ func NewAudioJobService(
 	}
 }
 
-// CreateJob は非同期音声生成ジョブを作成する
+// CreateJob は非同期音声生成ジョブを作成して返す
 func (s *audioJobService) CreateJob(ctx context.Context, userID, channelID, episodeID string, req request.GenerateAudioAsyncRequest) (*response.AudioJobResponse, error) {
 	log := logger.FromContext(ctx)
 
@@ -212,7 +212,7 @@ func (s *audioJobService) CreateJob(ctx context.Context, userID, channelID, epis
 	}, nil
 }
 
-// GetJob はジョブの詳細を取得する
+// GetJob は指定されたジョブの詳細を取得する
 func (s *audioJobService) GetJob(ctx context.Context, userID, jobID string) (*response.AudioJobResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -237,7 +237,7 @@ func (s *audioJobService) GetJob(ctx context.Context, userID, jobID string) (*re
 	return s.toAudioJobResponse(ctx, job)
 }
 
-// ListMyJobs はユーザーのジョブ一覧を取得する
+// ListMyJobs は指定されたユーザーのジョブ一覧を取得する
 func (s *audioJobService) ListMyJobs(ctx context.Context, userID string, filter repository.AudioJobFilter) (*response.AudioJobListResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -263,7 +263,7 @@ func (s *audioJobService) ListMyJobs(ctx context.Context, userID string, filter 
 	}, nil
 }
 
-// ExecuteJob はジョブを実行する（Cloud Tasks ワーカーから呼び出される）
+// ExecuteJob は指定されたジョブを実行する（Cloud Tasks ワーカーから呼び出される）
 func (s *audioJobService) ExecuteJob(ctx context.Context, jobID string) error {
 	log := logger.FromContext(ctx)
 
@@ -305,7 +305,7 @@ func (s *audioJobService) ExecuteJob(ctx context.Context, jobID string) error {
 	return nil
 }
 
-// executeJobInternal は実際の音声生成処理を実行する
+// executeJobInternal は音声生成処理を実行する
 func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.AudioJob) error {
 	log := logger.FromContext(ctx)
 
@@ -569,7 +569,7 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 	return nil
 }
 
-// downloadFromStorage は GCS からファイルをダウンロードする
+// downloadFromStorage は指定されたパスのファイルを GCS からダウンロードする
 func (s *audioJobService) downloadFromStorage(ctx context.Context, path string) ([]byte, error) {
 	// storage.Client に Download メソッドがある前提
 	type downloader interface {
@@ -583,14 +583,14 @@ func (s *audioJobService) downloadFromStorage(ctx context.Context, path string) 
 	return nil, apperror.ErrInternal.WithMessage("ストレージクライアントが Download をサポートしていません")
 }
 
-// updateProgress は進捗を更新し、WebSocket で通知する
+// updateProgress はジョブの進捗を更新し WebSocket で通知する
 func (s *audioJobService) updateProgress(ctx context.Context, job *model.AudioJob, progress int, message string) {
 	job.Progress = progress
 	_ = s.audioJobRepo.Update(ctx, job) //nolint:errcheck // progress update is best effort
 	s.notifyProgress(job.ID.String(), job.UserID.String(), progress, message)
 }
 
-// failJob はジョブを失敗状態に更新する
+// failJob は指定されたジョブを失敗状態に更新する
 func (s *audioJobService) failJob(ctx context.Context, job *model.AudioJob, err error) {
 	completedAt := time.Now()
 	job.Status = model.AudioJobStatusFailed
@@ -612,7 +612,7 @@ func (s *audioJobService) failJob(ctx context.Context, job *model.AudioJob, err 
 	s.notifyFailed(job.ID.String(), job.UserID.String(), job.ErrorCode, job.ErrorMessage)
 }
 
-// notifyProgress は進捗を WebSocket で通知する
+// notifyProgress はジョブの進捗を WebSocket で通知する
 func (s *audioJobService) notifyProgress(jobID, userID string, progress int, message string) {
 	if s.wsHub == nil {
 		return
@@ -627,7 +627,7 @@ func (s *audioJobService) notifyProgress(jobID, userID string, progress int, mes
 	})
 }
 
-// notifyCompleted は完了を WebSocket で通知する
+// notifyCompleted はジョブの完了を WebSocket で通知する
 func (s *audioJobService) notifyCompleted(jobID, userID string, audioModel *model.Audio) {
 	if s.wsHub == nil {
 		return
@@ -644,7 +644,7 @@ func (s *audioJobService) notifyCompleted(jobID, userID string, audioModel *mode
 	})
 }
 
-// notifyFailed は失敗を WebSocket で通知する
+// notifyFailed はジョブの失敗を WebSocket で通知する
 func (s *audioJobService) notifyFailed(jobID, userID string, errorCode, errorMessage *string) {
 	if s.wsHub == nil {
 		return
@@ -720,7 +720,7 @@ func splitTurnsIntoChunks(turns []tts.SpeakerTurn, maxBytes int) [][]tts.Speaker
 	return chunks
 }
 
-// toAudioJobResponse は AudioJob モデルをレスポンス DTO に変換する
+// toAudioJobResponse は AudioJob をレスポンス DTO に変換する
 func (s *audioJobService) toAudioJobResponse(ctx context.Context, job *model.AudioJob) (*response.AudioJobResponse, error) {
 	resp := &response.AudioJobResponse{
 		ID:             job.ID,

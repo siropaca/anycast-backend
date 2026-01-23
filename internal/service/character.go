@@ -12,7 +12,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
-// キャラクター関連のビジネスロジックインターフェース
+// CharacterService はキャラクター関連のビジネスロジックインターフェースを表す
 type CharacterService interface {
 	ListMyCharacters(ctx context.Context, userID string, filter repository.CharacterFilter) (*response.CharacterListWithPaginationResponse, error)
 	GetMyCharacter(ctx context.Context, userID, characterID string) (*response.CharacterDataResponse, error)
@@ -28,7 +28,7 @@ type characterService struct {
 	storageClient storage.Client
 }
 
-// CharacterService の実装を返す
+// NewCharacterService は characterService を生成して CharacterService として返す
 func NewCharacterService(
 	characterRepo repository.CharacterRepository,
 	voiceRepo repository.VoiceRepository,
@@ -43,7 +43,7 @@ func NewCharacterService(
 	}
 }
 
-// 自分のキャラクター一覧を取得する
+// ListMyCharacters は自分のキャラクター一覧を取得する
 func (s *characterService) ListMyCharacters(ctx context.Context, userID string, filter repository.CharacterFilter) (*response.CharacterListWithPaginationResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -66,7 +66,7 @@ func (s *characterService) ListMyCharacters(ctx context.Context, userID string, 
 	}, nil
 }
 
-// 自分のキャラクターを取得する
+// GetMyCharacter は自分のキャラクターを取得する
 func (s *characterService) GetMyCharacter(ctx context.Context, userID, characterID string) (*response.CharacterDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -96,7 +96,7 @@ func (s *characterService) GetMyCharacter(ctx context.Context, userID, character
 	return &response.CharacterDataResponse{Data: res}, nil
 }
 
-// Character モデルのスライスをチャンネル情報付きレスポンス DTO のスライスに変換する
+// toCharacterWithChannelsResponses は Character のスライスをチャンネル情報付きレスポンス DTO のスライスに変換する
 func (s *characterService) toCharacterWithChannelsResponses(ctx context.Context, characters []model.Character) ([]response.CharacterWithChannelsResponse, error) {
 	result := make([]response.CharacterWithChannelsResponse, len(characters))
 
@@ -111,7 +111,7 @@ func (s *characterService) toCharacterWithChannelsResponses(ctx context.Context,
 	return result, nil
 }
 
-// Character モデルをチャンネル情報付きレスポンス DTO に変換する
+// toCharacterWithChannelsResponse は Character をチャンネル情報付きレスポンス DTO に変換する
 func (s *characterService) toCharacterWithChannelsResponse(ctx context.Context, c model.Character) (response.CharacterWithChannelsResponse, error) {
 	channels := make([]response.CharacterChannelResponse, len(c.ChannelCharacters))
 	for i, cc := range c.ChannelCharacters {
@@ -151,7 +151,7 @@ func (s *characterService) toCharacterWithChannelsResponse(ctx context.Context, 
 	}, nil
 }
 
-// キャラクターを作成する
+// CreateCharacter は新しいキャラクターを作成する
 func (s *characterService) CreateCharacter(ctx context.Context, userID string, req request.CreateCharacterRequest) (*response.CharacterDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -216,7 +216,7 @@ func (s *characterService) CreateCharacter(ctx context.Context, userID string, r
 	return &response.CharacterDataResponse{Data: res}, nil
 }
 
-// キャラクターを更新する
+// UpdateCharacter は指定されたキャラクターを更新する
 func (s *characterService) UpdateCharacter(ctx context.Context, userID, characterID string, req request.UpdateCharacterRequest) (*response.CharacterDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -299,7 +299,7 @@ func (s *characterService) UpdateCharacter(ctx context.Context, userID, characte
 	return &response.CharacterDataResponse{Data: res}, nil
 }
 
-// キャラクターを削除する
+// DeleteCharacter は指定されたキャラクターを削除する
 func (s *characterService) DeleteCharacter(ctx context.Context, userID, characterID string) error {
 	uid, err := uuid.Parse(userID)
 	if err != nil {

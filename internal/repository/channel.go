@@ -13,7 +13,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// チャンネルデータへのアクセスインターフェース
+// ChannelRepository はチャンネルデータへのアクセスインターフェース
 type ChannelRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*model.Channel, error)
 	FindByUserID(ctx context.Context, userID uuid.UUID, filter ChannelFilter) ([]model.Channel, int64, error)
@@ -23,7 +23,7 @@ type ChannelRepository interface {
 	ReplaceChannelCharacters(ctx context.Context, channelID uuid.UUID, characterIDs []uuid.UUID) error
 }
 
-// チャンネル検索のフィルタ条件
+// ChannelFilter はチャンネル検索のフィルタ条件を表す
 type ChannelFilter struct {
 	Status *string // "published" or "draft"
 	Limit  int
@@ -34,12 +34,12 @@ type channelRepository struct {
 	db *gorm.DB
 }
 
-// ChannelRepository の実装を返す
+// NewChannelRepository は ChannelRepository の実装を返す
 func NewChannelRepository(db *gorm.DB) ChannelRepository {
 	return &channelRepository{db: db}
 }
 
-// 指定されたユーザーのチャンネル一覧を取得する
+// FindByUserID は指定されたユーザーのチャンネル一覧を取得する
 func (r *channelRepository) FindByUserID(ctx context.Context, userID uuid.UUID, filter ChannelFilter) ([]model.Channel, int64, error) {
 	var channels []model.Channel
 	var total int64
@@ -84,7 +84,7 @@ func (r *channelRepository) FindByUserID(ctx context.Context, userID uuid.UUID, 
 	return channels, total, nil
 }
 
-// 指定された ID のチャンネルを取得する
+// FindByID は指定された ID のチャンネルを取得する
 func (r *channelRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Channel, error) {
 	var channel model.Channel
 
@@ -111,7 +111,7 @@ func (r *channelRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.
 	return &channel, nil
 }
 
-// チャンネルを作成する
+// Create はチャンネルを作成する
 func (r *channelRepository) Create(ctx context.Context, channel *model.Channel) error {
 	if err := r.db.WithContext(ctx).Create(channel).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to create channel", "error", err)
@@ -121,7 +121,7 @@ func (r *channelRepository) Create(ctx context.Context, channel *model.Channel) 
 	return nil
 }
 
-// チャンネルを更新する
+// Update はチャンネルを更新する
 func (r *channelRepository) Update(ctx context.Context, channel *model.Channel) error {
 	if err := r.db.WithContext(ctx).Save(channel).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to update channel", "error", err, "channel_id", channel.ID)
@@ -131,7 +131,7 @@ func (r *channelRepository) Update(ctx context.Context, channel *model.Channel) 
 	return nil
 }
 
-// チャンネルを削除する
+// Delete はチャンネルを削除する
 func (r *channelRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	result := r.db.WithContext(ctx).Delete(&model.Channel{}, "id = ?", id)
 	if result.Error != nil {
@@ -145,7 +145,7 @@ func (r *channelRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-// チャンネルに紐づくキャラクターを置き換える
+// ReplaceChannelCharacters はチャンネルに紐づくキャラクターを置き換える
 func (r *channelRepository) ReplaceChannelCharacters(ctx context.Context, channelID uuid.UUID, characterIDs []uuid.UUID) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// 既存の紐づけを削除

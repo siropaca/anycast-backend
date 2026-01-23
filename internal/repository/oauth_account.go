@@ -12,7 +12,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// OAuth 認証情報へのアクセスインターフェース
+// OAuthAccountRepository は OAuth 認証情報へのアクセスインターフェース
 type OAuthAccountRepository interface {
 	Create(ctx context.Context, account *model.OAuthAccount) error
 	Update(ctx context.Context, account *model.OAuthAccount) error
@@ -24,12 +24,12 @@ type oauthAccountRepository struct {
 	db *gorm.DB
 }
 
-// OAuthAccountRepository の実装を返す
+// NewOAuthAccountRepository は OAuthAccountRepository の実装を返す
 func NewOAuthAccountRepository(db *gorm.DB) OAuthAccountRepository {
 	return &oauthAccountRepository{db: db}
 }
 
-// OAuth 認証情報を作成する
+// Create は OAuth 認証情報を作成する
 func (r *oauthAccountRepository) Create(ctx context.Context, account *model.OAuthAccount) error {
 	if err := r.db.WithContext(ctx).Create(account).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to create oauth account", "error", err, "provider", account.Provider)
@@ -39,7 +39,7 @@ func (r *oauthAccountRepository) Create(ctx context.Context, account *model.OAut
 	return nil
 }
 
-// OAuth 認証情報を更新する
+// Update は OAuth 認証情報を更新する
 func (r *oauthAccountRepository) Update(ctx context.Context, account *model.OAuthAccount) error {
 	if err := r.db.WithContext(ctx).Save(account).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to update oauth account", "error", err, "account_id", account.ID)
@@ -49,7 +49,7 @@ func (r *oauthAccountRepository) Update(ctx context.Context, account *model.OAut
 	return nil
 }
 
-// 指定されたプロバイダとプロバイダユーザー ID の OAuth 認証情報を取得する
+// FindByProviderAndProviderUserID は指定されたプロバイダとプロバイダユーザー ID の OAuth 認証情報を取得する
 func (r *oauthAccountRepository) FindByProviderAndProviderUserID(ctx context.Context, provider model.OAuthProvider, providerUserID string) (*model.OAuthAccount, error) {
 	var account model.OAuthAccount
 
@@ -65,7 +65,7 @@ func (r *oauthAccountRepository) FindByProviderAndProviderUserID(ctx context.Con
 	return &account, nil
 }
 
-// 指定されたユーザー ID の OAuth 認証情報一覧を取得する
+// FindByUserID は指定されたユーザー ID の OAuth 認証情報一覧を取得する
 func (r *oauthAccountRepository) FindByUserID(ctx context.Context, userID uuid.UUID) ([]model.OAuthAccount, error) {
 	var accounts []model.OAuthAccount
 

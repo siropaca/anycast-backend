@@ -6,7 +6,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// 画像ファイル情報
+// Image は画像ファイル情報を表す
 type Image struct {
 	ID        uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	MimeType  string    `gorm:"type:varchar(100);not null;column:mime_type"`

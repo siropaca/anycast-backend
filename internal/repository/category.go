@@ -12,7 +12,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// カテゴリデータへのアクセスインターフェース
+// CategoryRepository はカテゴリデータへのアクセスインターフェース
 type CategoryRepository interface {
 	FindAllActive(ctx context.Context) ([]model.Category, error)
 	FindByID(ctx context.Context, id uuid.UUID) (*model.Category, error)
@@ -22,12 +22,12 @@ type categoryRepository struct {
 	db *gorm.DB
 }
 
-// CategoryRepository の実装を返す
+// NewCategoryRepository は CategoryRepository の実装を返す
 func NewCategoryRepository(db *gorm.DB) CategoryRepository {
 	return &categoryRepository{db: db}
 }
 
-// アクティブなカテゴリを表示順で取得する
+// FindAllActive はアクティブなカテゴリを表示順で取得する
 func (r *categoryRepository) FindAllActive(ctx context.Context) ([]model.Category, error) {
 	var categories []model.Category
 
@@ -39,7 +39,7 @@ func (r *categoryRepository) FindAllActive(ctx context.Context) ([]model.Categor
 	return categories, nil
 }
 
-// 指定された ID のカテゴリを取得する
+// FindByID は指定された ID のカテゴリを取得する
 func (r *categoryRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Category, error) {
 	var category model.Category
 

@@ -6,7 +6,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// エピソード情報
+// Episode はエピソード情報を表す
 type Episode struct {
 	ID            uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	ChannelID     uuid.UUID  `gorm:"type:uuid;not null;column:channel_id"`

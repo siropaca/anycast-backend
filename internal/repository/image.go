@@ -12,7 +12,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// 画像データへのアクセスインターフェース
+// ImageRepository は画像データへのアクセスインターフェース
 type ImageRepository interface {
 	Create(ctx context.Context, image *model.Image) error
 	FindByID(ctx context.Context, id uuid.UUID) (*model.Image, error)
@@ -24,12 +24,12 @@ type imageRepository struct {
 	db *gorm.DB
 }
 
-// ImageRepository の実装を返す
+// NewImageRepository は ImageRepository の実装を返す
 func NewImageRepository(db *gorm.DB) ImageRepository {
 	return &imageRepository{db: db}
 }
 
-// 画像を作成する
+// Create は画像を作成する
 func (r *imageRepository) Create(ctx context.Context, image *model.Image) error {
 	if err := r.db.WithContext(ctx).Create(image).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to create image", "error", err)
@@ -39,7 +39,7 @@ func (r *imageRepository) Create(ctx context.Context, image *model.Image) error 
 	return nil
 }
 
-// 指定された ID の画像を取得する
+// FindByID は指定された ID の画像を取得する
 func (r *imageRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Image, error) {
 	var image model.Image
 
@@ -55,7 +55,7 @@ func (r *imageRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Im
 	return &image, nil
 }
 
-// 画像を削除する
+// Delete は画像を削除する
 func (r *imageRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	result := r.db.WithContext(ctx).Delete(&model.Image{}, "id = ?", id)
 	if result.Error != nil {
@@ -70,7 +70,8 @@ func (r *imageRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-// どのテーブルからも参照されていない孤児レコードを取得する
+// FindOrphaned はどのテーブルからも参照されていない孤児レコードを取得する
+//
 // 対象: users.avatar_id, channels.artwork_id, episodes.artwork_id, characters.avatar_id
 // 条件: created_at から 1 時間以上経過したレコードのみ
 func (r *imageRepository) FindOrphaned(ctx context.Context) ([]model.Image, error) {

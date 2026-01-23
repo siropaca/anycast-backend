@@ -6,7 +6,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// ユーザー情報
+// User はユーザー情報を表す
 type User struct {
 	ID          uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	Email       string     `gorm:"type:varchar(255);not null;uniqueIndex"`
@@ -19,7 +19,7 @@ type User struct {
 	UpdatedAt   time.Time  `gorm:"not null;default:CURRENT_TIMESTAMP"`
 }
 
-// パスワード認証情報
+// Credential はパスワード認証情報を表す
 type Credential struct {
 	ID           uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	UserID       uuid.UUID `gorm:"type:uuid;not null;uniqueIndex"`
@@ -28,7 +28,7 @@ type Credential struct {
 	UpdatedAt    time.Time `gorm:"not null;default:CURRENT_TIMESTAMP"`
 }
 
-// OAuth 認証情報
+// OAuthAccount は OAuth 認証情報を表す
 type OAuthAccount struct {
 	ID             uuid.UUID     `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	UserID         uuid.UUID     `gorm:"type:uuid;not null;index"`
@@ -41,6 +41,7 @@ type OAuthAccount struct {
 	UpdatedAt      time.Time     `gorm:"not null;default:CURRENT_TIMESTAMP"`
 }
 
+// TableName はテーブル名を返す
 func (OAuthAccount) TableName() string {
 	return "oauth_accounts"
 }

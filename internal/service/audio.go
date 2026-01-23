@@ -16,7 +16,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
-// 許可される音声の MIME タイプ
+// allowedAudioMimeTypes は許可される音声の MIME タイプ
 var allowedAudioMimeTypes = map[string]string{
 	"audio/mpeg":  ".mp3",
 	"audio/mp3":   ".mp3",
@@ -28,7 +28,7 @@ var allowedAudioMimeTypes = map[string]string{
 	"audio/x-m4a": ".m4a",
 }
 
-// UploadAudioInput は音声アップロード用の入力データ
+// UploadAudioInput は音声アップロード用の入力データを表す
 type UploadAudioInput struct {
 	File        io.Reader
 	Filename    string
@@ -36,7 +36,7 @@ type UploadAudioInput struct {
 	FileSize    int
 }
 
-// AudioService は音声サービスのインターフェース
+// AudioService は音声サービスのインターフェースを表す
 type AudioService interface {
 	UploadAudio(ctx context.Context, input UploadAudioInput) (*response.AudioUploadDataResponse, error)
 }
@@ -46,7 +46,7 @@ type audioService struct {
 	storageClient storage.Client
 }
 
-// NewAudioService は AudioService の実装を返す
+// NewAudioService は audioService を生成して AudioService として返す
 func NewAudioService(audioRepo repository.AudioRepository, storageClient storage.Client) AudioService {
 	return &audioService{
 		audioRepo:     audioRepo,
@@ -54,7 +54,7 @@ func NewAudioService(audioRepo repository.AudioRepository, storageClient storage
 	}
 }
 
-// UploadAudio は音声をアップロードする
+// UploadAudio は音声ファイルをアップロードする
 func (s *audioService) UploadAudio(ctx context.Context, input UploadAudioInput) (*response.AudioUploadDataResponse, error) {
 	log := logger.FromContext(ctx)
 

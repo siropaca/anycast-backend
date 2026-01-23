@@ -15,7 +15,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
-// 許可される画像の MIME タイプ
+// allowedImageMimeTypes は許可される画像の MIME タイプ
 var allowedImageMimeTypes = map[string]string{
 	"image/png":  ".png",
 	"image/jpeg": ".jpg",
@@ -23,7 +23,7 @@ var allowedImageMimeTypes = map[string]string{
 	"image/webp": ".webp",
 }
 
-// UploadImageInput は画像アップロード用の入力データ
+// UploadImageInput は画像アップロード用の入力データを表す
 type UploadImageInput struct {
 	File        io.Reader
 	Filename    string
@@ -31,7 +31,7 @@ type UploadImageInput struct {
 	FileSize    int
 }
 
-// ImageService は画像サービスのインターフェース
+// ImageService は画像サービスのインターフェースを表す
 type ImageService interface {
 	UploadImage(ctx context.Context, input UploadImageInput) (*response.ImageUploadDataResponse, error)
 }
@@ -41,7 +41,7 @@ type imageService struct {
 	storageClient storage.Client
 }
 
-// NewImageService は ImageService の実装を返す
+// NewImageService は imageService を生成して ImageService として返す
 func NewImageService(imageRepo repository.ImageRepository, storageClient storage.Client) ImageService {
 	return &imageService{
 		imageRepo:     imageRepo,
@@ -49,7 +49,7 @@ func NewImageService(imageRepo repository.ImageRepository, storageClient storage
 	}
 }
 
-// UploadImage は画像をアップロードする
+// UploadImage は画像ファイルをアップロードする
 func (s *imageService) UploadImage(ctx context.Context, input UploadImageInput) (*response.ImageUploadDataResponse, error) {
 	log := logger.FromContext(ctx)
 

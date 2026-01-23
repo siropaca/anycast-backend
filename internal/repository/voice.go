@@ -11,14 +11,14 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/logger"
 )
 
-// ボイスデータへのアクセスインターフェース
+// VoiceRepository はボイスデータへのアクセスインターフェース
 type VoiceRepository interface {
 	FindAll(ctx context.Context, filter VoiceFilter) ([]model.Voice, error)
 	FindByID(ctx context.Context, id string) (*model.Voice, error)
 	FindActiveByID(ctx context.Context, id string) (*model.Voice, error)
 }
 
-// ボイス検索のフィルタ条件
+// VoiceFilter はボイス検索のフィルタ条件を表す
 type VoiceFilter struct {
 	Provider *string
 	Gender   *string
@@ -28,12 +28,12 @@ type voiceRepository struct {
 	db *gorm.DB
 }
 
-// VoiceRepository の実装を返す
+// NewVoiceRepository は VoiceRepository の実装を返す
 func NewVoiceRepository(db *gorm.DB) VoiceRepository {
 	return &voiceRepository{db: db}
 }
 
-// フィルタ条件に基づいてアクティブなボイス一覧を取得する
+// FindAll はフィルタ条件に基づいてアクティブなボイス一覧を取得する
 func (r *voiceRepository) FindAll(ctx context.Context, filter VoiceFilter) ([]model.Voice, error) {
 	var voices []model.Voice
 	tx := r.db.WithContext(ctx).Model(&model.Voice{}).
@@ -54,7 +54,7 @@ func (r *voiceRepository) FindAll(ctx context.Context, filter VoiceFilter) ([]mo
 	return voices, nil
 }
 
-// 指定された ID のボイスを取得する
+// FindByID は指定された ID のボイスを取得する
 func (r *voiceRepository) FindByID(ctx context.Context, id string) (*model.Voice, error) {
 	var voice model.Voice
 
@@ -69,7 +69,7 @@ func (r *voiceRepository) FindByID(ctx context.Context, id string) (*model.Voice
 	return &voice, nil
 }
 
-// 指定された ID のアクティブなボイスを取得する
+// FindActiveByID は指定された ID のアクティブなボイスを取得する
 func (r *voiceRepository) FindActiveByID(ctx context.Context, id string) (*model.Voice, error) {
 	var voice model.Voice
 

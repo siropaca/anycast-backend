@@ -6,7 +6,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// キャラクター情報
+// Character はキャラクター情報を表す
 type Character struct {
 	ID        uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	UserID    uuid.UUID  `gorm:"type:uuid;not null;column:user_id"`

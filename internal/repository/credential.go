@@ -12,7 +12,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// パスワード認証情報へのアクセスインターフェース
+// CredentialRepository はパスワード認証情報へのアクセスインターフェース
 type CredentialRepository interface {
 	Create(ctx context.Context, credential *model.Credential) error
 	FindByUserID(ctx context.Context, userID uuid.UUID) (*model.Credential, error)
@@ -22,12 +22,12 @@ type credentialRepository struct {
 	db *gorm.DB
 }
 
-// CredentialRepository の実装を返す
+// NewCredentialRepository は CredentialRepository の実装を返す
 func NewCredentialRepository(db *gorm.DB) CredentialRepository {
 	return &credentialRepository{db: db}
 }
 
-// パスワード認証情報を作成する
+// Create はパスワード認証情報を作成する
 func (r *credentialRepository) Create(ctx context.Context, credential *model.Credential) error {
 	if err := r.db.WithContext(ctx).Create(credential).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to create credential", "error", err)
@@ -37,7 +37,7 @@ func (r *credentialRepository) Create(ctx context.Context, credential *model.Cre
 	return nil
 }
 
-// 指定されたユーザー ID のパスワード認証情報を取得する
+// FindByUserID は指定されたユーザー ID のパスワード認証情報を取得する
 func (r *credentialRepository) FindByUserID(ctx context.Context, userID uuid.UUID) (*model.Credential, error) {
 	var credential model.Credential
 

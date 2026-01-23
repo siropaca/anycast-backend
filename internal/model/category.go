@@ -6,7 +6,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// カテゴリ情報
+// Category はカテゴリ情報を表す
 type Category struct {
 	ID        uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	Slug      string    `gorm:"type:varchar(50);not null;uniqueIndex"`

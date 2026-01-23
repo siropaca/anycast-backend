@@ -13,7 +13,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
-// 台本行関連のビジネスロジックインターフェース
+// ScriptLineService は台本行関連のビジネスロジックインターフェースを表す
 type ScriptLineService interface {
 	ListByEpisodeID(ctx context.Context, userID, channelID, episodeID string) (*response.ScriptLineListResponse, error)
 	Create(ctx context.Context, userID, channelID, episodeID string, req request.CreateScriptLineRequest) (*response.ScriptLineResponse, error)
@@ -29,7 +29,7 @@ type scriptLineService struct {
 	channelRepo    repository.ChannelRepository
 }
 
-// ScriptLineService の実装を返す
+// NewScriptLineService は scriptLineService を生成して ScriptLineService として返す
 func NewScriptLineService(
 	db *gorm.DB,
 	scriptLineRepo repository.ScriptLineRepository,
@@ -44,7 +44,7 @@ func NewScriptLineService(
 	}
 }
 
-// 指定されたエピソードの台本行一覧を取得する
+// ListByEpisodeID は指定されたエピソードの台本行一覧を取得する
 func (s *scriptLineService) ListByEpisodeID(ctx context.Context, userID, channelID, episodeID string) (*response.ScriptLineListResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -95,7 +95,7 @@ func (s *scriptLineService) ListByEpisodeID(ctx context.Context, userID, channel
 	}, nil
 }
 
-// 新しい台本行を作成する
+// Create は新しい台本行を作成する
 func (s *scriptLineService) Create(ctx context.Context, userID, channelID, episodeID string, req request.CreateScriptLineRequest) (*response.ScriptLineResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -224,7 +224,7 @@ func (s *scriptLineService) Create(ctx context.Context, userID, channelID, episo
 	return &resp, nil
 }
 
-// 指定された台本行を更新する
+// Update は指定された台本行を更新する
 func (s *scriptLineService) Update(ctx context.Context, userID, channelID, episodeID, lineID string, req request.UpdateScriptLineRequest) (*response.ScriptLineResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -338,7 +338,7 @@ func (s *scriptLineService) Update(ctx context.Context, userID, channelID, episo
 	return &resp, nil
 }
 
-// 指定された台本行を削除する
+// Delete は指定された台本行を削除する
 func (s *scriptLineService) Delete(ctx context.Context, userID, channelID, episodeID, lineID string) error {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -406,7 +406,7 @@ func (s *scriptLineService) Delete(ctx context.Context, userID, channelID, episo
 	return nil
 }
 
-// 台本行の順序を並び替える
+// Reorder は台本行の順序を並び替える
 func (s *scriptLineService) Reorder(ctx context.Context, userID, channelID, episodeID string, req request.ReorderScriptLinesRequest) (*response.ScriptLineListResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -518,7 +518,7 @@ func (s *scriptLineService) Reorder(ctx context.Context, userID, channelID, epis
 	}, nil
 }
 
-// ScriptLine モデルのスライスをレスポンス DTO のスライスに変換する
+// toScriptLineResponses は ScriptLine のスライスをレスポンス DTO のスライスに変換する
 func (s *scriptLineService) toScriptLineResponses(scriptLines []model.ScriptLine) []response.ScriptLineResponse {
 	result := make([]response.ScriptLineResponse, len(scriptLines))
 
@@ -529,7 +529,7 @@ func (s *scriptLineService) toScriptLineResponses(scriptLines []model.ScriptLine
 	return result
 }
 
-// ScriptLine モデルをレスポンス DTO に変換する
+// toScriptLineResponse は ScriptLine をレスポンス DTO に変換する
 func (s *scriptLineService) toScriptLineResponse(sl *model.ScriptLine) response.ScriptLineResponse {
 	return response.ScriptLineResponse{
 		ID:        sl.ID,

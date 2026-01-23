@@ -14,7 +14,7 @@ import (
 	_ "github.com/siropaca/anycast-backend/swagger"
 )
 
-// ルーターを設定して返す
+// Setup はルーターを設定して返す
 func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	r := gin.New()
 

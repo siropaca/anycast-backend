@@ -6,7 +6,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// システム BGM（管理者が提供）
+// SystemBgm はシステム BGM（管理者が提供）を表す
 type SystemBgm struct {
 	ID        uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	AudioID   uuid.UUID `gorm:"type:uuid;not null;column:audio_id"`

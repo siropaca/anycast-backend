@@ -19,13 +19,13 @@ import (
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
-// 認証結果
+// AuthResult は認証結果を表す
 type AuthResult struct {
 	User      response.UserResponse
 	IsCreated bool // 新規作成されたかどうか（OAuth 用）
 }
 
-// 認証関連のビジネスロジックインターフェース
+// AuthService は認証関連のビジネスロジックインターフェースを表す
 type AuthService interface {
 	Register(ctx context.Context, req request.RegisterRequest) (*response.UserResponse, error)
 	Login(ctx context.Context, req request.LoginRequest) (*response.UserResponse, error)
@@ -43,7 +43,7 @@ type authService struct {
 	storageClient    storage.Client
 }
 
-// AuthService の実装を返す
+// NewAuthService は authService を生成して AuthService として返す
 func NewAuthService(
 	userRepo repository.UserRepository,
 	credentialRepo repository.CredentialRepository,
@@ -62,7 +62,7 @@ func NewAuthService(
 	}
 }
 
-// ユーザーを登録する
+// Register は新規ユーザーを登録する
 func (s *authService) Register(ctx context.Context, req request.RegisterRequest) (*response.UserResponse, error) {
 	// メールアドレスの重複チェック
 	exists, err := s.userRepo.ExistsByEmail(ctx, req.Email)
@@ -108,7 +108,7 @@ func (s *authService) Register(ctx context.Context, req request.RegisterRequest)
 	return s.toUserResponse(ctx, user), nil
 }
 
-// メールアドレスとパスワードで認証する
+// Login はメールアドレスとパスワードで認証する
 func (s *authService) Login(ctx context.Context, req request.LoginRequest) (*response.UserResponse, error) {
 	// ユーザーを取得
 	user, err := s.userRepo.FindByEmail(ctx, req.Email)
@@ -138,7 +138,7 @@ func (s *authService) Login(ctx context.Context, req request.LoginRequest) (*res
 	return s.toUserResponse(ctx, user), nil
 }
 
-// Google OAuth で認証する
+// OAuthGoogle は Google OAuth で認証する
 func (s *authService) OAuthGoogle(ctx context.Context, req request.OAuthGoogleRequest) (*AuthResult, error) {
 	// 既存の OAuth アカウントを検索
 	existingAccount, err := s.oauthAccountRepo.FindByProviderAndProviderUserID(ctx, model.OAuthProviderGoogle, req.ProviderUserID)
@@ -214,10 +214,10 @@ func (s *authService) OAuthGoogle(ctx context.Context, req request.OAuthGoogleRe
 	}, nil
 }
 
-// 連続する半角スペースにマッチする正規表現
+// multiSpaceRegex は連続する半角スペースにマッチする正規表現
 var multiSpaceRegex = regexp.MustCompile(`\s+`)
 
-// displayName をユーザー名形式に変換する
+// displayNameToUsername は displayName をユーザー名形式に変換する
 func displayNameToUsername(displayName string) string {
 	// 全角スペースを半角スペースに変換
 	s := strings.ReplaceAll(displayName, "\u3000", " ")
@@ -229,13 +229,13 @@ func displayNameToUsername(displayName string) string {
 	return strings.ReplaceAll(s, " ", "_")
 }
 
-// ユーザー名にランダムなサフィックスを付与する
+// appendRandomSuffix はユーザー名にランダムなサフィックスを付与する
 func appendRandomSuffix(username string) string {
 	suffix := rand.IntN(10000)
 	return fmt.Sprintf("%s_%d", username, suffix)
 }
 
-// displayName からユニークなユーザー名を生成する
+// generateUniqueUsername は displayName からユニークなユーザー名を生成する
 func (s *authService) generateUniqueUsername(ctx context.Context, displayName string) (string, error) {
 	base := displayNameToUsername(displayName)
 
@@ -266,7 +266,7 @@ func (s *authService) generateUniqueUsername(ctx context.Context, displayName st
 	return "", apperror.ErrInternal.WithMessage("ユニークなユーザー名の生成に失敗しました")
 }
 
-// model.User を response.UserResponse に変換する
+// toUserResponse は model.User を response.UserResponse に変換する
 func (s *authService) toUserResponse(ctx context.Context, user *model.User) *response.UserResponse {
 	var avatarURL *string
 	if user.AvatarID != nil {
@@ -290,7 +290,7 @@ func (s *authService) toUserResponse(ctx context.Context, user *model.User) *res
 	}
 }
 
-// 現在のユーザー情報を取得する
+// GetMe は現在のユーザー情報を取得する
 func (s *authService) GetMe(ctx context.Context, userID string) (*response.MeResponse, error) {
 	// UUID をパース
 	id, err := uuid.Parse(userID)
@@ -348,7 +348,7 @@ func (s *authService) GetMe(ctx context.Context, userID string) (*response.MeRes
 	}, nil
 }
 
-// ユーザーの台本生成用プロンプトを更新する
+// UpdatePrompt はユーザーの台本生成用プロンプトを更新する
 func (s *authService) UpdatePrompt(ctx context.Context, userID string, req request.UpdateUserPromptRequest) (*response.MeResponse, error) {
 	// UUID をパース
 	id, err := uuid.Parse(userID)

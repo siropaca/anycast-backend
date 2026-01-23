@@ -15,7 +15,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
-// エピソード関連のビジネスロジックインターフェース
+// EpisodeService はエピソード関連のビジネスロジックインターフェースを表す
 type EpisodeService interface {
 	GetMyChannelEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error)
 	ListMyChannelEpisodes(ctx context.Context, userID, channelID string, filter repository.EpisodeFilter) (*response.EpisodeListWithPaginationResponse, error)
@@ -40,7 +40,7 @@ type episodeService struct {
 	ttsClient      tts.Client
 }
 
-// EpisodeService の実装を返す
+// NewEpisodeService は episodeService を生成して EpisodeService として返す
 func NewEpisodeService(
 	episodeRepo repository.EpisodeRepository,
 	channelRepo repository.ChannelRepository,
@@ -65,7 +65,7 @@ func NewEpisodeService(
 	}
 }
 
-// 自分のチャンネルのエピソードを取得する
+// GetMyChannelEpisode は自分のチャンネルのエピソードを取得する
 func (s *episodeService) GetMyChannelEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -112,7 +112,7 @@ func (s *episodeService) GetMyChannelEpisode(ctx context.Context, userID, channe
 	}, nil
 }
 
-// 自分のチャンネルのエピソード一覧を取得する
+// ListMyChannelEpisodes は自分のチャンネルのエピソード一覧を取得する
 func (s *episodeService) ListMyChannelEpisodes(ctx context.Context, userID, channelID string, filter repository.EpisodeFilter) (*response.EpisodeListWithPaginationResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -151,7 +151,7 @@ func (s *episodeService) ListMyChannelEpisodes(ctx context.Context, userID, chan
 	}, nil
 }
 
-// エピソードを作成する
+// CreateEpisode は新しいエピソードを作成する
 func (s *episodeService) CreateEpisode(ctx context.Context, userID, channelID, title, description string, artworkImageID *string) (*response.EpisodeResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -216,7 +216,7 @@ func (s *episodeService) CreateEpisode(ctx context.Context, userID, channelID, t
 	}, nil
 }
 
-// エピソードを更新する
+// UpdateEpisode は指定されたエピソードを更新する
 func (s *episodeService) UpdateEpisode(ctx context.Context, userID, channelID, episodeID string, req request.UpdateEpisodeRequest) (*response.EpisodeDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -297,7 +297,7 @@ func (s *episodeService) UpdateEpisode(ctx context.Context, userID, channelID, e
 	}, nil
 }
 
-// エピソードを削除する
+// DeleteEpisode は指定されたエピソードを削除する
 func (s *episodeService) DeleteEpisode(ctx context.Context, userID, channelID, episodeID string) error {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -361,7 +361,7 @@ func (s *episodeService) DeleteEpisode(ctx context.Context, userID, channelID, e
 	return nil
 }
 
-// エピソードを公開する
+// PublishEpisode は指定されたエピソードを公開する
 func (s *episodeService) PublishEpisode(ctx context.Context, userID, channelID, episodeID string, publishedAt *string) (*response.EpisodeDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -433,7 +433,7 @@ func (s *episodeService) PublishEpisode(ctx context.Context, userID, channelID, 
 	}, nil
 }
 
-// エピソードを非公開にする
+// UnpublishEpisode は指定されたエピソードを非公開にする
 func (s *episodeService) UnpublishEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -494,7 +494,7 @@ func (s *episodeService) UnpublishEpisode(ctx context.Context, userID, channelID
 	}, nil
 }
 
-// Episode モデルのスライスをレスポンス DTO のスライスに変換する
+// toEpisodeResponses は Episode のスライスをレスポンス DTO のスライスに変換する
 func (s *episodeService) toEpisodeResponses(ctx context.Context, episodes []model.Episode) ([]response.EpisodeResponse, error) {
 	result := make([]response.EpisodeResponse, len(episodes))
 
@@ -509,7 +509,7 @@ func (s *episodeService) toEpisodeResponses(ctx context.Context, episodes []mode
 	return result, nil
 }
 
-// Episode モデルをレスポンス DTO に変換する
+// toEpisodeResponse は Episode をレスポンス DTO に変換する
 func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode) (response.EpisodeResponse, error) {
 	resp := response.EpisodeResponse{
 		ID:            e.ID,
@@ -584,7 +584,7 @@ func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode
 	return resp, nil
 }
 
-// エピソードに BGM を設定する
+// SetEpisodeBgm は指定されたエピソードに BGM を設定する
 func (s *episodeService) SetEpisodeBgm(ctx context.Context, userID, channelID, episodeID string, req request.SetEpisodeBgmRequest) (*response.EpisodeDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -698,7 +698,7 @@ func (s *episodeService) SetEpisodeBgm(ctx context.Context, userID, channelID, e
 	}, nil
 }
 
-// エピソードの BGM を削除する
+// DeleteEpisodeBgm は指定されたエピソードの BGM を削除する
 func (s *episodeService) DeleteEpisodeBgm(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {

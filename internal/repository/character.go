@@ -12,7 +12,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// キャラクターデータへのアクセスインターフェース
+// CharacterRepository はキャラクターデータへのアクセスインターフェース
 type CharacterRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*model.Character, error)
 	FindByUserID(ctx context.Context, userID uuid.UUID, filter CharacterFilter) ([]model.Character, int64, error)
@@ -24,7 +24,7 @@ type CharacterRepository interface {
 	ExistsByUserIDAndName(ctx context.Context, userID uuid.UUID, name string, excludeID *uuid.UUID) (bool, error)
 }
 
-// キャラクター検索のフィルタ条件
+// CharacterFilter はキャラクター検索のフィルタ条件を表す
 type CharacterFilter struct {
 	Limit  int
 	Offset int
@@ -34,12 +34,12 @@ type characterRepository struct {
 	db *gorm.DB
 }
 
-// CharacterRepository の実装を返す
+// NewCharacterRepository は CharacterRepository の実装を返す
 func NewCharacterRepository(db *gorm.DB) CharacterRepository {
 	return &characterRepository{db: db}
 }
 
-// 指定されたユーザーのキャラクター一覧を取得する
+// FindByUserID は指定されたユーザーのキャラクター一覧を取得する
 func (r *characterRepository) FindByUserID(ctx context.Context, userID uuid.UUID, filter CharacterFilter) ([]model.Character, int64, error) {
 	var characters []model.Character
 	var total int64
@@ -68,7 +68,7 @@ func (r *characterRepository) FindByUserID(ctx context.Context, userID uuid.UUID
 	return characters, total, nil
 }
 
-// 指定された ID のキャラクターを取得する
+// FindByID は指定された ID のキャラクターを取得する
 func (r *characterRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Character, error) {
 	var character model.Character
 
@@ -91,7 +91,7 @@ func (r *characterRepository) FindByID(ctx context.Context, id uuid.UUID) (*mode
 	return &character, nil
 }
 
-// 複数の ID でキャラクターを取得する
+// FindByIDs は複数の ID でキャラクターを取得する
 func (r *characterRepository) FindByIDs(ctx context.Context, ids []uuid.UUID) ([]model.Character, error) {
 	var characters []model.Character
 
@@ -111,7 +111,7 @@ func (r *characterRepository) FindByIDs(ctx context.Context, ids []uuid.UUID) ([
 	return characters, nil
 }
 
-// キャラクターを作成する
+// Create はキャラクターを作成する
 func (r *characterRepository) Create(ctx context.Context, character *model.Character) error {
 	if err := r.db.WithContext(ctx).Create(character).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to create character", "error", err)
@@ -121,7 +121,7 @@ func (r *characterRepository) Create(ctx context.Context, character *model.Chara
 	return nil
 }
 
-// キャラクターを更新する
+// Update はキャラクターを更新する
 func (r *characterRepository) Update(ctx context.Context, character *model.Character) error {
 	if err := r.db.WithContext(ctx).Save(character).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to update character", "error", err, "character_id", character.ID)
@@ -131,7 +131,7 @@ func (r *characterRepository) Update(ctx context.Context, character *model.Chara
 	return nil
 }
 
-// キャラクターを削除する
+// Delete はキャラクターを削除する
 func (r *characterRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	result := r.db.WithContext(ctx).Delete(&model.Character{}, "id = ?", id)
 	if result.Error != nil {
@@ -145,7 +145,7 @@ func (r *characterRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-// キャラクターがいずれかのチャンネルで使用中かどうかを確認する
+// IsUsedInAnyChannel はキャラクターがいずれかのチャンネルで使用中かどうかを確認する
 func (r *characterRepository) IsUsedInAnyChannel(ctx context.Context, id uuid.UUID) (bool, error) {
 	var count int64
 
@@ -160,7 +160,7 @@ func (r *characterRepository) IsUsedInAnyChannel(ctx context.Context, id uuid.UU
 	return count > 0, nil
 }
 
-// 同一ユーザー内で同じ名前のキャラクターが存在するかどうかを確認する
+// ExistsByUserIDAndName は同一ユーザー内で同じ名前のキャラクターが存在するかどうかを確認する
 func (r *characterRepository) ExistsByUserIDAndName(ctx context.Context, userID uuid.UUID, name string, excludeID *uuid.UUID) (bool, error) {
 	var count int64
 

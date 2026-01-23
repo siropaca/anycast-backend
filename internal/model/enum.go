@@ -1,13 +1,13 @@
 package model
 
-// OAuth プロバイダの種別
+// OAuthProvider は OAuth プロバイダの種別を表す
 type OAuthProvider string
 
 const (
 	OAuthProviderGoogle OAuthProvider = "google"
 )
 
-// 性別
+// Gender は性別を表す
 type Gender string
 
 const (
@@ -16,7 +16,7 @@ const (
 	GenderNeutral Gender = "neutral"
 )
 
-// ユーザーロール
+// Role はユーザーロールを表す
 type Role string
 
 const (
@@ -24,7 +24,7 @@ const (
 	RoleAdmin Role = "admin"
 )
 
-// 管理者かどうかを判定
+// IsAdmin は管理者かどうかを判定する
 func (r Role) IsAdmin() bool {
 	return r == RoleAdmin
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// TTS ボイス情報
+// Voice は TTS ボイス情報を表す
 type Voice struct {
 	ID              uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	Provider        string    `gorm:"type:varchar(50);not null" json:"provider"`

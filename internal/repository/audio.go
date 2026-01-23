@@ -11,7 +11,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// 音声データへのアクセスインターフェース
+// AudioRepository は音声データへのアクセスインターフェース
 type AudioRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*model.Audio, error)
 	Create(ctx context.Context, audio *model.Audio) error
@@ -23,12 +23,12 @@ type audioRepository struct {
 	db *gorm.DB
 }
 
-// AudioRepository の実装を返す
+// NewAudioRepository は AudioRepository の実装を返す
 func NewAudioRepository(db *gorm.DB) AudioRepository {
 	return &audioRepository{db: db}
 }
 
-// ID で音声を取得する
+// FindByID は ID で音声を取得する
 func (r *audioRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Audio, error) {
 	var audio model.Audio
 
@@ -44,7 +44,7 @@ func (r *audioRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Au
 	return &audio, nil
 }
 
-// 音声を作成する
+// Create は音声を作成する
 func (r *audioRepository) Create(ctx context.Context, audio *model.Audio) error {
 	if err := r.db.WithContext(ctx).Create(audio).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to create audio", "error", err)
@@ -54,7 +54,7 @@ func (r *audioRepository) Create(ctx context.Context, audio *model.Audio) error 
 	return nil
 }
 
-// 音声を削除する
+// Delete は音声を削除する
 func (r *audioRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	result := r.db.WithContext(ctx).Delete(&model.Audio{}, "id = ?", id)
 	if result.Error != nil {
@@ -69,7 +69,8 @@ func (r *audioRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-// どのテーブルからも参照されていない孤児レコードを取得する
+// FindOrphaned はどのテーブルからも参照されていない孤児レコードを取得する
+//
 // 対象: episodes.full_audio_id, bgms.audio_id, system_bgms.audio_id, audio_jobs.result_audio_id
 // 条件: created_at から 1 時間以上経過したレコードのみ
 func (r *audioRepository) FindOrphaned(ctx context.Context) ([]model.Audio, error) {

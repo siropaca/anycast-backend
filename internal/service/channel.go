@@ -16,7 +16,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
-// チャンネル関連のビジネスロジックインターフェース
+// ChannelService はチャンネル関連のビジネスロジックインターフェースを表す
 type ChannelService interface {
 	GetChannel(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error)
 	GetMyChannel(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error)
@@ -42,7 +42,7 @@ type channelService struct {
 	storageClient storage.Client
 }
 
-// ChannelService の実装を返す
+// NewChannelService は channelService を生成して ChannelService として返す
 func NewChannelService(
 	db *gorm.DB,
 	channelRepo repository.ChannelRepository,
@@ -69,7 +69,7 @@ func NewChannelService(
 	}
 }
 
-// チャンネルを取得する
+// GetChannel は指定されたチャンネルを取得する
 // オーナーまたは公開中のチャンネルのみ取得可能
 func (s *channelService) GetChannel(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error) {
 	uid, err := uuid.Parse(userID)
@@ -105,7 +105,7 @@ func (s *channelService) GetChannel(ctx context.Context, userID, channelID strin
 	}, nil
 }
 
-// 自分のチャンネルを取得する（オーナーのみ取得可能）
+// GetMyChannel は自分のチャンネルを取得する（オーナーのみ取得可能）
 func (s *channelService) GetMyChannel(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -137,7 +137,7 @@ func (s *channelService) GetMyChannel(ctx context.Context, userID, channelID str
 	}, nil
 }
 
-// 自分のチャンネル一覧を取得する
+// ListMyChannels は自分のチャンネル一覧を取得する
 func (s *channelService) ListMyChannels(ctx context.Context, userID string, filter repository.ChannelFilter) (*response.ChannelListWithPaginationResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -160,7 +160,7 @@ func (s *channelService) ListMyChannels(ctx context.Context, userID string, filt
 	}, nil
 }
 
-// 新しいチャンネルを作成する
+// CreateChannel は新しいチャンネルを作成する
 func (s *channelService) CreateChannel(ctx context.Context, userID string, req request.CreateChannelRequest) (*response.ChannelDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -293,7 +293,7 @@ func (s *channelService) CreateChannel(ctx context.Context, userID string, req r
 	}, nil
 }
 
-// チャンネルを更新する（オーナーのみ更新可能）
+// UpdateChannel は指定されたチャンネルを更新する（オーナーのみ更新可能）
 func (s *channelService) UpdateChannel(ctx context.Context, userID, channelID string, req request.UpdateChannelRequest) (*response.ChannelDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -424,7 +424,7 @@ func (s *channelService) UpdateChannel(ctx context.Context, userID, channelID st
 	}, nil
 }
 
-// チャンネルを削除する（オーナーのみ削除可能）
+// DeleteChannel は指定されたチャンネルを削除する（オーナーのみ削除可能）
 func (s *channelService) DeleteChannel(ctx context.Context, userID, channelID string) error {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -487,7 +487,7 @@ func (s *channelService) DeleteChannel(ctx context.Context, userID, channelID st
 	return nil
 }
 
-// チャンネルを公開する
+// PublishChannel は指定されたチャンネルを公開する
 func (s *channelService) PublishChannel(ctx context.Context, userID, channelID string, publishedAt *string) (*response.ChannelDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -544,7 +544,7 @@ func (s *channelService) PublishChannel(ctx context.Context, userID, channelID s
 	}, nil
 }
 
-// チャンネルを非公開にする
+// UnpublishChannel は指定されたチャンネルを非公開にする
 func (s *channelService) UnpublishChannel(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -590,7 +590,7 @@ func (s *channelService) UnpublishChannel(ctx context.Context, userID, channelID
 	}, nil
 }
 
-// チャンネルのデフォルト BGM を削除する
+// DeleteDefaultBgm は指定されたチャンネルのデフォルト BGM を削除する
 func (s *channelService) DeleteDefaultBgm(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -639,7 +639,7 @@ func (s *channelService) DeleteDefaultBgm(ctx context.Context, userID, channelID
 	}, nil
 }
 
-// キャラクター入力を処理して、キャラクター ID のスライスを返す
+// processCharacterInputs はキャラクター入力を処理してキャラクター ID のスライスを返す
 // connect は既存キャラクターの紐づけ、create は新規キャラクターの作成
 func (s *channelService) processCharacterInputs(ctx context.Context, userID uuid.UUID, input request.ChannelCharactersInput, characterRepo repository.CharacterRepository) ([]uuid.UUID, error) {
 	characterIDs := make([]uuid.UUID, 0, input.Total())
@@ -715,7 +715,7 @@ func (s *channelService) processCharacterInputs(ctx context.Context, userID uuid
 	return characterIDs, nil
 }
 
-// Channel モデルのスライスをレスポンス DTO のスライスに変換する
+// toChannelResponses は Channel のスライスをレスポンス DTO のスライスに変換する
 // ListMyChannels で使用するため、常にオーナーとして扱う
 func (s *channelService) toChannelResponses(ctx context.Context, channels []model.Channel) ([]response.ChannelResponse, error) {
 	result := make([]response.ChannelResponse, len(channels))
@@ -731,7 +731,7 @@ func (s *channelService) toChannelResponses(ctx context.Context, channels []mode
 	return result, nil
 }
 
-// Channel モデルをレスポンス DTO に変換する
+// toChannelResponse は Channel をレスポンス DTO に変換する
 // isOwner が false の場合、userPrompt は空文字になる
 func (s *channelService) toChannelResponse(ctx context.Context, c *model.Channel, isOwner bool) (response.ChannelResponse, error) {
 	userPrompt := ""
@@ -804,7 +804,7 @@ func (s *channelService) toChannelResponse(ctx context.Context, c *model.Channel
 	return resp, nil
 }
 
-// ChannelCharacter のスライスからレスポンス DTO のスライスに変換する
+// toCharacterResponsesFromChannelCharacters は ChannelCharacter のスライスをレスポンス DTO のスライスに変換する
 func (s *channelService) toCharacterResponsesFromChannelCharacters(channelCharacters []model.ChannelCharacter) []response.CharacterResponse {
 	result := make([]response.CharacterResponse, len(channelCharacters))
 

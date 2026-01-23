@@ -101,13 +101,13 @@ const systemPromptWithEmotion = `
 - 話者名は与えられた登場人物リストの名前のみ使用可能
 - 台本テキスト以外の説明文やコメントは出力しない`
 
-// 台本エクスポート結果
+// ExportScriptResult は台本エクスポート結果を表す
 type ExportScriptResult struct {
 	EpisodeTitle string // エピソードタイトル
 	Text         string // 台本テキスト
 }
 
-// 台本関連のビジネスロジックインターフェース
+// ScriptService は台本関連のビジネスロジックインターフェースを表す
 type ScriptService interface {
 	GenerateScript(ctx context.Context, userID, channelID, episodeID, prompt string, durationMinutes *int, withEmotion bool) (*response.ScriptLineListResponse, error)
 	ImportScript(ctx context.Context, userID, channelID, episodeID, text string) (*response.ScriptLineListResponse, error)
@@ -124,7 +124,7 @@ type scriptService struct {
 	storageClient  storage.Client
 }
 
-// ScriptService の実装を返す
+// NewScriptService は scriptService を生成して ScriptService として返す
 func NewScriptService(
 	db *gorm.DB,
 	userRepo repository.UserRepository,
@@ -145,7 +145,7 @@ func NewScriptService(
 	}
 }
 
-// AI を使って台本を生成する
+// GenerateScript は AI を使って台本を生成する
 func (s *scriptService) GenerateScript(ctx context.Context, userID, channelID, episodeID, prompt string, durationMinutes *int, withEmotion bool) (*response.ScriptLineListResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -281,7 +281,7 @@ func (s *scriptService) GenerateScript(ctx context.Context, userID, channelID, e
 	}, nil
 }
 
-// ScriptLine モデルのスライスをレスポンス DTO のスライスに変換する
+// toScriptLineResponses は ScriptLine のスライスをレスポンス DTO のスライスに変換する
 func (s *scriptService) toScriptLineResponses(scriptLines []model.ScriptLine) ([]response.ScriptLineResponse, error) {
 	result := make([]response.ScriptLineResponse, len(scriptLines))
 
@@ -296,7 +296,7 @@ func (s *scriptService) toScriptLineResponses(scriptLines []model.ScriptLine) ([
 	return result, nil
 }
 
-// ScriptLine モデルをレスポンス DTO に変換する
+// toScriptLineResponse は ScriptLine をレスポンス DTO に変換する
 func (s *scriptService) toScriptLineResponse(sl *model.ScriptLine) (response.ScriptLineResponse, error) {
 	return response.ScriptLineResponse{
 		ID:        sl.ID,
@@ -319,7 +319,7 @@ func (s *scriptService) toScriptLineResponse(sl *model.ScriptLine) (response.Scr
 	}, nil
 }
 
-// LLM 用のユーザープロンプトを構築する
+// buildUserPrompt は LLM 用のユーザープロンプトを構築する
 // プロンプトは User → Channel → Episode の順で結合（追記）される
 func (s *scriptService) buildUserPrompt(user *model.User, channel *model.Channel, episode *model.Episode, prompt string, durationMinutes int) string {
 	var sb strings.Builder
@@ -376,7 +376,7 @@ func (s *scriptService) buildUserPrompt(user *model.User, channel *model.Channel
 	return sb.String()
 }
 
-// テキスト形式の台本をインポートする
+// ImportScript はテキスト形式の台本をインポートする
 func (s *scriptService) ImportScript(ctx context.Context, userID, channelID, episodeID, text string) (*response.ScriptLineListResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -484,7 +484,7 @@ func (s *scriptService) ImportScript(ctx context.Context, userID, channelID, epi
 	}, nil
 }
 
-// 台本をテキスト形式でエクスポートする
+// ExportScript は台本をテキスト形式でエクスポートする
 func (s *scriptService) ExportScript(ctx context.Context, userID, channelID, episodeID string) (*ExportScriptResult, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {

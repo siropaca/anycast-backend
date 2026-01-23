@@ -6,7 +6,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// ユーザーが所有する BGM
+// Bgm はユーザーが所有する BGM を表す
 type Bgm struct {
 	ID        uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	UserID    uuid.UUID `gorm:"type:uuid;not null;column:user_id"`

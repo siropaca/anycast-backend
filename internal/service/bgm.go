@@ -12,7 +12,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
-// BGM 関連のビジネスロジックインターフェース
+// BgmService は BGM 関連のビジネスロジックインターフェースを表す
 type BgmService interface {
 	ListMyBgms(ctx context.Context, userID string, req request.ListMyBgmsRequest) (*response.BgmListWithPaginationResponse, error)
 	GetMyBgm(ctx context.Context, userID string, bgmID string) (*response.BgmDataResponse, error)
@@ -28,7 +28,7 @@ type bgmService struct {
 	storageClient storage.Client
 }
 
-// BgmService の実装を返す
+// NewBgmService は bgmService を生成して BgmService として返す
 func NewBgmService(
 	bgmRepo repository.BgmRepository,
 	systemBgmRepo repository.SystemBgmRepository,
@@ -43,7 +43,7 @@ func NewBgmService(
 	}
 }
 
-// 自分の BGM 一覧を取得する
+// ListMyBgms は自分の BGM 一覧を取得する
 func (s *bgmService) ListMyBgms(ctx context.Context, userID string, req request.ListMyBgmsRequest) (*response.BgmListWithPaginationResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -57,7 +57,7 @@ func (s *bgmService) ListMyBgms(ctx context.Context, userID string, req request.
 	return s.listUserBgmsOnly(ctx, uid, req)
 }
 
-// ユーザー BGM のみを取得する
+// listUserBgmsOnly はユーザー BGM のみを取得する
 func (s *bgmService) listUserBgmsOnly(ctx context.Context, userID uuid.UUID, req request.ListMyBgmsRequest) (*response.BgmListWithPaginationResponse, error) {
 	filter := repository.BgmFilter{
 		Limit:  req.Limit,
@@ -80,7 +80,7 @@ func (s *bgmService) listUserBgmsOnly(ctx context.Context, userID uuid.UUID, req
 	}, nil
 }
 
-// システム BGM とユーザー BGM を結合して取得する
+// listBgmsWithDefault はシステム BGM とユーザー BGM を結合して取得する
 func (s *bgmService) listBgmsWithDefault(ctx context.Context, userID uuid.UUID, req request.ListMyBgmsRequest) (*response.BgmListWithPaginationResponse, error) {
 	// システム BGM の総件数を取得
 	systemTotal, err := s.systemBgmRepo.CountActive(ctx)
@@ -160,7 +160,7 @@ func (s *bgmService) listBgmsWithDefault(ctx context.Context, userID uuid.UUID, 
 	}, nil
 }
 
-// Bgm モデルのスライスをエピソード情報付きレスポンス DTO のスライスに変換する
+// toBgmWithEpisodesResponses は Bgm のスライスをエピソード情報付きレスポンス DTO のスライスに変換する
 func (s *bgmService) toBgmWithEpisodesResponses(ctx context.Context, bgms []model.Bgm) ([]response.BgmWithEpisodesResponse, error) {
 	result := make([]response.BgmWithEpisodesResponse, len(bgms))
 
@@ -175,7 +175,7 @@ func (s *bgmService) toBgmWithEpisodesResponses(ctx context.Context, bgms []mode
 	return result, nil
 }
 
-// Bgm モデルをエピソード・チャンネル情報付きレスポンス DTO に変換する
+// toBgmWithEpisodesResponse は Bgm をエピソード・チャンネル情報付きレスポンス DTO に変換する
 func (s *bgmService) toBgmWithEpisodesResponse(ctx context.Context, b model.Bgm) (response.BgmWithEpisodesResponse, error) {
 	audioResponse, err := s.toAudioResponse(ctx, b.Audio)
 	if err != nil {
@@ -214,7 +214,7 @@ func (s *bgmService) toBgmWithEpisodesResponse(ctx context.Context, b model.Bgm)
 	}, nil
 }
 
-// SystemBgm モデルのスライスをエピソード情報付きレスポンス DTO のスライスに変換する
+// toSystemBgmWithEpisodesResponses は SystemBgm のスライスをエピソード情報付きレスポンス DTO のスライスに変換する
 func (s *bgmService) toSystemBgmWithEpisodesResponses(ctx context.Context, bgms []model.SystemBgm) ([]response.BgmWithEpisodesResponse, error) {
 	result := make([]response.BgmWithEpisodesResponse, len(bgms))
 
@@ -229,7 +229,7 @@ func (s *bgmService) toSystemBgmWithEpisodesResponses(ctx context.Context, bgms 
 	return result, nil
 }
 
-// SystemBgm モデルをエピソード・チャンネル情報付きレスポンス DTO に変換する
+// toSystemBgmWithEpisodesResponse は SystemBgm をエピソード・チャンネル情報付きレスポンス DTO に変換する
 // SystemBgm はシステム提供の BGM のため、episodes と channels は常に空配列を返す
 func (s *bgmService) toSystemBgmWithEpisodesResponse(ctx context.Context, b model.SystemBgm) (response.BgmWithEpisodesResponse, error) {
 	audioResponse, err := s.toAudioResponse(ctx, b.Audio)
@@ -249,7 +249,7 @@ func (s *bgmService) toSystemBgmWithEpisodesResponse(ctx context.Context, b mode
 	}, nil
 }
 
-// Audio モデルをレスポンス DTO に変換する
+// toAudioResponse は Audio をレスポンス DTO に変換する
 func (s *bgmService) toAudioResponse(ctx context.Context, audio model.Audio) (response.BgmAudioResponse, error) {
 	var url string
 	if s.storageClient != nil {
@@ -267,7 +267,7 @@ func (s *bgmService) toAudioResponse(ctx context.Context, audio model.Audio) (re
 	}, nil
 }
 
-// BGM を作成する
+// CreateBgm は新しい BGM を作成する
 func (s *bgmService) CreateBgm(ctx context.Context, userID string, req request.CreateBgmRequest) (*response.BgmDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -318,7 +318,7 @@ func (s *bgmService) CreateBgm(ctx context.Context, userID string, req request.C
 	return &response.BgmDataResponse{Data: res}, nil
 }
 
-// 自分の BGM を取得する
+// GetMyBgm は自分の BGM を取得する
 func (s *bgmService) GetMyBgm(ctx context.Context, userID, bgmID string) (*response.BgmDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -348,7 +348,7 @@ func (s *bgmService) GetMyBgm(ctx context.Context, userID, bgmID string) (*respo
 	return &response.BgmDataResponse{Data: res}, nil
 }
 
-// 自分の BGM を更新する
+// UpdateMyBgm は自分の BGM を更新する
 func (s *bgmService) UpdateMyBgm(ctx context.Context, userID, bgmID string, req request.UpdateBgmRequest) (*response.BgmDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -395,7 +395,7 @@ func (s *bgmService) UpdateMyBgm(ctx context.Context, userID, bgmID string, req 
 	return &response.BgmDataResponse{Data: res}, nil
 }
 
-// 自分の BGM を削除する
+// DeleteMyBgm は自分の BGM を削除する
 func (s *bgmService) DeleteMyBgm(ctx context.Context, userID, bgmID string) error {
 	uid, err := uuid.Parse(userID)
 	if err != nil {

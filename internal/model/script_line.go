@@ -6,7 +6,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// 台本行情報
+// ScriptLine は台本行情報を表す
 type ScriptLine struct {
 	ID        uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	EpisodeID uuid.UUID `gorm:"type:uuid;not null;column:episode_id"`
@@ -22,7 +22,7 @@ type ScriptLine struct {
 	Speaker Character `gorm:"foreignKey:SpeakerID"`
 }
 
-// テーブル名を指定
+// TableName はテーブル名を返す
 func (ScriptLine) TableName() string {
 	return "script_lines"
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// 音声ファイル情報
+// Audio は音声ファイル情報を表す
 type Audio struct {
 	ID         uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	MimeType   string    `gorm:"type:varchar(100);not null;column:mime_type"`

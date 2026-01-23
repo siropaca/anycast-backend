@@ -6,7 +6,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// チャンネルとキャラクターの紐づけを管理する中間テーブル
+// ChannelCharacter はチャンネルとキャラクターの紐づけを管理する中間テーブルを表す
 type ChannelCharacter struct {
 	ID          uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	ChannelID   uuid.UUID `gorm:"type:uuid;not null;column:channel_id"`
