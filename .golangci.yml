@@ -31,6 +31,15 @@ linters:
       exclude-functions:
         - (*os.File).Close
         - (io.Closer).Close
+        # WebSocket 関連（クリーンアップ処理でのエラーは無視可）
+        - (*github.com/gorilla/websocket.Conn).Close
+        - (*github.com/gorilla/websocket.Conn).SetReadDeadline
+        - (*github.com/gorilla/websocket.Conn).SetWriteDeadline
+        - (*github.com/gorilla/websocket.Conn).WriteMessage
+        - (io.Writer).Write
+        # 一時ファイルのクリーンアップ
+        - os.Remove
+        - os.RemoveAll
 
     gocritic:
       # 有効にするチェックグループ
