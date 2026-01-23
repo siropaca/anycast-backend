@@ -26,7 +26,7 @@ func NewAudioJobHandler(ajs service.AudioJobService) *AudioJobHandler {
 // GenerateAudioAsync godoc
 // @Summary 非同期音声生成
 // @Description エピソードの音声を非同期で生成します。ジョブを作成し、完了時は WebSocket で通知されます。
-// @Tags me
+// @Tags episodes
 // @Accept json
 // @Produce json
 // @Param channelId path string true "チャンネル ID"
@@ -39,7 +39,7 @@ func NewAudioJobHandler(ajs service.AudioJobService) *AudioJobHandler {
 // @Failure 404 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
 // @Security BearerAuth
-// @Router /me/channels/{channelId}/episodes/{episodeId}/audio/generate-async [post]
+// @Router /channels/{channelId}/episodes/{episodeId}/audio/generate-async [post]
 func (h *AudioJobHandler) GenerateAudioAsync(c *gin.Context) {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {

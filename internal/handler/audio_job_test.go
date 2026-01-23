@@ -70,7 +70,7 @@ func setupAudioJobRouter(service *mockAudioJobService) *gin.Engine {
 		}
 	}
 
-	r.POST("/me/channels/:channelId/episodes/:episodeId/audio/generate-async", authMiddleware("user-123"), handler.GenerateAudioAsync)
+	r.POST("/channels/:channelId/episodes/:episodeId/audio/generate-async", authMiddleware("user-123"), handler.GenerateAudioAsync)
 	r.GET("/audio-jobs/:jobId", authMiddleware("user-123"), handler.GetAudioJob)
 	r.GET("/me/audio-jobs", authMiddleware("user-123"), handler.ListMyAudioJobs)
 
@@ -95,7 +95,7 @@ func TestAudioJobHandler_GenerateAudioAsync(t *testing.T) {
 		mockService.On("CreateJob", mock.Anything, "user-123", channelID.String(), episodeID.String(), mock.Anything).Return(jobResponse, nil)
 
 		router := setupAudioJobRouter(mockService)
-		req := httptest.NewRequest(http.MethodPost, "/me/channels/"+channelID.String()+"/episodes/"+episodeID.String()+"/audio/generate-async", strings.NewReader(`{}`))
+		req := httptest.NewRequest(http.MethodPost, "/channels/"+channelID.String()+"/episodes/"+episodeID.String()+"/audio/generate-async", strings.NewReader(`{}`))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -122,7 +122,7 @@ func TestAudioJobHandler_GenerateAudioAsync(t *testing.T) {
 
 		router := setupAudioJobRouter(mockService)
 		body := `{"voiceStyle":"warm tone","bgmVolumeDb":-20,"fadeOutMs":5000}`
-		req := httptest.NewRequest(http.MethodPost, "/me/channels/"+channelID.String()+"/episodes/"+episodeID.String()+"/audio/generate-async", strings.NewReader(body))
+		req := httptest.NewRequest(http.MethodPost, "/channels/"+channelID.String()+"/episodes/"+episodeID.String()+"/audio/generate-async", strings.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 
@@ -138,13 +138,13 @@ func TestAudioJobHandler_GenerateAudioAsync(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 		r := gin.New()
 		handler := NewAudioJobHandler(mockService)
-		r.POST("/me/channels/:channelId/episodes/:episodeId/audio/generate-async", func(c *gin.Context) {
+		r.POST("/channels/:channelId/episodes/:episodeId/audio/generate-async", func(c *gin.Context) {
 			c.Set(string(middleware.UserIDKey), "user-123")
 			c.Params = gin.Params{{Key: "channelId", Value: ""}, {Key: "episodeId", Value: "ep-123"}}
 			handler.GenerateAudioAsync(c)
 		})
 
-		req := httptest.NewRequest(http.MethodPost, "/me/channels//episodes/ep-123/audio/generate-async", http.NoBody)
+		req := httptest.NewRequest(http.MethodPost, "/channels//episodes/ep-123/audio/generate-async", http.NoBody)
 		rec := httptest.NewRecorder()
 
 		r.ServeHTTP(rec, req)
@@ -157,7 +157,7 @@ func TestAudioJobHandler_GenerateAudioAsync(t *testing.T) {
 		mockService.On("CreateJob", mock.Anything, "user-123", channelID.String(), episodeID.String(), mock.Anything).Return(nil, apperror.ErrValidation.WithMessage("Validation error"))
 
 		router := setupAudioJobRouter(mockService)
-		req := httptest.NewRequest(http.MethodPost, "/me/channels/"+channelID.String()+"/episodes/"+episodeID.String()+"/audio/generate-async", strings.NewReader(`{}`))
+		req := httptest.NewRequest(http.MethodPost, "/channels/"+channelID.String()+"/episodes/"+episodeID.String()+"/audio/generate-async", strings.NewReader(`{}`))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 

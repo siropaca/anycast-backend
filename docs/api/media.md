@@ -7,7 +7,7 @@ Gemini TTS の multi-speaker 機能を使用し、各キャラクターの声で
 BGM が設定されている場合は FFmpeg でミキシングを行います。
 
 ```
-POST /channels/:channelId/episodes/:episodeId/audio/generate
+POST /channels/:channelId/episodes/:episodeId/audio/generate-async
 ```
 
 **リクエスト:**

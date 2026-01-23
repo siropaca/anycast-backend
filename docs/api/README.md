@@ -78,7 +78,7 @@
 | DELETE | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | 行削除 | Owner | ✅ | [詳細](./script.md#行削除) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/reorder` | 行並び替え | Owner | ✅ | [詳細](./script.md#行並び替え) |
 | **Audio（音声生成）** | - | - | - | - | [media.md](./media.md) |
-| POST | `/api/v1/channels/:channelId/episodes/:episodeId/audio/generate` | 非同期音声生成（BGM ミキシング対応） | Owner | ✅ | [詳細](./media.md#非同期音声生成) |
+| POST | `/api/v1/channels/:channelId/episodes/:episodeId/audio/generate-async` | 非同期音声生成（BGM ミキシング対応） | Owner | ✅ | [詳細](./media.md#非同期音声生成) |
 | GET | `/api/v1/audio-jobs/:jobId` | 音声生成ジョブ取得 | Owner | ✅ | [詳細](./media.md#音声生成ジョブ取得) |
 | GET | `/api/v1/me/audio-jobs` | 自分の音声生成ジョブ一覧 | Owner | ✅ | [詳細](./media.md#自分の音声生成ジョブ一覧) |
 | POST | `/api/v1/audios` | 音声アップロード | Owner | ✅ | [詳細](./media.md#音声アップロード) |
