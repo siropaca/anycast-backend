@@ -13,6 +13,7 @@ erDiagram
     users ||--o{ bookmarks : has
     users ||--o{ playback_histories : has
     users ||--o{ follows : has
+    users ||--o{ audio_jobs : has
     users ||--o| images : avatar
     categories ||--o{ channels : has
     channels ||--o{ channel_characters : has
@@ -29,6 +30,7 @@ erDiagram
     episodes ||--o{ bookmarks : has
     episodes ||--o{ playback_histories : has
     episodes ||--o{ follows : has
+    episodes ||--o{ audio_jobs : has
     episodes ||--o| images : artwork
     episodes ||--o| bgms : user_bgm
     episodes ||--o| system_bgms : system_bgm
@@ -67,6 +69,26 @@ erDiagram
         uuid user_id FK
         uuid episode_id FK
         timestamp created_at
+    }
+
+    audio_jobs {
+        uuid id PK
+        uuid episode_id FK
+        uuid user_id FK
+        audio_job_status status
+        integer progress
+        text voice_style
+        decimal bgm_volume_db
+        integer fade_out_ms
+        integer padding_start_ms
+        integer padding_end_ms
+        uuid result_audio_id FK
+        text error_message
+        varchar error_code
+        timestamp started_at
+        timestamp completed_at
+        timestamp created_at
+        timestamp updated_at
     }
 
     users {
@@ -569,6 +591,44 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 
 ---
 
+#### audio_jobs
+
+音声生成ジョブを管理する。非同期で音声を生成し、進捗を追跡する。
+
+| カラム名 | 型 | NULLABLE | デフォルト | 説明 |
+|----------|-----|:--------:|------------|------|
+| id | UUID | | gen_random_uuid() | 主キー |
+| episode_id | UUID | | - | 対象エピソード（episodes 参照） |
+| user_id | UUID | | - | ジョブ作成者（users 参照） |
+| status | audio_job_status | | `pending` | ステータス |
+| progress | INTEGER | | 0 | 進捗（0-100） |
+| voice_style | TEXT | | '' | 音声生成のスタイル指示 |
+| bgm_volume_db | DECIMAL(5,2) | | -15.0 | BGM 音量（dB） |
+| fade_out_ms | INTEGER | | 3000 | フェードアウト時間（ms） |
+| padding_start_ms | INTEGER | | 500 | 音声開始前の余白（ms） |
+| padding_end_ms | INTEGER | | 1000 | 音声終了後の余白（ms） |
+| result_audio_id | UUID | ◯ | - | 生成された音声（audios 参照） |
+| error_message | TEXT | ◯ | - | エラーメッセージ |
+| error_code | VARCHAR(50) | ◯ | - | エラーコード |
+| started_at | TIMESTAMP | ◯ | - | 処理開始日時 |
+| completed_at | TIMESTAMP | ◯ | - | 処理完了日時 |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
+| updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
+
+**インデックス:**
+- PRIMARY KEY (id)
+- INDEX (episode_id)
+- INDEX (user_id)
+- INDEX (status)
+- INDEX (created_at DESC)
+
+**外部キー:**
+- episode_id → episodes(id) ON DELETE CASCADE
+- user_id → users(id) ON DELETE CASCADE
+- result_audio_id → audios(id) ON DELETE SET NULL
+
+---
+
 #### script_lines
 
 台本の各行（セリフ）を管理する。
@@ -728,6 +788,7 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 | oauth_provider | `google` | OAuth プロバイダ |
 | gender | `male`, `female`, `neutral` | ボイスの性別 |
 | user_role | `user`, `admin` | ユーザーのロール |
+| audio_job_status | `pending`, `processing`, `completed`, `failed` | 音声生成ジョブのステータス |
 
 ### UUID について
 
