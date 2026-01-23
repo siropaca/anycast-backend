@@ -2137,25 +2137,13 @@ const docTemplate = `{
                         "description": "ステータスでフィルタ（pending / processing / completed / failed）",
                         "name": "status",
                         "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "取得件数（デフォルト: 20、最大: 100）",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "オフセット（デフォルト: 0）",
-                        "name": "offset",
-                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.AudioJobListWithPaginationResponse"
+                            "$ref": "#/definitions/response.AudioJobListResponse"
                         }
                     },
                     "400": {
@@ -3919,11 +3907,10 @@ const docTemplate = `{
                 }
             }
         },
-        "response.AudioJobListWithPaginationResponse": {
+        "response.AudioJobListResponse": {
             "type": "object",
             "required": [
-                "data",
-                "pagination"
+                "data"
             ],
             "properties": {
                 "data": {
@@ -3931,9 +3918,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/response.AudioJobResponse"
                     }
-                },
-                "pagination": {
-                    "$ref": "#/definitions/response.PaginationResponse"
                 }
             }
         },
