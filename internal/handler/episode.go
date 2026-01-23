@@ -357,58 +357,6 @@ func (h *EpisodeHandler) UnpublishEpisode(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-// GenerateAudio godoc
-// @Summary エピソード音声生成
-// @Description 指定したエピソードの台本から音声を生成します
-// @Tags episodes
-// @Accept json
-// @Produce json
-// @Param channelId path string true "チャンネル ID"
-// @Param episodeId path string true "エピソード ID"
-// @Param request body request.GenerateAudioRequest false "音声生成リクエスト"
-// @Success 200 {object} response.GenerateAudioResponse
-// @Failure 400 {object} response.ErrorResponse
-// @Failure 401 {object} response.ErrorResponse
-// @Failure 403 {object} response.ErrorResponse
-// @Failure 404 {object} response.ErrorResponse
-// @Failure 500 {object} response.ErrorResponse
-// @Security BearerAuth
-// @Router /channels/{channelId}/episodes/{episodeId}/audio/generate [post]
-func (h *EpisodeHandler) GenerateAudio(c *gin.Context) {
-	userID, ok := middleware.GetUserID(c)
-	if !ok {
-		Error(c, apperror.ErrUnauthorized)
-		return
-	}
-
-	channelID := c.Param("channelId")
-	if channelID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
-		return
-	}
-
-	episodeID := c.Param("episodeId")
-	if episodeID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
-		return
-	}
-
-	var req request.GenerateAudioRequest
-	// ボディが空でもエラーにならないよう ShouldBindJSON を使用
-	if err := c.ShouldBindJSON(&req); err != nil && err.Error() != "EOF" {
-		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
-		return
-	}
-
-	result, err := h.episodeService.GenerateAudio(c.Request.Context(), userID, channelID, episodeID, req.VoiceStyle)
-	if err != nil {
-		Error(c, err)
-		return
-	}
-
-	c.JSON(http.StatusOK, result)
-}
-
 // SetEpisodeBgm godoc
 // @Summary エピソード BGM 設定
 // @Description 指定したエピソードに BGM を設定します。ユーザー BGM またはデフォルト BGM のどちらかを指定します。
