@@ -78,3 +78,15 @@ func (e *AppError) WithError(err error) *AppError {
 		Err:        err,
 	}
 }
+
+// IsRetryable はエラーがリトライ可能かどうかを判定する
+//
+// 500 系のエラーはリトライ可能、400 系のエラーはリトライ不可
+func IsRetryable(err error) bool {
+	var appErr *AppError
+	if errors.As(err, &appErr) {
+		return appErr.HTTPStatus >= 500
+	}
+	// AppError でない場合はリトライ可能と判断
+	return true
+}
