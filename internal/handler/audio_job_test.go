@@ -144,7 +144,7 @@ func TestAudioJobHandler_GenerateAudioAsync(t *testing.T) {
 			handler.GenerateAudioAsync(c)
 		})
 
-		req := httptest.NewRequest(http.MethodPost, "/me/channels//episodes/ep-123/audio/generate-async", nil)
+		req := httptest.NewRequest(http.MethodPost, "/me/channels//episodes/ep-123/audio/generate-async", http.NoBody)
 		rec := httptest.NewRecorder()
 
 		r.ServeHTTP(rec, req)
@@ -183,7 +183,7 @@ func TestAudioJobHandler_GetAudioJob(t *testing.T) {
 		mockService.On("GetJob", mock.Anything, "user-123", jobID.String()).Return(jobResponse, nil)
 
 		router := setupAudioJobRouter(mockService)
-		req := httptest.NewRequest(http.MethodGet, "/audio-jobs/"+jobID.String(), nil)
+		req := httptest.NewRequest(http.MethodGet, "/audio-jobs/"+jobID.String(), http.NoBody)
 		rec := httptest.NewRecorder()
 
 		router.ServeHTTP(rec, req)
@@ -202,7 +202,7 @@ func TestAudioJobHandler_GetAudioJob(t *testing.T) {
 		mockService.On("GetJob", mock.Anything, "user-123", jobID.String()).Return(nil, apperror.ErrNotFound.WithMessage("Job not found"))
 
 		router := setupAudioJobRouter(mockService)
-		req := httptest.NewRequest(http.MethodGet, "/audio-jobs/"+jobID.String(), nil)
+		req := httptest.NewRequest(http.MethodGet, "/audio-jobs/"+jobID.String(), http.NoBody)
 		rec := httptest.NewRecorder()
 
 		router.ServeHTTP(rec, req)
@@ -216,7 +216,7 @@ func TestAudioJobHandler_GetAudioJob(t *testing.T) {
 		mockService.On("GetJob", mock.Anything, "user-123", jobID.String()).Return(nil, apperror.ErrForbidden.WithMessage("Access denied"))
 
 		router := setupAudioJobRouter(mockService)
-		req := httptest.NewRequest(http.MethodGet, "/audio-jobs/"+jobID.String(), nil)
+		req := httptest.NewRequest(http.MethodGet, "/audio-jobs/"+jobID.String(), http.NoBody)
 		rec := httptest.NewRecorder()
 
 		router.ServeHTTP(rec, req)
@@ -242,7 +242,7 @@ func TestAudioJobHandler_ListMyAudioJobs(t *testing.T) {
 		mockService.On("ListMyJobs", mock.Anything, "user-123", mock.Anything).Return(listResponse, nil)
 
 		router := setupAudioJobRouter(mockService)
-		req := httptest.NewRequest(http.MethodGet, "/me/audio-jobs", nil)
+		req := httptest.NewRequest(http.MethodGet, "/me/audio-jobs", http.NoBody)
 		rec := httptest.NewRecorder()
 
 		router.ServeHTTP(rec, req)
@@ -266,7 +266,7 @@ func TestAudioJobHandler_ListMyAudioJobs(t *testing.T) {
 		mockService.On("ListMyJobs", mock.Anything, "user-123", mock.Anything).Return(listResponse, nil)
 
 		router := setupAudioJobRouter(mockService)
-		req := httptest.NewRequest(http.MethodGet, "/me/audio-jobs?status=pending", nil)
+		req := httptest.NewRequest(http.MethodGet, "/me/audio-jobs?status=pending", http.NoBody)
 		rec := httptest.NewRecorder()
 
 		router.ServeHTTP(rec, req)
@@ -283,7 +283,7 @@ func TestAudioJobHandler_ListMyAudioJobs(t *testing.T) {
 		mockService.On("ListMyJobs", mock.Anything, "user-123", mock.Anything).Return(listResponse, nil)
 
 		router := setupAudioJobRouter(mockService)
-		req := httptest.NewRequest(http.MethodGet, "/me/audio-jobs", nil)
+		req := httptest.NewRequest(http.MethodGet, "/me/audio-jobs", http.NoBody)
 		rec := httptest.NewRecorder()
 
 		router.ServeHTTP(rec, req)
@@ -301,7 +301,7 @@ func TestAudioJobHandler_ListMyAudioJobs(t *testing.T) {
 		mockService := new(mockAudioJobService)
 
 		router := setupAudioJobRouter(mockService)
-		req := httptest.NewRequest(http.MethodGet, "/me/audio-jobs?status=invalid", nil)
+		req := httptest.NewRequest(http.MethodGet, "/me/audio-jobs?status=invalid", http.NoBody)
 		rec := httptest.NewRecorder()
 
 		router.ServeHTTP(rec, req)
