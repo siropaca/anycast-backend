@@ -3783,9 +3783,6 @@ const docTemplate = `{
         },
         "request.GenerateScriptAsyncRequest": {
             "type": "object",
-            "required": [
-                "prompt"
-            ],
             "properties": {
                 "durationMinutes": {
                     "type": "integer",

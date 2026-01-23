@@ -2,7 +2,7 @@ package request
 
 // 非同期台本生成リクエスト
 type GenerateScriptAsyncRequest struct {
-	Prompt          string `json:"prompt" binding:"required,max=2000"`
+	Prompt          string `json:"prompt" binding:"max=2000"`
 	DurationMinutes *int   `json:"durationMinutes" binding:"omitempty,min=3,max=30"`
 	WithEmotion     bool   `json:"withEmotion"`
 }
