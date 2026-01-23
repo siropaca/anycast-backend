@@ -26,7 +26,7 @@ func Auth(tokenManager jwt.TokenManager) gin.HandlerFunc {
 		// Authorization ヘッダーからトークンを取得
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			log.Warn("missing authorization header")
+			log.Warn("Authorization ヘッダーがありません")
 			abortWithUnauthorized(c)
 			return
 		}
@@ -34,7 +34,7 @@ func Auth(tokenManager jwt.TokenManager) gin.HandlerFunc {
 		// Bearer プレフィックスを確認
 		parts := strings.SplitN(authHeader, " ", 2)
 		if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
-			log.Warn("invalid authorization header format")
+			log.Warn("Authorization ヘッダーの形式が不正です")
 			abortWithUnauthorized(c)
 			return
 		}
@@ -44,7 +44,7 @@ func Auth(tokenManager jwt.TokenManager) gin.HandlerFunc {
 		// JWT を検証
 		claims, err := tokenManager.Validate(tokenString)
 		if err != nil {
-			log.Warn("invalid token", "error", err)
+			log.Warn("トークンが無効です", "error", err)
 			abortWithUnauthorized(c)
 			return
 		}

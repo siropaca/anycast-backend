@@ -56,7 +56,7 @@ func (h *WebSocketHandler) HandleJobs(c *gin.Context) {
 	// JWT を検証
 	claims, err := h.tokenManager.Validate(token)
 	if err != nil {
-		log.Warn("invalid websocket token", "error", err)
+		log.Warn("WebSocket トークンが無効です", "error", err)
 		Error(c, apperror.ErrUnauthorized.WithMessage("無効なトークンです"))
 		return
 	}
@@ -64,11 +64,11 @@ func (h *WebSocketHandler) HandleJobs(c *gin.Context) {
 	// WebSocket にアップグレード
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		log.Error("failed to upgrade websocket", "error", err)
+		log.Error("WebSocket へのアップグレードに失敗しました", "error", err)
 		return
 	}
 
-	log.Info("websocket client connected", "user_id", claims.UserID)
+	log.Info("WebSocket クライアントが接続しました", "user_id", claims.UserID)
 
 	// クライアントを登録して読み書きループを開始
 	client := h.hub.RegisterClient(conn, claims.UserID)

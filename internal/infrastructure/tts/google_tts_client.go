@@ -225,18 +225,18 @@ func (c *googleTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 
 		if len(resp.AudioContent) == 0 {
 			lastErr = fmt.Errorf("empty audio content in response")
-			log.Warn("empty audio content in multi-speaker tts response", "attempt", attempt)
+			log.Warn("マルチスピーカーTTS レスポンスの音声コンテンツが空です", "attempt", attempt)
 
 			if attempt < maxRetries {
 				time.Sleep(time.Duration(attempt) * time.Second)
 				continue
 			}
 
-			log.Error("multi-speaker tts returned empty audio after retries")
+			log.Error("マルチスピーカーTTS がリトライ後も空の音声を返しました")
 			return nil, apperror.ErrGenerationFailed.WithMessage("複数話者の音声合成に失敗しました: 音声データが空です")
 		}
 
-		log.Debug("multi-speaker speech synthesized successfully", "audio_size", len(resp.AudioContent))
+		log.Debug("マルチスピーカー音声合成に成功しました", "audio_size", len(resp.AudioContent))
 		return resp.AudioContent, nil
 	}
 

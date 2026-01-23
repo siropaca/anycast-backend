@@ -62,7 +62,7 @@ func (s *cleanupService) CleanupOrphanedMedia(ctx context.Context, dryRun bool) 
 	}
 	result.OrphanedImages = orphanedImages
 
-	log.Info("orphaned media found",
+	log.Info("孤児メディアを検出しました",
 		"orphaned_audios", len(orphanedAudios),
 		"orphaned_images", len(orphanedImages),
 		"dry_run", dryRun,
@@ -78,7 +78,7 @@ func (s *cleanupService) CleanupOrphanedMedia(ctx context.Context, dryRun bool) 
 		// GCS から削除
 		if s.storageClient != nil {
 			if err := s.storageClient.Delete(ctx, audio.Path); err != nil {
-				log.Warn("failed to delete audio from GCS", "audio_id", audio.ID, "path", audio.Path, "error", err)
+				log.Warn("GCS からの音声削除に失敗しました", "audio_id", audio.ID, "path", audio.Path, "error", err)
 				result.FailedAudioCount++
 				continue
 			}
@@ -86,13 +86,13 @@ func (s *cleanupService) CleanupOrphanedMedia(ctx context.Context, dryRun bool) 
 
 		// DB から削除
 		if err := s.audioRepo.Delete(ctx, audio.ID); err != nil {
-			log.Warn("failed to delete audio from DB", "audio_id", audio.ID, "error", err)
+			log.Warn("DB からの音声削除に失敗しました", "audio_id", audio.ID, "error", err)
 			result.FailedAudioCount++
 			continue
 		}
 
 		result.DeletedAudioCount++
-		log.Debug("deleted orphaned audio", "audio_id", audio.ID, "path", audio.Path)
+		log.Debug("孤児音声を削除しました", "audio_id", audio.ID, "path", audio.Path)
 	}
 
 	// Image を削除
@@ -100,7 +100,7 @@ func (s *cleanupService) CleanupOrphanedMedia(ctx context.Context, dryRun bool) 
 		// GCS から削除
 		if s.storageClient != nil {
 			if err := s.storageClient.Delete(ctx, image.Path); err != nil {
-				log.Warn("failed to delete image from GCS", "image_id", image.ID, "path", image.Path, "error", err)
+				log.Warn("GCS からの画像削除に失敗しました", "image_id", image.ID, "path", image.Path, "error", err)
 				result.FailedImageCount++
 				continue
 			}
@@ -108,16 +108,16 @@ func (s *cleanupService) CleanupOrphanedMedia(ctx context.Context, dryRun bool) 
 
 		// DB から削除
 		if err := s.imageRepo.Delete(ctx, image.ID); err != nil {
-			log.Warn("failed to delete image from DB", "image_id", image.ID, "error", err)
+			log.Warn("DB からの画像削除に失敗しました", "image_id", image.ID, "error", err)
 			result.FailedImageCount++
 			continue
 		}
 
 		result.DeletedImageCount++
-		log.Debug("deleted orphaned image", "image_id", image.ID, "path", image.Path)
+		log.Debug("孤児画像を削除しました", "image_id", image.ID, "path", image.Path)
 	}
 
-	log.Info("orphaned media cleanup completed",
+	log.Info("孤児メディアのクリーンアップが完了しました",
 		"deleted_audios", result.DeletedAudioCount,
 		"deleted_images", result.DeletedImageCount,
 		"failed_audios", result.FailedAudioCount,

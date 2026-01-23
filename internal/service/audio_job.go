@@ -184,7 +184,7 @@ func (s *audioJobService) CreateJob(ctx context.Context, userID, channelID, epis
 	// Cloud Tasks が設定されている場合はエンキュー、そうでなければ goroutine で直接実行
 	if s.tasksClient != nil {
 		if err := s.tasksClient.EnqueueAudioJob(ctx, job.ID.String()); err != nil {
-			log.Error("failed to enqueue job", "error", err, "job_id", job.ID)
+			log.Error("ジョブのエンキューに失敗しました", "error", err, "job_id", job.ID)
 			// エンキュー失敗時はジョブを失敗状態に更新（ベストエフォート）
 			job.Status = model.AudioJobStatusFailed
 			errMsg := "タスクのエンキューに失敗しました"
@@ -194,13 +194,13 @@ func (s *audioJobService) CreateJob(ctx context.Context, userID, channelID, epis
 			_ = s.audioJobRepo.Update(ctx, job) //nolint:errcheck // best effort cleanup
 			return nil, apperror.ErrInternal.WithMessage("音声生成タスクの登録に失敗しました").WithError(err)
 		}
-		log.Info("audio job created and enqueued", "job_id", job.ID, "episode_id", eid)
+		log.Info("音声ジョブを作成しエンキューしました", "job_id", job.ID, "episode_id", eid)
 	} else {
 		// ローカル開発モード: goroutine で直接実行
-		log.Info("cloud tasks not configured, executing job directly", "job_id", job.ID, "episode_id", eid)
+		log.Info("Cloud Tasks 未設定のためジョブを直接実行します", "job_id", job.ID, "episode_id", eid)
 		go func() {
 			if err := s.ExecuteJob(context.Background(), job.ID.String()); err != nil {
-				log.Error("local job execution failed", "error", err, "job_id", job.ID)
+				log.Error("ローカルジョブの実行に失敗しました", "error", err, "job_id", job.ID)
 			}
 		}()
 	}
@@ -280,7 +280,7 @@ func (s *audioJobService) ExecuteJob(ctx context.Context, jobID string) error {
 
 	// 既に完了または失敗している場合はスキップ
 	if job.Status == model.AudioJobStatusCompleted || job.Status == model.AudioJobStatusFailed {
-		log.Info("job already finished, skipping", "job_id", jobID, "status", job.Status)
+		log.Info("ジョブは既に完了しているためスキップします", "job_id", jobID, "status", job.Status)
 		return nil
 	}
 
@@ -297,7 +297,7 @@ func (s *audioJobService) ExecuteJob(ctx context.Context, jobID string) error {
 
 	// 処理実行（エラー時はジョブを失敗状態に）
 	if err := s.executeJobInternal(ctx, job); err != nil {
-		log.Error("job execution failed", "error", err, "job_id", jobID)
+		log.Error("ジョブの実行に失敗しました", "error", err, "job_id", jobID)
 		s.failJob(ctx, job, err)
 		return err
 	}
@@ -376,7 +376,7 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 
 	// ターンをチャンクに分割
 	chunks := splitTurnsIntoChunks(turns, maxTTSInputBytes)
-	log.Info("split turns into chunks", "total_turns", len(turns), "chunks", len(chunks))
+	log.Info("ターンをチャンクに分割しました", "total_turns", len(turns), "chunks", len(chunks))
 
 	// チャンク分割の詳細をログ出力
 	if len(chunks) > 1 {
@@ -388,7 +388,7 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 			}
 			firstText := truncateText(chunk[0].Text, 30)
 			lastText := truncateText(chunk[len(chunk)-1].Text, 30)
-			log.Info("chunk detail",
+			log.Info("チャンク詳細",
 				"chunk", i+1,
 				"turns", fmt.Sprintf("%d-%d", turnIndex+1, turnIndex+len(chunk)),
 				"turn_count", len(chunk),
@@ -405,7 +405,7 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 		// 単一チャンクの場合はそのまま TTS を呼び出し
 		voiceAudio, err = s.ttsClient.SynthesizeMultiSpeaker(ctx, chunks[0], voiceConfigs, voiceStyle)
 		if err != nil {
-			log.Error("TTS failed", "error", err)
+			log.Error("TTS が失敗しました", "error", err)
 			return apperror.ErrGenerationFailed.WithMessage("音声の生成に失敗しました").WithError(err)
 		}
 	} else {
@@ -415,10 +415,10 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 			progress := 20 + (i * 25 / len(chunks))
 			s.updateProgress(ctx, job, progress, fmt.Sprintf("音声を生成中... (%d/%d)", i+1, len(chunks)))
 
-			log.Info("synthesizing chunk", "chunk", i+1, "total", len(chunks), "turns", len(chunk))
+			log.Info("チャンクを合成中", "chunk", i+1, "total", len(chunks), "turns", len(chunk))
 			chunkAudio, err := s.ttsClient.SynthesizeMultiSpeaker(ctx, chunk, voiceConfigs, voiceStyle)
 			if err != nil {
-				log.Error("TTS failed for chunk", "error", err, "chunk", i+1)
+				log.Error("チャンクの TTS が失敗しました", "error", err, "chunk", i+1)
 				return apperror.ErrGenerationFailed.WithMessage(
 					fmt.Sprintf("音声の生成に失敗しました (チャンク %d/%d)", i+1, len(chunks)),
 				).WithError(err)
@@ -430,7 +430,7 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 		s.updateProgress(ctx, job, 45, "音声を結合中...")
 		voiceAudio, err = s.ffmpegService.ConcatAudio(ctx, audioChunks)
 		if err != nil {
-			log.Error("audio concat failed", "error", err)
+			log.Error("音声結合が失敗しました", "error", err)
 			return apperror.ErrInternal.WithMessage("音声の結合に失敗しました").WithError(err)
 		}
 	}
@@ -465,14 +465,14 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 		// GCS から BGM をダウンロード
 		bgmData, err := s.downloadFromStorage(ctx, bgmPath)
 		if err != nil {
-			log.Error("failed to download BGM", "error", err, "path", bgmPath)
+			log.Error("BGM のダウンロードに失敗しました", "error", err, "path", bgmPath)
 			return apperror.ErrInternal.WithMessage("BGM のダウンロードに失敗しました").WithError(err)
 		}
 
 		// 音声の長さを取得
 		voiceDurationMs, err = audio.GetDurationMsE(voiceAudio)
 		if err != nil {
-			log.Error("failed to get audio duration", "error", err)
+			log.Error("音声長の取得に失敗しました", "error", err)
 			return apperror.ErrInternal.WithMessage("音声長の取得に失敗しました").WithError(err)
 		}
 
@@ -490,7 +490,7 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 			PaddingEndMs:    job.PaddingEndMs,
 		})
 		if err != nil {
-			log.Error("FFmpeg mixing failed", "error", err)
+			log.Error("FFmpeg ミキシングが失敗しました", "error", err)
 			return apperror.ErrInternal.WithMessage("BGM のミキシングに失敗しました").WithError(err)
 		}
 	} else {
@@ -506,14 +506,14 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 	audioPath := storage.GenerateAudioPath(audioID.String())
 
 	if _, err := s.storageClient.Upload(ctx, finalAudio, audioPath, "audio/mpeg"); err != nil {
-		log.Error("failed to upload audio", "error", err)
+		log.Error("音声のアップロードに失敗しました", "error", err)
 		return apperror.ErrInternal.WithMessage("音声のアップロードに失敗しました").WithError(err)
 	}
 
 	// 最終的な長さを取得（ミキシングした場合は変わる可能性がある）
 	finalDurationMs, err := audio.GetDurationMsE(finalAudio)
 	if err != nil {
-		log.Warn("failed to get final duration, using estimated", "error", err)
+		log.Warn("最終音声長の取得に失敗、推定値を使用", "error", err)
 		// ミキシングした場合は計算、そうでなければ voiceDurationMs を使用
 		if voiceDurationMs > 0 {
 			finalDurationMs = job.PaddingStartMs + voiceDurationMs + job.PaddingEndMs
@@ -531,7 +531,7 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 	}
 
 	if err := s.audioRepo.Create(ctx, audioRecord); err != nil {
-		log.Error("failed to create audio record", "error", err)
+		log.Error("音声レコードの作成に失敗しました", "error", err)
 		return apperror.ErrInternal.WithMessage("音声レコードの保存に失敗しました").WithError(err)
 	}
 
@@ -564,7 +564,7 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 	// WebSocket で完了通知
 	s.notifyCompleted(job.ID.String(), job.UserID.String(), audioRecord)
 
-	log.Info("audio job completed successfully", "job_id", job.ID, "audio_id", audioID)
+	log.Info("音声ジョブが正常に完了しました", "job_id", job.ID, "audio_id", audioID)
 
 	return nil
 }

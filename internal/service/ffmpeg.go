@@ -52,7 +52,7 @@ func (s *ffmpegService) MixAudioWithBGM(ctx context.Context, params MixParams) (
 	// 一時ディレクトリを作成
 	tmpDir, err := os.MkdirTemp("", "ffmpeg-mix-*")
 	if err != nil {
-		log.Error("failed to create temp dir", "error", err)
+		log.Error("一時ディレクトリの作成に失敗しました", "error", err)
 		return nil, apperror.ErrInternal.WithMessage("一時ディレクトリの作成に失敗しました").WithError(err)
 	}
 	defer os.RemoveAll(tmpDir)
@@ -63,12 +63,12 @@ func (s *ffmpegService) MixAudioWithBGM(ctx context.Context, params MixParams) (
 	outputPath := filepath.Join(tmpDir, "output.mp3")
 
 	if err := os.WriteFile(voicePath, params.VoiceData, 0o644); err != nil {
-		log.Error("failed to write voice file", "error", err)
+		log.Error("音声ファイルの書き込みに失敗しました", "error", err)
 		return nil, apperror.ErrInternal.WithMessage("音声ファイルの書き込みに失敗しました").WithError(err)
 	}
 
 	if err := os.WriteFile(bgmPath, params.BGMData, 0o644); err != nil {
-		log.Error("failed to write bgm file", "error", err)
+		log.Error("BGM ファイルの書き込みに失敗しました", "error", err)
 		return nil, apperror.ErrInternal.WithMessage("BGM ファイルの書き込みに失敗しました").WithError(err)
 	}
 
@@ -115,17 +115,17 @@ func (s *ffmpegService) MixAudioWithBGM(ctx context.Context, params MixParams) (
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 
-	log.Info("executing ffmpeg", "args", args)
+	log.Info("FFmpeg を実行中", "args", args)
 
 	if err := cmd.Run(); err != nil {
-		log.Error("ffmpeg failed", "error", err, "stderr", stderr.String())
+		log.Error("FFmpeg が失敗しました", "error", err, "stderr", stderr.String())
 		return nil, apperror.ErrInternal.WithMessage("音声ミキシングに失敗しました").WithError(err)
 	}
 
 	// 出力ファイルを読み込み
 	outputData, err := os.ReadFile(outputPath)
 	if err != nil {
-		log.Error("failed to read output file", "error", err)
+		log.Error("出力ファイルの読み込みに失敗しました", "error", err)
 		return nil, apperror.ErrInternal.WithMessage("出力ファイルの読み込みに失敗しました").WithError(err)
 	}
 
@@ -137,15 +137,15 @@ func (s *ffmpegService) MixAudioWithBGM(ctx context.Context, params MixParams) (
 func (s *ffmpegService) ConcatAudio(ctx context.Context, audioChunks [][]byte) ([]byte, error) {
 	log := logger.FromContext(ctx)
 
-	log.Info("executing ffmpeg concat", "chunks", len(audioChunks))
+	log.Info("FFmpeg 結合を実行中", "chunks", len(audioChunks))
 
 	outputData, err := audio.Concat(audioChunks)
 	if err != nil {
-		log.Error("ffmpeg concat failed", "error", err)
+		log.Error("FFmpeg 結合が失敗しました", "error", err)
 		return nil, apperror.ErrInternal.WithMessage("音声の結合に失敗しました").WithError(err)
 	}
 
-	log.Info("audio concat completed", "chunks", len(audioChunks), "output_size", len(outputData))
+	log.Info("音声結合が完了しました", "chunks", len(audioChunks), "output_size", len(outputData))
 
 	return outputData, nil
 }

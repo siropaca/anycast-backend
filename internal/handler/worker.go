@@ -51,15 +51,15 @@ func (h *WorkerHandler) ProcessAudioJob(c *gin.Context) {
 
 	var payload AudioJobPayload
 	if err := c.ShouldBindJSON(&payload); err != nil {
-		log.Error("invalid payload", "error", err)
+		log.Error("ペイロードが不正です", "error", err)
 		Error(c, apperror.ErrValidation.WithMessage("jobId は必須です"))
 		return
 	}
 
-	log.Info("processing audio job", "job_id", payload.JobID)
+	log.Info("音声ジョブを処理中", "job_id", payload.JobID)
 
 	if err := h.audioJobService.ExecuteJob(c.Request.Context(), payload.JobID); err != nil {
-		log.Error("failed to execute job", "error", err, "job_id", payload.JobID)
+		log.Error("ジョブの実行に失敗しました", "error", err, "job_id", payload.JobID)
 		// Cloud Tasks はエラーレスポンスを受け取るとリトライするため、
 		// ビジネスエラーでも 200 を返す（ジョブ自体は失敗状態で記録される）
 		// 500 を返すのはリトライ可能なエラーのみ
@@ -99,15 +99,15 @@ func (h *WorkerHandler) ProcessScriptJob(c *gin.Context) {
 
 	var payload ScriptJobPayload
 	if err := c.ShouldBindJSON(&payload); err != nil {
-		log.Error("invalid payload", "error", err)
+		log.Error("ペイロードが不正です", "error", err)
 		Error(c, apperror.ErrValidation.WithMessage("jobId は必須です"))
 		return
 	}
 
-	log.Info("processing script job", "job_id", payload.JobID)
+	log.Info("台本ジョブを処理中", "job_id", payload.JobID)
 
 	if err := h.scriptJobService.ExecuteJob(c.Request.Context(), payload.JobID); err != nil {
-		log.Error("failed to execute script job", "error", err, "job_id", payload.JobID)
+		log.Error("台本ジョブの実行に失敗しました", "error", err, "job_id", payload.JobID)
 		// Cloud Tasks はエラーレスポンスを受け取るとリトライするため、
 		// ビジネスエラーでも 200 を返す（ジョブ自体は失敗状態で記録される）
 		// 500 を返すのはリトライ可能なエラーのみ
