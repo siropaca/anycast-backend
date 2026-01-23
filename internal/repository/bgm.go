@@ -54,6 +54,8 @@ func (r *bgmRepository) FindByUserID(ctx context.Context, userID uuid.UUID, filt
 	// ページネーションとリレーションのプリロード
 	if err := tx.
 		Preload("Audio").
+		Preload("Episodes.Channel").
+		Preload("Channels").
 		Order("created_at DESC").
 		Limit(filter.Limit).
 		Offset(filter.Offset).
@@ -71,6 +73,8 @@ func (r *bgmRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Bgm,
 
 	if err := r.db.WithContext(ctx).
 		Preload("Audio").
+		Preload("Episodes.Channel").
+		Preload("Channels").
 		First(&bgm, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperror.ErrNotFound.WithMessage("BGM が見つかりません")

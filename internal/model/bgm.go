@@ -16,5 +16,7 @@ type Bgm struct {
 	UpdatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP"`
 
 	// リレーション
-	Audio Audio `gorm:"foreignKey:AudioID"`
+	Audio    Audio     `gorm:"foreignKey:AudioID"`
+	Episodes []Episode `gorm:"foreignKey:BgmID"`
+	Channels []Channel `gorm:"foreignKey:DefaultBgmID"`
 }

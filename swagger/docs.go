@@ -3748,6 +3748,21 @@ const docTemplate = `{
                 }
             }
         },
+        "response.BgmChannelResponse": {
+            "type": "object",
+            "required": [
+                "id",
+                "name"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "response.BgmDataResponse": {
             "type": "object",
             "required": [
@@ -3755,7 +3770,41 @@ const docTemplate = `{
             ],
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/response.BgmResponse"
+                    "$ref": "#/definitions/response.BgmWithEpisodesResponse"
+                }
+            }
+        },
+        "response.BgmEpisodeChannelResponse": {
+            "type": "object",
+            "required": [
+                "id",
+                "name"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.BgmEpisodeResponse": {
+            "type": "object",
+            "required": [
+                "channel",
+                "id",
+                "title"
+            ],
+            "properties": {
+                "channel": {
+                    "$ref": "#/definitions/response.BgmEpisodeChannelResponse"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
                 }
             }
         },
@@ -3769,7 +3818,7 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/response.BgmResponse"
+                        "$ref": "#/definitions/response.BgmWithEpisodesResponse"
                     }
                 },
                 "pagination": {
@@ -3777,11 +3826,13 @@ const docTemplate = `{
                 }
             }
         },
-        "response.BgmResponse": {
+        "response.BgmWithEpisodesResponse": {
             "type": "object",
             "required": [
                 "audio",
+                "channels",
                 "createdAt",
+                "episodes",
                 "id",
                 "isDefault",
                 "name",
@@ -3791,8 +3842,20 @@ const docTemplate = `{
                 "audio": {
                     "$ref": "#/definitions/response.BgmAudioResponse"
                 },
+                "channels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.BgmChannelResponse"
+                    }
+                },
                 "createdAt": {
                     "type": "string"
+                },
+                "episodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.BgmEpisodeResponse"
+                    }
                 },
                 "id": {
                     "type": "string"

@@ -31,6 +31,22 @@ GET /me/bgms
         "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
         "durationMs": 180000
       },
+      "episodes": [
+        {
+          "id": "uuid",
+          "title": "第1回 はじめまして",
+          "channel": {
+            "id": "uuid",
+            "name": "マイチャンネル"
+          }
+        }
+      ],
+      "channels": [
+        {
+          "id": "uuid",
+          "name": "マイチャンネル"
+        }
+      ],
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2025-01-01T00:00:00Z"
     }
@@ -56,6 +72,8 @@ GET /me/bgms
         "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
         "durationMs": 180000
       },
+      "episodes": [],
+      "channels": [],
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2025-01-01T00:00:00Z"
     },
@@ -68,6 +86,22 @@ GET /me/bgms
         "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
         "durationMs": 180000
       },
+      "episodes": [
+        {
+          "id": "uuid",
+          "title": "第1回 はじめまして",
+          "channel": {
+            "id": "uuid",
+            "name": "マイチャンネル"
+          }
+        }
+      ],
+      "channels": [
+        {
+          "id": "uuid",
+          "name": "マイチャンネル"
+        }
+      ],
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2025-01-01T00:00:00Z"
     }
@@ -102,6 +136,22 @@ GET /me/bgms/:bgmId
       "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
       "durationMs": 180000
     },
+    "episodes": [
+      {
+        "id": "uuid",
+        "title": "第1回 はじめまして",
+        "channel": {
+          "id": "uuid",
+          "name": "マイチャンネル"
+        }
+      }
+    ],
+    "channels": [
+      {
+        "id": "uuid",
+        "name": "マイチャンネル"
+      }
+    ],
     "createdAt": "2025-01-01T00:00:00Z",
     "updatedAt": "2025-01-01T00:00:00Z"
   }

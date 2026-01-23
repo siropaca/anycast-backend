@@ -96,9 +96,9 @@ func setupAuthenticatedBgmRouter(h *BgmHandler, userID string) *gin.Engine {
 }
 
 // テスト用の BGM レスポンスを生成する
-func createTestBgmResponse() response.BgmResponse {
+func createTestBgmWithEpisodesResponse() response.BgmWithEpisodesResponse {
 	now := time.Now()
-	return response.BgmResponse{
+	return response.BgmWithEpisodesResponse{
 		ID:        uuid.New(),
 		Name:      "Test BGM",
 		IsDefault: false,
@@ -107,6 +107,8 @@ func createTestBgmResponse() response.BgmResponse {
 			URL:        "https://example.com/audio.mp3",
 			DurationMs: 180000,
 		},
+		Episodes:  []response.BgmEpisodeResponse{},
+		Channels:  []response.BgmChannelResponse{},
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
@@ -118,7 +120,7 @@ func TestBgmHandler_GetMyBgm(t *testing.T) {
 
 	t.Run("自分の BGM を取得できる", func(t *testing.T) {
 		mockSvc := new(mockBgmService)
-		bgmResp := createTestBgmResponse()
+		bgmResp := createTestBgmWithEpisodesResponse()
 		result := &response.BgmDataResponse{Data: bgmResp}
 		mockSvc.On("GetMyBgm", mock.Anything, userID, bgmID).Return(result, nil)
 
@@ -187,7 +189,7 @@ func TestBgmHandler_UpdateMyBgm(t *testing.T) {
 
 	t.Run("BGM を更新できる", func(t *testing.T) {
 		mockSvc := new(mockBgmService)
-		bgmResp := createTestBgmResponse()
+		bgmResp := createTestBgmWithEpisodesResponse()
 		bgmResp.Name = "Updated BGM"
 		result := &response.BgmDataResponse{Data: bgmResp}
 		mockSvc.On("UpdateMyBgm", mock.Anything, userID, bgmID, mock.AnythingOfType("request.UpdateBgmRequest")).Return(result, nil)

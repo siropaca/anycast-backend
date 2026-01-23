@@ -69,7 +69,7 @@ func (s *bgmService) listUserBgmsOnly(ctx context.Context, userID uuid.UUID, req
 		return nil, err
 	}
 
-	responses, err := s.toBgmResponses(ctx, bgms)
+	responses, err := s.toBgmWithEpisodesResponses(ctx, bgms)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (s *bgmService) listBgmsWithDefault(ctx context.Context, userID uuid.UUID, 
 
 	total := systemTotal + userTotal
 
-	responses := make([]response.BgmResponse, 0)
+	responses := make([]response.BgmWithEpisodesResponse, 0)
 
 	// オフセットがシステム BGM の範囲内の場合
 	if int64(req.Offset) < systemTotal {
@@ -111,7 +111,7 @@ func (s *bgmService) listBgmsWithDefault(ctx context.Context, userID uuid.UUID, 
 			return nil, err
 		}
 
-		systemResponses, err := s.toSystemBgmResponses(ctx, systemBgms)
+		systemResponses, err := s.toSystemBgmWithEpisodesResponses(ctx, systemBgms)
 		if err != nil {
 			return nil, err
 		}
@@ -129,7 +129,7 @@ func (s *bgmService) listBgmsWithDefault(ctx context.Context, userID uuid.UUID, 
 				return nil, err
 			}
 
-			userResponses, err := s.toBgmResponses(ctx, userBgms)
+			userResponses, err := s.toBgmWithEpisodesResponses(ctx, userBgms)
 			if err != nil {
 				return nil, err
 			}
@@ -147,7 +147,7 @@ func (s *bgmService) listBgmsWithDefault(ctx context.Context, userID uuid.UUID, 
 			return nil, err
 		}
 
-		userResponses, err := s.toBgmResponses(ctx, userBgms)
+		userResponses, err := s.toBgmWithEpisodesResponses(ctx, userBgms)
 		if err != nil {
 			return nil, err
 		}
@@ -160,12 +160,12 @@ func (s *bgmService) listBgmsWithDefault(ctx context.Context, userID uuid.UUID, 
 	}, nil
 }
 
-// Bgm モデルのスライスをレスポンス DTO のスライスに変換する
-func (s *bgmService) toBgmResponses(ctx context.Context, bgms []model.Bgm) ([]response.BgmResponse, error) {
-	result := make([]response.BgmResponse, len(bgms))
+// Bgm モデルのスライスをエピソード情報付きレスポンス DTO のスライスに変換する
+func (s *bgmService) toBgmWithEpisodesResponses(ctx context.Context, bgms []model.Bgm) ([]response.BgmWithEpisodesResponse, error) {
+	result := make([]response.BgmWithEpisodesResponse, len(bgms))
 
 	for i, b := range bgms {
-		res, err := s.toBgmResponse(ctx, b)
+		res, err := s.toBgmWithEpisodesResponse(ctx, b)
 		if err != nil {
 			return nil, err
 		}
@@ -175,29 +175,51 @@ func (s *bgmService) toBgmResponses(ctx context.Context, bgms []model.Bgm) ([]re
 	return result, nil
 }
 
-// Bgm モデルをレスポンス DTO に変換する
-func (s *bgmService) toBgmResponse(ctx context.Context, b model.Bgm) (response.BgmResponse, error) {
+// Bgm モデルをエピソード・チャンネル情報付きレスポンス DTO に変換する
+func (s *bgmService) toBgmWithEpisodesResponse(ctx context.Context, b model.Bgm) (response.BgmWithEpisodesResponse, error) {
 	audioResponse, err := s.toAudioResponse(ctx, b.Audio)
 	if err != nil {
-		return response.BgmResponse{}, err
+		return response.BgmWithEpisodesResponse{}, err
 	}
 
-	return response.BgmResponse{
+	episodes := make([]response.BgmEpisodeResponse, len(b.Episodes))
+	for i, e := range b.Episodes {
+		episodes[i] = response.BgmEpisodeResponse{
+			ID:    e.ID,
+			Title: e.Title,
+			Channel: response.BgmEpisodeChannelResponse{
+				ID:   e.Channel.ID,
+				Name: e.Channel.Name,
+			},
+		}
+	}
+
+	channels := make([]response.BgmChannelResponse, len(b.Channels))
+	for i, c := range b.Channels {
+		channels[i] = response.BgmChannelResponse{
+			ID:   c.ID,
+			Name: c.Name,
+		}
+	}
+
+	return response.BgmWithEpisodesResponse{
 		ID:        b.ID,
 		Name:      b.Name,
 		IsDefault: false,
 		Audio:     audioResponse,
+		Episodes:  episodes,
+		Channels:  channels,
 		CreatedAt: b.CreatedAt,
 		UpdatedAt: b.UpdatedAt,
 	}, nil
 }
 
-// SystemBgm モデルのスライスをレスポンス DTO のスライスに変換する
-func (s *bgmService) toSystemBgmResponses(ctx context.Context, bgms []model.SystemBgm) ([]response.BgmResponse, error) {
-	result := make([]response.BgmResponse, len(bgms))
+// SystemBgm モデルのスライスをエピソード情報付きレスポンス DTO のスライスに変換する
+func (s *bgmService) toSystemBgmWithEpisodesResponses(ctx context.Context, bgms []model.SystemBgm) ([]response.BgmWithEpisodesResponse, error) {
+	result := make([]response.BgmWithEpisodesResponse, len(bgms))
 
 	for i, b := range bgms {
-		res, err := s.toSystemBgmResponse(ctx, b)
+		res, err := s.toSystemBgmWithEpisodesResponse(ctx, b)
 		if err != nil {
 			return nil, err
 		}
@@ -207,18 +229,21 @@ func (s *bgmService) toSystemBgmResponses(ctx context.Context, bgms []model.Syst
 	return result, nil
 }
 
-// SystemBgm モデルをレスポンス DTO に変換する
-func (s *bgmService) toSystemBgmResponse(ctx context.Context, b model.SystemBgm) (response.BgmResponse, error) {
+// SystemBgm モデルをエピソード・チャンネル情報付きレスポンス DTO に変換する
+// SystemBgm はシステム提供の BGM のため、episodes と channels は常に空配列を返す
+func (s *bgmService) toSystemBgmWithEpisodesResponse(ctx context.Context, b model.SystemBgm) (response.BgmWithEpisodesResponse, error) {
 	audioResponse, err := s.toAudioResponse(ctx, b.Audio)
 	if err != nil {
-		return response.BgmResponse{}, err
+		return response.BgmWithEpisodesResponse{}, err
 	}
 
-	return response.BgmResponse{
+	return response.BgmWithEpisodesResponse{
 		ID:        b.ID,
 		Name:      b.Name,
 		IsDefault: true,
 		Audio:     audioResponse,
+		Episodes:  []response.BgmEpisodeResponse{},
+		Channels:  []response.BgmChannelResponse{},
 		CreatedAt: b.CreatedAt,
 		UpdatedAt: b.UpdatedAt,
 	}, nil
@@ -282,8 +307,10 @@ func (s *bgmService) CreateBgm(ctx context.Context, userID string, req request.C
 
 	// レスポンス用にリレーションを設定
 	bgm.Audio = *audio
+	bgm.Episodes = []model.Episode{} // 新規作成時は空
+	bgm.Channels = []model.Channel{} // 新規作成時は空
 
-	res, err := s.toBgmResponse(ctx, *bgm)
+	res, err := s.toBgmWithEpisodesResponse(ctx, *bgm)
 	if err != nil {
 		return nil, err
 	}
@@ -313,7 +340,7 @@ func (s *bgmService) GetMyBgm(ctx context.Context, userID, bgmID string) (*respo
 		return nil, apperror.ErrNotFound.WithMessage("BGM が見つかりません")
 	}
 
-	res, err := s.toBgmResponse(ctx, *bgm)
+	res, err := s.toBgmWithEpisodesResponse(ctx, *bgm)
 	if err != nil {
 		return nil, err
 	}
@@ -360,7 +387,7 @@ func (s *bgmService) UpdateMyBgm(ctx context.Context, userID, bgmID string, req 
 		return nil, err
 	}
 
-	res, err := s.toBgmResponse(ctx, *bgm)
+	res, err := s.toBgmWithEpisodesResponse(ctx, *bgm)
 	if err != nil {
 		return nil, err
 	}
