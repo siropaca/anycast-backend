@@ -173,10 +173,10 @@ POST /audios
 
 ## WebSocket 接続
 
-音声生成ジョブの進捗・完了をリアルタイムで受信できます。
+音声生成・台本生成ジョブの進捗・完了をリアルタイムで受信できます。
 
 ```
-WS /ws/audio-jobs?token=<JWT>
+WS /ws/jobs?token=<JWT>
 ```
 
 **クエリパラメータ:**

@@ -158,9 +158,10 @@ POST /internal/worker/audio
 ## WebSocket
 
 リアルタイムで進捗を受け取るための WebSocket エンドポイント。
+台本生成ジョブと共通のエンドポイントを使用する。
 
 ```
-GET /ws/audio-jobs?token={jwt}
+GET /ws/jobs?token={jwt}
 ```
 
 ### クライアント → サーバー
@@ -278,10 +279,12 @@ pending ───▶ processing ───▶ completed
 | 設定 | 値 | 説明 |
 |------|------|------|
 | ロケーション | asia-northeast1 | デフォルト |
-| キュー名 | audio-generation-queue | 音声生成用キュー |
+| キュー名 | async-jobs | 非同期ジョブ用キュー（台本・音声生成共通） |
 | 認証 | OIDC | Service Account による認証 |
+| ワーカー URL | {baseURL}/audio | ベース URL + `/audio` |
 
 - 設定箇所: `internal/infrastructure/cloudtasks/client.go`
+- ベース URL は環境変数 `GOOGLE_CLOUD_TASKS_WORKER_URL` で設定
 - Cloud Tasks が未設定の場合（ローカル開発）は goroutine で直接実行
 
 ### Google Cloud Storage

@@ -8,7 +8,7 @@
 |----------|------|
 | [domain-model.md](./domain-model.md) | ドメインモデル設計書。エンティティ、集約、値オブジェクトの定義 |
 | [database.md](./database.md) | データベース設計書。ER 図、テーブル定義、制約 |
-| [script-generate-api.md](./script-generate-api.md) | 台本生成 API の詳細設計。LLM プロンプト設計を含む |
+| [script-generate-async-api.md](./script-generate-async-api.md) | 台本生成 API（非同期）の詳細設計。LLM プロンプト設計、Cloud Tasks、WebSocket |
 | [audio-generate-async-api.md](./audio-generate-async-api.md) | 音声生成 API（非同期）の詳細設計。Cloud Tasks、TTS、WebSocket |
 | [system.md](./system.md) | システム設定。タイムアウト、外部サービス設定 |
 

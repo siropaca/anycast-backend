@@ -1,9 +1,12 @@
 # Script（台本）
 
-## 台本を AI で生成
+## 台本を AI で生成（非同期）
+
+台本生成は LLM（OpenAI GPT）を使用した処理のため、非同期ジョブとして実行されます。
+詳細は [台本生成 API（非同期）仕様書](../specs/script-generate-async-api.md) を参照してください。
 
 ```
-POST /channels/:channelId/episodes/:episodeId/script/generate
+POST /channels/:channelId/episodes/:episodeId/script/generate-async
 ```
 
 **リクエスト:**
@@ -23,12 +26,102 @@ POST /channels/:channelId/episodes/:episodeId/script/generate
 
 > **Note:** `prompt` はエピソードの `userPrompt` として自動保存されます。
 
+**レスポンス（202 Accepted）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "episodeId": "uuid",
+    "status": "pending",
+    "progress": 0,
+    "prompt": "今日の天気について楽しく話す",
+    "durationMinutes": 10,
+    "withEmotion": true,
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+---
+
+## 台本生成ジョブ取得
+
+```
+GET /script-jobs/:jobId
+```
+
+指定したジョブの状態を取得します。
+
 **レスポンス:**
 ```json
 {
   "data": {
-    "lines": [ ... ]
+    "id": "uuid",
+    "episodeId": "uuid",
+    "status": "completed",
+    "progress": 100,
+    "prompt": "今日の天気について楽しく話す",
+    "durationMinutes": 10,
+    "withEmotion": true,
+    "episode": {
+      "id": "uuid",
+      "title": "エピソードタイトル",
+      "channel": {
+        "id": "uuid",
+        "name": "チャンネル名"
+      }
+    },
+    "scriptLinesCount": 42,
+    "startedAt": "2025-01-01T00:00:00Z",
+    "completedAt": "2025-01-01T00:00:15Z",
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:15Z"
   }
+}
+```
+
+**ステータス:**
+
+| ステータス | 説明 |
+|------------|------|
+| pending | キュー待ち |
+| processing | 処理中 |
+| completed | 完了 |
+| failed | 失敗 |
+
+---
+
+## 自分の台本生成ジョブ一覧
+
+```
+GET /me/script-jobs
+```
+
+自分が作成した台本生成ジョブの一覧を取得します。
+
+**クエリパラメータ:**
+
+| パラメータ | 型 | デフォルト | 説明 |
+|------------|-----|------------|------|
+| status | string | - | ステータスでフィルタ: `pending` / `processing` / `completed` / `failed` |
+
+**レスポンス:**
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "episodeId": "uuid",
+      "status": "processing",
+      "progress": 45,
+      "prompt": "今日の天気について楽しく話す",
+      "durationMinutes": 10,
+      "withEmotion": true,
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:05Z"
+    }
+  ]
 }
 ```
 
