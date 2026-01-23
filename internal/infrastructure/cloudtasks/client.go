@@ -80,7 +80,7 @@ func (c *client) enqueueJob(ctx context.Context, jobID, pathSuffix, jobType stri
 
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
-		log.Error("failed to marshal payload", "error", err)
+		log.Error("ペイロードのマーシャリングに失敗しました", "error", err)
 		return apperror.ErrInternal.WithMessage("ペイロードのシリアライズに失敗しました").WithError(err)
 	}
 
@@ -108,15 +108,15 @@ func (c *client) enqueueJob(ctx context.Context, jobID, pathSuffix, jobType stri
 		},
 	}
 
-	log.Info("enqueuing job task", "job_id", jobID, "job_type", jobType, "queue", c.queuePath, "url", workerURL)
+	log.Info("ジョブタスクをエンキュー中", "job_id", jobID, "job_type", jobType, "queue", c.queuePath, "url", workerURL)
 
 	task, err := c.tasksClient.CreateTask(ctx, req)
 	if err != nil {
-		log.Error("failed to create task", "error", err, "job_id", jobID)
+		log.Error("タスクの作成に失敗しました", "error", err, "job_id", jobID)
 		return apperror.ErrInternal.WithMessage("タスクの作成に失敗しました").WithError(err)
 	}
 
-	log.Info("task created successfully", "task_name", task.Name, "job_id", jobID, "job_type", jobType)
+	log.Info("タスクを正常に作成しました", "task_name", task.Name, "job_id", jobID, "job_type", jobType)
 	return nil
 }
 

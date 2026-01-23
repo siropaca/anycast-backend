@@ -62,7 +62,7 @@ func (s *imageService) UploadImage(ctx context.Context, input UploadImageInput) 
 	// ファイルデータの読み込み
 	data, err := io.ReadAll(input.File)
 	if err != nil {
-		log.Error("failed to read image data", "error", err)
+		log.Error("画像データの読み込みに失敗しました", "error", err)
 		return nil, apperror.ErrInternal.WithMessage("画像データの読み込みに失敗しました").WithError(err)
 	}
 
@@ -87,7 +87,7 @@ func (s *imageService) UploadImage(ctx context.Context, input UploadImageInput) 
 	if err := s.imageRepo.Create(ctx, image); err != nil {
 		// DB 保存に失敗した場合は GCS のファイルを削除
 		if deleteErr := s.storageClient.Delete(ctx, path); deleteErr != nil {
-			log.Warn("failed to cleanup uploaded image", "error", deleteErr, "path", path)
+			log.Warn("アップロード済み画像のクリーンアップに失敗しました", "error", deleteErr, "path", path)
 		}
 		return nil, err
 	}

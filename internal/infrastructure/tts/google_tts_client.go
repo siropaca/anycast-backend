@@ -80,7 +80,7 @@ func (c *googleTTSClient) Synthesize(ctx context.Context, text string, emotion *
 		},
 	}
 
-	log.Debug("tts input", "text", synthesisText, "voiceID", voiceID)
+	log.Debug("TTS 入力", "text", synthesisText, "voiceID", voiceID)
 
 	req := &texttospeechpb.SynthesizeSpeechRequest{
 		Input: input,
@@ -97,12 +97,12 @@ func (c *googleTTSClient) Synthesize(ctx context.Context, text string, emotion *
 
 	var lastErr error
 	for attempt := 1; attempt <= maxRetries; attempt++ {
-		log.Debug("synthesizing speech", "attempt", attempt, "text_length", len(text))
+		log.Debug("音声を合成中", "attempt", attempt, "text_length", len(text))
 
 		resp, err := c.client.SynthesizeSpeech(ctx, req)
 		if err != nil {
 			lastErr = err
-			log.Warn(fmt.Sprintf("tts api error: attempt=%d, voiceID=%s, error=%v", attempt, voiceID, err))
+			log.Warn(fmt.Sprintf("TTS API エラー: 試行=%d, voiceID=%s, error=%v", attempt, voiceID, err))
 
 			// 最後のリトライでなければ待機して再試行
 			if attempt < maxRetries {
@@ -110,24 +110,24 @@ func (c *googleTTSClient) Synthesize(ctx context.Context, text string, emotion *
 				continue
 			}
 
-			log.Error("tts api failed after retries", "error", err, "voiceID", voiceID)
+			log.Error("TTS API がリトライ後も失敗しました", "error", err, "voiceID", voiceID)
 			return nil, apperror.ErrGenerationFailed.WithMessage("音声合成に失敗しました").WithError(err)
 		}
 
 		if len(resp.AudioContent) == 0 {
 			lastErr = fmt.Errorf("empty audio content in response")
-			log.Warn("empty audio content in tts response", "attempt", attempt)
+			log.Warn("TTS レスポンスの音声コンテンツが空です", "attempt", attempt)
 
 			if attempt < maxRetries {
 				time.Sleep(time.Duration(attempt) * time.Second)
 				continue
 			}
 
-			log.Error("tts returned empty audio after retries")
+			log.Error("TTS がリトライ後も空の音声を返しました")
 			return nil, apperror.ErrGenerationFailed.WithMessage("音声合成に失敗しました: 音声データが空です")
 		}
 
-		log.Debug("speech synthesized successfully", "audio_size", len(resp.AudioContent))
+		log.Debug("音声合成に成功しました", "audio_size", len(resp.AudioContent))
 		return resp.AudioContent, nil
 	}
 
@@ -161,7 +161,7 @@ func (c *googleTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 			Text:    text,
 		}
 
-		log.Debug("multi-speaker turn", "speaker", turn.Speaker, "text", text)
+		log.Debug("マルチスピーカーターン", "speaker", turn.Speaker, "text", text)
 	}
 
 	input := &texttospeechpb.SynthesisInput{
@@ -176,7 +176,7 @@ func (c *googleTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 	// AI Studio では Style Instructions と呼ばれる
 	if voiceStyle != nil && *voiceStyle != "" {
 		input.Prompt = voiceStyle
-		log.Debug("using voice style", "voiceStyle", *voiceStyle)
+		log.Debug("ボイススタイルを使用中", "voiceStyle", *voiceStyle)
 	}
 
 	// SpeakerVoiceConfigs を構築
@@ -204,19 +204,19 @@ func (c *googleTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 
 	var lastErr error
 	for attempt := 1; attempt <= maxRetries; attempt++ {
-		log.Debug("synthesizing multi-speaker speech", "attempt", attempt, "turns_count", len(turns), "speakers_count", len(voiceConfigs))
+		log.Debug("マルチスピーカー音声を合成中", "attempt", attempt, "turns_count", len(turns), "speakers_count", len(voiceConfigs))
 
 		resp, err := c.client.SynthesizeSpeech(ctx, req)
 		if err != nil {
 			lastErr = err
-			log.Warn(fmt.Sprintf("multi-speaker tts api error: attempt=%d, error=%v", attempt, err))
+			log.Warn(fmt.Sprintf("マルチスピーカーTTS API エラー: 試行=%d, error=%v", attempt, err))
 
 			if attempt < maxRetries {
 				time.Sleep(time.Duration(attempt) * time.Second)
 				continue
 			}
 
-			log.Error("multi-speaker tts api failed after retries", "error", err)
+			log.Error("マルチスピーカーTTS API がリトライ後も失敗しました", "error", err)
 			return nil, apperror.ErrGenerationFailed.WithMessage("複数話者の音声合成に失敗しました").WithError(err)
 		}
 

@@ -18,14 +18,14 @@ func Admin(userRepo repository.UserRepository) gin.HandlerFunc {
 		// コンテキストからユーザー ID を取得
 		userIDStr, exists := GetUserID(c)
 		if !exists {
-			log.Warn("user_id not found in context")
+			log.Warn("コンテキストに user_id がありません")
 			abortWithForbidden(c)
 			return
 		}
 
 		userID, err := uuid.Parse(userIDStr)
 		if err != nil {
-			log.Warn("invalid user_id format", "user_id", userIDStr)
+			log.Warn("user_id の形式が不正です", "user_id", userIDStr)
 			abortWithForbidden(c)
 			return
 		}
@@ -33,14 +33,14 @@ func Admin(userRepo repository.UserRepository) gin.HandlerFunc {
 		// ユーザー情報を取得
 		user, err := userRepo.FindByID(c.Request.Context(), userID)
 		if err != nil {
-			log.Warn("failed to find user", "user_id", userID, "error", err)
+			log.Warn("ユーザーの取得に失敗しました", "user_id", userID, "error", err)
 			abortWithForbidden(c)
 			return
 		}
 
 		// 管理者権限をチェック
 		if !user.Role.IsAdmin() {
-			log.Warn("user does not have admin role", "user_id", userID, "role", user.Role)
+			log.Warn("ユーザーに管理者権限がありません", "user_id", userID, "role", user.Role)
 			abortWithForbidden(c)
 			return
 		}

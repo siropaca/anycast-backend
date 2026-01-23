@@ -22,7 +22,7 @@ func CloudTasksAuth(expectedAudience, expectedServiceAccount string) gin.Handler
 		// Authorization ヘッダーからトークンを取得
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			log.Warn("missing authorization header for cloud tasks")
+			log.Warn("Cloud Tasks 用の Authorization ヘッダーがありません")
 			abortWithUnauthorized(c)
 			return
 		}
@@ -30,7 +30,7 @@ func CloudTasksAuth(expectedAudience, expectedServiceAccount string) gin.Handler
 		// Bearer プレフィックスを確認
 		parts := strings.SplitN(authHeader, " ", 2)
 		if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
-			log.Warn("invalid authorization header format for cloud tasks")
+			log.Warn("Cloud Tasks 用の Authorization ヘッダー形式が不正です")
 			abortWithUnauthorized(c)
 			return
 		}
@@ -40,7 +40,7 @@ func CloudTasksAuth(expectedAudience, expectedServiceAccount string) gin.Handler
 		// OIDC トークンを検証
 		payload, err := validateOIDCToken(c.Request.Context(), tokenString, expectedAudience)
 		if err != nil {
-			log.Warn("invalid OIDC token", "error", err)
+			log.Warn("OIDC トークンが無効です", "error", err)
 			abortWithUnauthorized(c)
 			return
 		}
@@ -48,12 +48,12 @@ func CloudTasksAuth(expectedAudience, expectedServiceAccount string) gin.Handler
 		// サービスアカウントを確認
 		email, ok := payload.Claims["email"].(string)
 		if !ok || email != expectedServiceAccount {
-			log.Warn("invalid service account", "expected", expectedServiceAccount, "got", email)
+			log.Warn("サービスアカウントが不正です", "expected", expectedServiceAccount, "got", email)
 			abortWithUnauthorized(c)
 			return
 		}
 
-		log.Debug("cloud tasks auth successful", "email", email)
+		log.Debug("Cloud Tasks 認証に成功しました", "email", email)
 		c.Next()
 	}
 }
