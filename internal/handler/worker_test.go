@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -12,8 +13,45 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
+	"github.com/siropaca/anycast-backend/internal/dto/request"
+	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
+	"github.com/siropaca/anycast-backend/internal/repository"
 )
+
+// ScriptJobService のモック
+type mockScriptJobService struct {
+	mock.Mock
+}
+
+func (m *mockScriptJobService) CreateJob(ctx context.Context, userID, channelID, episodeID string, req request.GenerateScriptAsyncRequest) (*response.ScriptJobResponse, error) {
+	args := m.Called(ctx, userID, channelID, episodeID, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.ScriptJobResponse), args.Error(1)
+}
+
+func (m *mockScriptJobService) GetJob(ctx context.Context, userID, jobID string) (*response.ScriptJobResponse, error) {
+	args := m.Called(ctx, userID, jobID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.ScriptJobResponse), args.Error(1)
+}
+
+func (m *mockScriptJobService) ListMyJobs(ctx context.Context, userID string, filter repository.ScriptJobFilter) (*response.ScriptJobListResponse, error) {
+	args := m.Called(ctx, userID, filter)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.ScriptJobListResponse), args.Error(1)
+}
+
+func (m *mockScriptJobService) ExecuteJob(ctx context.Context, jobID string) error {
+	args := m.Called(ctx, jobID)
+	return args.Error(0)
+}
 
 // テスト用のルーターをセットアップする
 func setupWorkerRouter(h *WorkerHandler) *gin.Engine {
@@ -30,7 +68,7 @@ func TestWorkerHandler_ProcessAudioJob(t *testing.T) {
 		mockSvc := new(mockAudioJobService)
 		mockSvc.On("ExecuteJob", mock.Anything, jobID).Return(nil)
 
-		handler := NewWorkerHandler(mockSvc)
+		handler := NewWorkerHandler(mockSvc, new(mockScriptJobService))
 		router := setupWorkerRouter(handler)
 
 		payload := AudioJobPayload{JobID: jobID}
@@ -53,7 +91,7 @@ func TestWorkerHandler_ProcessAudioJob(t *testing.T) {
 
 	t.Run("jobId が指定されていない場合は 400 を返す", func(t *testing.T) {
 		mockSvc := new(mockAudioJobService)
-		handler := NewWorkerHandler(mockSvc)
+		handler := NewWorkerHandler(mockSvc, new(mockScriptJobService))
 		router := setupWorkerRouter(handler)
 
 		payload := map[string]string{}
@@ -73,7 +111,7 @@ func TestWorkerHandler_ProcessAudioJob(t *testing.T) {
 		retryableErr := apperror.ErrInternal.WithMessage("temporary error")
 		mockSvc.On("ExecuteJob", mock.Anything, jobID).Return(retryableErr)
 
-		handler := NewWorkerHandler(mockSvc)
+		handler := NewWorkerHandler(mockSvc, new(mockScriptJobService))
 		router := setupWorkerRouter(handler)
 
 		payload := AudioJobPayload{JobID: jobID}
@@ -94,7 +132,7 @@ func TestWorkerHandler_ProcessAudioJob(t *testing.T) {
 		nonRetryableErr := apperror.ErrValidation.WithMessage("validation error")
 		mockSvc.On("ExecuteJob", mock.Anything, jobID).Return(nonRetryableErr)
 
-		handler := NewWorkerHandler(mockSvc)
+		handler := NewWorkerHandler(mockSvc, new(mockScriptJobService))
 		router := setupWorkerRouter(handler)
 
 		payload := AudioJobPayload{JobID: jobID}
@@ -119,7 +157,7 @@ func TestWorkerHandler_ProcessAudioJob(t *testing.T) {
 func TestNewWorkerHandler(t *testing.T) {
 	t.Run("WorkerHandler を作成できる", func(t *testing.T) {
 		mockSvc := new(mockAudioJobService)
-		handler := NewWorkerHandler(mockSvc)
+		handler := NewWorkerHandler(mockSvc, new(mockScriptJobService))
 		assert.NotNil(t, handler)
 	})
 }

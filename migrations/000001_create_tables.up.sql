@@ -9,6 +9,7 @@ CREATE TYPE oauth_provider AS ENUM ('google');
 CREATE TYPE gender AS ENUM ('male', 'female', 'neutral');
 CREATE TYPE user_role AS ENUM ('user', 'admin');
 CREATE TYPE audio_job_status AS ENUM ('pending', 'processing', 'completed', 'failed');
+CREATE TYPE script_job_status AS ENUM ('pending', 'processing', 'completed', 'failed');
 
 -- ===========================================
 -- メディア関連テーブル
@@ -251,6 +252,32 @@ CREATE INDEX idx_audio_jobs_episode_id ON audio_jobs (episode_id);
 CREATE INDEX idx_audio_jobs_user_id ON audio_jobs (user_id);
 CREATE INDEX idx_audio_jobs_status ON audio_jobs (status);
 CREATE INDEX idx_audio_jobs_created_at ON audio_jobs (created_at DESC);
+
+-- 台本生成ジョブ
+CREATE TABLE script_jobs (
+	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+	episode_id UUID NOT NULL REFERENCES episodes (id) ON DELETE CASCADE,
+	user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+	status script_job_status NOT NULL DEFAULT 'pending',
+	progress INTEGER NOT NULL DEFAULT 0,
+	-- 生成パラメータ
+	prompt TEXT NOT NULL,
+	duration_minutes INTEGER NOT NULL DEFAULT 10,
+	with_emotion BOOLEAN NOT NULL DEFAULT false,
+	-- 結果
+	error_message TEXT,
+	error_code VARCHAR(50),
+	-- タイムスタンプ
+	started_at TIMESTAMP,
+	completed_at TIMESTAMP,
+	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_script_jobs_episode_id ON script_jobs (episode_id);
+CREATE INDEX idx_script_jobs_user_id ON script_jobs (user_id);
+CREATE INDEX idx_script_jobs_status ON script_jobs (status);
+CREATE INDEX idx_script_jobs_created_at ON script_jobs (created_at DESC);
 
 -- 台本行
 CREATE TABLE script_lines (

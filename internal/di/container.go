@@ -29,6 +29,7 @@ type Container struct {
 	EpisodeHandler    *handler.EpisodeHandler
 	ScriptLineHandler *handler.ScriptLineHandler
 	ScriptHandler     *handler.ScriptHandler
+	ScriptJobHandler  *handler.ScriptJobHandler
 	CleanupHandler    *handler.CleanupHandler
 	ImageHandler      *handler.ImageHandler
 	AudioHandler      *handler.AudioHandler
@@ -100,6 +101,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	bgmRepo := repository.NewBgmRepository(db)
 	systemBgmRepo := repository.NewSystemBgmRepository(db)
 	audioJobRepo := repository.NewAudioJobRepository(db)
+	scriptJobRepo := repository.NewScriptJobRepository(db)
 
 	// Service 層
 	voiceService := service.NewVoiceService(voiceRepo)
@@ -128,6 +130,17 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		tasksClient,
 		wsHub,
 	)
+	scriptJobService := service.NewScriptJobService(
+		db,
+		scriptJobRepo,
+		userRepo,
+		channelRepo,
+		episodeRepo,
+		scriptLineRepo,
+		llmClient,
+		tasksClient,
+		wsHub,
+	)
 
 	// Handler 層
 	voiceHandler := handler.NewVoiceHandler(voiceService)
@@ -138,12 +151,13 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	episodeHandler := handler.NewEpisodeHandler(episodeService)
 	scriptLineHandler := handler.NewScriptLineHandler(scriptLineService)
 	scriptHandler := handler.NewScriptHandler(scriptService)
+	scriptJobHandler := handler.NewScriptJobHandler(scriptJobService)
 	cleanupHandler := handler.NewCleanupHandler(cleanupService, storageClient)
 	imageHandler := handler.NewImageHandler(imageService)
 	audioHandler := handler.NewAudioHandler(audioService)
 	bgmHandler := handler.NewBgmHandler(bgmService)
 	audioJobHandler := handler.NewAudioJobHandler(audioJobService)
-	workerHandler := handler.NewWorkerHandler(audioJobService)
+	workerHandler := handler.NewWorkerHandler(audioJobService, scriptJobService)
 	webSocketHandler := handler.NewWebSocketHandler(wsHub, tokenManager)
 
 	return &Container{
@@ -155,6 +169,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		EpisodeHandler:    episodeHandler,
 		ScriptLineHandler: scriptLineHandler,
 		ScriptHandler:     scriptHandler,
+		ScriptJobHandler:  scriptJobHandler,
 		CleanupHandler:    cleanupHandler,
 		ImageHandler:      imageHandler,
 		AudioHandler:      audioHandler,

@@ -1286,14 +1286,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/channels/{channelId}/episodes/{episodeId}/script/generate": {
+        "/channels/{channelId}/episodes/{episodeId}/script/generate-async": {
             "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "指定したエピソードの台本を AI を使って生成します。既存の台本がある場合は全て削除されます。",
+                "description": "エピソードの台本を非同期で生成します。ジョブを作成し、完了時は WebSocket で通知されます。",
                 "consumes": [
                     "application/json"
                 ],
@@ -1303,7 +1303,7 @@ const docTemplate = `{
                 "tags": [
                     "script"
                 ],
-                "summary": "台本を AI で生成",
+                "summary": "非同期台本生成",
                 "parameters": [
                     {
                         "type": "string",
@@ -1320,20 +1320,20 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "台本生成リクエスト",
-                        "name": "request",
+                        "description": "台本生成オプション",
+                        "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/request.GenerateScriptRequest"
+                            "$ref": "#/definitions/request.GenerateScriptAsyncRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "202": {
+                        "description": "Accepted",
                         "schema": {
-                            "$ref": "#/definitions/response.ScriptLineListResponse"
+                            "$ref": "#/definitions/response.ScriptJobDataResponse"
                         }
                     },
                     "400": {
@@ -2124,6 +2124,61 @@ const docTemplate = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/handler.AudioJobPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/internal/worker/script": {
+            "post": {
+                "description": "Cloud Tasks から呼び出される台本生成ワーカーエンドポイント",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "internal"
+                ],
+                "summary": "台本生成ジョブを処理",
+                "parameters": [
+                    {
+                        "description": "ジョブ情報",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.ScriptJobPayload"
                         }
                     }
                 ],
@@ -3252,6 +3307,127 @@ const docTemplate = `{
                 }
             }
         },
+        "/me/script-jobs": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "自分の台本生成ジョブ一覧を取得します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "me"
+                ],
+                "summary": "自分の台本生成ジョブ一覧取得",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ステータスでフィルタ（pending / processing / completed / failed）",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ScriptJobListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/script-jobs/{jobId}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "台本生成ジョブの詳細を取得します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "script-jobs"
+                ],
+                "summary": "台本生成ジョブ詳細取得",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ジョブ ID",
+                        "name": "jobId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ScriptJobDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/voices": {
             "get": {
                 "description": "利用可能なボイスの一覧を取得します",
@@ -3351,13 +3527,13 @@ const docTemplate = `{
                 }
             }
         },
-        "/ws/audio-jobs": {
+        "/ws/jobs": {
             "get": {
-                "description": "リアルタイムで音声生成ジョブの進捗を受信するための WebSocket エンドポイント",
+                "description": "リアルタイムで音声生成・台本生成ジョブの進捗を受信するための WebSocket エンドポイント",
                 "tags": [
                     "websocket"
                 ],
-                "summary": "音声生成ジョブの WebSocket 接続",
+                "summary": "ジョブの WebSocket 接続",
                 "parameters": [
                     {
                         "type": "string",
@@ -3386,6 +3562,17 @@ const docTemplate = `{
     },
     "definitions": {
         "handler.AudioJobPayload": {
+            "type": "object",
+            "required": [
+                "jobId"
+            ],
+            "properties": {
+                "jobId": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.ScriptJobPayload": {
             "type": "object",
             "required": [
                 "jobId"
@@ -3594,7 +3781,7 @@ const docTemplate = `{
                 }
             }
         },
-        "request.GenerateScriptRequest": {
+        "request.GenerateScriptAsyncRequest": {
             "type": "object",
             "required": [
                 "prompt"
@@ -3606,12 +3793,10 @@ const docTemplate = `{
                     "minimum": 3
                 },
                 "prompt": {
-                    "description": "Episode の UserPrompt になる",
                     "type": "string",
                     "maxLength": 2000
                 },
                 "withEmotion": {
-                    "description": "感情を付与するかどうか",
                     "type": "boolean"
                 }
             }
@@ -3752,8 +3937,7 @@ const docTemplate = `{
             "required": [
                 "categoryId",
                 "description",
-                "name",
-                "userPrompt"
+                "name"
             ],
             "properties": {
                 "artworkImageId": {
@@ -4913,6 +5097,137 @@ const docTemplate = `{
                 },
                 "total": {
                     "type": "integer"
+                }
+            }
+        },
+        "response.ScriptJobChannelResponse": {
+            "type": "object",
+            "required": [
+                "id",
+                "name"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.ScriptJobDataResponse": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.ScriptJobResponse"
+                }
+            }
+        },
+        "response.ScriptJobEpisodeResponse": {
+            "type": "object",
+            "required": [
+                "id",
+                "title"
+            ],
+            "properties": {
+                "channel": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.ScriptJobChannelResponse"
+                        }
+                    ],
+                    "x-nullable": true
+                },
+                "id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.ScriptJobListResponse": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.ScriptJobResponse"
+                    }
+                }
+            }
+        },
+        "response.ScriptJobResponse": {
+            "type": "object",
+            "required": [
+                "createdAt",
+                "episodeId",
+                "id",
+                "progress",
+                "status",
+                "updatedAt"
+            ],
+            "properties": {
+                "completedAt": {
+                    "type": "string",
+                    "x-nullable": true
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "durationMinutes": {
+                    "type": "integer"
+                },
+                "episode": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.ScriptJobEpisodeResponse"
+                        }
+                    ],
+                    "x-nullable": true
+                },
+                "episodeId": {
+                    "type": "string"
+                },
+                "errorCode": {
+                    "type": "string",
+                    "x-nullable": true
+                },
+                "errorMessage": {
+                    "type": "string",
+                    "x-nullable": true
+                },
+                "id": {
+                    "type": "string"
+                },
+                "progress": {
+                    "type": "integer"
+                },
+                "prompt": {
+                    "type": "string"
+                },
+                "scriptLinesCount": {
+                    "type": "integer",
+                    "x-nullable": true
+                },
+                "startedAt": {
+                    "type": "string",
+                    "x-nullable": true
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "withEmotion": {
+                    "type": "boolean"
                 }
             }
         },

@@ -82,6 +82,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.PATCH("/me/bgms/:bgmId", container.BgmHandler.UpdateMyBgm)
 	authenticated.DELETE("/me/bgms/:bgmId", container.BgmHandler.DeleteMyBgm)
 	authenticated.GET("/me/audio-jobs", container.AudioJobHandler.ListMyAudioJobs)
+	authenticated.GET("/me/script-jobs", container.ScriptJobHandler.ListMyScriptJobs)
 
 	// Channels
 	authenticated.GET("/channels/:channelId", container.ChannelHandler.GetChannel)
@@ -105,6 +106,9 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	// Audio Jobs
 	authenticated.GET("/audio-jobs/:jobId", container.AudioJobHandler.GetAudioJob)
 
+	// Script Jobs
+	authenticated.GET("/script-jobs/:jobId", container.ScriptJobHandler.GetScriptJob)
+
 	// Script Lines
 	authenticated.GET("/channels/:channelId/episodes/:episodeId/script/lines", container.ScriptLineHandler.ListScriptLines)
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/script/lines", container.ScriptLineHandler.CreateScriptLine)
@@ -113,7 +117,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/script/reorder", container.ScriptLineHandler.ReorderScriptLines)
 
 	// Script（台本）
-	authenticated.POST("/channels/:channelId/episodes/:episodeId/script/generate", container.ScriptHandler.GenerateScript)
+	authenticated.POST("/channels/:channelId/episodes/:episodeId/script/generate-async", container.ScriptJobHandler.GenerateScriptAsync)
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/script/import", container.ScriptHandler.ImportScript)
 	authenticated.GET("/channels/:channelId/episodes/:episodeId/script/export", container.ScriptHandler.ExportScript)
 
@@ -140,9 +144,10 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	internal := r.Group("/internal")
 	internal.Use(middleware.CloudTasksAuth(cfg.GoogleCloudTasksWorkerURL, cfg.GoogleCloudTasksServiceAccountEmail))
 	internal.POST("/worker/audio", container.WorkerHandler.ProcessAudioJob)
+	internal.POST("/worker/script", container.WorkerHandler.ProcessScriptJob)
 
 	// WebSocket
-	r.GET("/ws/audio-jobs", container.WebSocketHandler.HandleAudioJobs)
+	r.GET("/ws/jobs", container.WebSocketHandler.HandleJobs)
 
 	return r
 }
