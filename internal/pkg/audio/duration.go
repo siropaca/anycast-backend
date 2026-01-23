@@ -12,7 +12,7 @@ import (
 // ffprobe を使用して正確な再生時間を取得する
 // エラー時は 0 を返す（エラーハンドリングが必要な場合は GetDurationMsE を使用）
 func GetDurationMs(data []byte) int {
-	durationMs, _ := GetDurationMsE(data)
+	durationMs, _ := GetDurationMsE(data) //nolint:errcheck // エラー時は 0 を返す仕様
 	return durationMs
 }
 
