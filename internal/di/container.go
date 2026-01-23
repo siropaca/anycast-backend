@@ -8,9 +8,11 @@ import (
 
 	"github.com/siropaca/anycast-backend/internal/config"
 	"github.com/siropaca/anycast-backend/internal/handler"
+	"github.com/siropaca/anycast-backend/internal/infrastructure/cloudtasks"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/llm"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/tts"
+	"github.com/siropaca/anycast-backend/internal/infrastructure/websocket"
 	"github.com/siropaca/anycast-backend/internal/pkg/crypto"
 	"github.com/siropaca/anycast-backend/internal/pkg/jwt"
 	"github.com/siropaca/anycast-backend/internal/repository"
@@ -31,8 +33,12 @@ type Container struct {
 	ImageHandler      *handler.ImageHandler
 	AudioHandler      *handler.AudioHandler
 	BgmHandler        *handler.BgmHandler
+	AudioJobHandler   *handler.AudioJobHandler
+	WorkerHandler     *handler.WorkerHandler
+	WebSocketHandler  *handler.WebSocketHandler
 	TokenManager      jwt.TokenManager
 	UserRepository    repository.UserRepository
+	WebSocketHub      *websocket.Hub
 }
 
 // 依存関係を構築して Container を返す
@@ -45,16 +51,39 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	llmClient := llm.NewOpenAIClient(cfg.OpenAIAPIKey)
 
 	// Storage クライアント（GCS）
-	storageClient, err := storage.NewGCSClient(ctx, cfg.GCSBucketName, cfg.GoogleCredentialsJSON)
+	storageClient, err := storage.NewGCSClient(ctx, cfg.GoogleCloudStorageBucketName, cfg.GoogleCloudCredentialsJSON)
 	if err != nil {
 		log.Fatalf("failed to create storage client: %v", err)
 	}
 
 	// TTS クライアント（音声生成用）
-	ttsClient, err := tts.NewGoogleTTSClient(ctx, cfg.GoogleCredentialsJSON)
+	ttsClient, err := tts.NewGoogleTTSClient(ctx, cfg.GoogleCloudCredentialsJSON)
 	if err != nil {
 		log.Fatalf("failed to create TTS client: %v", err)
 	}
+
+	// Cloud Tasks クライアント
+	var tasksClient cloudtasks.Client
+	if cfg.GoogleCloudProjectID != "" && cfg.GoogleCloudTasksWorkerURL != "" {
+		tasksClient, err = cloudtasks.NewClient(ctx, cloudtasks.Config{
+			ProjectID:           cfg.GoogleCloudProjectID,
+			Location:            cfg.GoogleCloudTasksLocation,
+			QueueName:           cfg.GoogleCloudTasksQueueName,
+			ServiceAccountEmail: cfg.GoogleCloudTasksServiceAccountEmail,
+			WorkerEndpointURL:   cfg.GoogleCloudTasksWorkerURL,
+			CredentialsJSON:     cfg.GoogleCloudCredentialsJSON,
+		})
+		if err != nil {
+			log.Fatalf("failed to create cloud tasks client: %v", err)
+		}
+	}
+
+	// WebSocket Hub
+	wsHub := websocket.NewHub()
+	go wsHub.Run()
+
+	// FFmpeg サービス
+	ffmpegService := service.NewFFmpegService()
 
 	// Repository 層
 	voiceRepo := repository.NewVoiceRepository(db)
@@ -70,6 +99,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	audioRepo := repository.NewAudioRepository(db)
 	bgmRepo := repository.NewBgmRepository(db)
 	systemBgmRepo := repository.NewSystemBgmRepository(db)
+	audioJobRepo := repository.NewAudioJobRepository(db)
 
 	// Service 層
 	voiceService := service.NewVoiceService(voiceRepo)
@@ -84,6 +114,20 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	imageService := service.NewImageService(imageRepo, storageClient)
 	audioService := service.NewAudioService(audioRepo, storageClient)
 	bgmService := service.NewBgmService(bgmRepo, systemBgmRepo, audioRepo, storageClient)
+	audioJobService := service.NewAudioJobService(
+		audioJobRepo,
+		episodeRepo,
+		channelRepo,
+		scriptLineRepo,
+		audioRepo,
+		bgmRepo,
+		systemBgmRepo,
+		storageClient,
+		ttsClient,
+		ffmpegService,
+		tasksClient,
+		wsHub,
+	)
 
 	// Handler 層
 	voiceHandler := handler.NewVoiceHandler(voiceService)
@@ -98,6 +142,9 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	imageHandler := handler.NewImageHandler(imageService)
 	audioHandler := handler.NewAudioHandler(audioService)
 	bgmHandler := handler.NewBgmHandler(bgmService)
+	audioJobHandler := handler.NewAudioJobHandler(audioJobService)
+	workerHandler := handler.NewWorkerHandler(audioJobService)
+	webSocketHandler := handler.NewWebSocketHandler(wsHub, tokenManager)
 
 	return &Container{
 		VoiceHandler:      voiceHandler,
@@ -112,7 +159,11 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		ImageHandler:      imageHandler,
 		AudioHandler:      audioHandler,
 		BgmHandler:        bgmHandler,
+		AudioJobHandler:   audioJobHandler,
+		WorkerHandler:     workerHandler,
+		WebSocketHandler:  webSocketHandler,
 		TokenManager:      tokenManager,
 		UserRepository:    userRepo,
+		WebSocketHub:      wsHub,
 	}
 }
