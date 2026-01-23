@@ -15,27 +15,37 @@ const (
 
 // アプリケーション設定
 type Config struct {
-	Port                  string
-	DatabaseURL           string
-	AppEnv                Env
-	AuthSecret            string
-	CORSAllowedOrigins    []string
-	OpenAIAPIKey          string
-	GCSBucketName         string
-	GoogleCredentialsJSON string
+	Port                                string
+	DatabaseURL                         string
+	AppEnv                              Env
+	AuthSecret                          string
+	CORSAllowedOrigins                  []string
+	OpenAIAPIKey                        string
+	GoogleCloudProjectID                string
+	GoogleCloudCredentialsJSON          string
+	GoogleCloudStorageBucketName        string
+	GoogleCloudTasksLocation            string
+	GoogleCloudTasksQueueName           string
+	GoogleCloudTasksServiceAccountEmail string
+	GoogleCloudTasksWorkerURL           string
 }
 
 // 環境変数から設定を読み込む
 func Load() *Config {
 	return &Config{
-		Port:                  getEnv("PORT", "8081"),
-		DatabaseURL:           getEnv("DATABASE_URL", ""),
-		AppEnv:                Env(getEnv("APP_ENV", string(EnvDevelopment))),
-		AuthSecret:            getEnv("AUTH_SECRET", ""),
-		CORSAllowedOrigins:    getEnvAsSlice("CORS_ALLOWED_ORIGINS", []string{"http://localhost:3210"}),
-		OpenAIAPIKey:          getEnv("OPENAI_API_KEY", ""),
-		GCSBucketName:         getEnv("GCS_BUCKET_NAME", ""),
-		GoogleCredentialsJSON: getEnv("GOOGLE_CREDENTIALS_JSON", ""),
+		Port:                                getEnv("PORT", "8081"),
+		DatabaseURL:                         getEnv("DATABASE_URL", ""),
+		AppEnv:                              Env(getEnv("APP_ENV", string(EnvDevelopment))),
+		AuthSecret:                          getEnv("AUTH_SECRET", ""),
+		CORSAllowedOrigins:                  getEnvAsSlice("CORS_ALLOWED_ORIGINS", []string{"http://localhost:3210"}),
+		OpenAIAPIKey:                        getEnv("OPENAI_API_KEY", ""),
+		GoogleCloudProjectID:                getEnv("GOOGLE_CLOUD_PROJECT_ID", ""),
+		GoogleCloudCredentialsJSON:          getEnv("GOOGLE_CLOUD_CREDENTIALS_JSON", ""),
+		GoogleCloudStorageBucketName:        getEnv("GOOGLE_CLOUD_STORAGE_BUCKET_NAME", ""),
+		GoogleCloudTasksLocation:            getEnv("GOOGLE_CLOUD_TASKS_LOCATION", "asia-northeast1"),
+		GoogleCloudTasksQueueName:           getEnv("GOOGLE_CLOUD_TASKS_QUEUE_NAME", "audio-generation-queue"),
+		GoogleCloudTasksServiceAccountEmail: getEnv("GOOGLE_CLOUD_TASKS_SERVICE_ACCOUNT_EMAIL", ""),
+		GoogleCloudTasksWorkerURL:           getEnv("GOOGLE_CLOUD_TASKS_WORKER_URL", ""),
 	}
 }
 
