@@ -50,7 +50,7 @@ type googleTTSClient struct {
 func NewGoogleTTSClient(ctx context.Context, credentialsJSON string) (Client, error) {
 	var opts []option.ClientOption
 	if credentialsJSON != "" {
-		opts = append(opts, option.WithCredentialsJSON([]byte(credentialsJSON)))
+		opts = append(opts, option.WithCredentialsJSON([]byte(credentialsJSON))) //nolint:staticcheck // TODO: migrate to newer auth method
 	}
 
 	client, err := texttospeech.NewClient(ctx, opts...)
