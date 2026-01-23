@@ -1,19 +1,19 @@
 package request
 
-// POST /auth/register のリクエストボディ
+// ユーザー登録リクエスト
 type RegisterRequest struct {
 	Email       string `json:"email" binding:"required,email"`
 	Password    string `json:"password" binding:"required,min=8,max=100"`
 	DisplayName string `json:"displayName" binding:"required,max=20"`
 }
 
-// POST /auth/login のリクエストボディ
+// ログインリクエスト
 type LoginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
 }
 
-// POST /auth/oauth/google のリクエストボディ
+// Google OAuth 認証リクエスト
 type OAuthGoogleRequest struct {
 	ProviderUserID string  `json:"providerUserId" binding:"required"`
 	Email          string  `json:"email" binding:"required,email"`
@@ -23,7 +23,7 @@ type OAuthGoogleRequest struct {
 	ExpiresAt      *int64  `json:"expiresAt"`
 }
 
-// PATCH /me/prompt のリクエストボディ
+// ユーザープロンプト更新リクエスト
 type UpdateUserPromptRequest struct {
 	UserPrompt *string `json:"userPrompt"`
 }
