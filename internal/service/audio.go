@@ -74,11 +74,8 @@ func (s *audioService) UploadAudio(ctx context.Context, input UploadAudioInput) 
 	// 音声 ID の生成
 	audioID := uuid.New()
 
-	// 再生時間の推定（MP3 の場合はビットレートベース、それ以外は 0）
-	durationMs := 0
-	if ext == ".mp3" {
-		durationMs = audio.GetMP3DurationMs(data)
-	}
+	// 再生時間を取得
+	durationMs := audio.GetDurationMs(data)
 
 	// GCS へアップロード
 	path := storage.GenerateAudioPathWithExt(audioID.String(), ext)
