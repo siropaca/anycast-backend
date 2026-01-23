@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
+	"github.com/siropaca/anycast-backend/internal/pkg/audio"
 	"github.com/siropaca/anycast-backend/internal/pkg/logger"
 )
 
@@ -133,78 +134,17 @@ func (s *ffmpegService) MixAudioWithBGM(ctx context.Context, params MixParams) (
 
 // ConcatAudio は複数の音声データを連結する
 //
-// FFmpeg の concat demuxer を使用して、複数の MP3 ファイルをシームレスに結合する。
-//
 // @param audioChunks - 連結する音声データの配列
 // @returns 連結された音声データ
 func (s *ffmpegService) ConcatAudio(ctx context.Context, audioChunks [][]byte) ([]byte, error) {
 	log := logger.FromContext(ctx)
 
-	if len(audioChunks) == 0 {
-		return nil, apperror.ErrValidation.WithMessage("結合する音声データがありません")
-	}
-
-	// 1つだけの場合はそのまま返す
-	if len(audioChunks) == 1 {
-		return audioChunks[0], nil
-	}
-
-	// 一時ディレクトリを作成
-	tmpDir, err := os.MkdirTemp("", "ffmpeg-concat-*")
-	if err != nil {
-		log.Error("failed to create temp dir", "error", err)
-		return nil, apperror.ErrInternal.WithMessage("一時ディレクトリの作成に失敗しました").WithError(err)
-	}
-	defer os.RemoveAll(tmpDir)
-
-	// 各チャンクを一時ファイルに書き込み、concat リストを作成
-	var concatList bytes.Buffer
-	for i, chunk := range audioChunks {
-		chunkPath := filepath.Join(tmpDir, fmt.Sprintf("chunk_%03d.mp3", i))
-		if err := os.WriteFile(chunkPath, chunk, 0o644); err != nil {
-			log.Error("failed to write chunk file", "error", err, "index", i)
-			return nil, apperror.ErrInternal.WithMessage("音声チャンクの書き込みに失敗しました").WithError(err)
-		}
-		// concat demuxer 用のリスト形式
-		concatList.WriteString(fmt.Sprintf("file '%s'\n", chunkPath))
-	}
-
-	// concat リストファイルを作成
-	listPath := filepath.Join(tmpDir, "concat_list.txt")
-	if err := os.WriteFile(listPath, concatList.Bytes(), 0o644); err != nil {
-		log.Error("failed to write concat list", "error", err)
-		return nil, apperror.ErrInternal.WithMessage("結合リストの書き込みに失敗しました").WithError(err)
-	}
-
-	outputPath := filepath.Join(tmpDir, "output.mp3")
-
-	// FFmpeg コマンドを実行（concat demuxer を使用）
-	args := []string{
-		"-f", "concat",
-		"-safe", "0",
-		"-i", listPath,
-		"-c:a", "libmp3lame",
-		"-b:a", "192k",
-		"-y",
-		outputPath,
-	}
-
-	cmd := exec.CommandContext(ctx, "ffmpeg", args...)
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-
 	log.Info("executing ffmpeg concat", "chunks", len(audioChunks))
 
-	if err := cmd.Run(); err != nil {
-		log.Error("ffmpeg concat failed", "error", err, "stderr", stderr.String())
-		return nil, apperror.ErrInternal.WithMessage("音声の結合に失敗しました").WithError(err)
-	}
-
-	// 出力ファイルを読み込み
-	outputData, err := os.ReadFile(outputPath)
+	outputData, err := audio.Concat(audioChunks)
 	if err != nil {
-		log.Error("failed to read output file", "error", err)
-		return nil, apperror.ErrInternal.WithMessage("出力ファイルの読み込みに失敗しました").WithError(err)
+		log.Error("ffmpeg concat failed", "error", err)
+		return nil, apperror.ErrInternal.WithMessage("音声の結合に失敗しました").WithError(err)
 	}
 
 	log.Info("audio concat completed", "chunks", len(audioChunks), "output_size", len(outputData))
