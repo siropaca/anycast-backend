@@ -70,7 +70,7 @@ func (r *audioRepository) Delete(ctx context.Context, id uuid.UUID) error {
 }
 
 // どのテーブルからも参照されていない孤児レコードを取得する
-// 対象: episodes.bgm_id, episodes.full_audio_id
+// 対象: episodes.full_audio_id, bgms.audio_id, system_bgms.audio_id, audio_jobs.result_audio_id
 // 条件: created_at から 1 時間以上経過したレコードのみ
 func (r *audioRepository) FindOrphaned(ctx context.Context) ([]model.Audio, error) {
 	var audios []model.Audio
@@ -78,8 +78,10 @@ func (r *audioRepository) FindOrphaned(ctx context.Context) ([]model.Audio, erro
 	query := `
 		SELECT a.* FROM audios a
 		WHERE a.created_at < NOW() - INTERVAL '1 hour'
-		AND NOT EXISTS (SELECT 1 FROM episodes e WHERE e.bgm_id = a.id)
 		AND NOT EXISTS (SELECT 1 FROM episodes e WHERE e.full_audio_id = a.id)
+		AND NOT EXISTS (SELECT 1 FROM bgms b WHERE b.audio_id = a.id)
+		AND NOT EXISTS (SELECT 1 FROM system_bgms sb WHERE sb.audio_id = a.id)
+		AND NOT EXISTS (SELECT 1 FROM audio_jobs aj WHERE aj.result_audio_id = a.id)
 		ORDER BY a.created_at DESC
 	`
 

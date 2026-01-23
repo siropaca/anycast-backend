@@ -2,12 +2,14 @@ package service
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
+	"github.com/siropaca/anycast-backend/internal/infrastructure/tts"
 	"github.com/siropaca/anycast-backend/internal/model"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 	"github.com/siropaca/anycast-backend/internal/repository"
@@ -284,5 +286,100 @@ func TestAudioJobStatus(t *testing.T) {
 		assert.Equal(t, model.AudioJobStatus("processing"), model.AudioJobStatusProcessing)
 		assert.Equal(t, model.AudioJobStatus("completed"), model.AudioJobStatusCompleted)
 		assert.Equal(t, model.AudioJobStatus("failed"), model.AudioJobStatusFailed)
+	})
+}
+
+func TestSplitTurnsIntoChunks(t *testing.T) {
+	t.Run("空のターンの場合は nil を返す", func(t *testing.T) {
+		chunks := splitTurnsIntoChunks(nil, 100)
+		assert.Nil(t, chunks)
+
+		chunks = splitTurnsIntoChunks([]tts.SpeakerTurn{}, 100)
+		assert.Nil(t, chunks)
+	})
+
+	t.Run("制限内のターンは 1 チャンクになる", func(t *testing.T) {
+		turns := []tts.SpeakerTurn{
+			{Speaker: "speaker1", Text: "Hello"},
+			{Speaker: "speaker2", Text: "World"},
+		}
+		chunks := splitTurnsIntoChunks(turns, 100)
+
+		assert.Len(t, chunks, 1)
+		assert.Len(t, chunks[0], 2)
+	})
+
+	t.Run("制限を超えるターンは複数チャンクに分割される", func(t *testing.T) {
+		turns := []tts.SpeakerTurn{
+			{Speaker: "speaker1", Text: "Hello World"},       // 11 bytes
+			{Speaker: "speaker2", Text: "How are you"},       // 11 bytes
+			{Speaker: "speaker1", Text: "I am fine"},         // 9 bytes
+			{Speaker: "speaker2", Text: "Good to hear that"}, // 17 bytes
+		}
+		// 制限を 25 バイトに設定
+		// チャンク1: "Hello World" + "How are you" = 22 bytes
+		// チャンク2: "I am fine" = 9 bytes (22 + 9 = 31 > 25 なので新チャンク)
+		// チャンク3: "Good to hear that" = 17 bytes (9 + 17 = 26 > 25 なので新チャンク)
+		chunks := splitTurnsIntoChunks(turns, 25)
+
+		assert.Len(t, chunks, 3)
+		assert.Len(t, chunks[0], 2)
+		assert.Len(t, chunks[1], 1)
+		assert.Len(t, chunks[2], 1)
+	})
+
+	t.Run("emotion を含むターンのバイト数が正しく計算される", func(t *testing.T) {
+		emotion := "happy"
+		turns := []tts.SpeakerTurn{
+			{Speaker: "speaker1", Text: "Hello", Emotion: &emotion}, // 5 + 5 + 3 = 13 bytes
+			{Speaker: "speaker2", Text: "World"},                    // 5 bytes
+		}
+		// 制限を 15 バイトに設定
+		chunks := splitTurnsIntoChunks(turns, 15)
+
+		assert.Len(t, chunks, 2) // emotion 付きのため分割される
+	})
+
+	t.Run("日本語テキストが正しく分割される", func(t *testing.T) {
+		// 日本語は UTF-8 で 1 文字 3 バイト
+		turns := []tts.SpeakerTurn{
+			{Speaker: "speaker1", Text: "こんにちは"},   // 15 bytes
+			{Speaker: "speaker2", Text: "お元気ですか"}, // 18 bytes
+			{Speaker: "speaker1", Text: "元気です"},     // 12 bytes
+		}
+		// 制限を 35 バイトに設定
+		chunks := splitTurnsIntoChunks(turns, 35)
+
+		assert.Len(t, chunks, 2)
+		assert.Len(t, chunks[0], 2) // "こんにちは" + "お元気ですか" = 33 bytes
+		assert.Len(t, chunks[1], 1) // "元気です" = 12 bytes
+	})
+
+	t.Run("大量のターンが正しく分割される", func(t *testing.T) {
+		// 100 ターン、各 50 バイト → 合計 5000 バイト
+		turns := make([]tts.SpeakerTurn, 100)
+		for i := range turns {
+			turns[i] = tts.SpeakerTurn{
+				Speaker: "speaker1",
+				Text:    strings.Repeat("a", 50),
+			}
+		}
+		// 制限を 500 バイトに設定 → 約 10 ターンずつ
+		chunks := splitTurnsIntoChunks(turns, 500)
+
+		// 各チャンクが制限を超えていないことを確認
+		for _, chunk := range chunks {
+			totalBytes := 0
+			for _, turn := range chunk {
+				totalBytes += len(turn.Text)
+			}
+			assert.LessOrEqual(t, totalBytes, 500)
+		}
+		// 全ターンが含まれていることを確認
+		totalTurns := 0
+		for _, chunk := range chunks {
+			totalTurns += len(chunk)
+		}
+		assert.Equal(t, 100, totalTurns)
 	})
 }

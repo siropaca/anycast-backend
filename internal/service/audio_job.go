@@ -20,6 +20,12 @@ import (
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
+const (
+	// TTS API のテキスト入力制限（バイト）
+	// Google Cloud TTS の制限は 4000 バイトだが、安全マージンを取る
+	maxTTSInputBytes = 3500
+)
+
 // AudioJobService は非同期音声生成ジョブを管理するインターフェース
 type AudioJobService interface {
 	CreateJob(ctx context.Context, userID, channelID, episodeID string, req request.GenerateAudioAsyncRequest) (*response.AudioJobResponse, error)
@@ -362,15 +368,71 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 	// 進捗: 20%
 	s.updateProgress(ctx, job, 20, "音声を生成中...")
 
-	// TTS で音声を生成
+	// TTS で音声を生成（チャンク分割対応）
 	var voiceStyle *string
 	if job.VoiceStyle != "" {
 		voiceStyle = &job.VoiceStyle
 	}
-	voiceAudio, err := s.ttsClient.SynthesizeMultiSpeaker(ctx, turns, voiceConfigs, voiceStyle)
-	if err != nil {
-		log.Error("TTS failed", "error", err)
-		return apperror.ErrGenerationFailed.WithMessage("音声の生成に失敗しました").WithError(err)
+
+	// ターンをチャンクに分割
+	chunks := splitTurnsIntoChunks(turns, maxTTSInputBytes)
+	log.Info("split turns into chunks", "total_turns", len(turns), "chunks", len(chunks))
+
+	// チャンク分割の詳細をログ出力
+	if len(chunks) > 1 {
+		turnIndex := 0
+		for i, chunk := range chunks {
+			chunkBytes := 0
+			for _, turn := range chunk {
+				chunkBytes += len(turn.Text)
+			}
+			firstText := truncateText(chunk[0].Text, 30)
+			lastText := truncateText(chunk[len(chunk)-1].Text, 30)
+			log.Info("chunk detail",
+				"chunk", i+1,
+				"turns", fmt.Sprintf("%d-%d", turnIndex+1, turnIndex+len(chunk)),
+				"turn_count", len(chunk),
+				"bytes", chunkBytes,
+				"first", firstText,
+				"last", lastText,
+			)
+			turnIndex += len(chunk)
+		}
+	}
+
+	var voiceAudio []byte
+	if len(chunks) == 1 {
+		// 単一チャンクの場合はそのまま TTS を呼び出し
+		voiceAudio, err = s.ttsClient.SynthesizeMultiSpeaker(ctx, chunks[0], voiceConfigs, voiceStyle)
+		if err != nil {
+			log.Error("TTS failed", "error", err)
+			return apperror.ErrGenerationFailed.WithMessage("音声の生成に失敗しました").WithError(err)
+		}
+	} else {
+		// 複数チャンクの場合は順次 TTS を呼び出して結合
+		audioChunks := make([][]byte, 0, len(chunks))
+		for i, chunk := range chunks {
+			progress := 20 + (i * 25 / len(chunks))
+			s.updateProgress(ctx, job, progress, fmt.Sprintf("音声を生成中... (%d/%d)", i+1, len(chunks)))
+
+			log.Info("synthesizing chunk", "chunk", i+1, "total", len(chunks), "turns", len(chunk))
+			chunkAudio, err := s.ttsClient.SynthesizeMultiSpeaker(ctx, chunk, voiceConfigs, voiceStyle)
+			if err != nil {
+				log.Error("TTS failed for chunk", "error", err, "chunk", i+1)
+				return apperror.ErrGenerationFailed.WithMessage(
+					fmt.Sprintf("音声の生成に失敗しました (チャンク %d/%d)", i+1, len(chunks)),
+				).WithError(err)
+			}
+			audioChunks = append(audioChunks, chunkAudio)
+		}
+
+		// FFmpeg で音声を結合
+		s.updateProgress(ctx, job, 45, "音声を結合中...")
+		voiceAudio, err = s.ffmpegService.ConcatAudio(ctx, audioChunks)
+		if err != nil {
+			log.Error("audio concat failed", "error", err)
+			return apperror.ErrInternal.WithMessage("音声の結合に失敗しました").WithError(err)
+		}
 	}
 
 	// 進捗: 50%
@@ -603,6 +665,59 @@ func (s *audioJobService) notifyFailed(jobID, userID string, errorCode, errorMes
 			"errorMessage": msg,
 		},
 	})
+}
+
+// truncateText はテキストを指定した長さで切り詰める（日本語対応）
+//
+// @param text - 切り詰める対象のテキスト
+// @param maxRunes - 最大文字数（runeベース）
+// @returns 切り詰められたテキスト（超過時は "..." を付加）
+func truncateText(text string, maxRunes int) string {
+	runes := []rune(text)
+	if len(runes) <= maxRunes {
+		return text
+	}
+	return string(runes[:maxRunes]) + "..."
+}
+
+// splitTurnsIntoChunks はターンをバイトサイズ制限に基づいてチャンクに分割する
+//
+// @param turns - 分割対象のターン配列
+// @param maxBytes - 1チャンクの最大バイト数
+// @returns チャンクに分割されたターン配列の配列
+func splitTurnsIntoChunks(turns []tts.SpeakerTurn, maxBytes int) [][]tts.SpeakerTurn {
+	if len(turns) == 0 {
+		return nil
+	}
+
+	var chunks [][]tts.SpeakerTurn
+	var currentChunk []tts.SpeakerTurn
+	currentBytes := 0
+
+	for _, turn := range turns {
+		// ターンのバイト数を計算（emotion がある場合は [emotion] も含む）
+		turnBytes := len(turn.Text)
+		if turn.Emotion != nil && *turn.Emotion != "" {
+			turnBytes += len(*turn.Emotion) + 3 // "[]" と空白
+		}
+
+		// 現在のチャンクに追加すると制限を超える場合は新しいチャンクを開始
+		if len(currentChunk) > 0 && currentBytes+turnBytes > maxBytes {
+			chunks = append(chunks, currentChunk)
+			currentChunk = nil
+			currentBytes = 0
+		}
+
+		currentChunk = append(currentChunk, turn)
+		currentBytes += turnBytes
+	}
+
+	// 最後のチャンクを追加
+	if len(currentChunk) > 0 {
+		chunks = append(chunks, currentChunk)
+	}
+
+	return chunks
 }
 
 // toAudioJobResponse は AudioJob モデルをレスポンス DTO に変換する
