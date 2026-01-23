@@ -18,6 +18,9 @@ AI 専用のポッドキャストを作成・配信できるプラットフォ�
 - **ストレージ**: GCS（Google Cloud Storage）
 - **TTS**: Google Cloud Text-to-Speech
 - **LLM**: OpenAI (GPT-4o)
+- **ジョブキュー**: Google Cloud Tasks
+- **WebSocket**: gorilla/websocket
+- **音声処理**: FFmpeg
 - **バージョン管理**: mise
 - **静的解析**: golangci-lint
 - **ローカル環境**: Docker Compose
@@ -58,6 +61,9 @@ Handler → Service → Repository → DB
 
 - [mise](https://mise.jdx.dev/) がインストールされていること
 - [Docker](https://www.docker.com/) および Docker Compose がインストールされていること
+- [FFmpeg](https://ffmpeg.org/) がインストールされていること（音声ミキシング機能で使用）
+  - macOS: `brew install ffmpeg`
+  - Ubuntu/Debian: `sudo apt install ffmpeg`
 
 ### インストール
 
@@ -83,6 +89,15 @@ cp .env.example .env        # 環境変数ファイルの作成
 | `AUTH_SECRET` | JWT 検証用シークレットキー（フロントエンドの AUTH_SECRET と同じ値） | - |
 | `CORS_ALLOWED_ORIGINS` | CORS 許可オリジン（カンマ区切りで複数指定可能） | http://localhost:3210 |
 | `OPENAI_API_KEY` | OpenAI API キー（台本生成に使用） | - |
+| `GOOGLE_CLOUD_PROJECT_ID` | GCP プロジェクト ID | - |
+| `GOOGLE_CLOUD_CREDENTIALS_JSON` | サービスアカウントの JSON キー | - |
+| `GOOGLE_CLOUD_STORAGE_BUCKET_NAME` | GCS バケット名 | - |
+| `GOOGLE_CLOUD_TASKS_LOCATION` | Cloud Tasks ロケーション | asia-northeast1 |
+| `GOOGLE_CLOUD_TASKS_QUEUE_NAME` | Cloud Tasks キュー名 | audio-generation-queue |
+| `GOOGLE_CLOUD_TASKS_SERVICE_ACCOUNT_EMAIL` | Cloud Tasks サービスアカウントメール | - |
+| `GOOGLE_CLOUD_TASKS_WORKER_URL` | ワーカーエンドポイント URL | - |
+
+> **Note:** `GOOGLE_CLOUD_PROJECT_ID` と `GOOGLE_CLOUD_TASKS_WORKER_URL` が未設定の場合、Cloud Tasks を使わずに goroutine で直接ジョブを実行します（ローカル開発用）。
 
 ### DB の起動
 
@@ -190,7 +205,11 @@ make swagger
 │   ├── dto/             # Data Transfer Objects
 │   ├── handler/         # ハンドラー
 │   ├── infrastructure/  # 外部サービス連携
-│   │   └── llm/         # LLM クライアント（OpenAI）
+│   │   ├── cloudtasks/  # Cloud Tasks クライアント
+│   │   ├── llm/         # LLM クライアント（OpenAI）
+│   │   ├── storage/     # GCS クライアント
+│   │   ├── tts/         # Google TTS クライアント
+│   │   └── websocket/   # WebSocket Hub
 │   ├── middleware/      # ミドルウェア
 │   ├── model/           # ドメインモデル
 │   ├── pkg/             # 共通ユーティリティ

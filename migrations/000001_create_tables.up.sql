@@ -8,6 +8,7 @@
 CREATE TYPE oauth_provider AS ENUM ('google');
 CREATE TYPE gender AS ENUM ('male', 'female', 'neutral');
 CREATE TYPE user_role AS ENUM ('user', 'admin');
+CREATE TYPE audio_job_status AS ENUM ('pending', 'processing', 'completed', 'failed');
 
 -- ===========================================
 -- メディア関連テーブル
@@ -221,6 +222,35 @@ CREATE TABLE episodes (
 
 CREATE INDEX idx_episodes_channel_id ON episodes (channel_id);
 CREATE INDEX idx_episodes_published_at ON episodes (published_at);
+
+-- 音声生成ジョブ
+CREATE TABLE audio_jobs (
+	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+	episode_id UUID NOT NULL REFERENCES episodes (id) ON DELETE CASCADE,
+	user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+	status audio_job_status NOT NULL DEFAULT 'pending',
+	progress INTEGER NOT NULL DEFAULT 0,
+	voice_style TEXT NOT NULL DEFAULT '',
+	-- BGM ミキシング設定
+	bgm_volume_db DECIMAL(5, 2) NOT NULL DEFAULT -15.0,
+	fade_out_ms INTEGER NOT NULL DEFAULT 3000,
+	padding_start_ms INTEGER NOT NULL DEFAULT 500,
+	padding_end_ms INTEGER NOT NULL DEFAULT 1000,
+	-- 結果
+	result_audio_id UUID REFERENCES audios (id) ON DELETE SET NULL,
+	error_message TEXT,
+	error_code VARCHAR(50),
+	-- タイムスタンプ
+	started_at TIMESTAMP,
+	completed_at TIMESTAMP,
+	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_audio_jobs_episode_id ON audio_jobs (episode_id);
+CREATE INDEX idx_audio_jobs_user_id ON audio_jobs (user_id);
+CREATE INDEX idx_audio_jobs_status ON audio_jobs (status);
+CREATE INDEX idx_audio_jobs_created_at ON audio_jobs (created_at DESC);
 
 -- 台本行
 CREATE TABLE script_lines (

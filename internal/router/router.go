@@ -81,6 +81,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.GET("/me/bgms/:bgmId", container.BgmHandler.GetMyBgm)
 	authenticated.PATCH("/me/bgms/:bgmId", container.BgmHandler.UpdateMyBgm)
 	authenticated.DELETE("/me/bgms/:bgmId", container.BgmHandler.DeleteMyBgm)
+	authenticated.GET("/me/audio-jobs", container.AudioJobHandler.ListMyAudioJobs)
 
 	// Channels
 	authenticated.GET("/channels/:channelId", container.ChannelHandler.GetChannel)
@@ -99,7 +100,10 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/unpublish", container.EpisodeHandler.UnpublishEpisode)
 	authenticated.PUT("/channels/:channelId/episodes/:episodeId/bgm", container.EpisodeHandler.SetEpisodeBgm)
 	authenticated.DELETE("/channels/:channelId/episodes/:episodeId/bgm", container.EpisodeHandler.DeleteEpisodeBgm)
-	authenticated.POST("/channels/:channelId/episodes/:episodeId/audio/generate", container.EpisodeHandler.GenerateAudio)
+	authenticated.POST("/channels/:channelId/episodes/:episodeId/audio/generate", container.AudioJobHandler.GenerateAudioAsync)
+
+	// Audio Jobs
+	authenticated.GET("/audio-jobs/:jobId", container.AudioJobHandler.GetAudioJob)
 
 	// Script Lines
 	authenticated.GET("/channels/:channelId/episodes/:episodeId/script/lines", container.ScriptLineHandler.ListScriptLines)
@@ -131,6 +135,14 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	admin.Use(middleware.Auth(container.TokenManager))
 	admin.Use(middleware.Admin(container.UserRepository))
 	admin.POST("/cleanup/orphaned-media", container.CleanupHandler.CleanupOrphanedMedia)
+
+	// Internal（Cloud Tasks ワーカー用）
+	internal := r.Group("/internal")
+	internal.Use(middleware.CloudTasksAuth(cfg.GoogleCloudTasksWorkerURL, cfg.GoogleCloudTasksServiceAccountEmail))
+	internal.POST("/worker/audio", container.WorkerHandler.ProcessAudioJob)
+
+	// WebSocket
+	r.GET("/ws/audio-jobs", container.WebSocketHandler.HandleAudioJobs)
 
 	return r
 }

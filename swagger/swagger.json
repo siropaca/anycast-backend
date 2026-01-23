@@ -58,6 +58,73 @@
                 }
             }
         },
+        "/audio-jobs/{jobId}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "音声生成ジョブの詳細を取得します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "audio-jobs"
+                ],
+                "summary": "音声生成ジョブ詳細取得",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ジョブ ID",
+                        "name": "jobId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.AudioJobDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/audios": {
             "post": {
                 "security": [
@@ -794,88 +861,6 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.EpisodeDataResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/channels/{channelId}/episodes/{episodeId}/audio/generate": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "指定したエピソードの台本から音声を生成します",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "episodes"
-                ],
-                "summary": "エピソード音声生成",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "チャンネル ID",
-                        "name": "channelId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "エピソード ID",
-                        "name": "episodeId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "音声生成リクエスト",
-                        "name": "request",
-                        "in": "body",
-                        "schema": {
-                            "$ref": "#/definitions/request.GenerateAudioRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.GenerateAudioResponse"
                         }
                     },
                     "400": {
@@ -2030,6 +2015,61 @@
                 }
             }
         },
+        "/internal/worker/audio": {
+            "post": {
+                "description": "Cloud Tasks から呼び出される音声生成ワーカーエンドポイント",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "internal"
+                ],
+                "summary": "音声生成ジョブを処理",
+                "parameters": [
+                    {
+                        "description": "ジョブ情報",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.AudioJobPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/me": {
             "get": {
                 "security": [
@@ -2050,6 +2090,60 @@
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.MeDataResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/me/audio-jobs": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "自分の音声生成ジョブ一覧を取得します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "me"
+                ],
+                "summary": "自分の音声生成ジョブ一覧取得",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ステータスでフィルタ（pending / processing / completed / failed）",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.AudioJobListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
                     "401": {
@@ -2689,6 +2783,88 @@
                 }
             }
         },
+        "/me/channels/{channelId}/episodes/{episodeId}/audio/generate-async": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "エピソードの音声を非同期で生成します。ジョブを作成し、完了時は WebSocket で通知されます。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "me"
+                ],
+                "summary": "非同期音声生成",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "チャンネル ID",
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "エピソード ID",
+                        "name": "episodeId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "音声生成オプション",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/request.GenerateAudioAsyncRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/response.AudioJobDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/me/characters": {
             "get": {
                 "security": [
@@ -3168,9 +3344,52 @@
                     }
                 }
             }
+        },
+        "/ws/audio-jobs": {
+            "get": {
+                "description": "リアルタイムで音声生成ジョブの進捗を受信するための WebSocket エンドポイント",
+                "tags": [
+                    "websocket"
+                ],
+                "summary": "音声生成ジョブの WebSocket 接続",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "JWT アクセストークン",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "101": {
+                        "description": "Switching Protocols",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "handler.AudioJobPayload": {
+            "type": "object",
+            "required": [
+                "jobId"
+            ],
+            "properties": {
+                "jobId": {
+                    "type": "string"
+                }
+            }
+        },
         "request.ChannelCharactersInput": {
             "type": "object",
             "properties": {
@@ -3340,9 +3559,29 @@
                 }
             }
         },
-        "request.GenerateAudioRequest": {
+        "request.GenerateAudioAsyncRequest": {
             "type": "object",
             "properties": {
+                "bgmVolumeDb": {
+                    "type": "number",
+                    "maximum": 0,
+                    "minimum": -60
+                },
+                "fadeOutMs": {
+                    "type": "integer",
+                    "maximum": 30000,
+                    "minimum": 0
+                },
+                "paddingEndMs": {
+                    "type": "integer",
+                    "maximum": 10000,
+                    "minimum": 0
+                },
+                "paddingStartMs": {
+                    "type": "integer",
+                    "maximum": 10000,
+                    "minimum": 0
+                },
                 "voiceStyle": {
                     "type": "string",
                     "maxLength": 500
@@ -3609,6 +3848,147 @@
                     "type": "string"
                 },
                 "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.AudioJobChannelResponse": {
+            "type": "object",
+            "required": [
+                "id",
+                "name"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.AudioJobDataResponse": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.AudioJobResponse"
+                }
+            }
+        },
+        "response.AudioJobEpisodeResponse": {
+            "type": "object",
+            "required": [
+                "id",
+                "title"
+            ],
+            "properties": {
+                "channel": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.AudioJobChannelResponse"
+                        }
+                    ],
+                    "x-nullable": true
+                },
+                "id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.AudioJobListResponse": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.AudioJobResponse"
+                    }
+                }
+            }
+        },
+        "response.AudioJobResponse": {
+            "type": "object",
+            "required": [
+                "createdAt",
+                "episodeId",
+                "id",
+                "progress",
+                "status",
+                "updatedAt"
+            ],
+            "properties": {
+                "bgmVolumeDb": {
+                    "type": "number"
+                },
+                "completedAt": {
+                    "type": "string",
+                    "x-nullable": true
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "episode": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.AudioJobEpisodeResponse"
+                        }
+                    ],
+                    "x-nullable": true
+                },
+                "episodeId": {
+                    "type": "string"
+                },
+                "errorCode": {
+                    "type": "string",
+                    "x-nullable": true
+                },
+                "errorMessage": {
+                    "type": "string",
+                    "x-nullable": true
+                },
+                "fadeOutMs": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "paddingEndMs": {
+                    "type": "integer"
+                },
+                "paddingStartMs": {
+                    "type": "integer"
+                },
+                "progress": {
+                    "type": "integer"
+                },
+                "resultAudio": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.AudioResponse"
+                        }
+                    ],
+                    "x-nullable": true
+                },
+                "startedAt": {
+                    "type": "string",
+                    "x-nullable": true
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "voiceStyle": {
                     "type": "string"
                 }
             }
@@ -4351,17 +4731,6 @@
             "properties": {
                 "error": {
                     "$ref": "#/definitions/response.ErrorDetail"
-                }
-            }
-        },
-        "response.GenerateAudioResponse": {
-            "type": "object",
-            "required": [
-                "data"
-            ],
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/response.AudioResponse"
                 }
             }
         },

@@ -40,8 +40,8 @@ func main() {
 
 	// GCS クライアント
 	var storageClient storage.Client
-	if cfg.GCSBucketName != "" && cfg.GoogleCredentialsJSON != "" {
-		storageClient, err = storage.NewGCSClient(ctx, cfg.GCSBucketName, cfg.GoogleCredentialsJSON)
+	if cfg.GoogleCloudStorageBucketName != "" && cfg.GoogleCloudCredentialsJSON != "" {
+		storageClient, err = storage.NewGCSClient(ctx, cfg.GoogleCloudStorageBucketName, cfg.GoogleCloudCredentialsJSON)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: failed to create storage client: %v\n", err)
 		}

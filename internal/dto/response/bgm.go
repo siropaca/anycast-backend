@@ -41,8 +41,8 @@ type BgmResponse struct {
 
 // BGM に紐づくエピソード情報のレスポンス
 type BgmEpisodeResponse struct {
-	ID      uuid.UUID              `json:"id" validate:"required"`
-	Title   string                 `json:"title" validate:"required"`
+	ID      uuid.UUID                 `json:"id" validate:"required"`
+	Title   string                    `json:"title" validate:"required"`
 	Channel BgmEpisodeChannelResponse `json:"channel" validate:"required"`
 }
 

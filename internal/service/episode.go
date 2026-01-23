@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
@@ -11,7 +10,6 @@ import (
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/tts"
 	"github.com/siropaca/anycast-backend/internal/model"
-	"github.com/siropaca/anycast-backend/internal/pkg/audio"
 	"github.com/siropaca/anycast-backend/internal/pkg/logger"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 	"github.com/siropaca/anycast-backend/internal/repository"
@@ -26,7 +24,6 @@ type EpisodeService interface {
 	DeleteEpisode(ctx context.Context, userID, channelID, episodeID string) error
 	PublishEpisode(ctx context.Context, userID, channelID, episodeID string, publishedAt *string) (*response.EpisodeDataResponse, error)
 	UnpublishEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error)
-	GenerateAudio(ctx context.Context, userID, channelID, episodeID string, voiceStyle *string) (*response.GenerateAudioResponse, error)
 	SetEpisodeBgm(ctx context.Context, userID, channelID, episodeID string, req request.SetEpisodeBgmRequest) (*response.EpisodeDataResponse, error)
 	DeleteEpisodeBgm(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error)
 }
@@ -585,160 +582,6 @@ func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode
 	}
 
 	return resp, nil
-}
-
-// エピソードの音声を生成する
-func (s *episodeService) GenerateAudio(ctx context.Context, userID, channelID, episodeID string, voiceStyle *string) (*response.GenerateAudioResponse, error) {
-	log := logger.FromContext(ctx)
-
-	uid, err := uuid.Parse(userID)
-	if err != nil {
-		return nil, err
-	}
-
-	cid, err := uuid.Parse(channelID)
-	if err != nil {
-		return nil, err
-	}
-
-	eid, err := uuid.Parse(episodeID)
-	if err != nil {
-		return nil, err
-	}
-
-	// チャンネルの存在確認とオーナーチェック
-	channel, err := s.channelRepo.FindByID(ctx, cid)
-	if err != nil {
-		return nil, err
-	}
-
-	if channel.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("このエピソードの音声生成権限がありません")
-	}
-
-	// エピソードの存在確認とチャンネルの一致チェック
-	episode, err := s.episodeRepo.FindByID(ctx, eid)
-	if err != nil {
-		return nil, err
-	}
-
-	if episode.ChannelID != cid {
-		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
-	}
-
-	// 台本行を取得（Voice 情報を含む）
-	scriptLines, err := s.scriptLineRepo.FindByEpisodeIDWithVoice(ctx, eid)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(scriptLines) == 0 {
-		return nil, apperror.ErrValidation.WithMessage("このエピソードには台本行がありません")
-	}
-
-	// speech 行から turns と voiceConfigs を構築
-	// Google TTS の multi-speaker 機能では speaker alias に英数字のみ使用可能なため、
-	// キャラクター名から speakerX 形式のエイリアスにマッピングする
-	var turns []tts.SpeakerTurn
-	speakerAliasMap := make(map[string]string) // キャラクター名 -> speakerX
-	voiceConfigMap := make(map[string]string)  // speakerX -> voiceID
-	speakerIndex := 1
-
-	for _, line := range scriptLines {
-		if line.Text == "" {
-			continue
-		}
-
-		// キャラクター名からエイリアスを取得または作成
-		alias, exists := speakerAliasMap[line.Speaker.Name]
-		if !exists {
-			alias = fmt.Sprintf("speaker%d", speakerIndex)
-			speakerAliasMap[line.Speaker.Name] = alias
-			voiceConfigMap[alias] = line.Speaker.Voice.ProviderVoiceID
-			speakerIndex++
-		}
-
-		// Turn を追加
-		turns = append(turns, tts.SpeakerTurn{
-			Speaker: alias,
-			Text:    line.Text,
-			Emotion: line.Emotion,
-		})
-	}
-
-	if len(turns) == 0 {
-		return nil, apperror.ErrValidation.WithMessage("音声生成に使用できる台本行がありません")
-	}
-
-	// voiceConfigs を構築
-	voiceConfigs := make([]tts.SpeakerVoiceConfig, 0, len(voiceConfigMap))
-	for alias, voiceID := range voiceConfigMap {
-		voiceConfigs = append(voiceConfigs, tts.SpeakerVoiceConfig{
-			SpeakerAlias: alias,
-			VoiceID:      voiceID,
-		})
-	}
-
-	// Multi-speaker TTS で音声を生成
-	combinedAudio, err := s.ttsClient.SynthesizeMultiSpeaker(ctx, turns, voiceConfigs, voiceStyle)
-	if err != nil {
-		log.Error("failed to synthesize multi-speaker audio", "error", err)
-		return nil, apperror.ErrGenerationFailed.WithMessage("音声の生成に失敗しました").WithError(err)
-	}
-
-	// 新しい Audio ID を生成してパスを作成
-	audioID := uuid.New()
-	audioPath := storage.GenerateAudioPath(audioID.String())
-
-	// GCS にアップロード
-	if _, err := s.storageClient.Upload(ctx, combinedAudio, audioPath, "audio/mpeg"); err != nil {
-		log.Error("failed to upload audio", "error", err)
-		return nil, apperror.ErrInternal.WithMessage("音声のアップロードに失敗しました").WithError(err)
-	}
-
-	// Audio レコードを作成
-	audioRecord := &model.Audio{
-		ID:         audioID,
-		MimeType:   "audio/mpeg",
-		Path:       audioPath,
-		Filename:   audioID.String() + ".mp3",
-		FileSize:   len(combinedAudio),
-		DurationMs: audio.GetMP3DurationMs(combinedAudio),
-	}
-
-	if err := s.audioRepo.Create(ctx, audioRecord); err != nil {
-		log.Error("failed to create audio record", "error", err)
-		return nil, apperror.ErrInternal.WithMessage("音声レコードの保存に失敗しました").WithError(err)
-	}
-
-	// エピソードの FullAudioID, voiceStyle, AudioOutdated を更新
-	episode.FullAudioID = &audioID
-	episode.FullAudio = nil
-	episode.AudioOutdated = false
-	if voiceStyle != nil {
-		episode.VoiceStyle = *voiceStyle
-	}
-
-	if err := s.episodeRepo.Update(ctx, episode); err != nil {
-		return nil, err
-	}
-
-	// 署名付き URL を生成
-	signedURL, err := s.storageClient.GenerateSignedURL(ctx, audioPath, storage.SignedURLExpirationAudio)
-	if err != nil {
-		log.Error("failed to generate signed URL for audio", "error", err)
-		return nil, apperror.ErrInternal.WithMessage("音声 URL の生成に失敗しました").WithError(err)
-	}
-
-	return &response.GenerateAudioResponse{
-		Data: response.AudioResponse{
-			ID:         audioID,
-			URL:        signedURL,
-			MimeType:   "audio/mpeg",
-			FileSize:   len(combinedAudio),
-			DurationMs: audio.GetMP3DurationMs(combinedAudio),
-		},
-	}, nil
 }
 
 // エピソードに BGM を設定する
