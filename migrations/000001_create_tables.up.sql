@@ -232,10 +232,10 @@ CREATE TABLE audio_jobs (
 	progress INTEGER NOT NULL DEFAULT 0,
 	voice_style TEXT NOT NULL DEFAULT '',
 	-- BGM ミキシング設定
-	bgm_volume_db DECIMAL(5, 2) DEFAULT -15.0,
-	fade_out_ms INTEGER DEFAULT 3000,
-	padding_start_ms INTEGER DEFAULT 500,
-	padding_end_ms INTEGER DEFAULT 1000,
+	bgm_volume_db DECIMAL(5, 2) NOT NULL DEFAULT -15.0,
+	fade_out_ms INTEGER NOT NULL DEFAULT 3000,
+	padding_start_ms INTEGER NOT NULL DEFAULT 500,
+	padding_end_ms INTEGER NOT NULL DEFAULT 1000,
 	-- 結果
 	result_audio_id UUID REFERENCES audios (id) ON DELETE SET NULL,
 	error_message TEXT,
