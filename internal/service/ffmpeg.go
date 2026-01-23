@@ -133,9 +133,7 @@ func (s *ffmpegService) MixAudioWithBGM(ctx context.Context, params MixParams) (
 }
 
 // ConcatAudio は複数の音声データを連結する
-//
-// @param audioChunks - 連結する音声データの配列
-// @returns 連結された音声データ
+// audioChunks に連結する音声データの配列を渡す。
 func (s *ffmpegService) ConcatAudio(ctx context.Context, audioChunks [][]byte) ([]byte, error) {
 	log := logger.FromContext(ctx)
 

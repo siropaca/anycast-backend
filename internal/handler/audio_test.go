@@ -41,8 +41,8 @@ func setupAudioRouter(h *AudioHandler) *gin.Engine {
 }
 
 // テスト用のマルチパートフォームを作成する
-func createAudioMultipartForm(t *testing.T, filename, contentType string, content []byte) (*bytes.Buffer, string) {
-	body := new(bytes.Buffer)
+func createAudioMultipartForm(t *testing.T, filename, contentType string, content []byte) (body *bytes.Buffer, formContentType string) {
+	body = new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
 
 	part, err := writer.CreateFormFile("file", filename)

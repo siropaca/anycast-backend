@@ -343,9 +343,9 @@ func TestSplitTurnsIntoChunks(t *testing.T) {
 	t.Run("日本語テキストが正しく分割される", func(t *testing.T) {
 		// 日本語は UTF-8 で 1 文字 3 バイト
 		turns := []tts.SpeakerTurn{
-			{Speaker: "speaker1", Text: "こんにちは"},   // 15 bytes
+			{Speaker: "speaker1", Text: "こんにちは"},  // 15 bytes
 			{Speaker: "speaker2", Text: "お元気ですか"}, // 18 bytes
-			{Speaker: "speaker1", Text: "元気です"},     // 12 bytes
+			{Speaker: "speaker1", Text: "元気です"},   // 12 bytes
 		}
 		// 制限を 35 バイトに設定
 		chunks := splitTurnsIntoChunks(turns, 35)

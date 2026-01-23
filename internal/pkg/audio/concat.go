@@ -11,9 +11,7 @@ import (
 // Concat は複数の音声データを連結する
 //
 // FFmpeg の concat demuxer を使用して、複数の MP3 ファイルをシームレスに結合する。
-//
-// @param audioChunks - 連結する音声データの配列
-// @returns 連結された音声データ
+// audioChunks には連結する音声データの配列を渡す。
 func Concat(audioChunks [][]byte) ([]byte, error) {
 	if len(audioChunks) == 0 {
 		return nil, fmt.Errorf("no audio chunks to concatenate")

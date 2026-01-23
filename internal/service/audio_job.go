@@ -668,10 +668,7 @@ func (s *audioJobService) notifyFailed(jobID, userID string, errorCode, errorMes
 }
 
 // truncateText はテキストを指定した長さで切り詰める（日本語対応）
-//
-// @param text - 切り詰める対象のテキスト
-// @param maxRunes - 最大文字数（runeベース）
-// @returns 切り詰められたテキスト（超過時は "..." を付加）
+// maxRunes で最大文字数（runeベース）を指定し、超過時は "..." を付加する。
 func truncateText(text string, maxRunes int) string {
 	runes := []rune(text)
 	if len(runes) <= maxRunes {
@@ -681,10 +678,7 @@ func truncateText(text string, maxRunes int) string {
 }
 
 // splitTurnsIntoChunks はターンをバイトサイズ制限に基づいてチャンクに分割する
-//
-// @param turns - 分割対象のターン配列
-// @param maxBytes - 1チャンクの最大バイト数
-// @returns チャンクに分割されたターン配列の配列
+// maxBytes で1チャンクの最大バイト数を指定する。
 func splitTurnsIntoChunks(turns []tts.SpeakerTurn, maxBytes int) [][]tts.SpeakerTurn {
 	if len(turns) == 0 {
 		return nil
