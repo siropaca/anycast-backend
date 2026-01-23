@@ -4261,6 +4261,7 @@
         "response.EpisodeResponse": {
             "type": "object",
             "required": [
+                "audioOutdated",
                 "createdAt",
                 "description",
                 "id",
@@ -4277,6 +4278,9 @@
                         }
                     ],
                     "x-nullable": true
+                },
+                "audioOutdated": {
+                    "type": "boolean"
                 },
                 "bgm": {
                     "allOf": [

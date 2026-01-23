@@ -204,6 +204,14 @@ func (s *scriptLineService) Create(ctx context.Context, userID, channelID, episo
 		return nil, err
 	}
 
+	// 音声が生成済みの場合は audioOutdated を true に設定
+	if episode.FullAudioID != nil {
+		episode.AudioOutdated = true
+		if err := s.episodeRepo.Update(ctx, episode); err != nil {
+			return nil, err
+		}
+	}
+
 	// 作成した行を再取得（Speaker 情報を含める）
 	createdLine, err := s.scriptLineRepo.FindByID(ctx, scriptLine.ID)
 	if err != nil {
@@ -310,6 +318,14 @@ func (s *scriptLineService) Update(ctx context.Context, userID, channelID, episo
 		return nil, err
 	}
 
+	// 音声が生成済みの場合は audioOutdated を true に設定
+	if episode.FullAudioID != nil {
+		episode.AudioOutdated = true
+		if err := s.episodeRepo.Update(ctx, episode); err != nil {
+			return nil, err
+		}
+	}
+
 	// 更新した行を再取得（Speaker 情報を含める）
 	scriptLine, err = s.scriptLineRepo.FindByID(ctx, lid)
 	if err != nil {
@@ -375,7 +391,19 @@ func (s *scriptLineService) Delete(ctx context.Context, userID, channelID, episo
 	}
 
 	// 台本行を削除
-	return s.scriptLineRepo.Delete(ctx, lid)
+	if err := s.scriptLineRepo.Delete(ctx, lid); err != nil {
+		return err
+	}
+
+	// 音声が生成済みの場合は audioOutdated を true に設定
+	if episode.FullAudioID != nil {
+		episode.AudioOutdated = true
+		if err := s.episodeRepo.Update(ctx, episode); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // 台本行の順序を並び替える
@@ -466,6 +494,14 @@ func (s *scriptLineService) Reorder(ctx context.Context, userID, channelID, epis
 
 	if err != nil {
 		return nil, err
+	}
+
+	// 音声が生成済みの場合は audioOutdated を true に設定
+	if episode.FullAudioID != nil {
+		episode.AudioOutdated = true
+		if err := s.episodeRepo.Update(ctx, episode); err != nil {
+			return nil, err
+		}
 	}
 
 	// 更新後の台本行一覧を取得

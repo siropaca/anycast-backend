@@ -17,8 +17,9 @@ type Episode struct {
 	ArtworkID   *uuid.UUID `gorm:"type:uuid;column:artwork_id"`
 	BgmID       *uuid.UUID `gorm:"type:uuid;column:bgm_id"`
 	SystemBgmID *uuid.UUID `gorm:"type:uuid;column:system_bgm_id"`
-	FullAudioID *uuid.UUID `gorm:"type:uuid;column:full_audio_id"`
-	PublishedAt *time.Time `gorm:"column:published_at"`
+	FullAudioID   *uuid.UUID `gorm:"type:uuid;column:full_audio_id"`
+	AudioOutdated bool       `gorm:"not null;default:false;column:audio_outdated"`
+	PublishedAt   *time.Time `gorm:"column:published_at"`
 	CreatedAt   time.Time  `gorm:"not null;default:CURRENT_TIMESTAMP"`
 	UpdatedAt   time.Time  `gorm:"not null;default:CURRENT_TIMESTAMP"`
 

@@ -299,7 +299,15 @@ OAuth プロバイダとの連携情報。
 | script | ScriptLine[] | | 台本（順序付きの ScriptLine 配列） |
 | bgm | Audio | | BGM 音声ファイル |
 | fullAudio | Audio | | 結合済み音声（全 ScriptLine + BGM） |
+| audioOutdated | Boolean | ◯ | 音声生成後に台本が変更されたか（デフォルト: false） |
 | publishedAt | DateTime | | 公開日時（NULL = 下書き） |
+
+#### audioOutdated の更新ルール
+
+- 音声生成時（GenerateAudio）: `false` にリセット
+- 台本変更時（ScriptLine の追加/更新/削除/並び替え）:
+  - `fullAudio` が存在する場合のみ `true` に設定
+  - `fullAudio` が存在しない場合は変更なし
 
 #### 入力形式
 

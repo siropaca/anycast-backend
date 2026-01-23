@@ -515,14 +515,15 @@ func (s *episodeService) toEpisodeResponses(ctx context.Context, episodes []mode
 // Episode モデルをレスポンス DTO に変換する
 func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode) (response.EpisodeResponse, error) {
 	resp := response.EpisodeResponse{
-		ID:          e.ID,
-		Title:       e.Title,
-		Description: e.Description,
-		UserPrompt:  e.UserPrompt,
-		VoiceStyle:  e.VoiceStyle,
-		PublishedAt: e.PublishedAt,
-		CreatedAt:   e.CreatedAt,
-		UpdatedAt:   e.UpdatedAt,
+		ID:            e.ID,
+		Title:         e.Title,
+		Description:   e.Description,
+		UserPrompt:    e.UserPrompt,
+		VoiceStyle:    e.VoiceStyle,
+		AudioOutdated: e.AudioOutdated,
+		PublishedAt:   e.PublishedAt,
+		CreatedAt:     e.CreatedAt,
+		UpdatedAt:     e.UpdatedAt,
 	}
 
 	if e.Artwork != nil {
@@ -710,9 +711,10 @@ func (s *episodeService) GenerateAudio(ctx context.Context, userID, channelID, e
 		return nil, apperror.ErrInternal.WithMessage("音声レコードの保存に失敗しました").WithError(err)
 	}
 
-	// エピソードの FullAudioID と voiceStyle を更新
+	// エピソードの FullAudioID, voiceStyle, AudioOutdated を更新
 	episode.FullAudioID = &audioID
 	episode.FullAudio = nil
+	episode.AudioOutdated = false
 	if voiceStyle != nil {
 		episode.VoiceStyle = *voiceStyle
 	}
