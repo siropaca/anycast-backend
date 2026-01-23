@@ -35,15 +35,15 @@ func NewWebSocketHandler(hub *websocket.Hub, tm jwt.TokenManager) *WebSocketHand
 	}
 }
 
-// HandleAudioJobs godoc
-// @Summary 音声生成ジョブの WebSocket 接続
-// @Description リアルタイムで音声生成ジョブの進捗を受信するための WebSocket エンドポイント
+// HandleJobs godoc
+// @Summary ジョブの WebSocket 接続
+// @Description リアルタイムで音声生成・台本生成ジョブの進捗を受信するための WebSocket エンドポイント
 // @Tags websocket
 // @Param token query string true "JWT アクセストークン"
 // @Success 101 {string} string "Switching Protocols"
 // @Failure 401 {object} response.ErrorResponse
-// @Router /ws/audio-jobs [get]
-func (h *WebSocketHandler) HandleAudioJobs(c *gin.Context) {
+// @Router /ws/jobs [get]
+func (h *WebSocketHandler) HandleJobs(c *gin.Context) {
 	log := logger.FromContext(c.Request.Context())
 
 	// クエリパラメータからトークンを取得

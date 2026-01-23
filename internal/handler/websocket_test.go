@@ -17,11 +17,11 @@ import (
 func setupWebSocketRouter(h *WebSocketHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	r.GET("/ws/audio-jobs", h.HandleAudioJobs)
+	r.GET("/ws/jobs", h.HandleJobs)
 	return r
 }
 
-func TestWebSocketHandler_HandleAudioJobs(t *testing.T) {
+func TestWebSocketHandler_HandleJobs(t *testing.T) {
 	t.Run("トークンが指定されていない場合は 401 を返す", func(t *testing.T) {
 		mockTm := new(mockTokenManager)
 		hub := websocket.NewHub()
@@ -30,7 +30,7 @@ func TestWebSocketHandler_HandleAudioJobs(t *testing.T) {
 		router := setupWebSocketRouter(handler)
 
 		w := httptest.NewRecorder()
-		req := httptest.NewRequest("GET", "/ws/audio-jobs", http.NoBody)
+		req := httptest.NewRequest("GET", "/ws/jobs", http.NoBody)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
@@ -46,7 +46,7 @@ func TestWebSocketHandler_HandleAudioJobs(t *testing.T) {
 		router := setupWebSocketRouter(handler)
 
 		w := httptest.NewRecorder()
-		req := httptest.NewRequest("GET", "/ws/audio-jobs?token=invalid-token", http.NoBody)
+		req := httptest.NewRequest("GET", "/ws/jobs?token=invalid-token", http.NoBody)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
@@ -66,7 +66,7 @@ func TestWebSocketHandler_HandleAudioJobs(t *testing.T) {
 		router := setupWebSocketRouter(handler)
 
 		w := httptest.NewRecorder()
-		req := httptest.NewRequest("GET", "/ws/audio-jobs?token=valid-token", http.NoBody)
+		req := httptest.NewRequest("GET", "/ws/jobs?token=valid-token", http.NoBody)
 		router.ServeHTTP(w, req)
 
 		// WebSocket のアップグレードは httptest では完了しないため、
