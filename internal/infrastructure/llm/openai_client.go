@@ -24,7 +24,7 @@ const (
 	maxRetries = 3
 )
 
-// LLM クライアントのインターフェース
+// Client は LLM クライアントのインターフェース
 type Client interface {
 	GenerateScript(ctx context.Context, systemPrompt, userPrompt string) (string, error)
 }
@@ -33,7 +33,7 @@ type openAIClient struct {
 	client openai.Client
 }
 
-// OpenAI クライアントを作成する
+// NewOpenAIClient は OpenAI クライアントを作成する
 func NewOpenAIClient(apiKey string) Client {
 	client := openai.NewClient(
 		option.WithAPIKey(apiKey),
@@ -45,7 +45,7 @@ func NewOpenAIClient(apiKey string) Client {
 	}
 }
 
-// 台本を生成する
+// GenerateScript は台本を生成する
 func (c *openAIClient) GenerateScript(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
 	log := logger.FromContext(ctx)
 

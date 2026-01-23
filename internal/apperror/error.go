@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// アプリケーション全体で使用するエラー型
+// AppError はアプリケーション全体で使用するエラー型
 type AppError struct {
 	Code       ErrorCode `json:"code"`
 	Message    string    `json:"message"`
@@ -14,7 +14,7 @@ type AppError struct {
 	Err        error     `json:"-"`
 }
 
-// error インターフェースの実装
+// Error は error インターフェースの実装
 func (e *AppError) Error() string {
 	if e.Err != nil {
 		return fmt.Sprintf("%s: %s: %v", e.Code, e.Message, e.Err)
@@ -22,22 +22,22 @@ func (e *AppError) Error() string {
 	return fmt.Sprintf("%s: %s", e.Code, e.Message)
 }
 
-// ラップされた元のエラーを返す
+// Unwrap はラップされた元のエラーを返す
 func (e *AppError) Unwrap() error {
 	return e.Err
 }
 
-// 新しい AppError を作成する
+// New は新しい AppError を作成する
 func New(code ErrorCode, message string, status int) *AppError {
 	return &AppError{Code: code, Message: message, HTTPStatus: status}
 }
 
-// 既存のエラーをラップした AppError を作成する
+// Wrap は既存のエラーをラップした AppError を作成する
 func Wrap(err error, code ErrorCode, message string, status int) *AppError {
 	return &AppError{Code: code, Message: message, HTTPStatus: status, Err: err}
 }
 
-// エラーが指定したコードかどうかを判定する
+// IsCode はエラーが指定したコードかどうかを判定する
 func IsCode(err error, code ErrorCode) bool {
 	var appErr *AppError
 	if errors.As(err, &appErr) {
@@ -46,7 +46,7 @@ func IsCode(err error, code ErrorCode) bool {
 	return false
 }
 
-// 新しいメッセージでエラーをコピーする
+// WithMessage は新しいメッセージでエラーをコピーする
 func (e *AppError) WithMessage(msg string) *AppError {
 	return &AppError{
 		Code:       e.Code,
@@ -57,7 +57,7 @@ func (e *AppError) WithMessage(msg string) *AppError {
 	}
 }
 
-// 詳細情報を付与したエラーをコピーする
+// WithDetails は詳細情報を付与したエラーをコピーする
 func (e *AppError) WithDetails(details any) *AppError {
 	return &AppError{
 		Code:       e.Code,
@@ -68,7 +68,7 @@ func (e *AppError) WithDetails(details any) *AppError {
 	}
 }
 
-// 元のエラーを付与したエラーをコピーする
+// WithError は元のエラーを付与したエラーをコピーする
 func (e *AppError) WithError(err error) *AppError {
 	return &AppError{
 		Code:       e.Code,

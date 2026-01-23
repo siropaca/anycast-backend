@@ -9,7 +9,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
-// 管理者権限を持つユーザーのみアクセスを許可するミドルウェア
+// Admin は管理者権限を持つユーザーのみアクセスを許可するミドルウェア
 // Auth ミドルウェアの後に使用する必要がある
 func Admin(userRepo repository.UserRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {

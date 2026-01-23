@@ -12,7 +12,7 @@ var (
 	leadingSpaces = regexp.MustCompile(`(?m)^[ \t]+`)
 )
 
-// プロンプトの不要な空白を除去してトークン数を削減する
+// Compress はプロンプトの不要な空白を除去してトークン数を削減する
 // 可読性を維持するため、過度な圧縮は行わない
 func Compress(s string) string {
 	s = strings.TrimSpace(s)

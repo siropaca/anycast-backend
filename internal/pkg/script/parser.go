@@ -5,20 +5,20 @@ import (
 	"strings"
 )
 
-// パース済みの台本行
+// ParsedLine はパース済みの台本行
 type ParsedLine struct {
 	SpeakerName string  // 話者名
 	Text        string  // セリフ
 	Emotion     *string // 感情・喋り方（オプション）
 }
 
-// パースエラー
+// ParseError はパースエラー
 type ParseError struct {
 	Line   int    // 行番号（1始まり）
 	Reason string // エラー理由
 }
 
-// パース結果
+// ParseResult はパース結果
 type ParseResult struct {
 	Lines  []ParsedLine // パース成功した行
 	Errors []ParseError // パースエラー
@@ -27,7 +27,7 @@ type ParseResult struct {
 // 感情を抽出する正規表現: [感情] パターン
 var emotionRegex = regexp.MustCompile(`^\[([^\]]+)\]\s*`)
 
-// 台本テキストをパースして ParsedLine のスライスに変換する
+// Parse は台本テキストをパースして ParsedLine のスライスに変換する
 //
 // フォーマット:
 //
@@ -125,7 +125,7 @@ func Parse(text string, allowedSpeakers []string) ParseResult {
 	return result
 }
 
-// パース結果にエラーがあるかどうかを返す
+// HasErrors はパース結果にエラーがあるかどうかを返す
 func (r *ParseResult) HasErrors() bool {
 	return len(r.Errors) > 0
 }

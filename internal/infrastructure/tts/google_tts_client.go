@@ -36,7 +36,7 @@ type SpeakerVoiceConfig struct {
 	VoiceID      string // Voice の ProviderVoiceID
 }
 
-// TTS クライアントのインターフェース
+// Client は TTS クライアントのインターフェース
 type Client interface {
 	Synthesize(ctx context.Context, text string, emotion *string, voiceID string, gender model.Gender) ([]byte, error)
 	SynthesizeMultiSpeaker(ctx context.Context, turns []SpeakerTurn, voiceConfigs []SpeakerVoiceConfig, voiceStyle *string) ([]byte, error)
@@ -46,7 +46,7 @@ type googleTTSClient struct {
 	client *texttospeech.Client
 }
 
-// Google TTS クライアントを作成する
+// NewGoogleTTSClient は Google TTS クライアントを作成する
 func NewGoogleTTSClient(ctx context.Context, credentialsJSON string) (Client, error) {
 	var opts []option.ClientOption
 	if credentialsJSON != "" {
@@ -63,7 +63,7 @@ func NewGoogleTTSClient(ctx context.Context, credentialsJSON string) (Client, er
 	}, nil
 }
 
-// テキストから音声を合成する
+// Synthesize はテキストから音声を合成する
 // Gemini-TTS を使用し、emotion がある場合は [emotion] をテキストの先頭に付加する
 func (c *googleTTSClient) Synthesize(ctx context.Context, text string, emotion *string, voiceID string, gender model.Gender) ([]byte, error) {
 	log := logger.FromContext(ctx)
@@ -134,7 +134,7 @@ func (c *googleTTSClient) Synthesize(ctx context.Context, text string, emotion *
 	return nil, apperror.ErrGenerationFailed.WithMessage("Failed to synthesize speech").WithError(lastErr)
 }
 
-// 複数話者のテキストから音声を合成する
+// SynthesizeMultiSpeaker は複数話者のテキストから音声を合成する
 // Gemini-TTS の multi-speaker 機能を使用
 func (c *googleTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []SpeakerTurn, voiceConfigs []SpeakerVoiceConfig, voiceStyle *string) ([]byte, error) {
 	log := logger.FromContext(ctx)
@@ -240,7 +240,7 @@ func (c *googleTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 	return nil, apperror.ErrGenerationFailed.WithMessage("Failed to synthesize multi-speaker speech").WithError(lastErr)
 }
 
-// Gender を SsmlVoiceGender に変換する
+// toSsmlVoiceGender は Gender を SsmlVoiceGender に変換する
 func toSsmlVoiceGender(gender model.Gender) texttospeechpb.SsmlVoiceGender {
 	switch gender {
 	case model.GenderMale:
@@ -254,7 +254,7 @@ func toSsmlVoiceGender(gender model.Gender) texttospeechpb.SsmlVoiceGender {
 	}
 }
 
-// クライアントを閉じる
+// Close はクライアントを閉じる
 func (c *googleTTSClient) Close() error {
 	return c.client.Close()
 }

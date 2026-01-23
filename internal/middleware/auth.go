@@ -18,7 +18,7 @@ const (
 	UserIDKey contextKey = "user_id"
 )
 
-// Bearer Token 認証を行うミドルウェア
+// Auth は Bearer Token 認証を行うミドルウェア
 func Auth(tokenManager jwt.TokenManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		log := logger.FromContext(c.Request.Context())
@@ -66,7 +66,7 @@ func abortWithUnauthorized(c *gin.Context) {
 	})
 }
 
-// コンテキストからユーザー ID を取得する
+// GetUserID はコンテキストからユーザー ID を取得する
 func GetUserID(c *gin.Context) (string, bool) {
 	userID, exists := c.Get(string(UserIDKey))
 	if !exists {

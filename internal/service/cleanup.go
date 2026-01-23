@@ -9,7 +9,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
-// 孤児メディアクリーンアップの結果
+// CleanupResult は孤児メディアクリーンアップの結果
 type CleanupResult struct {
 	OrphanedAudios    []model.Audio
 	OrphanedImages    []model.Image
@@ -19,7 +19,7 @@ type CleanupResult struct {
 	FailedImageCount  int
 }
 
-// クリーンアップサービスのインターフェース
+// CleanupService はクリーンアップサービスのインターフェース
 type CleanupService interface {
 	CleanupOrphanedMedia(ctx context.Context, dryRun bool) (*CleanupResult, error)
 }
@@ -30,7 +30,7 @@ type cleanupService struct {
 	storageClient storage.Client
 }
 
-// CleanupService の実装を返す
+// NewCleanupService は CleanupService の実装を返す
 func NewCleanupService(
 	audioRepo repository.AudioRepository,
 	imageRepo repository.ImageRepository,
@@ -43,7 +43,7 @@ func NewCleanupService(
 	}
 }
 
-// 孤児メディアファイルを検出して削除する
+// CleanupOrphanedMedia は孤児メディアファイルを検出して削除する
 func (s *cleanupService) CleanupOrphanedMedia(ctx context.Context, dryRun bool) (*CleanupResult, error) {
 	log := logger.FromContext(ctx)
 	result := &CleanupResult{}

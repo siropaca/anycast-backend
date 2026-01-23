@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// データベース接続を作成して返す
+// New はデータベース接続を作成して返す
 func New(databaseURL string) (*gorm.DB, error) {
 	db, err := gorm.Open(postgres.Open(databaseURL), &gorm.Config{})
 	if err != nil {

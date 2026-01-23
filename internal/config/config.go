@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// 環境を表す型
+// Env は環境を表す型
 type Env string
 
 const (
@@ -13,7 +13,7 @@ const (
 	EnvDevelopment Env = "development"
 )
 
-// アプリケーション設定
+// Config はアプリケーション設定
 type Config struct {
 	Port                                string
 	DatabaseURL                         string
@@ -30,7 +30,7 @@ type Config struct {
 	GoogleCloudTasksWorkerURL           string
 }
 
-// 環境変数から設定を読み込む
+// Load は環境変数から設定を読み込む
 func Load() *Config {
 	return &Config{
 		Port:                                getEnv("PORT", "8081"),

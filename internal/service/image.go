@@ -23,7 +23,7 @@ var allowedImageMimeTypes = map[string]string{
 	"image/webp": ".webp",
 }
 
-// 画像アップロード用の入力データ
+// UploadImageInput は画像アップロード用の入力データ
 type UploadImageInput struct {
 	File        io.Reader
 	Filename    string
@@ -31,7 +31,7 @@ type UploadImageInput struct {
 	FileSize    int
 }
 
-// 画像サービスのインターフェース
+// ImageService は画像サービスのインターフェース
 type ImageService interface {
 	UploadImage(ctx context.Context, input UploadImageInput) (*response.ImageUploadDataResponse, error)
 }
@@ -41,7 +41,7 @@ type imageService struct {
 	storageClient storage.Client
 }
 
-// ImageService の実装を返す
+// NewImageService は ImageService の実装を返す
 func NewImageService(imageRepo repository.ImageRepository, storageClient storage.Client) ImageService {
 	return &imageService{
 		imageRepo:     imageRepo,
@@ -49,7 +49,7 @@ func NewImageService(imageRepo repository.ImageRepository, storageClient storage
 	}
 }
 
-// 画像をアップロードする
+// UploadImage は画像をアップロードする
 func (s *imageService) UploadImage(ctx context.Context, input UploadImageInput) (*response.ImageUploadDataResponse, error) {
 	log := logger.FromContext(ctx)
 

@@ -4,14 +4,14 @@ import (
 	"strings"
 )
 
-// ScriptLine をテキスト形式に変換するための情報
+// FormatLine は ScriptLine をテキスト形式に変換するための情報
 type FormatLine struct {
 	SpeakerName string  // 話者名
 	Text        string  // セリフ
 	Emotion     *string // 感情・喋り方（オプション）
 }
 
-// FormatLine のスライスをテキスト形式に変換する
+// Format は FormatLine のスライスをテキスト形式に変換する
 //
 // 出力フォーマット:
 //

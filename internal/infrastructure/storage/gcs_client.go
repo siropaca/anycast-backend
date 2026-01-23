@@ -19,25 +19,25 @@ const (
 	SignedURLExpirationImage = 1 * time.Hour
 )
 
-// ストレージクライアントのインターフェース
+// Client はストレージクライアントのインターフェース
 type Client interface {
 	Upload(ctx context.Context, data []byte, path, contentType string) (string, error)
 	GenerateSignedURL(ctx context.Context, path string, expiration time.Duration) (string, error)
 	Delete(ctx context.Context, path string) error
 }
 
-// 音声ファイルの GCS パスを生成する（TTS 生成用、常に MP3）
+// GenerateAudioPath は音声ファイルの GCS パスを生成する（TTS 生成用、常に MP3）
 func GenerateAudioPath(audioID string) string {
 	return fmt.Sprintf("audios/%s.mp3", audioID)
 }
 
-// 音声ファイルの GCS パスを生成する（アップロード用、拡張子指定）
+// GenerateAudioPathWithExt は音声ファイルの GCS パスを生成する（アップロード用、拡張子指定）
 // ext は拡張子（例: ".mp3", ".wav"）
 func GenerateAudioPathWithExt(audioID, ext string) string {
 	return fmt.Sprintf("audios/%s%s", audioID, ext)
 }
 
-// 画像ファイルの GCS パスを生成する
+// GenerateImagePath は画像ファイルの GCS パスを生成する
 // ext は拡張子（例: ".png", ".jpg"）
 func GenerateImagePath(imageID, ext string) string {
 	return fmt.Sprintf("images/%s%s", imageID, ext)
@@ -48,7 +48,7 @@ type gcsClient struct {
 	bucketName string
 }
 
-// GCS クライアントを作成する
+// NewGCSClient は GCS クライアントを作成する
 func NewGCSClient(ctx context.Context, bucketName, credentialsJSON string) (Client, error) {
 	var opts []option.ClientOption
 	if credentialsJSON != "" {
@@ -66,7 +66,7 @@ func NewGCSClient(ctx context.Context, bucketName, credentialsJSON string) (Clie
 	}, nil
 }
 
-// ファイルをアップロードする
+// Upload はファイルをアップロードする
 func (c *gcsClient) Upload(ctx context.Context, data []byte, path, contentType string) (string, error) {
 	log := logger.FromContext(ctx)
 	log.Debug("uploading file to GCS", "path", path, "size", len(data))
@@ -92,7 +92,7 @@ func (c *gcsClient) Upload(ctx context.Context, data []byte, path, contentType s
 	return path, nil
 }
 
-// 署名付き URL を生成する
+// GenerateSignedURL は署名付き URL を生成する
 func (c *gcsClient) GenerateSignedURL(ctx context.Context, path string, expiration time.Duration) (string, error) {
 	log := logger.FromContext(ctx)
 	log.Debug("generating signed URL", "path", path, "expiration", expiration)
@@ -113,7 +113,7 @@ func (c *gcsClient) GenerateSignedURL(ctx context.Context, path string, expirati
 	return url, nil
 }
 
-// ファイルを削除する
+// Delete はファイルを削除する
 func (c *gcsClient) Delete(ctx context.Context, path string) error {
 	log := logger.FromContext(ctx)
 	log.Debug("deleting file from GCS", "path", path)
@@ -135,7 +135,7 @@ func (c *gcsClient) Delete(ctx context.Context, path string) error {
 	return nil
 }
 
-// ファイルをダウンロードする
+// Download はファイルをダウンロードする
 func (c *gcsClient) Download(ctx context.Context, path string) ([]byte, error) {
 	log := logger.FromContext(ctx)
 	log.Debug("downloading file from GCS", "path", path)
@@ -168,7 +168,7 @@ func (c *gcsClient) Download(ctx context.Context, path string) ([]byte, error) {
 	return data, nil
 }
 
-// クライアントを閉じる
+// Close はクライアントを閉じる
 func (c *gcsClient) Close() error {
 	return c.client.Close()
 }

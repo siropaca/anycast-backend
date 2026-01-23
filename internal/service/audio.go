@@ -28,7 +28,7 @@ var allowedAudioMimeTypes = map[string]string{
 	"audio/x-m4a": ".m4a",
 }
 
-// 音声アップロード用の入力データ
+// UploadAudioInput は音声アップロード用の入力データ
 type UploadAudioInput struct {
 	File        io.Reader
 	Filename    string
@@ -36,7 +36,7 @@ type UploadAudioInput struct {
 	FileSize    int
 }
 
-// 音声サービスのインターフェース
+// AudioService は音声サービスのインターフェース
 type AudioService interface {
 	UploadAudio(ctx context.Context, input UploadAudioInput) (*response.AudioUploadDataResponse, error)
 }
@@ -46,7 +46,7 @@ type audioService struct {
 	storageClient storage.Client
 }
 
-// AudioService の実装を返す
+// NewAudioService は AudioService の実装を返す
 func NewAudioService(audioRepo repository.AudioRepository, storageClient storage.Client) AudioService {
 	return &audioService{
 		audioRepo:     audioRepo,
@@ -54,7 +54,7 @@ func NewAudioService(audioRepo repository.AudioRepository, storageClient storage
 	}
 }
 
-// 音声をアップロードする
+// UploadAudio は音声をアップロードする
 func (s *audioService) UploadAudio(ctx context.Context, input UploadAudioInput) (*response.AudioUploadDataResponse, error) {
 	log := logger.FromContext(ctx)
 

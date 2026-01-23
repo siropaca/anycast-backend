@@ -12,17 +12,17 @@ var (
 	ErrInvalidAlgorithm = errors.New("invalid signing algorithm")
 )
 
-// JWT クレーム
+// Claims は JWT クレーム
 type Claims struct {
 	jwt.RegisteredClaims
 	UserID string `json:"-"` // Subject から設定される
 }
 
-// JWT の生成と検証を行うインターフェース
+// TokenManager は JWT の生成と検証を行うインターフェース
 type TokenManager interface {
-	// トークンを生成する
+	// Generate はトークンを生成する
 	Generate(userID string, expiration time.Duration) (string, error)
-	// トークンを検証してクレームを返す
+	// Validate はトークンを検証してクレームを返す
 	Validate(tokenString string) (*Claims, error)
 }
 
@@ -30,14 +30,14 @@ type tokenManager struct {
 	secret []byte
 }
 
-// TokenManager の実装を返す
+// NewTokenManager は TokenManager の実装を返す
 func NewTokenManager(secret string) TokenManager {
 	return &tokenManager{
 		secret: []byte(secret),
 	}
 }
 
-// トークンを生成する
+// Generate はトークンを生成する
 func (m *tokenManager) Generate(userID string, expiration time.Duration) (string, error) {
 	now := time.Now()
 	claims := jwt.RegisteredClaims{
@@ -50,7 +50,7 @@ func (m *tokenManager) Generate(userID string, expiration time.Duration) (string
 	return token.SignedString(m.secret)
 }
 
-// トークンを検証してクレームを返す
+// Validate はトークンを検証してクレームを返す
 func (m *tokenManager) Validate(tokenString string) (*Claims, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (any, error) {
