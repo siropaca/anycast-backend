@@ -148,3 +148,7 @@ Authorization: Bearer {{token}}
 ### エピソード BGM 削除
 DELETE {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/bgm
 Authorization: Bearer {{token}}
+
+### エピソード音声生成（非同期）
+POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/audio/generate-async
+Authorization: Bearer {{token}}

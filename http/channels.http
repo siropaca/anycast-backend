@@ -106,24 +106,18 @@ Authorization: Bearer {{token}}
   "userPrompt": "新しいスクリプトプロンプト"
 }
 
-### チャンネル更新（公開）
-PATCH {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE
-Content-Type: application/json
+### チャンネル公開
+POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/publish
 Authorization: Bearer {{token}}
 
-{
-  "publishedAt": "2025-01-01T00:00:00Z"
-}
-
-### チャンネル更新（非公開化）
-PATCH {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE
-Content-Type: application/json
+### チャンネル非公開
+POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/unpublish
 Authorization: Bearer {{token}}
-
-{
-  "publishedAt": ""
-}
 
 ### チャンネル削除
 DELETE {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE
+Authorization: Bearer {{token}}
+
+### チャンネルデフォルトBGM削除
+DELETE {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/default-bgm
 Authorization: Bearer {{token}}
