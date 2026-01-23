@@ -16,6 +16,7 @@ import (
 // Client は Cloud Tasks クライアントのインターフェース
 type Client interface {
 	EnqueueAudioJob(ctx context.Context, jobID string) error
+	EnqueueScriptJob(ctx context.Context, jobID string) error
 	Close() error
 }
 
@@ -59,21 +60,31 @@ func NewClient(ctx context.Context, cfg Config) (Client, error) {
 	}, nil
 }
 
-// AudioJobPayload はワーカーに送信されるペイロード
-type AudioJobPayload struct {
-	JobID string `json:"jobId"`
-}
-
 // EnqueueAudioJob は音声生成ジョブをキューに追加する
 func (c *client) EnqueueAudioJob(ctx context.Context, jobID string) error {
+	return c.enqueueJob(ctx, jobID, "/audio", "audio")
+}
+
+// EnqueueScriptJob は台本生成ジョブをキューに追加する
+func (c *client) EnqueueScriptJob(ctx context.Context, jobID string) error {
+	return c.enqueueJob(ctx, jobID, "/script", "script")
+}
+
+// enqueueJob はジョブをキューに追加する共通処理
+func (c *client) enqueueJob(ctx context.Context, jobID, pathSuffix, jobType string) error {
 	log := logger.FromContext(ctx)
 
-	payload := AudioJobPayload{JobID: jobID}
+	payload := struct {
+		JobID string `json:"jobId"`
+	}{JobID: jobID}
+
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
 		log.Error("failed to marshal payload", "error", err)
 		return apperror.ErrInternal.WithMessage("ペイロードのシリアライズに失敗しました").WithError(err)
 	}
+
+	workerURL := c.workerEndpointURL + pathSuffix
 
 	req := &taskspb.CreateTaskRequest{
 		Parent: c.queuePath,
@@ -81,7 +92,7 @@ func (c *client) EnqueueAudioJob(ctx context.Context, jobID string) error {
 			MessageType: &taskspb.Task_HttpRequest{
 				HttpRequest: &taskspb.HttpRequest{
 					HttpMethod: taskspb.HttpMethod_POST,
-					Url:        c.workerEndpointURL,
+					Url:        workerURL,
 					Headers: map[string]string{
 						"Content-Type": "application/json",
 					},
@@ -89,7 +100,7 @@ func (c *client) EnqueueAudioJob(ctx context.Context, jobID string) error {
 					AuthorizationHeader: &taskspb.HttpRequest_OidcToken{
 						OidcToken: &taskspb.OidcToken{
 							ServiceAccountEmail: c.serviceAccountEmail,
-							Audience:            c.workerEndpointURL,
+							Audience:            workerURL,
 						},
 					},
 				},
@@ -97,7 +108,7 @@ func (c *client) EnqueueAudioJob(ctx context.Context, jobID string) error {
 		},
 	}
 
-	log.Info("enqueuing audio job task", "job_id", jobID, "queue", c.queuePath)
+	log.Info("enqueuing job task", "job_id", jobID, "job_type", jobType, "queue", c.queuePath, "url", workerURL)
 
 	task, err := c.tasksClient.CreateTask(ctx, req)
 	if err != nil {
@@ -105,7 +116,7 @@ func (c *client) EnqueueAudioJob(ctx context.Context, jobID string) error {
 		return apperror.ErrInternal.WithMessage("タスクの作成に失敗しました").WithError(err)
 	}
 
-	log.Info("task created successfully", "task_name", task.Name, "job_id", jobID)
+	log.Info("task created successfully", "task_name", task.Name, "job_id", jobID, "job_type", jobType)
 	return nil
 }
 
