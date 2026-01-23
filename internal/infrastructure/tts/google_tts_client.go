@@ -156,6 +156,9 @@ func (c *googleTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 			text = fmt.Sprintf("[%s] %s", *turn.Emotion, turn.Text)
 		}
 
+		// 行の最後にポーズを追加して行間に余白を入れる
+		text = text + " [medium pause]"
+
 		markupTurns[i] = &texttospeechpb.MultiSpeakerMarkup_Turn{
 			Speaker: turn.Speaker,
 			Text:    text,
