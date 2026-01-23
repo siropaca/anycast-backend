@@ -1,8 +1,10 @@
 # Audio（音声生成）
 
-## エピソード全体音声生成
+## 非同期音声生成
 
-エピソードの全台本行から音声を生成します。Gemini TTS の multi-speaker 機能を使用し、各キャラクターの声で 1 つの音声ファイルを生成します。
+エピソードの全台本行から音声を非同期で生成します。  
+Gemini TTS の multi-speaker 機能を使用し、各キャラクターの声で 1 つの音声ファイルを生成します。  
+BGM が設定されている場合は FFmpeg でミキシングを行います。
 
 ```
 POST /channels/:channelId/episodes/:episodeId/audio/generate
@@ -11,38 +13,42 @@ POST /channels/:channelId/episodes/:episodeId/audio/generate
 **リクエスト:**
 ```json
 {
-  "voiceStyle": "Read aloud in a warm, welcoming tone"
+  "voiceStyle": "Read aloud in a warm, welcoming tone",
+  "bgmVolumeDb": -15,
+  "fadeOutMs": 3000,
+  "paddingStartMs": 500,
+  "paddingEndMs": 1000
 }
 ```
 
-| フィールド | 型 | 必須 | 説明 |
-|------------|-----|:----:|------|
-| voiceStyle | string | | 音声生成のスタイル指示（500文字以内） |
+| フィールド | 型 | 必須 | デフォルト | 説明 |
+|------------|-----|:----:|------------|------|
+| voiceStyle | string | | - | 音声生成のスタイル指示（500文字以内） |
+| bgmVolumeDb | number | | -15 | BGM 音量（dB）。0 で原音量、負の値で音量を下げる |
+| fadeOutMs | int | | 3000 | BGM のフェードアウト時間（ms） |
+| paddingStartMs | int | | 500 | 音声開始前の BGM のみの余白時間（ms） |
+| paddingEndMs | int | | 1000 | 音声終了後の BGM のみの余白時間（ms） |
 
-**処理内容:**
+**処理フロー:**
 
-1. エピソードの全台本行を取得
-2. 各キャラクターの Voice 設定を収集
-3. リクエストの `voiceStyle` をスタイル指示として適用
-4. Gemini TTS multi-speaker API で 1 つの音声ファイルを生成
-5. エピソードの `fullAudio` として保存
-6. `voiceStyle` をエピソードに保存
+1. ジョブレコードを作成（status: `pending`）
+2. Cloud Tasks にジョブをキューイング（ローカル開発時は goroutine で直接実行）
+3. クライアントに即座にジョブ情報を返却（202 Accepted）
+4. ワーカーが非同期で以下を実行:
+   - エピソードの全台本行を取得
+   - 各キャラクターの Voice 設定を収集
+   - Gemini TTS multi-speaker API で音声を生成
+   - BGM が設定されている場合、FFmpeg でミキシング
+   - エピソードの `fullAudio` として保存
+   - WebSocket で完了通知
 
-**voiceStyle について:**
-
-リクエストで `voiceStyle` が指定された場合、音声生成時のスタイル指示として使用され、エピソードに保存されます。
-
-例: `"Read aloud in a warm, welcoming tone"`
-
-**レスポンス:**
+**レスポンス（202 Accepted）:**
 ```json
 {
   "data": {
-    "id": "uuid",
-    "url": "https://storage.example.com/full-episode.mp3",
-    "mimeType": "audio/mpeg",
-    "fileSize": 1024000,
-    "durationMs": 180000
+    "jobId": "uuid",
+    "status": "pending",
+    "progress": 0
   }
 }
 ```
@@ -52,7 +58,84 @@ POST /channels/:channelId/episodes/:episodeId/audio/generate
 | コード | 説明 |
 |--------|------|
 | VALIDATION_ERROR | 台本に speech 行が存在しない |
-| GENERATION_FAILED | 音声生成に失敗 |
+| JOB_ENQUEUE_FAILED | ジョブのキューイングに失敗 |
+
+---
+
+## 音声生成ジョブ取得
+
+```
+GET /audio-jobs/:jobId
+```
+
+指定したジョブの状態を取得します。
+
+**レスポンス:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "episodeId": "uuid",
+    "status": "completed",
+    "progress": 100,
+    "voiceStyle": "Read aloud in a warm, welcoming tone",
+    "audio": {
+      "id": "uuid",
+      "url": "https://storage.example.com/full-episode.mp3",
+      "mimeType": "audio/mpeg",
+      "fileSize": 1024000,
+      "durationMs": 180000
+    },
+    "errorCode": null,
+    "errorMessage": null,
+    "startedAt": "2025-01-01T00:00:00Z",
+    "completedAt": "2025-01-01T00:00:10Z",
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:10Z"
+  }
+}
+```
+
+**ステータス:**
+
+| ステータス | 説明 |
+|------------|------|
+| pending | キュー待ち |
+| processing | 処理中 |
+| completed | 完了 |
+| failed | 失敗 |
+
+---
+
+## 自分の音声生成ジョブ一覧
+
+```
+GET /me/audio-jobs
+```
+
+自分が作成した音声生成ジョブの一覧を取得します。
+
+**クエリパラメータ:**
+
+| パラメータ | 型 | デフォルト | 説明 |
+|------------|-----|------------|------|
+| status | string | - | ステータスでフィルタ: `pending` / `processing` / `completed` / `failed` |
+
+**レスポンス:**
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "episodeId": "uuid",
+      "status": "processing",
+      "progress": 45,
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:05Z"
+    }
+  ]
+}
+```
 
 ---
 
@@ -83,6 +166,101 @@ POST /audios
 ```
 
 > **Note:** `durationMs` は MP3 形式の場合のみビットレートベースで推定されます。その他の形式では 0 が返されます。
+
+---
+
+# WebSocket
+
+## WebSocket 接続
+
+音声生成ジョブの進捗・完了をリアルタイムで受信できます。
+
+```
+WS /ws/audio-jobs?token=<JWT>
+```
+
+**クエリパラメータ:**
+
+| パラメータ | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| token | string | ◯ | JWT トークン |
+
+### クライアント → サーバー
+
+**ジョブの購読開始:**
+```json
+{
+  "type": "subscribe",
+  "payload": {
+    "jobId": "uuid"
+  }
+}
+```
+
+**ジョブの購読解除:**
+```json
+{
+  "type": "unsubscribe",
+  "payload": {
+    "jobId": "uuid"
+  }
+}
+```
+
+**Ping（接続確認）:**
+```json
+{
+  "type": "ping"
+}
+```
+
+### サーバー → クライアント
+
+**進捗通知:**
+```json
+{
+  "type": "progress",
+  "payload": {
+    "jobId": "uuid",
+    "progress": 45,
+    "message": "音声を生成中..."
+  }
+}
+```
+
+**完了通知:**
+```json
+{
+  "type": "completed",
+  "payload": {
+    "jobId": "uuid",
+    "audio": {
+      "id": "uuid",
+      "url": "https://storage.example.com/full-episode.mp3",
+      "durationMs": 180000
+    }
+  }
+}
+```
+
+**エラー通知:**
+```json
+{
+  "type": "failed",
+  "payload": {
+    "jobId": "uuid",
+    "errorCode": "GENERATION_FAILED",
+    "errorMessage": "音声生成に失敗しました"
+  }
+}
+```
+
+**Pong（Ping への応答）:**
+```json
+{
+  "type": "pong"
+}
+```
 
 ---
 
