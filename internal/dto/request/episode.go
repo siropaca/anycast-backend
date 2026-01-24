@@ -9,7 +9,7 @@ type ListMyChannelEpisodesRequest struct {
 // エピソード作成リクエスト
 type CreateEpisodeRequest struct {
 	Title          string  `json:"title" binding:"required,max=255"`
-	Description    string  `json:"description" binding:"required,max=2000"`
+	Description    string  `json:"description" binding:"max=2000"`
 	ArtworkImageID *string `json:"artworkImageId" binding:"omitempty,uuid"`
 }
 

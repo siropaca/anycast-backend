@@ -3714,7 +3714,6 @@ const docTemplate = `{
         "request.CreateEpisodeRequest": {
             "type": "object",
             "required": [
-                "description",
                 "title"
             ],
             "properties": {

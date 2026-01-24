@@ -60,9 +60,6 @@ var fieldNameMap = map[string]string{
 }
 
 // formatValidationError はバリデーションエラーを日本語メッセージに変換する
-//
-// @param err - バリデーションエラー
-// @returns 日本語化されたエラーメッセージ
 func formatValidationError(err error) string {
 	var ve validator.ValidationErrors
 	if errors.As(err, &ve) {
@@ -76,9 +73,6 @@ func formatValidationError(err error) string {
 }
 
 // translateFieldError は個別のフィールドエラーを日本語に変換する
-//
-// @param fe - フィールドエラー
-// @returns 日本語化されたエラーメッセージ
 func translateFieldError(fe validator.FieldError) string {
 	fieldName := getFieldName(fe.Field())
 
@@ -101,9 +95,6 @@ func translateFieldError(fe validator.FieldError) string {
 }
 
 // getFieldName はフィールド名を日本語に変換する
-//
-// @param field - フィールド名
-// @returns 日本語のフィールド名（マッピングがない場合は元のフィールド名）
 func getFieldName(field string) string {
 	if name, ok := fieldNameMap[field]; ok {
 		return name
