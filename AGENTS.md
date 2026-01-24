@@ -27,7 +27,7 @@
 
 | サービス | リンク |
 |----------|--------|
-| Google Cloud Text-to-Speech | https://cloud.google.com/text-to-speech/docs |
+| Gemini TTS (Vertex AI) | https://ai.google.dev/gemini-api/docs/audio |
 | OpenAI API | https://platform.openai.com/docs |
 
 ## ドキュメント管理ルール

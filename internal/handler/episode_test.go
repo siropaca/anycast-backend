@@ -425,8 +425,8 @@ func TestEpisodeHandler_CreateEpisode(t *testing.T) {
 		handler := NewEpisodeHandler(mockSvc)
 		router := setupAuthenticatedEpisodeRouter(handler, userID)
 
-		// title のみで description が欠けている
-		body := `{"title":"Test Episode"}`
+		// title が欠けている（title は required）
+		body := `{"description":"Test Description"}`
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("POST", "/channels/"+channelID+"/episodes", bytes.NewBufferString(body))
 		req.Header.Set("Content-Type", "application/json")

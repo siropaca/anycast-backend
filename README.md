@@ -16,7 +16,7 @@ AI 専用のポッドキャストを作成・配信できるプラットフォ�
 - **API ドキュメント**: Swagger (swaggo/swag)
 - **DB**: PostgreSQL
 - **ストレージ**: GCS（Google Cloud Storage）
-- **TTS**: Google Cloud Text-to-Speech
+- **TTS**: Gemini TTS (Vertex AI)
 - **LLM**: OpenAI (GPT-4o)
 - **ジョブキュー**: Google Cloud Tasks
 - **WebSocket**: gorilla/websocket
@@ -96,6 +96,7 @@ cp .env.example .env        # 環境変数ファイルの作成
 | `GOOGLE_CLOUD_TASKS_QUEUE_NAME` | Cloud Tasks キュー名 | async-jobs |
 | `GOOGLE_CLOUD_TASKS_SERVICE_ACCOUNT_EMAIL` | Cloud Tasks サービスアカウントメール | - |
 | `GOOGLE_CLOUD_TASKS_WORKER_URL` | ワーカーエンドポイントのベース URL（末尾に `/audio` や `/script` が付与される） | - |
+| `GOOGLE_CLOUD_TTS_LOCATION` | Gemini TTS のロケーション | us-central1 |
 
 > **Note:** `GOOGLE_CLOUD_PROJECT_ID` と `GOOGLE_CLOUD_TASKS_WORKER_URL` が未設定の場合、Cloud Tasks を使わずに goroutine で直接ジョブを実行します（ローカル開発用）。
 
@@ -208,7 +209,7 @@ make swagger
 │   │   ├── cloudtasks/  # Cloud Tasks クライアント
 │   │   ├── llm/         # LLM クライアント（OpenAI）
 │   │   ├── storage/     # GCS クライアント
-│   │   ├── tts/         # Google TTS クライアント
+│   │   ├── tts/         # Gemini TTS クライアント
 │   │   └── websocket/   # WebSocket Hub
 │   ├── middleware/      # ミドルウェア
 │   ├── model/           # ドメインモデル
