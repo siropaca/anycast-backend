@@ -622,7 +622,7 @@ func (s *audioJobService) notifyProgress(jobID, userID string, progress int, mes
 		return
 	}
 	s.wsHub.SendToUser(userID, websocket.Message{
-		Type: "progress",
+		Type: "audio_progress",
 		Payload: map[string]interface{}{
 			"jobId":    jobID,
 			"progress": progress,
@@ -640,7 +640,7 @@ func (s *audioJobService) notifyCompleted(jobID, userID string, audioModel *mode
 	}
 	log.Info("WebSocket で完了を通知します", "job_id", jobID, "user_id", userID, "audio_id", audioModel.ID.String())
 	s.wsHub.SendToUser(userID, websocket.Message{
-		Type: "completed",
+		Type: "audio_completed",
 		Payload: map[string]interface{}{
 			"jobId": jobID,
 			"audio": map[string]interface{}{
@@ -668,7 +668,7 @@ func (s *audioJobService) notifyFailed(jobID, userID string, errorCode, errorMes
 	}
 	log.Info("WebSocket で失敗を通知します", "job_id", jobID, "user_id", userID, "error_code", code, "error_message", msg)
 	s.wsHub.SendToUser(userID, websocket.Message{
-		Type: "failed",
+		Type: "audio_failed",
 		Payload: map[string]interface{}{
 			"jobId":        jobID,
 			"errorCode":    code,

@@ -182,7 +182,7 @@ GET /ws/jobs?token={jwt}
 ```json
 // 進捗更新
 {
-  "type": "progress",
+  "type": "audio_progress",
   "payload": {
     "jobId": "...",
     "progress": 50,
@@ -192,7 +192,7 @@ GET /ws/jobs?token={jwt}
 
 // 完了通知
 {
-  "type": "completed",
+  "type": "audio_completed",
   "payload": {
     "jobId": "...",
     "audio": {
@@ -204,7 +204,7 @@ GET /ws/jobs?token={jwt}
 
 // 失敗通知
 {
-  "type": "failed",
+  "type": "audio_failed",
   "payload": {
     "jobId": "...",
     "errorCode": "GENERATION_FAILED",
