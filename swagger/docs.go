@@ -3632,7 +3632,6 @@ const docTemplate = `{
             "required": [
                 "categoryId",
                 "characters",
-                "description",
                 "name"
             ],
             "properties": {
