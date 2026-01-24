@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -14,6 +15,14 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/logger"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 	"github.com/siropaca/anycast-backend/internal/repository"
+)
+
+const (
+	// MinCharactersPerChannel はチャンネルに設定できるキャラクターの最小人数
+	MinCharactersPerChannel = 1
+	// MaxCharactersPerChannel はチャンネルに設定できるキャラクターの最大人数
+	// Google TTS の Multi-speaker API が最大2人までしかサポートしていないため
+	MaxCharactersPerChannel = 2
 )
 
 // ChannelService はチャンネル関連のビジネスロジックインターフェースを表す
@@ -190,9 +199,9 @@ func (s *channelService) CreateChannel(ctx context.Context, userID string, req r
 		artworkID = &aid
 	}
 
-	// キャラクター数のバリデーション（1〜2件）
-	if req.Characters.Total() < 1 || req.Characters.Total() > 2 {
-		return nil, apperror.ErrValidation.WithMessage("キャラクターは 1〜2 人で設定してください")
+	// キャラクター数のバリデーション
+	if req.Characters.Total() < MinCharactersPerChannel || req.Characters.Total() > MaxCharactersPerChannel {
+		return nil, apperror.ErrValidation.WithMessage(fmt.Sprintf("キャラクターは %d〜%d 人で設定してください", MinCharactersPerChannel, MaxCharactersPerChannel))
 	}
 
 	// デフォルト BGM のバリデーション（同時指定不可）
