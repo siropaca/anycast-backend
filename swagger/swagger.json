@@ -3924,7 +3924,6 @@
             "type": "object",
             "required": [
                 "categoryId",
-                "description",
                 "name"
             ],
             "properties": {

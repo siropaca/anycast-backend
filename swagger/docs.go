@@ -3930,7 +3930,6 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "categoryId",
-                "description",
                 "name"
             ],
             "properties": {
