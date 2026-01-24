@@ -48,7 +48,7 @@ func Load() *Config {
 		GoogleCloudTasksQueueName:           getEnv("GOOGLE_CLOUD_TASKS_QUEUE_NAME", "audio-generation-queue"),
 		GoogleCloudTasksServiceAccountEmail: getEnv("GOOGLE_CLOUD_TASKS_SERVICE_ACCOUNT_EMAIL", ""),
 		GoogleCloudTasksWorkerURL:           getEnv("GOOGLE_CLOUD_TASKS_WORKER_URL", ""),
-		GoogleCloudTTSLocation:              getEnv("GOOGLE_CLOUD_TTS_LOCATION", "us-central1"),
+		GoogleCloudTTSLocation:              getEnv("GOOGLE_CLOUD_TTS_LOCATION", "asia-northeast1"),
 	}
 }
 
