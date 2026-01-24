@@ -24,6 +24,10 @@ const (
 	// TTS API のテキスト入力制限（バイト）
 	// Google Cloud TTS の制限は 4000 バイトだが、安全マージンを取る
 	maxTTSInputBytes = 3500
+
+	// TTS API で各ターンに追加されるポーズ文字列のバイト数
+	// " [medium pause]" = 15 バイト
+	turnPauseOverheadBytes = 15
 )
 
 // AudioJobService は非同期音声生成ジョブを管理するインターフェースを表す
@@ -629,9 +633,12 @@ func (s *audioJobService) notifyProgress(jobID, userID string, progress int, mes
 
 // notifyCompleted はジョブの完了を WebSocket で通知する
 func (s *audioJobService) notifyCompleted(jobID, userID string, audioModel *model.Audio) {
+	log := logger.Default()
 	if s.wsHub == nil {
+		log.Warn("WebSocket Hub が未設定のため完了通知をスキップしました", "job_id", jobID, "user_id", userID)
 		return
 	}
+	log.Info("WebSocket で完了を通知します", "job_id", jobID, "user_id", userID, "audio_id", audioModel.ID.String())
 	s.wsHub.SendToUser(userID, websocket.Message{
 		Type: "completed",
 		Payload: map[string]interface{}{
@@ -646,7 +653,9 @@ func (s *audioJobService) notifyCompleted(jobID, userID string, audioModel *mode
 
 // notifyFailed はジョブの失敗を WebSocket で通知する
 func (s *audioJobService) notifyFailed(jobID, userID string, errorCode, errorMessage *string) {
+	log := logger.Default()
 	if s.wsHub == nil {
+		log.Warn("WebSocket Hub が未設定のため失敗通知をスキップしました", "job_id", jobID, "user_id", userID)
 		return
 	}
 	code := ""
@@ -657,6 +666,7 @@ func (s *audioJobService) notifyFailed(jobID, userID string, errorCode, errorMes
 	if errorMessage != nil {
 		msg = *errorMessage
 	}
+	log.Info("WebSocket で失敗を通知します", "job_id", jobID, "user_id", userID, "error_code", code, "error_message", msg)
 	s.wsHub.SendToUser(userID, websocket.Message{
 		Type: "failed",
 		Payload: map[string]interface{}{
@@ -689,8 +699,10 @@ func splitTurnsIntoChunks(turns []tts.SpeakerTurn, maxBytes int) [][]tts.Speaker
 	currentBytes := 0
 
 	for _, turn := range turns {
-		// ターンのバイト数を計算（emotion がある場合は [emotion] も含む）
-		turnBytes := len(turn.Text)
+		// ターンのバイト数を計算
+		// - emotion がある場合は [emotion] も含む
+		// - TTS API で追加されるポーズ " [medium pause]" を含む
+		turnBytes := len(turn.Text) + turnPauseOverheadBytes
 		if turn.Emotion != nil && *turn.Emotion != "" {
 			turnBytes += len(*turn.Emotion) + 3 // "[]" と空白
 		}
