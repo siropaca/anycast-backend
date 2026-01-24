@@ -15,7 +15,7 @@ import (
 
 const (
 	// Gemini TTS 用モデル名（Vertex AI）
-	geminiAPITTSModelName = "gemini-2.5-pro-tts"
+	geminiAPITTSModelName = "gemini-2.5-flash-tts"
 	// デフォルト言語コード
 	geminiDefaultLanguageCode = "ja-JP"
 )
@@ -131,7 +131,7 @@ func (c *geminiTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 		return nil, apperror.ErrValidation.WithMessage("複数話者合成用のボイス設定が指定されていません")
 	}
 
-	// プロンプトを構築（マルチスピーカー形式）
+	// 台本を構築（マルチスピーカー形式）
 	var promptBuilder strings.Builder
 
 	// voiceStyle が指定されている場合は先頭に追加
@@ -140,20 +140,21 @@ func (c *geminiTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 		promptBuilder.WriteString("\n\n")
 	}
 
-	// 台本を構築
 	for _, turn := range turns {
 		text := turn.Text
 		if turn.Emotion != nil && *turn.Emotion != "" {
 			text = fmt.Sprintf("[%s] %s", *turn.Emotion, turn.Text)
 		}
-		// 行間にポーズを追加
-		text += " [long pause]"
 
 		promptBuilder.WriteString(fmt.Sprintf("%s: %s\n", turn.Speaker, text))
 	}
 
 	prompt := promptBuilder.String()
-	log.Debug("Gemini TTS マルチスピーカープロンプト", "prompt_length", len(prompt), "turns_count", len(turns))
+	if voiceStyle != nil && *voiceStyle != "" {
+		log.Debug("Gemini TTS ボイススタイル", "voice_style", *voiceStyle)
+	}
+	log.Debug("Gemini TTS 台本", "prompt", prompt)
+	log.Debug("Gemini TTS マルチスピーカー処理開始", "prompt_length", len(prompt), "turns_count", len(turns))
 
 	// SpeakerVoiceConfigs を構築
 	speakerVoiceConfigs := make([]*genai.SpeakerVoiceConfig, len(voiceConfigs))
