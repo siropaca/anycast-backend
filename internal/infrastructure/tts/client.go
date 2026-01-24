@@ -15,7 +15,7 @@ import (
 
 const (
 	// Gemini TTS 用モデル名（Vertex AI）
-	geminiAPITTSModelName = "gemini-2.5-flash-preview-tts"
+	geminiAPITTSModelName = "gemini-2.5-pro-tts"
 	// デフォルト言語コード
 	geminiDefaultLanguageCode = "ja-JP"
 )
