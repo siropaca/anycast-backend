@@ -20,6 +20,31 @@ const (
 	geminiDefaultLanguageCode = "ja-JP"
 )
 
+// SpeakerTurn は multi-speaker 合成用の話者とテキストのペア
+type SpeakerTurn struct {
+	Speaker string  // 話者名（キャラクター名）
+	Text    string  // セリフ
+	Emotion *string // 感情（オプション）
+}
+
+// SpeakerVoiceConfig は話者名と Voice ID のマッピング
+type SpeakerVoiceConfig struct {
+	SpeakerAlias string // 話者名（スクリプト内での名前）
+	VoiceID      string // Voice の ProviderVoiceID
+}
+
+// Client は TTS クライアントのインターフェース
+type Client interface {
+	// Synthesize はテキストから音声を合成する（シングルスピーカー）
+	Synthesize(ctx context.Context, text string, emotion *string, voiceID string, gender model.Gender) ([]byte, error)
+	// SynthesizeMultiSpeaker は複数話者のテキストから音声を合成する
+	SynthesizeMultiSpeaker(ctx context.Context, turns []SpeakerTurn, voiceConfigs []SpeakerVoiceConfig, voiceStyle *string) ([]byte, error)
+	// SupportsLongForm は長い台本を分割せずに処理できるかどうかを返す
+	SupportsLongForm() bool
+	// OutputFormat は音声出力フォーマットを返す（"mp3" または "pcm"）
+	OutputFormat() string
+}
+
 // geminiTTSClient は Gemini API を使った TTS クライアント
 // 32k token のコンテキストウィンドウをサポートし、長い台本でも一貫した音声を生成できる
 type geminiTTSClient struct {
@@ -49,7 +74,7 @@ func NewGeminiTTSClient(ctx context.Context, projectID, location, credentialsJSO
 
 	client, err := genai.NewClient(ctx, config)
 	if err != nil {
-		return nil, fmt.Errorf("Gemini TTS クライアントの作成に失敗しました: %w", err)
+		return nil, fmt.Errorf("gemini TTS クライアントの作成に失敗しました: %w", err)
 	}
 
 	return &geminiTTSClient{
@@ -126,7 +151,7 @@ func (c *geminiTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 			text = fmt.Sprintf("[%s] %s", *turn.Emotion, turn.Text)
 		}
 		// 行間にポーズを追加
-		text = text + " [medium pause]"
+		text += " [medium pause]"
 
 		promptBuilder.WriteString(fmt.Sprintf("%s: %s\n", turn.Speaker, text))
 	}

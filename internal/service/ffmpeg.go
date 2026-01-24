@@ -200,9 +200,9 @@ func (s *ffmpegService) ConvertToMP3(ctx context.Context, audioData []byte, form
 	}
 
 	// FFmpeg コマンドを実行
-	args := append(inputArgs, "-c:a", "libmp3lame", "-b:a", "192k", "-y", outputPath)
+	inputArgs = append(inputArgs, "-c:a", "libmp3lame", "-b:a", "192k", "-y", outputPath)
 
-	cmd := exec.CommandContext(ctx, "ffmpeg", args...)
+	cmd := exec.CommandContext(ctx, "ffmpeg", inputArgs...)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 

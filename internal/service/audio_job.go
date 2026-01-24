@@ -20,7 +20,6 @@ import (
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
-
 // AudioJobService は非同期音声生成ジョブを管理するインターフェースを表す
 type AudioJobService interface {
 	CreateJob(ctx context.Context, userID, channelID, episodeID string, req request.GenerateAudioAsyncRequest) (*response.AudioJobResponse, error)
