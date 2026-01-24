@@ -55,7 +55,7 @@ func NewGoogleTTSClient(ctx context.Context, credentialsJSON string) (Client, er
 
 	client, err := texttospeech.NewClient(ctx, opts...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create TTS client: %w", err)
+		return nil, fmt.Errorf("TTS クライアントの作成に失敗しました: %w", err)
 	}
 
 	return &googleTTSClient{
@@ -115,7 +115,7 @@ func (c *googleTTSClient) Synthesize(ctx context.Context, text string, emotion *
 		}
 
 		if len(resp.AudioContent) == 0 {
-			lastErr = fmt.Errorf("empty audio content in response")
+			lastErr = fmt.Errorf("レスポンスの音声コンテンツが空です")
 			log.Warn("TTS レスポンスの音声コンテンツが空です", "attempt", attempt)
 
 			if attempt < maxRetries {
@@ -131,7 +131,7 @@ func (c *googleTTSClient) Synthesize(ctx context.Context, text string, emotion *
 		return resp.AudioContent, nil
 	}
 
-	return nil, apperror.ErrGenerationFailed.WithMessage("Failed to synthesize speech").WithError(lastErr)
+	return nil, apperror.ErrGenerationFailed.WithMessage("音声合成に失敗しました").WithError(lastErr)
 }
 
 // SynthesizeMultiSpeaker は複数話者のテキストから音声を合成する
@@ -224,7 +224,7 @@ func (c *googleTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 		}
 
 		if len(resp.AudioContent) == 0 {
-			lastErr = fmt.Errorf("empty audio content in response")
+			lastErr = fmt.Errorf("レスポンスの音声コンテンツが空です")
 			log.Warn("マルチスピーカーTTS レスポンスの音声コンテンツが空です", "attempt", attempt)
 
 			if attempt < maxRetries {
@@ -240,7 +240,7 @@ func (c *googleTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 		return resp.AudioContent, nil
 	}
 
-	return nil, apperror.ErrGenerationFailed.WithMessage("Failed to synthesize multi-speaker speech").WithError(lastErr)
+	return nil, apperror.ErrGenerationFailed.WithMessage("複数話者の音声合成に失敗しました").WithError(lastErr)
 }
 
 // toSsmlVoiceGender は Gender を SsmlVoiceGender に変換する
