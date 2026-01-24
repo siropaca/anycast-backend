@@ -1,4 +1,4 @@
-.PHONY: bootstrap bs dev run build test fmt lint lint-fix tidy clean swagger migrate-up migrate-down migrate-reset seed token cleanup cleanup-run
+.PHONY: bootstrap bs dev run build test fmt lint lint-fix tidy clean swagger migrate-up migrate-down migrate-reset migrate-reset-seed seed token cleanup cleanup-run
 
 DATABASE_URL ?= postgres://postgres:postgres@localhost:5433/anycast?sslmode=disable
 
@@ -60,6 +60,9 @@ migrate-down:
 migrate-reset:
 	docker exec -i anycast-db psql -U postgres -d anycast -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
 	mise exec -- migrate -path migrations -database "$(DATABASE_URL)" up
+
+# マイグレーションリセット + シード投入
+migrate-reset-seed: migrate-reset seed
 
 # シードデータを投入（開発環境用）
 seed:

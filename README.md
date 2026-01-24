@@ -162,6 +162,7 @@ make swagger
 | `make migrate-up` | マイグレーション実行 |
 | `make migrate-down` | マイグレーションロールバック |
 | `make migrate-reset` | マイグレーションリセット（テーブル全削除 → 再マイグレーション） |
+| `make migrate-reset-seed` | マイグレーションリセット + シード投入 |
 | `make seed` | シードデータを投入（開発環境用） |
 | `make token` | 開発用 JWT トークンを生成 |
 | `make cleanup` | 孤児メディアファイルをクリーンアップ（dry-run） |
