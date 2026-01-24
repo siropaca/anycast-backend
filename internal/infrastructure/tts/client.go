@@ -37,12 +37,8 @@ type SpeakerVoiceConfig struct {
 type Client interface {
 	// Synthesize はテキストから音声を合成する（シングルスピーカー）
 	Synthesize(ctx context.Context, text string, emotion *string, voiceID string, gender model.Gender) ([]byte, error)
-	// SynthesizeMultiSpeaker は複数話者のテキストから音声を合成する
+	// SynthesizeMultiSpeaker は複数話者のテキストから音声を合成する（マルチスピーカー）
 	SynthesizeMultiSpeaker(ctx context.Context, turns []SpeakerTurn, voiceConfigs []SpeakerVoiceConfig, voiceStyle *string) ([]byte, error)
-	// SupportsLongForm は長い台本を分割せずに処理できるかどうかを返す
-	SupportsLongForm() bool
-	// OutputFormat は音声出力フォーマットを返す（"mp3" または "pcm"）
-	OutputFormat() string
 }
 
 // geminiTTSClient は Gemini API を使った TTS クライアント
@@ -123,7 +119,7 @@ func (c *geminiTTSClient) Synthesize(ctx context.Context, text string, emotion *
 	return audioData, nil
 }
 
-// SynthesizeMultiSpeaker は複数話者のテキストから音声を合成する
+// SynthesizeMultiSpeaker は複数話者のテキストから音声を合成する（マルチスピーカー）
 func (c *geminiTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []SpeakerTurn, voiceConfigs []SpeakerVoiceConfig, voiceStyle *string) ([]byte, error) {
 	log := logger.FromContext(ctx)
 
@@ -151,7 +147,7 @@ func (c *geminiTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 			text = fmt.Sprintf("[%s] %s", *turn.Emotion, turn.Text)
 		}
 		// 行間にポーズを追加
-		text += " [medium pause]"
+		text += " [long pause]"
 
 		promptBuilder.WriteString(fmt.Sprintf("%s: %s\n", turn.Speaker, text))
 	}
@@ -223,16 +219,4 @@ func extractAudioFromResponse(resp *genai.GenerateContentResponse) ([]byte, erro
 func (c *geminiTTSClient) Close() error {
 	// genai.Client には Close メソッドがない場合がある
 	return nil
-}
-
-// SupportsLongForm は長い台本を分割せずに処理できるかどうかを返す
-// Gemini TTS は 32k token をサポートするため true
-func (c *geminiTTSClient) SupportsLongForm() bool {
-	return true
-}
-
-// OutputFormat は音声出力フォーマットを返す
-// Gemini TTS は PCM 16bit 24kHz を返す
-func (c *geminiTTSClient) OutputFormat() string {
-	return "pcm"
 }
