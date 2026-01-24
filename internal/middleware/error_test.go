@@ -96,7 +96,7 @@ func TestErrorHandler(t *testing.T) {
 		records := handler.getRecords()
 		assert.Len(t, records, 1)
 		assert.Equal(t, slog.LevelError, records[0].Level)
-		assert.Equal(t, "request error", records[0].Message)
+		assert.Equal(t, "リクエストエラー", records[0].Message)
 
 		// 属性を確認
 		var attrs []slog.Attr
@@ -129,7 +129,7 @@ func TestErrorHandler(t *testing.T) {
 		records := handler.getRecords()
 		assert.Len(t, records, 1)
 		assert.Equal(t, slog.LevelError, records[0].Level)
-		assert.Equal(t, "unexpected error", records[0].Message)
+		assert.Equal(t, "予期しないエラー", records[0].Message)
 
 		// 属性を確認
 		var attrs []slog.Attr
@@ -159,7 +159,7 @@ func TestErrorHandler(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 		records := handler.getRecords()
 		assert.Len(t, records, 1)
-		assert.Equal(t, "request error", records[0].Message)
+		assert.Equal(t, "リクエストエラー", records[0].Message)
 
 		// 最後のエラー（AppError）が処理されていることを確認
 		var attrs []slog.Attr
