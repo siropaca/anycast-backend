@@ -57,11 +57,16 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		log.Fatalf("failed to create storage client: %v", err)
 	}
 
-	// TTS クライアント（音声生成用）
-	ttsClient, err := tts.NewGoogleTTSClient(ctx, cfg.GoogleCloudCredentialsJSON)
-	if err != nil {
-		log.Fatalf("failed to create TTS client: %v", err)
+	// TTS クライアント（Gemini TTS - 32k token の長い台本をサポート）
+	log.Printf("TTS config: ProjectID=%q, Location=%q", cfg.GoogleCloudProjectID, cfg.GoogleCloudTTSLocation)
+	if cfg.GoogleCloudProjectID == "" {
+		log.Fatalf("GOOGLE_CLOUD_PROJECT_ID is required for Gemini TTS")
 	}
+	ttsClient, err := tts.NewGeminiTTSClient(ctx, cfg.GoogleCloudProjectID, cfg.GoogleCloudTTSLocation, cfg.GoogleCloudCredentialsJSON)
+	if err != nil {
+		log.Fatalf("failed to create Gemini TTS client: %v", err)
+	}
+	log.Printf("using Gemini TTS client (32k token support)")
 
 	// Cloud Tasks クライアント
 	var tasksClient cloudtasks.Client
