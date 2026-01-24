@@ -45,7 +45,7 @@ func (h *CharacterHandler) ListMyCharacters(c *gin.Context) {
 
 	var req request.ListMyCharactersRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
 		return
 	}
 
@@ -123,7 +123,7 @@ func (h *CharacterHandler) CreateCharacter(c *gin.Context) {
 
 	var req request.CreateCharacterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
 		return
 	}
 
@@ -167,7 +167,7 @@ func (h *CharacterHandler) UpdateCharacter(c *gin.Context) {
 
 	var req request.UpdateCharacterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
 		return
 	}
 

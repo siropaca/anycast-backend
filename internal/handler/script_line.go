@@ -102,7 +102,7 @@ func (h *ScriptLineHandler) CreateScriptLine(c *gin.Context) {
 
 	var req request.CreateScriptLineRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
 		return
 	}
 
@@ -160,7 +160,7 @@ func (h *ScriptLineHandler) UpdateScriptLine(c *gin.Context) {
 
 	var req request.UpdateScriptLineRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
 		return
 	}
 
@@ -260,7 +260,7 @@ func (h *ScriptLineHandler) ReorderScriptLines(c *gin.Context) {
 
 	var req request.ReorderScriptLinesRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
 		return
 	}
 

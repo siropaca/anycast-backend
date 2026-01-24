@@ -62,7 +62,7 @@ func (h *ScriptHandler) ImportScript(c *gin.Context) {
 
 	var req request.ImportScriptRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
 		return
 	}
 

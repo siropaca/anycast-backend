@@ -61,7 +61,7 @@ func (h *ScriptJobHandler) GenerateScriptAsync(c *gin.Context) {
 
 	var req request.GenerateScriptAsyncRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
 		return
 	}
 
@@ -133,7 +133,7 @@ func (h *ScriptJobHandler) ListMyScriptJobs(c *gin.Context) {
 
 	var req request.ListMyScriptJobsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
 		return
 	}
 

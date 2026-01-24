@@ -95,7 +95,7 @@ func (c *gcsClient) Upload(ctx context.Context, data []byte, path, contentType s
 // GenerateSignedURL は署名付き URL を生成する
 func (c *gcsClient) GenerateSignedURL(ctx context.Context, path string, expiration time.Duration) (string, error) {
 	log := logger.FromContext(ctx)
-	log.Debug("署名付き URL を生成中", "path", path, "expiration", expiration)
+	log.Debug("generating signed URL", "path", path, "expiration", expiration)
 
 	opts := &storage.SignedURLOptions{
 		Scheme:  storage.SigningSchemeV4,
@@ -109,7 +109,7 @@ func (c *gcsClient) GenerateSignedURL(ctx context.Context, path string, expirati
 		return "", apperror.ErrInternal.WithMessage("署名付き URL の生成に失敗しました").WithError(err)
 	}
 
-	log.Debug("署名付き URL を正常に生成しました", "url", url)
+	log.Debug("signed URL generated successfully", "url", url)
 	return url, nil
 }
 

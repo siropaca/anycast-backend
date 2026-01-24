@@ -45,7 +45,7 @@ func (h *BgmHandler) ListMyBgms(c *gin.Context) {
 
 	var req request.ListMyBgmsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
 		return
 	}
 
@@ -82,7 +82,7 @@ func (h *BgmHandler) CreateBgm(c *gin.Context) {
 
 	var req request.CreateBgmRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
 		return
 	}
 
@@ -154,7 +154,7 @@ func (h *BgmHandler) UpdateMyBgm(c *gin.Context) {
 
 	var req request.UpdateBgmRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
 		return
 	}
 

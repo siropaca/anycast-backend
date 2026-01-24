@@ -3633,8 +3633,7 @@ const docTemplate = `{
                 "categoryId",
                 "characters",
                 "description",
-                "name",
-                "userPrompt"
+                "name"
             ],
             "properties": {
                 "artworkImageId": {

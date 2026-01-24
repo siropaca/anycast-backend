@@ -65,6 +65,9 @@
 - エラーの型チェックには型アサーションではなく `errors.As` を使用する
 - 標準ライブラリの新しいパッケージ（`slices`, `maps`, `cmp` など）を積極的に活用する
 - エラーコードやエラーメッセージは日本語で記載する
+- バリデーションエラーは `internal/handler/validation.go` の `formatValidationError` 関数で日本語化する
+  - 新しいフィールドを追加した場合は `fieldNameMap` にマッピングを追加する
+  - 新しいバリデーションタグを使用する場合は `translateFieldError` 関数にケースを追加する
 
 ### ディレクトリ構成
 

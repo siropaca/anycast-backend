@@ -46,7 +46,7 @@ func (h *ChannelHandler) ListMyChannels(c *gin.Context) {
 
 	var req request.ListMyChannelsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
 		return
 	}
 
@@ -125,7 +125,7 @@ func (h *ChannelHandler) CreateChannel(c *gin.Context) {
 
 	var req request.CreateChannelRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
 		return
 	}
 
@@ -205,7 +205,7 @@ func (h *ChannelHandler) UpdateChannel(c *gin.Context) {
 
 	var req request.UpdateChannelRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
 		return
 	}
 
@@ -283,7 +283,7 @@ func (h *ChannelHandler) PublishChannel(c *gin.Context) {
 	var req request.PublishChannelRequest
 	// ボディが空でもエラーにならないよう ShouldBindJSON を使用
 	if err := c.ShouldBindJSON(&req); err != nil && err.Error() != "EOF" {
-		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
 		return
 	}
 

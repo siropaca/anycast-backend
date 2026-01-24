@@ -55,7 +55,7 @@ func (h *EpisodeHandler) ListMyChannelEpisodes(c *gin.Context) {
 
 	var req request.ListMyChannelEpisodesRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
-		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
 		return
 	}
 
@@ -149,7 +149,7 @@ func (h *EpisodeHandler) CreateEpisode(c *gin.Context) {
 
 	var req request.CreateEpisodeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
 		return
 	}
 
@@ -207,7 +207,7 @@ func (h *EpisodeHandler) UpdateEpisode(c *gin.Context) {
 
 	var req request.UpdateEpisodeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
 		return
 	}
 
@@ -301,7 +301,7 @@ func (h *EpisodeHandler) PublishEpisode(c *gin.Context) {
 	var req request.PublishEpisodeRequest
 	// ボディが空でもエラーにならないよう ShouldBindJSON を使用
 	if err := c.ShouldBindJSON(&req); err != nil && err.Error() != "EOF" {
-		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
 		return
 	}
 
@@ -395,7 +395,7 @@ func (h *EpisodeHandler) SetEpisodeBgm(c *gin.Context) {
 
 	var req request.SetEpisodeBgmRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
 		return
 	}
 

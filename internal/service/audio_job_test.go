@@ -311,16 +311,16 @@ func TestSplitTurnsIntoChunks(t *testing.T) {
 
 	t.Run("制限を超えるターンは複数チャンクに分割される", func(t *testing.T) {
 		turns := []tts.SpeakerTurn{
-			{Speaker: "speaker1", Text: "Hello World"},       // 11 bytes
-			{Speaker: "speaker2", Text: "How are you"},       // 11 bytes
-			{Speaker: "speaker1", Text: "I am fine"},         // 9 bytes
-			{Speaker: "speaker2", Text: "Good to hear that"}, // 17 bytes
+			{Speaker: "speaker1", Text: "Hello World"},       // 11 + 15 = 26 bytes
+			{Speaker: "speaker2", Text: "How are you"},       // 11 + 15 = 26 bytes
+			{Speaker: "speaker1", Text: "I am fine"},         // 9 + 15 = 24 bytes
+			{Speaker: "speaker2", Text: "Good to hear that"}, // 17 + 15 = 32 bytes
 		}
-		// 制限を 25 バイトに設定
-		// チャンク1: "Hello World" + "How are you" = 22 bytes
-		// チャンク2: "I am fine" = 9 bytes (22 + 9 = 31 > 25 なので新チャンク)
-		// チャンク3: "Good to hear that" = 17 bytes (9 + 17 = 26 > 25 なので新チャンク)
-		chunks := splitTurnsIntoChunks(turns, 25)
+		// 制限を 55 バイトに設定（ポーズ分 15 バイトを含む）
+		// チャンク1: 26 + 26 = 52 bytes (< 55)
+		// チャンク2: 24 bytes (52 + 24 = 76 > 55 なので新チャンク)
+		// チャンク3: 32 bytes (24 + 32 = 56 > 55 なので新チャンク)
+		chunks := splitTurnsIntoChunks(turns, 55)
 
 		assert.Len(t, chunks, 3)
 		assert.Len(t, chunks[0], 2)
@@ -331,32 +331,32 @@ func TestSplitTurnsIntoChunks(t *testing.T) {
 	t.Run("emotion を含むターンのバイト数が正しく計算される", func(t *testing.T) {
 		emotion := "happy"
 		turns := []tts.SpeakerTurn{
-			{Speaker: "speaker1", Text: "Hello", Emotion: &emotion}, // 5 + 5 + 3 = 13 bytes
-			{Speaker: "speaker2", Text: "World"},                    // 5 bytes
+			{Speaker: "speaker1", Text: "Hello", Emotion: &emotion}, // 5 + 5 + 3 + 15 = 28 bytes
+			{Speaker: "speaker2", Text: "World"},                    // 5 + 15 = 20 bytes
 		}
-		// 制限を 15 バイトに設定
-		chunks := splitTurnsIntoChunks(turns, 15)
+		// 制限を 30 バイトに設定
+		chunks := splitTurnsIntoChunks(turns, 30)
 
-		assert.Len(t, chunks, 2) // emotion 付きのため分割される
+		assert.Len(t, chunks, 2) // emotion 付きのため分割される (28 + 20 = 48 > 30)
 	})
 
 	t.Run("日本語テキストが正しく分割される", func(t *testing.T) {
-		// 日本語は UTF-8 で 1 文字 3 バイト
+		// 日本語は UTF-8 で 1 文字 3 バイト、ポーズ分 15 バイトを加算
 		turns := []tts.SpeakerTurn{
-			{Speaker: "speaker1", Text: "こんにちは"},  // 15 bytes
-			{Speaker: "speaker2", Text: "お元気ですか"}, // 18 bytes
-			{Speaker: "speaker1", Text: "元気です"},   // 12 bytes
+			{Speaker: "speaker1", Text: "こんにちは"},  // 15 + 15 = 30 bytes
+			{Speaker: "speaker2", Text: "お元気ですか"}, // 18 + 15 = 33 bytes
+			{Speaker: "speaker1", Text: "元気です"},   // 12 + 15 = 27 bytes
 		}
-		// 制限を 35 バイトに設定
-		chunks := splitTurnsIntoChunks(turns, 35)
+		// 制限を 65 バイトに設定
+		chunks := splitTurnsIntoChunks(turns, 65)
 
 		assert.Len(t, chunks, 2)
-		assert.Len(t, chunks[0], 2) // "こんにちは" + "お元気ですか" = 33 bytes
-		assert.Len(t, chunks[1], 1) // "元気です" = 12 bytes
+		assert.Len(t, chunks[0], 2) // 30 + 33 = 63 bytes (< 65)
+		assert.Len(t, chunks[1], 1) // 27 bytes (63 + 27 = 90 > 65 なので新チャンク)
 	})
 
 	t.Run("大量のターンが正しく分割される", func(t *testing.T) {
-		// 100 ターン、各 50 バイト → 合計 5000 バイト
+		// 100 ターン、各 50 バイト（+ ポーズ 15 バイト = 65 バイト）
 		turns := make([]tts.SpeakerTurn, 100)
 		for i := range turns {
 			turns[i] = tts.SpeakerTurn{
@@ -364,14 +364,14 @@ func TestSplitTurnsIntoChunks(t *testing.T) {
 				Text:    strings.Repeat("a", 50),
 			}
 		}
-		// 制限を 500 バイトに設定 → 約 10 ターンずつ
+		// 制限を 500 バイトに設定 → 約 7 ターンずつ (65 * 7 = 455)
 		chunks := splitTurnsIntoChunks(turns, 500)
 
-		// 各チャンクが制限を超えていないことを確認
+		// 各チャンクが制限を超えていないことを確認（ポーズ分を含む）
 		for _, chunk := range chunks {
 			totalBytes := 0
 			for _, turn := range chunk {
-				totalBytes += len(turn.Text)
+				totalBytes += len(turn.Text) + turnPauseOverheadBytes
 			}
 			assert.LessOrEqual(t, totalBytes, 500)
 		}

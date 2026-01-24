@@ -164,7 +164,7 @@ func (c *googleTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 			Text:    text,
 		}
 
-		log.Debug("マルチスピーカーターン", "speaker", turn.Speaker, "text", text)
+		log.Debug("multi-speaker turn", "speaker", turn.Speaker, "text", text)
 	}
 
 	input := &texttospeechpb.SynthesisInput{

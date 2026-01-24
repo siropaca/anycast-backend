@@ -34,7 +34,7 @@ func Logger() gin.HandlerFunc {
 
 		// レスポンスログ
 		duration := time.Since(start)
-		log.Info("リクエスト完了",
+		log.Info("request completed",
 			slog.Int("status", c.Writer.Status()),
 			slog.Duration("duration", duration),
 		)
