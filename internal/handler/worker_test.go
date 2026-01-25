@@ -53,6 +53,11 @@ func (m *mockScriptJobService) ExecuteJob(ctx context.Context, jobID string) err
 	return args.Error(0)
 }
 
+func (m *mockScriptJobService) CancelJob(ctx context.Context, userID, jobID string) error {
+	args := m.Called(ctx, userID, jobID)
+	return args.Error(0)
+}
+
 // テスト用のルーターをセットアップする
 func setupWorkerRouter(h *WorkerHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)

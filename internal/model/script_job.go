@@ -12,8 +12,10 @@ type ScriptJobStatus string
 const (
 	ScriptJobStatusPending    ScriptJobStatus = "pending"
 	ScriptJobStatusProcessing ScriptJobStatus = "processing"
+	ScriptJobStatusCanceling  ScriptJobStatus = "canceling"
 	ScriptJobStatusCompleted  ScriptJobStatus = "completed"
 	ScriptJobStatusFailed     ScriptJobStatus = "failed"
+	ScriptJobStatusCanceled   ScriptJobStatus = "canceled"
 )
 
 // ScriptJob は非同期台本生成ジョブを表す

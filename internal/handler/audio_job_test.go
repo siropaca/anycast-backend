@@ -56,6 +56,11 @@ func (m *mockAudioJobService) ExecuteJob(ctx context.Context, jobID string) erro
 	return args.Error(0)
 }
 
+func (m *mockAudioJobService) CancelJob(ctx context.Context, userID, jobID string) error {
+	args := m.Called(ctx, userID, jobID)
+	return args.Error(0)
+}
+
 func setupAudioJobRouter(service *mockAudioJobService) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()

@@ -1,0 +1,36 @@
+@baseUrl = http://localhost:8081/api/v1
+
+# トークン生成: make token
+@token = YOUR_TOKEN_HERE
+
+### 台本生成ジョブ詳細取得
+GET {{baseUrl}}/script-jobs/YOUR_JOB_ID_HERE
+Authorization: Bearer {{token}}
+
+### 自分の台本生成ジョブ一覧取得
+GET {{baseUrl}}/me/script-jobs
+Authorization: Bearer {{token}}
+
+### 自分の台本生成ジョブ一覧取得（ステータスでフィルタ: pending）
+GET {{baseUrl}}/me/script-jobs?status=pending
+Authorization: Bearer {{token}}
+
+### 自分の台本生成ジョブ一覧取得（ステータスでフィルタ: processing）
+GET {{baseUrl}}/me/script-jobs?status=processing
+Authorization: Bearer {{token}}
+
+### 自分の台本生成ジョブ一覧取得（ステータスでフィルタ: completed）
+GET {{baseUrl}}/me/script-jobs?status=completed
+Authorization: Bearer {{token}}
+
+### 自分の台本生成ジョブ一覧取得（ステータスでフィルタ: failed）
+GET {{baseUrl}}/me/script-jobs?status=failed
+Authorization: Bearer {{token}}
+
+### 自分の台本生成ジョブ一覧取得（ステータスでフィルタ: canceled）
+GET {{baseUrl}}/me/script-jobs?status=canceled
+Authorization: Bearer {{token}}
+
+### 台本生成ジョブキャンセル
+POST {{baseUrl}}/script-jobs/YOUR_JOB_ID_HERE/cancel
+Authorization: Bearer {{token}}

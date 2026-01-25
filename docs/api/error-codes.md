@@ -17,6 +17,7 @@
 | SELF_FOLLOW_NOT_ALLOWED | 400 | 自分のエピソードはフォロー不可 |
 | CHARACTER_IN_USE | 409 | キャラクターが使用中のため削除不可 |
 | BGM_IN_USE | 409 | BGM が使用中のため削除不可 |
+| CANCELED | 499 | ジョブがキャンセルされた |
 | INTERNAL_ERROR | 500 | サーバー内部エラー |
 | GENERATION_FAILED | 500 | 音声/台本の生成に失敗 |
 | MEDIA_UPLOAD_FAILED | 500 | メディアアップロードに失敗 |

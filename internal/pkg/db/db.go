@@ -10,9 +10,7 @@ import (
 
 // New はデータベース接続を作成して返す
 //
-// @param databaseURL - データベース接続URL
-// @param env - 実行環境
-// @returns データベース接続
+// databaseURL はデータベース接続 URL、env は実行環境を指定する
 func New(databaseURL string, env config.Env) (*gorm.DB, error) {
 	var gormConfig *gorm.Config
 

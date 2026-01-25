@@ -87,8 +87,38 @@ GET /script-jobs/:jobId
 |------------|------|
 | pending | キュー待ち |
 | processing | 処理中 |
+| canceling | キャンセル中 |
 | completed | 完了 |
 | failed | 失敗 |
+| canceled | キャンセル完了 |
+
+---
+
+## 台本生成ジョブキャンセル
+
+```
+POST /script-jobs/:jobId/cancel
+```
+
+台本生成ジョブをキャンセルします。
+
+- `pending` 状態のジョブは即座に `canceled` に遷移
+- `processing` 状態のジョブは `canceling` に遷移し、次のチェックポイントで中断
+
+**レスポンス（200 OK）:**
+```json
+{
+  "success": true
+}
+```
+
+**エラー:**
+
+| コード | 説明 |
+|--------|------|
+| VALIDATION_ERROR | キャンセル不可（既にキャンセル中/済み、完了済み、失敗済み） |
+| FORBIDDEN | ジョブへのアクセス権限なし |
+| NOT_FOUND | ジョブが存在しない |
 
 ---
 
@@ -104,7 +134,7 @@ GET /me/script-jobs
 
 | パラメータ | 型 | デフォルト | 説明 |
 |------------|-----|------------|------|
-| status | string | - | ステータスでフィルタ: `pending` / `processing` / `completed` / `failed` |
+| status | string | - | ステータスでフィルタ: `pending` / `processing` / `canceling` / `completed` / `failed` / `canceled` |
 
 **レスポンス:**
 ```json

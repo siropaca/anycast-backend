@@ -190,7 +190,7 @@ make swagger
 ├── .mise.toml           # mise 設定
 ├── docker-compose.yml   # ローカル DB
 ├── railway.toml         # Railway 設定
-├── nixpacks.toml        # Nixpacks ビルド設定
+├── Dockerfile           # Docker ビルド設定
 ├── scripts/             # セットアップスクリプト
 ├── migrations/          # マイグレーションファイル
 ├── seeds/               # シードデータ（開発環境用）

@@ -783,7 +783,8 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 | oauth_provider | `google` | OAuth プロバイダ |
 | gender | `male`, `female`, `neutral` | ボイスの性別 |
 | user_role | `user`, `admin` | ユーザーのロール |
-| audio_job_status | `pending`, `processing`, `completed`, `failed` | 音声生成ジョブのステータス |
+| audio_job_status | `pending`, `processing`, `canceling`, `completed`, `failed`, `canceled` | 音声生成ジョブのステータス |
+| script_job_status | `pending`, `processing`, `canceling`, `completed`, `failed`, `canceled` | 台本生成ジョブのステータス |
 
 ### UUID について
 

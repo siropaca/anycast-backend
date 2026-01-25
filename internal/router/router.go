@@ -109,9 +109,11 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 
 	// Audio Jobs
 	authenticated.GET("/audio-jobs/:jobId", container.AudioJobHandler.GetAudioJob)
+	authenticated.POST("/audio-jobs/:jobId/cancel", container.AudioJobHandler.CancelAudioJob)
 
 	// Script Jobs
 	authenticated.GET("/script-jobs/:jobId", container.ScriptJobHandler.GetScriptJob)
+	authenticated.POST("/script-jobs/:jobId/cancel", container.ScriptJobHandler.CancelScriptJob)
 
 	// Script Lines
 	authenticated.GET("/channels/:channelId/episodes/:episodeId/script/lines", container.ScriptLineHandler.ListScriptLines)

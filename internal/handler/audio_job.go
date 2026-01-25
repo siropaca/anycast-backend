@@ -153,3 +153,39 @@ func (h *AudioJobHandler) ListMyAudioJobs(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+
+// CancelAudioJob godoc
+// @Summary 音声生成ジョブキャンセル
+// @Description 音声生成ジョブをキャンセルします。pending 状態のジョブは即座に canceled に、processing 状態のジョブは canceling に遷移します。
+// @Tags audio-jobs
+// @Accept json
+// @Produce json
+// @Param jobId path string true "ジョブ ID"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /audio-jobs/{jobId}/cancel [post]
+func (h *AudioJobHandler) CancelAudioJob(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	jobID := c.Param("jobId")
+	if jobID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("jobId は必須です"))
+		return
+	}
+
+	if err := h.audioJobService.CancelJob(c.Request.Context(), userID, jobID); err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true})
+}
