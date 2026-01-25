@@ -13,10 +13,21 @@ const (
 	EnvDevelopment Env = "development"
 )
 
+// DBLogLevel はデータベースのログレベルを表す型
+type DBLogLevel string
+
+const (
+	DBLogLevelSilent DBLogLevel = "silent"
+	DBLogLevelError  DBLogLevel = "error"
+	DBLogLevelWarn   DBLogLevel = "warn"
+	DBLogLevelInfo   DBLogLevel = "info"
+)
+
 // Config はアプリケーション設定
 type Config struct {
 	Port                                string
 	DatabaseURL                         string
+	DBLogLevel                          DBLogLevel
 	AppEnv                              Env
 	AuthSecret                          string
 	CORSAllowedOrigins                  []string
@@ -37,6 +48,7 @@ func Load() *Config {
 	return &Config{
 		Port:                                getEnv("PORT", "8081"),
 		DatabaseURL:                         getEnv("DATABASE_URL", ""),
+		DBLogLevel:                          DBLogLevel(getEnv("DB_LOG_LEVEL", string(DBLogLevelSilent))),
 		AppEnv:                              Env(getEnv("APP_ENV", string(EnvDevelopment))),
 		AuthSecret:                          getEnv("AUTH_SECRET", ""),
 		CORSAllowedOrigins:                  getEnvAsSlice("CORS_ALLOWED_ORIGINS", []string{"http://localhost:3210"}),
