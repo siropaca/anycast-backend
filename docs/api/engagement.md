@@ -121,43 +121,50 @@ GET /search/users
 
 ---
 
-# Likes（お気に入り）
+# Reactions（リアクション）
 
-エピソードへのお気に入り機能。
+エピソードへのリアクション機能（like / bad）。同じエピソードには 1 つのリアクションのみ設定可能（排他的）。
 
-## お気に入り登録
+## リアクション登録・更新
 
 ```
-POST /episodes/:episodeId/like
+POST /episodes/:episodeId/reactions
 ```
 
-**レスポンス（201 Created）:**
+リアクションを登録する。既に同じエピソードにリアクションがある場合は更新する（upsert）。
+
+**リクエスト:**
+```json
+{
+  "reactionType": "like"
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| reactionType | string | ◯ | リアクション種別（`like` / `bad`） |
+
+**レスポンス（201 Created / 200 OK）:**
+
+- 201: 新規登録時
+- 200: 既存リアクションの更新時
+
 ```json
 {
   "data": {
     "id": "uuid",
     "episodeId": "uuid",
+    "reactionType": "like",
     "createdAt": "2025-01-01T00:00:00Z"
   }
 }
-```
-
-**エラー（409 Conflict）:**
-```json
-{
-  "error": {
-    "code": "ALREADY_LIKED",
-    "message": "既にお気に入り済みです"
-  }
-}
-```
 
 ---
 
-## お気に入り解除
+## リアクション解除
 
 ```
-DELETE /episodes/:episodeId/like
+DELETE /episodes/:episodeId/reactions
 ```
 
 **レスポンス（204 No Content）:**
@@ -168,7 +175,7 @@ DELETE /episodes/:episodeId/like
 {
   "error": {
     "code": "NOT_FOUND",
-    "message": "お気に入りが見つかりません"
+    "message": "リアクションが見つかりません"
   }
 }
 ```
@@ -176,6 +183,8 @@ DELETE /episodes/:episodeId/like
 ---
 
 ## お気に入りしたエピソード一覧
+
+like したエピソードの一覧を取得する。
 
 ```
 GET /me/likes
@@ -515,6 +524,225 @@ GET /me/follows
         "publishedAt": "2025-01-01T00:00:00Z"
       },
       "followedAt": "2025-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "total": 100,
+    "limit": 20,
+    "offset": 0
+  }
+}
+```
+
+---
+
+# Comments（コメント）
+
+エピソードへのコメント機能。
+
+## コメント投稿
+
+```
+POST /episodes/:episodeId/comments
+```
+
+**リクエスト:**
+```json
+{
+  "content": "とても参考になりました！"
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| content | string | ◯ | コメント本文（1〜1000文字） |
+
+**レスポンス（201 Created）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "user": {
+      "id": "uuid",
+      "username": "user_name",
+      "displayName": "ユーザー名",
+      "avatar": { "id": "uuid", "url": "..." }
+    },
+    "episodeId": "uuid",
+    "content": "とても参考になりました！",
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+**エラー（400 Bad Request）:**
+```json
+{
+  "error": {
+    "code": "INVALID_CONTENT_LENGTH",
+    "message": "コメントは1〜1000文字で入力してください"
+  }
+}
+```
+
+---
+
+## コメント一覧取得
+
+```
+GET /episodes/:episodeId/comments
+```
+
+**クエリパラメータ:**
+
+| パラメータ | 型 | デフォルト | 説明 |
+|------------|-----|------------|------|
+| limit | int | 20 | 取得件数（最大 100） |
+| offset | int | 0 | オフセット |
+
+**レスポンス:**
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "user": {
+        "id": "uuid",
+        "username": "user_name",
+        "displayName": "ユーザー名",
+        "avatar": { "id": "uuid", "url": "..." }
+      },
+      "content": "とても参考になりました！",
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "total": 100,
+    "limit": 20,
+    "offset": 0
+  }
+}
+```
+
+※ 削除されたコメント（deleted_at が設定されているもの）は表示されない
+
+---
+
+## コメント編集
+
+```
+PATCH /comments/:commentId
+```
+
+コメント投稿者本人または Admin のみ編集可能。
+
+**リクエスト:**
+```json
+{
+  "content": "修正しました。とても参考になりました！"
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| content | string | ◯ | コメント本文（1〜1000文字） |
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "user": {
+      "id": "uuid",
+      "username": "user_name",
+      "displayName": "ユーザー名",
+      "avatar": { "id": "uuid", "url": "..." }
+    },
+    "episodeId": "uuid",
+    "content": "修正しました。とても参考になりました！",
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:01Z"
+  }
+}
+```
+
+**エラー（403 Forbidden）:**
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "このコメントを編集する権限がありません"
+  }
+}
+```
+
+---
+
+## コメント削除
+
+```
+DELETE /comments/:commentId
+```
+
+コメント投稿者本人または Admin のみ削除可能。論理削除。
+
+**レスポンス（204 No Content）:**
+レスポンスボディなし
+
+**エラー（403 Forbidden）:**
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "このコメントを削除する権限がありません"
+  }
+}
+```
+
+**エラー（404 Not Found）:**
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "コメントが見つかりません"
+  }
+}
+```
+
+---
+
+## 自分のコメント一覧
+
+```
+GET /me/comments
+```
+
+**クエリパラメータ:**
+
+| パラメータ | 型 | デフォルト | 説明 |
+|------------|-----|------------|------|
+| limit | int | 20 | 取得件数（最大 100） |
+| offset | int | 0 | オフセット |
+
+**レスポンス:**
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "episode": {
+        "id": "uuid",
+        "title": "エピソードタイトル",
+        "channel": {
+          "id": "uuid",
+          "name": "チャンネル名"
+        }
+      },
+      "content": "とても参考になりました！",
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
     }
   ],
   "pagination": {

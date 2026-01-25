@@ -9,10 +9,11 @@ erDiagram
     users ||--o{ channels : owns
     users ||--o{ characters : owns
     users ||--o{ bgms : owns
-    users ||--o{ likes : has
+    users ||--o{ reactions : has
     users ||--o{ bookmarks : has
     users ||--o{ playback_histories : has
     users ||--o{ follows : has
+    users ||--o{ comments : has
     users ||--o{ audio_jobs : has
     users ||--o| images : avatar
     categories ||--o{ channels : has
@@ -25,10 +26,11 @@ erDiagram
     characters ||--|| voices : uses
     characters ||--o| images : avatar
     episodes ||--o{ script_lines : has
-    episodes ||--o{ likes : has
+    episodes ||--o{ reactions : has
     episodes ||--o{ bookmarks : has
     episodes ||--o{ playback_histories : has
     episodes ||--o{ follows : has
+    episodes ||--o{ comments : has
     episodes ||--o{ audio_jobs : has
     episodes ||--o| images : artwork
     episodes ||--o| bgms : user_bgm
@@ -38,10 +40,11 @@ erDiagram
     system_bgms ||--|| audios : has
     script_lines ||--|| characters : speaker
 
-    likes {
+    reactions {
         uuid id PK
         uuid user_id FK
         uuid episode_id FK
+        reaction_type reaction_type
         timestamp created_at
     }
 
@@ -68,6 +71,16 @@ erDiagram
         uuid user_id FK
         uuid episode_id FK
         timestamp created_at
+    }
+
+    comments {
+        uuid id PK
+        uuid user_id FK
+        uuid episode_id FK
+        text content
+        timestamp deleted_at
+        timestamp created_at
+        timestamp updated_at
     }
 
     audio_jobs {
@@ -490,16 +503,17 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 
 ---
 
-#### likes
+#### reactions
 
-エピソードへのお気に入りを管理する。
+エピソードへのリアクション（like / bad）を管理する。
 
 | カラム名 | 型 | NULLABLE | デフォルト | 説明 |
 |----------|-----|:--------:|------------|------|
 | id | UUID | | gen_random_uuid() | 主キー |
 | user_id | UUID | | - | ユーザー（users 参照） |
 | episode_id | UUID | | - | エピソード（episodes 参照） |
-| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | お気に入り登録日時 |
+| reaction_type | reaction_type | | - | リアクション種別（like / bad） |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | リアクション登録日時 |
 
 **インデックス:**
 - PRIMARY KEY (id)
@@ -587,6 +601,37 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 
 **制約:**
 - 自分が所有するチャンネルのエピソードはフォロー不可（アプリケーション層で検証）
+
+---
+
+#### comments
+
+エピソードへのコメントを管理する。
+
+| カラム名 | 型 | NULLABLE | デフォルト | 説明 |
+|----------|-----|:--------:|------------|------|
+| id | UUID | | gen_random_uuid() | 主キー |
+| user_id | UUID | | - | コメント投稿者（users 参照） |
+| episode_id | UUID | | - | エピソード（episodes 参照） |
+| content | TEXT | | - | コメント本文（1〜1000文字） |
+| deleted_at | TIMESTAMP | ◯ | - | 削除日時（NULL = 有効） |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 投稿日時 |
+| updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
+
+**インデックス:**
+- PRIMARY KEY (id)
+- INDEX (user_id)
+- INDEX (episode_id)
+- INDEX (created_at DESC)
+- INDEX (deleted_at)
+
+**外部キー:**
+- user_id → users(id) ON DELETE CASCADE
+- episode_id → episodes(id) ON DELETE CASCADE
+
+**制約:**
+- content は 1〜1000 文字（CHECK 制約）
+- 公開されているエピソードのみコメント可能（アプリケーション層で検証）
 
 ---
 
@@ -785,6 +830,7 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 | user_role | `user`, `admin` | ユーザーのロール |
 | audio_job_status | `pending`, `processing`, `canceling`, `completed`, `failed`, `canceled` | 音声生成ジョブのステータス |
 | script_job_status | `pending`, `processing`, `canceling`, `completed`, `failed`, `canceled` | 台本生成ジョブのステータス |
+| reaction_type | `like`, `bad` | エピソードへのリアクション種別 |
 
 ### UUID について
 

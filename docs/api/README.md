@@ -94,9 +94,9 @@
 | GET | `/api/v1/search/channels` | チャンネル検索 | Public | | [詳細](./engagement.md#チャンネル検索) |
 | GET | `/api/v1/search/episodes` | エピソード検索 | Public | | [詳細](./engagement.md#エピソード検索) |
 | GET | `/api/v1/search/users` | ユーザー検索 | Public | | [詳細](./engagement.md#ユーザー検索) |
-| **Likes（お気に入り）** | - | - | - | - | [engagement.md](./engagement.md#likesお気に入り) |
-| POST | `/api/v1/episodes/:episodeId/like` | お気に入り登録 | Owner | | [詳細](./engagement.md#お気に入り登録) |
-| DELETE | `/api/v1/episodes/:episodeId/like` | お気に入り解除 | Owner | | [詳細](./engagement.md#お気に入り解除) |
+| **Reactions（リアクション）** | - | - | - | - | [engagement.md](./engagement.md#reactionsリアクション) |
+| POST | `/api/v1/episodes/:episodeId/reactions` | リアクション登録（like/bad） | Owner | | [詳細](./engagement.md#リアクション登録) |
+| DELETE | `/api/v1/episodes/:episodeId/reactions` | リアクション解除 | Owner | | [詳細](./engagement.md#リアクション解除) |
 | GET | `/api/v1/me/likes` | お気に入りしたエピソード一覧 | Owner | | [詳細](./engagement.md#お気に入りしたエピソード一覧) |
 | **Bookmarks（後で見る）** | - | - | - | - | [engagement.md](./engagement.md#bookmarks後で見る) |
 | POST | `/api/v1/episodes/:episodeId/bookmark` | ブックマーク登録 | Owner | | [詳細](./engagement.md#ブックマーク登録) |
@@ -110,6 +110,12 @@
 | POST | `/api/v1/episodes/:episodeId/follow` | フォロー登録 | Owner | | [詳細](./engagement.md#フォロー登録) |
 | DELETE | `/api/v1/episodes/:episodeId/follow` | フォロー解除 | Owner | | [詳細](./engagement.md#フォロー解除) |
 | GET | `/api/v1/me/follows` | フォロー中のエピソード一覧 | Owner | | [詳細](./engagement.md#フォロー中のエピソード一覧) |
+| **Comments（コメント）** | - | - | - | - | [engagement.md](./engagement.md#commentsコメント) |
+| POST | `/api/v1/episodes/:episodeId/comments` | コメント投稿 | Owner | | [詳細](./engagement.md#コメント投稿) |
+| GET | `/api/v1/episodes/:episodeId/comments` | コメント一覧取得 | Public | | [詳細](./engagement.md#コメント一覧取得) |
+| PATCH | `/api/v1/comments/:commentId` | コメント編集 | Owner/Admin | | [詳細](./engagement.md#コメント編集) |
+| DELETE | `/api/v1/comments/:commentId` | コメント削除 | Owner/Admin | | [詳細](./engagement.md#コメント削除) |
+| GET | `/api/v1/me/comments` | 自分のコメント一覧 | Owner | | [詳細](./engagement.md#自分のコメント一覧) |
 | **Voices（ボイス）** | - | - | - | - | [master.md](./master.md) |
 | GET | `/api/v1/voices` | ボイス一覧取得 | Public | ✅ | [詳細](./master.md#ボイス一覧取得) |
 | GET | `/api/v1/voices/:voiceId` | ボイス取得 | Public | ✅ | [詳細](./master.md#ボイス取得) |

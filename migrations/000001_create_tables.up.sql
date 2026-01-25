@@ -10,6 +10,7 @@ CREATE TYPE gender AS ENUM ('male', 'female', 'neutral');
 CREATE TYPE user_role AS ENUM ('user', 'admin');
 CREATE TYPE audio_job_status AS ENUM ('pending', 'processing', 'canceling', 'completed', 'failed', 'canceled');
 CREATE TYPE script_job_status AS ENUM ('pending', 'processing', 'canceling', 'completed', 'failed', 'canceled');
+CREATE TYPE reaction_type AS ENUM ('like', 'bad');
 
 -- ===========================================
 -- メディア関連テーブル
@@ -298,17 +299,18 @@ CREATE INDEX idx_script_lines_episode_id ON script_lines (episode_id);
 -- ユーザーインタラクションテーブル
 -- ===========================================
 
--- いいね
-CREATE TABLE likes (
+-- リアクション
+CREATE TABLE reactions (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 	user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
 	episode_id UUID NOT NULL REFERENCES episodes (id) ON DELETE CASCADE,
+	reaction_type reaction_type NOT NULL,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	UNIQUE (user_id, episode_id)
 );
 
-CREATE INDEX idx_likes_user_id ON likes (user_id);
-CREATE INDEX idx_likes_episode_id ON likes (episode_id);
+CREATE INDEX idx_reactions_user_id ON reactions (user_id);
+CREATE INDEX idx_reactions_episode_id ON reactions (episode_id);
 
 -- ブックマーク
 CREATE TABLE bookmarks (
@@ -350,3 +352,20 @@ CREATE TABLE follows (
 
 CREATE INDEX idx_follows_user_id ON follows (user_id);
 CREATE INDEX idx_follows_episode_id ON follows (episode_id);
+
+-- コメント
+CREATE TABLE comments (
+	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+	user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+	episode_id UUID NOT NULL REFERENCES episodes (id) ON DELETE CASCADE,
+	content TEXT NOT NULL,
+	deleted_at TIMESTAMP,
+	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	CONSTRAINT chk_comments_content_length CHECK (char_length(content) >= 1 AND char_length(content) <= 1000)
+);
+
+CREATE INDEX idx_comments_user_id ON comments (user_id);
+CREATE INDEX idx_comments_episode_id ON comments (episode_id);
+CREATE INDEX idx_comments_created_at ON comments (created_at DESC);
+CREATE INDEX idx_comments_deleted_at ON comments (deleted_at);
