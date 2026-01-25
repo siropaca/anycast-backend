@@ -352,3 +352,20 @@ CREATE TABLE follows (
 
 CREATE INDEX idx_follows_user_id ON follows (user_id);
 CREATE INDEX idx_follows_episode_id ON follows (episode_id);
+
+-- コメント
+CREATE TABLE comments (
+	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+	user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+	episode_id UUID NOT NULL REFERENCES episodes (id) ON DELETE CASCADE,
+	content TEXT NOT NULL,
+	deleted_at TIMESTAMP,
+	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	CONSTRAINT chk_comments_content_length CHECK (char_length(content) >= 1 AND char_length(content) <= 1000)
+);
+
+CREATE INDEX idx_comments_user_id ON comments (user_id);
+CREATE INDEX idx_comments_episode_id ON comments (episode_id);
+CREATE INDEX idx_comments_created_at ON comments (created_at DESC);
+CREATE INDEX idx_comments_deleted_at ON comments (deleted_at);

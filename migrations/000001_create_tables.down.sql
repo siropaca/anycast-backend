@@ -1,5 +1,6 @@
 -- テーブルを依存関係の逆順で削除
 
+DROP TABLE IF EXISTS comments;
 DROP TABLE IF EXISTS follows;
 DROP TABLE IF EXISTS playback_histories;
 DROP TABLE IF EXISTS bookmarks;

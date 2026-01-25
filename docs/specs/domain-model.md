@@ -82,6 +82,7 @@ AI 専用のポッドキャストを作成・配信できるプラットフォ�
 │  Bookmark        : User ─── Episode                                         │
 │  PlaybackHistory : User ─── Episode + 再生状態                              │
 │  Follow          : User ─── Episode（他ユーザーのエピソードのみ）            │
+│  Comment         : User ─── Episode + コメント内容                          │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -112,7 +113,7 @@ AI 専用のポッドキャストを作成・配信できるプラットフォ�
 | 種別 | 名前 | 説明 |
 |------|------|------|
 | エンティティ | User, Channel, Character, Episode, ScriptLine | 一意の識別子を持ち、ライフサイクルを通じて追跡される |
-| エンティティ | Reaction, Bookmark, PlaybackHistory, Follow | ユーザーとエピソードの関連を表す |
+| エンティティ | Reaction, Bookmark, PlaybackHistory, Follow, Comment | ユーザーとエピソードの関連を表す |
 | エンティティ | Voice, Category | システム管理のマスタデータ |
 | エンティティ | Audio, Image | メディアファイル（外部ストレージへの参照） |
 | 値オブジェクト | Email, Username, OAuthProvider, Gender, MimeType | ドメイン固有のルール・制約を持つ値 |
@@ -517,6 +518,26 @@ emotion は TTS 生成時に text の先頭にカッコで付けて表現する�
 - **レジューム再生**: 途中から再生を再開
 - **視聴完了トラッキング**: 最後まで聴いたエピソードの管理
 - **視聴履歴表示**: 最近聴いたエピソードの一覧
+
+### Comment（コメント）
+
+ユーザーがエピソードに対して投稿したコメントを記録する。
+
+| 属性 | 型 | 必須 | 説明 |
+|------|-----|:----:|------|
+| id | UUID | ◯ | 識別子 |
+| userId | UUID | ◯ | コメント投稿者 |
+| episodeId | UUID | ◯ | 対象エピソード |
+| content | String | ◯ | コメント本文（1〜1000文字） |
+| deletedAt | DateTime | | 削除日時（NULL = 有効） |
+| createdAt | DateTime | ◯ | 投稿日時 |
+| updatedAt | DateTime | ◯ | 更新日時 |
+
+#### 制約
+
+- 公開されているエピソードのみコメント可能
+- コメント編集・削除は投稿者本人または Admin のみ
+- 削除されたコメントは一覧に表示されない（論理削除）
 
 ---
 

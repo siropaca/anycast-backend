@@ -13,6 +13,7 @@ erDiagram
     users ||--o{ bookmarks : has
     users ||--o{ playback_histories : has
     users ||--o{ follows : has
+    users ||--o{ comments : has
     users ||--o{ audio_jobs : has
     users ||--o| images : avatar
     categories ||--o{ channels : has
@@ -29,6 +30,7 @@ erDiagram
     episodes ||--o{ bookmarks : has
     episodes ||--o{ playback_histories : has
     episodes ||--o{ follows : has
+    episodes ||--o{ comments : has
     episodes ||--o{ audio_jobs : has
     episodes ||--o| images : artwork
     episodes ||--o| bgms : user_bgm
@@ -69,6 +71,16 @@ erDiagram
         uuid user_id FK
         uuid episode_id FK
         timestamp created_at
+    }
+
+    comments {
+        uuid id PK
+        uuid user_id FK
+        uuid episode_id FK
+        text content
+        timestamp deleted_at
+        timestamp created_at
+        timestamp updated_at
     }
 
     audio_jobs {
@@ -589,6 +601,37 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 
 **制約:**
 - 自分が所有するチャンネルのエピソードはフォロー不可（アプリケーション層で検証）
+
+---
+
+#### comments
+
+エピソードへのコメントを管理する。
+
+| カラム名 | 型 | NULLABLE | デフォルト | 説明 |
+|----------|-----|:--------:|------------|------|
+| id | UUID | | gen_random_uuid() | 主キー |
+| user_id | UUID | | - | コメント投稿者（users 参照） |
+| episode_id | UUID | | - | エピソード（episodes 参照） |
+| content | TEXT | | - | コメント本文（1〜1000文字） |
+| deleted_at | TIMESTAMP | ◯ | - | 削除日時（NULL = 有効） |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 投稿日時 |
+| updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
+
+**インデックス:**
+- PRIMARY KEY (id)
+- INDEX (user_id)
+- INDEX (episode_id)
+- INDEX (created_at DESC)
+- INDEX (deleted_at)
+
+**外部キー:**
+- user_id → users(id) ON DELETE CASCADE
+- episode_id → episodes(id) ON DELETE CASCADE
+
+**制約:**
+- content は 1〜1000 文字（CHECK 制約）
+- 公開されているエピソードのみコメント可能（アプリケーション層で検証）
 
 ---
 

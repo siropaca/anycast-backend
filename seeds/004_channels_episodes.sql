@@ -11,7 +11,8 @@ DELETE FROM script_lines WHERE episode_id IN (
 DELETE FROM channel_characters WHERE channel_id IN (
 	SELECT id FROM channels WHERE user_id IN ('8def69af-dae9-4641-a0e5-100107626933', '8eada3a5-f413-4eeb-9cd5-12def60d4596')
 );
--- reactions, bookmarks, follows はテストユーザーのものを削除
+-- reactions, bookmarks, follows, comments はテストユーザーのものを削除
+DELETE FROM comments WHERE user_id IN ('8def69af-dae9-4641-a0e5-100107626933', '8eada3a5-f413-4eeb-9cd5-12def60d4596');
 DELETE FROM reactions WHERE user_id IN ('8def69af-dae9-4641-a0e5-100107626933', '8eada3a5-f413-4eeb-9cd5-12def60d4596');
 DELETE FROM bookmarks WHERE user_id IN ('8def69af-dae9-4641-a0e5-100107626933', '8eada3a5-f413-4eeb-9cd5-12def60d4596');
 DELETE FROM follows WHERE user_id IN ('8def69af-dae9-4641-a0e5-100107626933', '8eada3a5-f413-4eeb-9cd5-12def60d4596');
@@ -138,3 +139,13 @@ INSERT INTO bookmarks (id, user_id, episode_id) VALUES
 INSERT INTO follows (id, user_id, episode_id) VALUES
 	('6869b7ad-1859-4b4f-8898-a3229f7ce27d', '8def69af-dae9-4641-a0e5-100107626933', 'fcb16526-951a-4ff1-a456-ab1dba96f699'),
 	('024c2206-a2ed-465d-b468-43a40b891264', '8def69af-dae9-4641-a0e5-100107626933', '9cde2abb-30e8-447b-bc8b-bb799b0f6f06');
+
+-- test_user が test_user2 のエピソードにコメント
+INSERT INTO comments (id, user_id, episode_id, content) VALUES
+	('a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d', '8def69af-dae9-4641-a0e5-100107626933', 'fcb16526-951a-4ff1-a456-ab1dba96f699', 'とても参考になりました！副業から始めるという考え方が新鮮でした。'),
+	('b2c3d4e5-f6a7-5b6c-9d0e-1f2a3b4c5d6e', '8def69af-dae9-4641-a0e5-100107626933', '9cde2abb-30e8-447b-bc8b-bb799b0f6f06', '資金調達の話、勉強になります。');
+
+-- test_user2 が test_user のエピソードにコメント
+INSERT INTO comments (id, user_id, episode_id, content) VALUES
+	('c3d4e5f6-a7b8-6c7d-0e1f-2a3b4c5d6e7f', '8eada3a5-f413-4eeb-9cd5-12def60d4596', 'eb960304-f86e-4364-be5d-d3d5126c9601', 'AIの未来について、とても興味深い内容でした！'),
+	('d4e5f6a7-b8c9-7d8e-1f2a-3b4c5d6e7f8a', '8eada3a5-f413-4eeb-9cd5-12def60d4596', '67e8e26d-20c8-492a-ac2c-5c79d8050aa3', 'スマートホーム、私も導入を検討してみます。');
