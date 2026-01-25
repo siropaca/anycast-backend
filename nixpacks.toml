@@ -7,9 +7,11 @@ cmds = [
     "go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest",
     "go build -o bin/server main.go",
     "cp $(go env GOPATH)/bin/migrate bin/migrate",
-    "cp $(which ffmpeg) bin/ffmpeg",
-    "cp $(which ffprobe) bin/ffprobe"
 ]
 
+# ランタイムイメージに ffmpeg をインストール
+[phases.install]
+aptPkgs = ["ffmpeg"]
+
 [start]
-cmd = "export PATH=$PATH:/app/bin && ./bin/migrate -path migrations -database \"$DATABASE_URL\" up && ./bin/server"
+cmd = "./bin/migrate -path migrations -database \"$DATABASE_URL\" up && ./bin/server"
