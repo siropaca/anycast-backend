@@ -22,13 +22,13 @@ func ErrorHandler() gin.HandlerFunc {
 
 			var appErr *apperror.AppError
 			if errors.As(err, &appErr) {
-				log.Error("リクエストエラー",
+				log.Error("request error",
 					slog.String("code", string(appErr.Code)),
 					slog.String("message", appErr.Message),
 					slog.Any("underlying", appErr.Err),
 				)
 			} else {
-				log.Error("予期しないエラー", slog.Any("error", err))
+				log.Error("unexpected error", slog.Any("error", err))
 			}
 		}
 	}

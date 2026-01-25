@@ -2,7 +2,7 @@ package di
 
 import (
 	"context"
-	"log"
+	"os"
 
 	"gorm.io/gorm"
 
@@ -15,6 +15,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/infrastructure/websocket"
 	"github.com/siropaca/anycast-backend/internal/pkg/crypto"
 	"github.com/siropaca/anycast-backend/internal/pkg/jwt"
+	"github.com/siropaca/anycast-backend/internal/pkg/logger"
 	"github.com/siropaca/anycast-backend/internal/repository"
 	"github.com/siropaca/anycast-backend/internal/service"
 )
@@ -51,22 +52,27 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	// Infrastructure
 	llmClient := llm.NewOpenAIClient(cfg.OpenAIAPIKey)
 
+	log := logger.Default()
+
 	// Storage クライアント（GCS）
 	storageClient, err := storage.NewGCSClient(ctx, cfg.GoogleCloudStorageBucketName, cfg.GoogleCloudCredentialsJSON)
 	if err != nil {
-		log.Fatalf("failed to create storage client: %v", err)
+		log.Error("failed to create storage client", "error", err)
+		os.Exit(1)
 	}
 
 	// TTS クライアント（Gemini TTS - 32k token の長い台本をサポート）
-	log.Printf("TTS config: ProjectID=%q, Location=%q", cfg.GoogleCloudProjectID, cfg.GoogleCloudTTSLocation)
+	log.Info("TTS config", "project_id", cfg.GoogleCloudProjectID, "location", cfg.GoogleCloudTTSLocation)
 	if cfg.GoogleCloudProjectID == "" {
-		log.Fatalf("GOOGLE_CLOUD_PROJECT_ID is required for Gemini TTS")
+		log.Error("GOOGLE_CLOUD_PROJECT_ID is required for Gemini TTS")
+		os.Exit(1)
 	}
 	ttsClient, err := tts.NewGeminiTTSClient(ctx, cfg.GoogleCloudProjectID, cfg.GoogleCloudTTSLocation, cfg.GoogleCloudCredentialsJSON)
 	if err != nil {
-		log.Fatalf("failed to create Gemini TTS client: %v", err)
+		log.Error("failed to create Gemini TTS client", "error", err)
+		os.Exit(1)
 	}
-	log.Printf("using Gemini TTS client (32k token support)")
+	log.Info("using Gemini TTS client (32k token support)")
 
 	// Cloud Tasks クライアント
 	var tasksClient cloudtasks.Client
@@ -80,7 +86,8 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 			CredentialsJSON:     cfg.GoogleCloudCredentialsJSON,
 		})
 		if err != nil {
-			log.Fatalf("failed to create cloud tasks client: %v", err)
+			log.Error("failed to create cloud tasks client", "error", err)
+			os.Exit(1)
 		}
 	}
 

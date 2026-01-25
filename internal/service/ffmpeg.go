@@ -55,7 +55,7 @@ func (s *ffmpegService) MixAudioWithBGM(ctx context.Context, params MixParams) (
 	// 一時ディレクトリを作成
 	tmpDir, err := os.MkdirTemp("", "ffmpeg-mix-*")
 	if err != nil {
-		log.Error("一時ディレクトリの作成に失敗しました", "error", err)
+		log.Error("failed to create temp directory", "error", err)
 		return nil, apperror.ErrInternal.WithMessage("一時ディレクトリの作成に失敗しました").WithError(err)
 	}
 	defer os.RemoveAll(tmpDir)
@@ -66,12 +66,12 @@ func (s *ffmpegService) MixAudioWithBGM(ctx context.Context, params MixParams) (
 	outputPath := filepath.Join(tmpDir, "output.mp3")
 
 	if err := os.WriteFile(voicePath, params.VoiceData, 0o644); err != nil {
-		log.Error("音声ファイルの書き込みに失敗しました", "error", err)
+		log.Error("failed to write voice file", "error", err)
 		return nil, apperror.ErrInternal.WithMessage("音声ファイルの書き込みに失敗しました").WithError(err)
 	}
 
 	if err := os.WriteFile(bgmPath, params.BGMData, 0o644); err != nil {
-		log.Error("BGM ファイルの書き込みに失敗しました", "error", err)
+		log.Error("failed to write BGM file", "error", err)
 		return nil, apperror.ErrInternal.WithMessage("BGM ファイルの書き込みに失敗しました").WithError(err)
 	}
 
@@ -118,17 +118,17 @@ func (s *ffmpegService) MixAudioWithBGM(ctx context.Context, params MixParams) (
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 
-	log.Info("FFmpeg を実行中", "args", args)
+	log.Info("running FFmpeg", "args", args)
 
 	if err := cmd.Run(); err != nil {
-		log.Error("FFmpeg が失敗しました", "error", err, "stderr", stderr.String())
+		log.Error("FFmpeg failed", "error", err, "stderr", stderr.String())
 		return nil, apperror.ErrInternal.WithMessage("音声ミキシングに失敗しました").WithError(err)
 	}
 
 	// 出力ファイルを読み込み
 	outputData, err := os.ReadFile(outputPath)
 	if err != nil {
-		log.Error("出力ファイルの読み込みに失敗しました", "error", err)
+		log.Error("failed to read output file", "error", err)
 		return nil, apperror.ErrInternal.WithMessage("出力ファイルの読み込みに失敗しました").WithError(err)
 	}
 
@@ -140,15 +140,15 @@ func (s *ffmpegService) MixAudioWithBGM(ctx context.Context, params MixParams) (
 func (s *ffmpegService) ConcatAudio(ctx context.Context, audioChunks [][]byte) ([]byte, error) {
 	log := logger.FromContext(ctx)
 
-	log.Info("FFmpeg 結合を実行中", "chunks", len(audioChunks))
+	log.Info("running FFmpeg concat", "chunks", len(audioChunks))
 
 	outputData, err := audio.Concat(audioChunks)
 	if err != nil {
-		log.Error("FFmpeg 結合が失敗しました", "error", err)
+		log.Error("FFmpeg concat failed", "error", err)
 		return nil, apperror.ErrInternal.WithMessage("音声の結合に失敗しました").WithError(err)
 	}
 
-	log.Info("音声結合が完了しました", "chunks", len(audioChunks), "output_size", len(outputData))
+	log.Info("audio concat completed", "chunks", len(audioChunks), "output_size", len(outputData))
 
 	return outputData, nil
 }
@@ -166,7 +166,7 @@ func (s *ffmpegService) ConvertToMP3(ctx context.Context, audioData []byte, form
 	// 一時ディレクトリを作成
 	tmpDir, err := os.MkdirTemp("", "ffmpeg-convert-*")
 	if err != nil {
-		log.Error("一時ディレクトリの作成に失敗しました", "error", err)
+		log.Error("failed to create temp directory", "error", err)
 		return nil, apperror.ErrInternal.WithMessage("一時ディレクトリの作成に失敗しました").WithError(err)
 	}
 	defer os.RemoveAll(tmpDir)
@@ -195,7 +195,7 @@ func (s *ffmpegService) ConvertToMP3(ctx context.Context, audioData []byte, form
 	outputPath := filepath.Join(tmpDir, "output.mp3")
 
 	if err := os.WriteFile(inputPath, audioData, 0o644); err != nil {
-		log.Error("入力ファイルの書き込みに失敗しました", "error", err)
+		log.Error("failed to write input file", "error", err)
 		return nil, apperror.ErrInternal.WithMessage("入力ファイルの書き込みに失敗しました").WithError(err)
 	}
 
@@ -206,21 +206,21 @@ func (s *ffmpegService) ConvertToMP3(ctx context.Context, audioData []byte, form
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 
-	log.Info("FFmpeg 変換を実行中", "format", format, "input_size", len(audioData))
+	log.Info("running FFmpeg conversion", "format", format, "input_size", len(audioData))
 
 	if err := cmd.Run(); err != nil {
-		log.Error("FFmpeg 変換が失敗しました", "error", err, "stderr", stderr.String())
+		log.Error("FFmpeg conversion failed", "error", err, "stderr", stderr.String())
 		return nil, apperror.ErrInternal.WithMessage(format + " から MP3 への変換に失敗しました").WithError(err)
 	}
 
 	// 出力ファイルを読み込み
 	outputData, err := os.ReadFile(outputPath)
 	if err != nil {
-		log.Error("出力ファイルの読み込みに失敗しました", "error", err)
+		log.Error("failed to read output file", "error", err)
 		return nil, apperror.ErrInternal.WithMessage("出力ファイルの読み込みに失敗しました").WithError(err)
 	}
 
-	log.Info("音声変換が完了しました", "format", format, "output_size", len(outputData))
+	log.Info("audio conversion completed", "format", format, "output_size", len(outputData))
 
 	return outputData, nil
 }

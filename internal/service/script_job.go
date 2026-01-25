@@ -144,7 +144,7 @@ func (s *scriptJobService) CreateJob(ctx context.Context, userID, channelID, epi
 	// Cloud Tasks が設定されている場合はエンキュー、そうでなければ goroutine で直接実行
 	if s.tasksClient != nil {
 		if err := s.tasksClient.EnqueueScriptJob(ctx, job.ID.String()); err != nil {
-			log.Error("台本ジョブのエンキューに失敗しました", "error", err, "job_id", job.ID)
+			log.Error("failed to enqueue script job", "error", err, "job_id", job.ID)
 			// エンキュー失敗時はジョブを失敗状態に更新（ベストエフォート）
 			job.Status = model.ScriptJobStatusFailed
 			errMsg := "タスクのエンキューに失敗しました"
@@ -154,13 +154,13 @@ func (s *scriptJobService) CreateJob(ctx context.Context, userID, channelID, epi
 			_ = s.scriptJobRepo.Update(ctx, job) //nolint:errcheck // best effort cleanup
 			return nil, apperror.ErrInternal.WithMessage("台本生成タスクの登録に失敗しました").WithError(err)
 		}
-		log.Info("台本ジョブを作成しエンキューしました", "job_id", job.ID, "episode_id", eid)
+		log.Info("script job created and enqueued", "job_id", job.ID, "episode_id", eid)
 	} else {
 		// ローカル開発モード: goroutine で直接実行
-		log.Info("Cloud Tasks 未設定のため台本ジョブを直接実行します", "job_id", job.ID, "episode_id", eid)
+		log.Info("executing script job directly as Cloud Tasks is not configured", "job_id", job.ID, "episode_id", eid)
 		go func() {
 			if err := s.ExecuteJob(context.Background(), job.ID.String()); err != nil {
-				log.Error("ローカル台本ジョブの実行に失敗しました", "error", err, "job_id", job.ID)
+				log.Error("failed to execute local script job", "error", err, "job_id", job.ID)
 			}
 		}()
 	}
@@ -240,7 +240,7 @@ func (s *scriptJobService) ExecuteJob(ctx context.Context, jobID string) error {
 
 	// 既に完了または失敗している場合はスキップ
 	if job.Status == model.ScriptJobStatusCompleted || job.Status == model.ScriptJobStatusFailed {
-		log.Info("台本ジョブは既に完了しているためスキップします", "job_id", jobID, "status", job.Status)
+		log.Info("skipping script job as it is already completed", "job_id", jobID, "status", job.Status)
 		return nil
 	}
 
@@ -258,7 +258,7 @@ func (s *scriptJobService) ExecuteJob(ctx context.Context, jobID string) error {
 	// 処理実行（エラー時はジョブを失敗状態に）
 	scriptLinesCount, err := s.executeJobInternal(ctx, job)
 	if err != nil {
-		log.Error("台本ジョブの実行に失敗しました", "error", err, "job_id", jobID)
+		log.Error("failed to execute script job", "error", err, "job_id", jobID)
 		s.failJob(ctx, job, err)
 		return err
 	}
@@ -266,7 +266,7 @@ func (s *scriptJobService) ExecuteJob(ctx context.Context, jobID string) error {
 	// WebSocket で完了通知
 	s.notifyCompleted(job.ID.String(), job.UserID.String(), scriptLinesCount)
 
-	log.Info("台本ジョブが正常に完了しました", "job_id", job.ID, "lines_count", scriptLinesCount)
+	log.Info("script job completed successfully", "job_id", job.ID, "lines_count", scriptLinesCount)
 
 	return nil
 }
@@ -336,7 +336,7 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 		return 0, apperror.ErrGenerationFailed.WithMessage("生成された台本のパースに失敗しました")
 	}
 
-	log.Info("台本をパースしました", "lines", len(parseResult.Lines), "errors", len(parseResult.Errors))
+	log.Info("script parsed", "lines", len(parseResult.Lines), "errors", len(parseResult.Errors))
 
 	// 進捗: 85%
 	s.updateProgress(ctx, job, 85, "台本を保存中...")

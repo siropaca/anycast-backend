@@ -69,7 +69,7 @@ func NewGCSClient(ctx context.Context, bucketName, credentialsJSON string) (Clie
 // Upload はファイルをアップロードする
 func (c *gcsClient) Upload(ctx context.Context, data []byte, path, contentType string) (string, error) {
 	log := logger.FromContext(ctx)
-	log.Debug("GCS にファイルをアップロード中", "path", path, "size", len(data))
+	log.Debug("uploading file to GCS", "path", path, "size", len(data))
 
 	bucket := c.client.Bucket(c.bucketName)
 	obj := bucket.Object(path)
@@ -78,16 +78,16 @@ func (c *gcsClient) Upload(ctx context.Context, data []byte, path, contentType s
 	writer.ContentType = contentType
 
 	if _, err := writer.Write(data); err != nil {
-		log.Error("GCS への書き込みに失敗しました", "error", err)
+		log.Error("failed to write to GCS", "error", err)
 		return "", apperror.ErrMediaUploadFailed.WithMessage("ファイルのアップロードに失敗しました").WithError(err)
 	}
 
 	if err := writer.Close(); err != nil {
-		log.Error("GCS ライターのクローズに失敗しました", "error", err)
+		log.Error("failed to close GCS writer", "error", err)
 		return "", apperror.ErrMediaUploadFailed.WithMessage("ファイルのアップロードに失敗しました").WithError(err)
 	}
 
-	log.Debug("ファイルを正常にアップロードしました", "path", path)
+	log.Debug("file uploaded successfully", "path", path)
 
 	return path, nil
 }
@@ -105,7 +105,7 @@ func (c *gcsClient) GenerateSignedURL(ctx context.Context, path string, expirati
 
 	url, err := c.client.Bucket(c.bucketName).SignedURL(path, opts)
 	if err != nil {
-		log.Error("署名付き URL の生成に失敗しました", "error", err)
+		log.Error("failed to generate signed URL", "error", err)
 		return "", apperror.ErrInternal.WithMessage("署名付き URL の生成に失敗しました").WithError(err)
 	}
 
@@ -116,7 +116,7 @@ func (c *gcsClient) GenerateSignedURL(ctx context.Context, path string, expirati
 // Delete はファイルを削除する
 func (c *gcsClient) Delete(ctx context.Context, path string) error {
 	log := logger.FromContext(ctx)
-	log.Debug("GCS からファイルを削除中", "path", path)
+	log.Debug("deleting file from GCS", "path", path)
 
 	bucket := c.client.Bucket(c.bucketName)
 	obj := bucket.Object(path)
@@ -124,21 +124,21 @@ func (c *gcsClient) Delete(ctx context.Context, path string) error {
 	if err := obj.Delete(ctx); err != nil {
 		// ファイルが存在しない場合はエラーにしない
 		if err == storage.ErrObjectNotExist {
-			log.Debug("ファイルが存在しないため削除をスキップします", "path", path)
+			log.Debug("skipping deletion as file does not exist", "path", path)
 			return nil
 		}
-		log.Error("GCS からの削除に失敗しました", "error", err)
+		log.Error("failed to delete from GCS", "error", err)
 		return apperror.ErrInternal.WithMessage("ファイルの削除に失敗しました").WithError(err)
 	}
 
-	log.Debug("ファイルを正常に削除しました", "path", path)
+	log.Debug("file deleted successfully", "path", path)
 	return nil
 }
 
 // Download はファイルをダウンロードする
 func (c *gcsClient) Download(ctx context.Context, path string) ([]byte, error) {
 	log := logger.FromContext(ctx)
-	log.Debug("GCS からファイルをダウンロード中", "path", path)
+	log.Debug("downloading file from GCS", "path", path)
 
 	bucket := c.client.Bucket(c.bucketName)
 	obj := bucket.Object(path)
@@ -148,23 +148,23 @@ func (c *gcsClient) Download(ctx context.Context, path string) ([]byte, error) {
 		if err == storage.ErrObjectNotExist {
 			return nil, apperror.ErrNotFound.WithMessage("ファイルが見つかりません")
 		}
-		log.Error("GCS リーダーの作成に失敗しました", "error", err)
+		log.Error("failed to create GCS reader", "error", err)
 		return nil, apperror.ErrInternal.WithMessage("ファイルのダウンロードに失敗しました").WithError(err)
 	}
 
 	defer func() {
 		if err := reader.Close(); err != nil {
-			log.Warn("GCS リーダーのクローズに失敗しました", "error", err)
+			log.Warn("failed to close GCS reader", "error", err)
 		}
 	}()
 
 	data, err := io.ReadAll(reader)
 	if err != nil {
-		log.Error("GCS からの読み込みに失敗しました", "error", err)
+		log.Error("failed to read from GCS", "error", err)
 		return nil, apperror.ErrInternal.WithMessage("ファイルのダウンロードに失敗しました").WithError(err)
 	}
 
-	log.Debug("ファイルを正常にダウンロードしました", "path", path, "size", len(data))
+	log.Debug("file downloaded successfully", "path", path, "size", len(data))
 	return data, nil
 }
 

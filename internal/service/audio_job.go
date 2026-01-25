@@ -178,7 +178,7 @@ func (s *audioJobService) CreateJob(ctx context.Context, userID, channelID, epis
 	// Cloud Tasks が設定されている場合はエンキュー、そうでなければ goroutine で直接実行
 	if s.tasksClient != nil {
 		if err := s.tasksClient.EnqueueAudioJob(ctx, job.ID.String()); err != nil {
-			log.Error("ジョブのエンキューに失敗しました", "error", err, "job_id", job.ID)
+			log.Error("failed to enqueue job", "error", err, "job_id", job.ID)
 			// エンキュー失敗時はジョブを失敗状態に更新（ベストエフォート）
 			job.Status = model.AudioJobStatusFailed
 			errMsg := "タスクのエンキューに失敗しました"
@@ -188,13 +188,13 @@ func (s *audioJobService) CreateJob(ctx context.Context, userID, channelID, epis
 			_ = s.audioJobRepo.Update(ctx, job) //nolint:errcheck // best effort cleanup
 			return nil, apperror.ErrInternal.WithMessage("音声生成タスクの登録に失敗しました").WithError(err)
 		}
-		log.Info("音声ジョブを作成しエンキューしました", "job_id", job.ID, "episode_id", eid)
+		log.Info("audio job created and enqueued", "job_id", job.ID, "episode_id", eid)
 	} else {
 		// ローカル開発モード: goroutine で直接実行
-		log.Info("Cloud Tasks 未設定のためジョブを直接実行します", "job_id", job.ID, "episode_id", eid)
+		log.Info("executing job directly as Cloud Tasks is not configured", "job_id", job.ID, "episode_id", eid)
 		go func() {
 			if err := s.ExecuteJob(context.Background(), job.ID.String()); err != nil {
-				log.Error("ローカルジョブの実行に失敗しました", "error", err, "job_id", job.ID)
+				log.Error("failed to execute local job", "error", err, "job_id", job.ID)
 			}
 		}()
 	}
@@ -274,7 +274,7 @@ func (s *audioJobService) ExecuteJob(ctx context.Context, jobID string) error {
 
 	// 既に完了または失敗している場合はスキップ
 	if job.Status == model.AudioJobStatusCompleted || job.Status == model.AudioJobStatusFailed {
-		log.Info("ジョブは既に完了しているためスキップします", "job_id", jobID, "status", job.Status)
+		log.Info("skipping job as it is already completed", "job_id", jobID, "status", job.Status)
 		return nil
 	}
 
@@ -291,7 +291,7 @@ func (s *audioJobService) ExecuteJob(ctx context.Context, jobID string) error {
 
 	// 処理実行（エラー時はジョブを失敗状態に）
 	if err := s.executeJobInternal(ctx, job); err != nil {
-		log.Error("ジョブの実行に失敗しました", "error", err, "job_id", jobID)
+		log.Error("failed to execute job", "error", err, "job_id", jobID)
 		s.failJob(ctx, job, err)
 		return err
 	}
@@ -368,21 +368,21 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 		voiceStyle = &job.VoiceStyle
 	}
 
-	log.Info("音声を生成します", "total_turns", len(turns))
+	log.Info("generating audio", "total_turns", len(turns))
 
 	// TTS で音声を生成（PCM 16bit 24kHz で返却される）
 	rawAudio, err := s.ttsClient.SynthesizeMultiSpeaker(ctx, turns, voiceConfigs, voiceStyle)
 	if err != nil {
-		log.Error("TTS が失敗しました", "error", err)
+		log.Error("TTS failed", "error", err)
 		return apperror.ErrGenerationFailed.WithMessage("音声の生成に失敗しました").WithError(err)
 	}
 
 	// PCM から MP3 に変換
 	s.updateProgress(ctx, job, 45, "音声を変換中...")
-	log.Info("音声合成に成功しました。PCM→MP3 変換中", "pcm_size", len(rawAudio))
+	log.Info("audio synthesis succeeded, converting PCM to MP3", "pcm_size", len(rawAudio))
 	voiceAudio, err := s.ffmpegService.ConvertToMP3(ctx, rawAudio, "pcm", 24000)
 	if err != nil {
-		log.Error("PCM→MP3 変換が失敗しました", "error", err)
+		log.Error("PCM to MP3 conversion failed", "error", err)
 		return apperror.ErrInternal.WithMessage("音声フォーマットの変換に失敗しました").WithError(err)
 	}
 
@@ -416,14 +416,14 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 		// GCS から BGM をダウンロード
 		bgmData, err := s.downloadFromStorage(ctx, bgmPath)
 		if err != nil {
-			log.Error("BGM のダウンロードに失敗しました", "error", err, "path", bgmPath)
+			log.Error("failed to download BGM", "error", err, "path", bgmPath)
 			return apperror.ErrInternal.WithMessage("BGM のダウンロードに失敗しました").WithError(err)
 		}
 
 		// 音声の長さを取得
 		voiceDurationMs, err = audio.GetDurationMsE(voiceAudio)
 		if err != nil {
-			log.Error("音声長の取得に失敗しました", "error", err)
+			log.Error("failed to get audio duration", "error", err)
 			return apperror.ErrInternal.WithMessage("音声長の取得に失敗しました").WithError(err)
 		}
 
@@ -441,7 +441,7 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 			PaddingEndMs:    job.PaddingEndMs,
 		})
 		if err != nil {
-			log.Error("FFmpeg ミキシングが失敗しました", "error", err)
+			log.Error("FFmpeg mixing failed", "error", err)
 			return apperror.ErrInternal.WithMessage("BGM のミキシングに失敗しました").WithError(err)
 		}
 	} else {
@@ -457,14 +457,14 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 	audioPath := storage.GenerateAudioPath(audioID.String())
 
 	if _, err := s.storageClient.Upload(ctx, finalAudio, audioPath, "audio/mpeg"); err != nil {
-		log.Error("音声のアップロードに失敗しました", "error", err)
+		log.Error("failed to upload audio", "error", err)
 		return apperror.ErrInternal.WithMessage("音声のアップロードに失敗しました").WithError(err)
 	}
 
 	// 最終的な長さを取得（ミキシングした場合は変わる可能性がある）
 	finalDurationMs, err := audio.GetDurationMsE(finalAudio)
 	if err != nil {
-		log.Warn("最終音声長の取得に失敗、推定値を使用", "error", err)
+		log.Warn("failed to get final audio duration, using estimate", "error", err)
 		// ミキシングした場合は計算、そうでなければ voiceDurationMs を使用
 		if voiceDurationMs > 0 {
 			finalDurationMs = job.PaddingStartMs + voiceDurationMs + job.PaddingEndMs
@@ -482,7 +482,7 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 	}
 
 	if err := s.audioRepo.Create(ctx, audioRecord); err != nil {
-		log.Error("音声レコードの作成に失敗しました", "error", err)
+		log.Error("failed to create audio record", "error", err)
 		return apperror.ErrInternal.WithMessage("音声レコードの保存に失敗しました").WithError(err)
 	}
 
@@ -515,7 +515,7 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 	// WebSocket で完了通知
 	s.notifyCompleted(job.ID.String(), job.UserID.String(), audioRecord)
 
-	log.Info("音声ジョブが正常に完了しました", "job_id", job.ID, "audio_id", audioID)
+	log.Info("audio job completed successfully", "job_id", job.ID, "audio_id", audioID)
 
 	return nil
 }
@@ -582,10 +582,10 @@ func (s *audioJobService) notifyProgress(jobID, userID string, progress int, mes
 func (s *audioJobService) notifyCompleted(jobID, userID string, audioModel *model.Audio) {
 	log := logger.Default()
 	if s.wsHub == nil {
-		log.Warn("WebSocket Hub が未設定のため完了通知をスキップしました", "job_id", jobID, "user_id", userID)
+		log.Warn("skipping completion notification as WebSocket Hub is not configured", "job_id", jobID, "user_id", userID)
 		return
 	}
-	log.Info("WebSocket で完了を通知します", "job_id", jobID, "user_id", userID, "audio_id", audioModel.ID.String())
+	log.Info("notifying completion via WebSocket", "job_id", jobID, "user_id", userID, "audio_id", audioModel.ID.String())
 	s.wsHub.SendToUser(userID, websocket.Message{
 		Type: "audio_completed",
 		Payload: map[string]interface{}{
@@ -602,7 +602,7 @@ func (s *audioJobService) notifyCompleted(jobID, userID string, audioModel *mode
 func (s *audioJobService) notifyFailed(jobID, userID string, errorCode, errorMessage *string) {
 	log := logger.Default()
 	if s.wsHub == nil {
-		log.Warn("WebSocket Hub が未設定のため失敗通知をスキップしました", "job_id", jobID, "user_id", userID)
+		log.Warn("skipping failure notification as WebSocket Hub is not configured", "job_id", jobID, "user_id", userID)
 		return
 	}
 	code := ""
@@ -613,7 +613,7 @@ func (s *audioJobService) notifyFailed(jobID, userID string, errorCode, errorMes
 	if errorMessage != nil {
 		msg = *errorMessage
 	}
-	log.Info("WebSocket で失敗を通知します", "job_id", jobID, "user_id", userID, "error_code", code, "error_message", msg)
+	log.Info("notifying failure via WebSocket", "job_id", jobID, "user_id", userID, "error_code", code, "error_message", msg)
 	s.wsHub.SendToUser(userID, websocket.Message{
 		Type: "audio_failed",
 		Payload: map[string]interface{}{

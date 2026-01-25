@@ -88,7 +88,7 @@ func (c *geminiTTSClient) Synthesize(ctx context.Context, text string, emotion *
 		synthesisText = fmt.Sprintf("[%s] %s", *emotion, text)
 	}
 
-	log.Debug("Gemini TTS 入力", "text", synthesisText, "voiceID", voiceID)
+	log.Debug("Gemini TTS input", "text", synthesisText, "voiceID", voiceID)
 
 	config := &genai.GenerateContentConfig{
 		ResponseModalities: []string{"AUDIO"},
@@ -104,18 +104,18 @@ func (c *geminiTTSClient) Synthesize(ctx context.Context, text string, emotion *
 
 	resp, err := c.client.Models.GenerateContent(ctx, geminiAPITTSModelName, genai.Text(synthesisText), config)
 	if err != nil {
-		log.Error("Gemini TTS API エラー", "error", err, "voiceID", voiceID)
+		log.Error("Gemini TTS API error", "error", err, "voiceID", voiceID)
 		return nil, apperror.ErrGenerationFailed.WithMessage("音声合成に失敗しました").WithError(err)
 	}
 
 	// 音声データを取得
 	audioData, err := extractAudioFromResponse(resp)
 	if err != nil {
-		log.Error("Gemini TTS 音声データの取得に失敗しました", "error", err)
+		log.Error("failed to extract Gemini TTS audio data", "error", err)
 		return nil, apperror.ErrGenerationFailed.WithMessage("音声データの取得に失敗しました").WithError(err)
 	}
 
-	log.Debug("Gemini TTS 音声合成に成功しました", "audio_size", len(audioData))
+	log.Debug("Gemini TTS synthesis succeeded", "audio_size", len(audioData))
 	return audioData, nil
 }
 
@@ -151,10 +151,10 @@ func (c *geminiTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 
 	prompt := promptBuilder.String()
 	if voiceStyle != nil && *voiceStyle != "" {
-		log.Debug("Gemini TTS ボイススタイル", "voice_style", *voiceStyle)
+		log.Debug("Gemini TTS voice style", "voice_style", *voiceStyle)
 	}
-	log.Debug("Gemini TTS 台本", "prompt", prompt)
-	log.Debug("Gemini TTS マルチスピーカー処理開始", "prompt_length", len(prompt), "turns_count", len(turns))
+	log.Debug("Gemini TTS script", "prompt", prompt)
+	log.Debug("starting Gemini TTS multi-speaker processing", "prompt_length", len(prompt), "turns_count", len(turns))
 
 	// SpeakerVoiceConfigs を構築
 	speakerVoiceConfigs := make([]*genai.SpeakerVoiceConfig, len(voiceConfigs))
@@ -181,18 +181,18 @@ func (c *geminiTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 
 	resp, err := c.client.Models.GenerateContent(ctx, geminiAPITTSModelName, genai.Text(prompt), config)
 	if err != nil {
-		log.Error("Gemini TTS マルチスピーカー API エラー", "error", err)
+		log.Error("Gemini TTS multi-speaker API error", "error", err)
 		return nil, apperror.ErrGenerationFailed.WithMessage("複数話者の音声合成に失敗しました").WithError(err)
 	}
 
 	// 音声データを取得
 	audioData, err := extractAudioFromResponse(resp)
 	if err != nil {
-		log.Error("Gemini TTS マルチスピーカー音声データの取得に失敗しました", "error", err)
+		log.Error("failed to extract Gemini TTS multi-speaker audio data", "error", err)
 		return nil, apperror.ErrGenerationFailed.WithMessage("複数話者の音声データの取得に失敗しました").WithError(err)
 	}
 
-	log.Debug("Gemini TTS マルチスピーカー音声合成に成功しました", "audio_size", len(audioData))
+	log.Debug("Gemini TTS multi-speaker synthesis succeeded", "audio_size", len(audioData))
 	return audioData, nil
 }
 

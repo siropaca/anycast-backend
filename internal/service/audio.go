@@ -67,7 +67,7 @@ func (s *audioService) UploadAudio(ctx context.Context, input UploadAudioInput) 
 	// ファイルデータの読み込み
 	data, err := io.ReadAll(input.File)
 	if err != nil {
-		log.Error("音声データの読み込みに失敗しました", "error", err)
+		log.Error("failed to read audio data", "error", err)
 		return nil, apperror.ErrInternal.WithMessage("音声データの読み込みに失敗しました").WithError(err)
 	}
 
@@ -96,7 +96,7 @@ func (s *audioService) UploadAudio(ctx context.Context, input UploadAudioInput) 
 	if err := s.audioRepo.Create(ctx, audioModel); err != nil {
 		// DB 保存に失敗した場合は GCS のファイルを削除
 		if deleteErr := s.storageClient.Delete(ctx, path); deleteErr != nil {
-			log.Warn("アップロード済み音声のクリーンアップに失敗しました", "error", deleteErr, "path", path)
+			log.Warn("failed to cleanup uploaded audio", "error", deleteErr, "path", path)
 		}
 		return nil, err
 	}

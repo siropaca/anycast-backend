@@ -49,12 +49,12 @@ func NewOpenAIClient(apiKey string) Client {
 func (c *openAIClient) GenerateScript(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
 	log := logger.FromContext(ctx)
 
-	log.Debug("GenerateScript 呼び出し", "systemPrompt", systemPrompt)
-	log.Debug("GenerateScript 呼び出し", "userPrompt", userPrompt)
+	log.Debug("GenerateScript called", "systemPrompt", systemPrompt)
+	log.Debug("GenerateScript called", "userPrompt", userPrompt)
 
 	var lastErr error
 	for attempt := 1; attempt <= maxRetries; attempt++ {
-		log.Debug("台本を生成中", "attempt", attempt)
+		log.Debug("generating script", "attempt", attempt)
 
 		resp, err := c.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
 			Model: defaultModel,
@@ -67,7 +67,7 @@ func (c *openAIClient) GenerateScript(ctx context.Context, systemPrompt, userPro
 
 		if err != nil {
 			lastErr = err
-			log.Warn("OpenAI API エラー", "attempt", attempt, "error", err)
+			log.Warn("OpenAI API error", "attempt", attempt, "error", err)
 
 			// 最後のリトライでなければ待機して再試行
 			if attempt < maxRetries {
@@ -75,25 +75,25 @@ func (c *openAIClient) GenerateScript(ctx context.Context, systemPrompt, userPro
 				continue
 			}
 
-			log.Error("OpenAI API がリトライ後も失敗しました", "error", err)
+			log.Error("OpenAI API failed after retries", "error", err)
 			return "", apperror.ErrGenerationFailed.WithMessage("台本の生成に失敗しました").WithError(err)
 		}
 
 		if len(resp.Choices) == 0 {
 			lastErr = fmt.Errorf("no choices in response")
-			log.Warn("OpenAI レスポンスに選択肢がありません", "attempt", attempt)
+			log.Warn("OpenAI response has no choices", "attempt", attempt)
 
 			if attempt < maxRetries {
 				time.Sleep(time.Duration(attempt) * time.Second)
 				continue
 			}
 
-			log.Error("OpenAI がリトライ後も選択肢を返しませんでした")
+			log.Error("OpenAI returned no choices after retries")
 			return "", apperror.ErrGenerationFailed.WithMessage("台本の生成に失敗しました: レスポンスがありません")
 		}
 
 		content := resp.Choices[0].Message.Content
-		log.Debug("台本生成に成功しました", "content_length", len(content))
+		log.Debug("script generated successfully", "content_length", len(content))
 
 		return content, nil
 	}
