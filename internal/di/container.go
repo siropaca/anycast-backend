@@ -62,7 +62,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	}
 
 	// TTS クライアント（Gemini TTS - 32k token の長い台本をサポート）
-	log.Info("TTS config", "project_id", cfg.GoogleCloudProjectID, "location", cfg.GoogleCloudTTSLocation)
+	log.Debug("TTS config", "project_id", cfg.GoogleCloudProjectID, "location", cfg.GoogleCloudTTSLocation)
 	if cfg.GoogleCloudProjectID == "" {
 		log.Error("GOOGLE_CLOUD_PROJECT_ID is required for Gemini TTS")
 		os.Exit(1)
@@ -72,7 +72,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		log.Error("failed to create Gemini TTS client", "error", err)
 		os.Exit(1)
 	}
-	log.Info("using Gemini TTS client (32k token support)")
+	log.Debug("using Gemini TTS client (32k token support)")
 
 	// Cloud Tasks クライアント
 	var tasksClient cloudtasks.Client
