@@ -66,6 +66,11 @@ func (m *mockScriptJobRepository) Delete(ctx context.Context, id uuid.UUID) erro
 	return args.Error(0)
 }
 
+func (m *mockScriptJobRepository) UpdateProgress(ctx context.Context, id uuid.UUID, progress int) error {
+	args := m.Called(ctx, id, progress)
+	return args.Error(0)
+}
+
 func TestScriptJobStatus(t *testing.T) {
 	t.Run("ScriptJobStatus 定数が正しい", func(t *testing.T) {
 		assert.Equal(t, model.ScriptJobStatus("pending"), model.ScriptJobStatusPending)
@@ -160,6 +165,35 @@ func TestScriptJobService_CancelJob(t *testing.T) {
 		var appErr *apperror.AppError
 		assert.True(t, errors.As(err, &appErr))
 		assert.Equal(t, apperror.CodeForbidden, appErr.Code)
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestScriptJobService_updateProgress(t *testing.T) {
+	jobID := uuid.New()
+	userID := uuid.New()
+	episodeID := uuid.New()
+
+	t.Run("UpdateProgress は進捗のみを更新しステータスを上書きしない", func(t *testing.T) {
+		mockRepo := new(mockScriptJobRepository)
+		job := &model.ScriptJob{
+			ID:        jobID,
+			EpisodeID: episodeID,
+			UserID:    userID,
+			Status:    model.ScriptJobStatusProcessing,
+			Progress:  30,
+		}
+
+		// UpdateProgress が呼ばれることを確認（Update ではなく）
+		mockRepo.On("UpdateProgress", mock.Anything, jobID, 50).Return(nil)
+
+		svc := &scriptJobService{scriptJobRepo: mockRepo}
+		svc.updateProgress(context.Background(), job, 50, "処理中...")
+
+		// job.Progress がメモリ上で更新されていることを確認
+		assert.Equal(t, 50, job.Progress)
+		// Status は変更されていないことを確認
+		assert.Equal(t, model.ScriptJobStatusProcessing, job.Status)
 		mockRepo.AssertExpectations(t)
 	})
 }

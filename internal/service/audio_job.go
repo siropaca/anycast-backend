@@ -576,9 +576,11 @@ func (s *audioJobService) downloadFromStorage(ctx context.Context, path string) 
 }
 
 // updateProgress はジョブの進捗を更新し WebSocket で通知する
+//
+// 進捗のみを更新し、ステータスなど他のフィールドは変更しない
 func (s *audioJobService) updateProgress(ctx context.Context, job *model.AudioJob, progress int, message string) {
 	job.Progress = progress
-	_ = s.audioJobRepo.Update(ctx, job) //nolint:errcheck // progress update is best effort
+	_ = s.audioJobRepo.UpdateProgress(ctx, job.ID, progress) //nolint:errcheck // progress update is best effort
 	s.notifyProgress(job.ID.String(), job.UserID.String(), progress, message)
 }
 

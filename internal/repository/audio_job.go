@@ -20,6 +20,7 @@ type AudioJobRepository interface {
 	FindPendingByEpisodeID(ctx context.Context, episodeID uuid.UUID) (*model.AudioJob, error)
 	Create(ctx context.Context, job *model.AudioJob) error
 	Update(ctx context.Context, job *model.AudioJob) error
+	UpdateProgress(ctx context.Context, id uuid.UUID, progress int) error
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
@@ -134,6 +135,18 @@ func (r *audioJobRepository) Update(ctx context.Context, job *model.AudioJob) er
 	if err := r.db.WithContext(ctx).Save(job).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to update audio job", "error", err, "job_id", job.ID)
 		return apperror.ErrInternal.WithMessage("音声生成ジョブの更新に失敗しました").WithError(err)
+	}
+
+	return nil
+}
+
+// UpdateProgress は音声ジョブの進捗のみを更新する
+//
+// ステータスなど他のフィールドは変更しない
+func (r *audioJobRepository) UpdateProgress(ctx context.Context, id uuid.UUID, progress int) error {
+	if err := r.db.WithContext(ctx).Model(&model.AudioJob{}).Where("id = ?", id).Update("progress", progress).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to update audio job progress", "error", err, "job_id", id)
+		return apperror.ErrInternal.WithMessage("進捗の更新に失敗しました").WithError(err)
 	}
 
 	return nil
