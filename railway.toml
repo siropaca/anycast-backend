@@ -1,8 +1,7 @@
 [build]
-builder = "nixpacks"
+builder = "dockerfile"
 
 [deploy]
-startCommand = "export PATH=$PATH:/app/bin && ./bin/migrate -path migrations -database \"$DATABASE_URL\" up && ./bin/server"
 healthcheckPath = "/health"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"
