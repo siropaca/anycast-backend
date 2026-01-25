@@ -32,7 +32,7 @@ func main() {
 	ctx := context.Background()
 
 	// DB 接続
-	dbConn, err := db.New(cfg.DatabaseURL)
+	dbConn, err := db.New(cfg.DatabaseURL, cfg.AppEnv)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: failed to connect to database: %v\n", err)
 		os.Exit(1)

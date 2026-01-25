@@ -41,7 +41,7 @@ func main() {
 	logger.Init(cfg.AppEnv)
 
 	// DB 初期化
-	database, err := db.New(cfg.DatabaseURL)
+	database, err := db.New(cfg.DatabaseURL, cfg.AppEnv)
 	if err != nil {
 		logger.Default().Error("Failed to connect to database", "error", err)
 		os.Exit(1)
