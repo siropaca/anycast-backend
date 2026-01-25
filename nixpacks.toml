@@ -1,5 +1,6 @@
 [phases.setup]
 nixPkgs = ["go", "ffmpeg"]
+aptPkgs = ["ffmpeg"]
 
 [phases.build]
 cmds = [
