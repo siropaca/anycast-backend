@@ -1,0 +1,36 @@
+@baseUrl = http://localhost:8081/api/v1
+
+# トークン生成: make token
+@token = YOUR_TOKEN_HERE
+
+### 音声生成ジョブ詳細取得
+GET {{baseUrl}}/audio-jobs/YOUR_JOB_ID_HERE
+Authorization: Bearer {{token}}
+
+### 自分の音声生成ジョブ一覧取得
+GET {{baseUrl}}/me/audio-jobs
+Authorization: Bearer {{token}}
+
+### 自分の音声生成ジョブ一覧取得（ステータスでフィルタ: pending）
+GET {{baseUrl}}/me/audio-jobs?status=pending
+Authorization: Bearer {{token}}
+
+### 自分の音声生成ジョブ一覧取得（ステータスでフィルタ: processing）
+GET {{baseUrl}}/me/audio-jobs?status=processing
+Authorization: Bearer {{token}}
+
+### 自分の音声生成ジョブ一覧取得（ステータスでフィルタ: completed）
+GET {{baseUrl}}/me/audio-jobs?status=completed
+Authorization: Bearer {{token}}
+
+### 自分の音声生成ジョブ一覧取得（ステータスでフィルタ: failed）
+GET {{baseUrl}}/me/audio-jobs?status=failed
+Authorization: Bearer {{token}}
+
+### 自分の音声生成ジョブ一覧取得（ステータスでフィルタ: canceled）
+GET {{baseUrl}}/me/audio-jobs?status=canceled
+Authorization: Bearer {{token}}
+
+### 音声生成ジョブキャンセル
+POST {{baseUrl}}/audio-jobs/YOUR_JOB_ID_HERE/cancel
+Authorization: Bearer {{token}}

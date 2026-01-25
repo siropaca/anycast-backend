@@ -12,8 +12,10 @@ type AudioJobStatus string
 const (
 	AudioJobStatusPending    AudioJobStatus = "pending"
 	AudioJobStatusProcessing AudioJobStatus = "processing"
+	AudioJobStatusCanceling  AudioJobStatus = "canceling"
 	AudioJobStatusCompleted  AudioJobStatus = "completed"
 	AudioJobStatusFailed     AudioJobStatus = "failed"
+	AudioJobStatusCanceled   AudioJobStatus = "canceled"
 )
 
 // AudioJob は非同期音声生成ジョブを表す

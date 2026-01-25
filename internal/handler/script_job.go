@@ -153,3 +153,39 @@ func (h *ScriptJobHandler) ListMyScriptJobs(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+
+// CancelScriptJob godoc
+// @Summary 台本生成ジョブキャンセル
+// @Description 台本生成ジョブをキャンセルします。pending 状態のジョブは即座に canceled に、processing 状態のジョブは canceling に遷移します。
+// @Tags script-jobs
+// @Accept json
+// @Produce json
+// @Param jobId path string true "ジョブ ID"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /script-jobs/{jobId}/cancel [post]
+func (h *ScriptJobHandler) CancelScriptJob(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	jobID := c.Param("jobId")
+	if jobID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("jobId は必須です"))
+		return
+	}
+
+	if err := h.scriptJobService.CancelJob(c.Request.Context(), userID, jobID); err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true})
+}

@@ -8,8 +8,8 @@
 CREATE TYPE oauth_provider AS ENUM ('google');
 CREATE TYPE gender AS ENUM ('male', 'female', 'neutral');
 CREATE TYPE user_role AS ENUM ('user', 'admin');
-CREATE TYPE audio_job_status AS ENUM ('pending', 'processing', 'completed', 'failed');
-CREATE TYPE script_job_status AS ENUM ('pending', 'processing', 'completed', 'failed');
+CREATE TYPE audio_job_status AS ENUM ('pending', 'processing', 'canceling', 'completed', 'failed', 'canceled');
+CREATE TYPE script_job_status AS ENUM ('pending', 'processing', 'canceling', 'completed', 'failed', 'canceled');
 
 -- ===========================================
 -- メディア関連テーブル

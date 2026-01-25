@@ -129,7 +129,36 @@ GET /me/script-jobs
 
 | パラメータ | 型 | 説明 |
 |-----------|------|------|
-| status | string | フィルタ: pending, processing, completed, failed |
+| status | string | フィルタ: pending, processing, canceling, completed, failed, canceled |
+
+### ジョブキャンセル
+
+```
+POST /script-jobs/{jobId}/cancel
+```
+
+**認証**: 必須
+
+**説明**: 台本生成ジョブをキャンセルする。
+
+- `pending` 状態のジョブは即座に `canceled` に遷移
+- `processing` 状態のジョブは `canceling` に遷移し、次のチェックポイントで中断
+
+**レスポンス**: `200 OK`
+
+```json
+{
+  "success": true
+}
+```
+
+**エラー**:
+
+| コード | 説明 |
+|-------|------|
+| 400 | キャンセル不可（既にキャンセル中/済み、完了済み、失敗済み） |
+| 403 | ジョブへのアクセス権限なし |
+| 404 | ジョブが存在しない |
 
 ### 内部ワーカーエンドポイント
 
@@ -203,6 +232,22 @@ GET /ws/jobs?token={jwt}
   }
 }
 
+// キャンセル中通知
+{
+  "type": "script_canceling",
+  "payload": {
+    "jobId": "..."
+  }
+}
+
+// キャンセル完了通知
+{
+  "type": "script_canceled",
+  "payload": {
+    "jobId": "..."
+  }
+}
+
 // ヘルスチェック応答
 {"type": "pong"}
 ```
@@ -210,17 +255,23 @@ GET /ws/jobs?token={jwt}
 ## ジョブステータス
 
 ```
-pending ───▶ processing ───▶ completed
-                  │
-                  └──────────▶ failed
+pending ────▶ processing ───▶ completed
+    │              │
+    │              └──────────▶ failed
+    │              │
+    ▼              ▼
+canceled      canceling ───▶ canceled
+                       ───▶ failed
 ```
 
 | ステータス | 説明 |
 |-----------|------|
 | pending | ジョブ作成済み、処理待ち |
 | processing | 台本生成処理中 |
+| canceling | キャンセル要求を受け付け、処理中断中 |
 | completed | 処理完了 |
 | failed | 処理失敗 |
+| canceled | キャンセル完了 |
 
 ## 処理フロー
 
@@ -309,7 +360,7 @@ pending ───▶ processing ───▶ completed
 ### script_jobs テーブル
 
 ```sql
-CREATE TYPE script_job_status AS ENUM ('pending', 'processing', 'completed', 'failed');
+CREATE TYPE script_job_status AS ENUM ('pending', 'processing', 'canceling', 'completed', 'failed', 'canceled');
 
 CREATE TABLE script_jobs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

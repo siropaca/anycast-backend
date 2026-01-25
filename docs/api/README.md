@@ -71,6 +71,7 @@
 | **Script（台本）** | - | - | - | - | [script.md](./script.md) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/generate-async` | 台本を AI で生成（非同期） | Owner | ✅ | [詳細](./script.md#台本を-ai-で生成非同期) |
 | GET | `/api/v1/script-jobs/:jobId` | 台本生成ジョブ取得 | Owner | ✅ | [詳細](./script.md#台本生成ジョブ取得) |
+| POST | `/api/v1/script-jobs/:jobId/cancel` | 台本生成ジョブキャンセル | Owner | ✅ | [詳細](./script.md#台本生成ジョブキャンセル) |
 | GET | `/api/v1/me/script-jobs` | 自分の台本生成ジョブ一覧 | Owner | ✅ | [詳細](./script.md#自分の台本生成ジョブ一覧) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/import` | 台本テキスト取り込み | Owner | ✅ | [詳細](./script.md#台本テキスト取り込み) |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId/script/export` | 台本テキスト出力 | Owner | ✅ | [詳細](./script.md#台本テキスト出力) |
@@ -82,6 +83,7 @@
 | **Audio（音声生成）** | - | - | - | - | [media.md](./media.md) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/audio/generate-async` | 非同期音声生成（BGM ミキシング対応） | Owner | ✅ | [詳細](./media.md#非同期音声生成) |
 | GET | `/api/v1/audio-jobs/:jobId` | 音声生成ジョブ取得 | Owner | ✅ | [詳細](./media.md#音声生成ジョブ取得) |
+| POST | `/api/v1/audio-jobs/:jobId/cancel` | 音声生成ジョブキャンセル | Owner | ✅ | [詳細](./media.md#音声生成ジョブキャンセル) |
 | GET | `/api/v1/me/audio-jobs` | 自分の音声生成ジョブ一覧 | Owner | ✅ | [詳細](./media.md#自分の音声生成ジョブ一覧) |
 | POST | `/api/v1/audios` | 音声アップロード | Owner | ✅ | [詳細](./media.md#音声アップロード) |
 | **WebSocket** | - | - | - | - | [media.md](./media.md#websocket) |

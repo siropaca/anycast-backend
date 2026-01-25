@@ -26,6 +26,7 @@ type AudioJobService interface {
 	GetJob(ctx context.Context, userID, jobID string) (*response.AudioJobResponse, error)
 	ListMyJobs(ctx context.Context, userID string, filter repository.AudioJobFilter) (*response.AudioJobListResponse, error)
 	ExecuteJob(ctx context.Context, jobID string) error
+	CancelJob(ctx context.Context, userID, jobID string) error
 }
 
 type audioJobService struct {
@@ -272,9 +273,24 @@ func (s *audioJobService) ExecuteJob(ctx context.Context, jobID string) error {
 		return err
 	}
 
-	// 既に完了または失敗している場合はスキップ
-	if job.Status == model.AudioJobStatusCompleted || job.Status == model.AudioJobStatusFailed {
+	// 既に完了、失敗、またはキャンセル済みの場合はスキップ
+	if job.Status == model.AudioJobStatusCompleted ||
+		job.Status == model.AudioJobStatusFailed ||
+		job.Status == model.AudioJobStatusCanceled {
 		log.Info("skipping job as it is already completed", "job_id", jobID, "status", job.Status)
+		return nil
+	}
+
+	// キャンセル中の場合はキャンセル完了にする
+	if job.Status == model.AudioJobStatusCanceling {
+		log.Info("completing cancellation for job", "job_id", jobID)
+		job.Status = model.AudioJobStatusCanceled
+		now := time.Now()
+		job.CompletedAt = &now
+		if err := s.audioJobRepo.Update(ctx, job); err != nil {
+			return err
+		}
+		s.notifyCanceled(job.ID.String(), job.UserID.String())
 		return nil
 	}
 
@@ -291,6 +307,11 @@ func (s *audioJobService) ExecuteJob(ctx context.Context, jobID string) error {
 
 	// 処理実行（エラー時はジョブを失敗状態に）
 	if err := s.executeJobInternal(ctx, job); err != nil {
+		// キャンセルによるエラーの場合は失敗扱いにしない
+		if apperror.IsCode(err, apperror.CodeCanceled) {
+			log.Info("job was canceled during execution", "job_id", jobID)
+			return nil
+		}
 		log.Error("failed to execute job", "error", err, "job_id", jobID)
 		s.failJob(ctx, job, err)
 		return err
@@ -362,6 +383,11 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 	// 進捗: 20%
 	s.updateProgress(ctx, job, 20, "音声を生成中...")
 
+	// キャンセルチェック（TTS 開始前）
+	if err := s.checkCanceled(ctx, job); err != nil {
+		return err
+	}
+
 	// TTS で音声を生成
 	var voiceStyle *string
 	if job.VoiceStyle != "" {
@@ -392,6 +418,11 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 	// 最終的な音声データ
 	var finalAudio []byte
 	voiceDurationMs := 0
+
+	// キャンセルチェック（BGM ミキシング前）
+	if err := s.checkCanceled(ctx, job); err != nil {
+		return err
+	}
 
 	// BGM がある場合はミキシング
 	if episode.BgmID != nil || episode.SystemBgmID != nil {
@@ -451,6 +482,11 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 
 	// 進捗: 85%
 	s.updateProgress(ctx, job, 85, "音声をアップロード中...")
+
+	// キャンセルチェック（アップロード前）
+	if err := s.checkCanceled(ctx, job); err != nil {
+		return err
+	}
 
 	// 新しい Audio ID を生成してアップロード
 	audioID := uuid.New()
@@ -541,6 +577,31 @@ func (s *audioJobService) updateProgress(ctx context.Context, job *model.AudioJo
 	s.notifyProgress(job.ID.String(), job.UserID.String(), progress, message)
 }
 
+// checkCanceled はジョブがキャンセルされていないかチェックする
+//
+// キャンセル中の場合は canceled に遷移させ、ErrCanceled を返す
+func (s *audioJobService) checkCanceled(ctx context.Context, job *model.AudioJob) error {
+	// 最新のステータスを取得
+	latestJob, err := s.audioJobRepo.FindByID(ctx, job.ID)
+	if err != nil {
+		return err
+	}
+
+	if latestJob.Status == model.AudioJobStatusCanceling {
+		// canceled に遷移
+		latestJob.Status = model.AudioJobStatusCanceled
+		now := time.Now()
+		latestJob.CompletedAt = &now
+		if err := s.audioJobRepo.Update(ctx, latestJob); err != nil {
+			return err
+		}
+		s.notifyCanceled(latestJob.ID.String(), latestJob.UserID.String())
+		return apperror.ErrCanceled.WithMessage("ジョブがキャンセルされました")
+	}
+
+	return nil
+}
+
 // failJob は指定されたジョブを失敗状態に更新する
 func (s *audioJobService) failJob(ctx context.Context, job *model.AudioJob, err error) {
 	completedAt := time.Now()
@@ -594,6 +655,98 @@ func (s *audioJobService) notifyCompleted(jobID, userID string, audioModel *mode
 				"id":         audioModel.ID.String(),
 				"durationMs": audioModel.DurationMs,
 			},
+		},
+	})
+}
+
+// CancelJob は指定されたジョブをキャンセルする
+func (s *audioJobService) CancelJob(ctx context.Context, userID, jobID string) error {
+	log := logger.FromContext(ctx)
+
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+
+	jid, err := uuid.Parse(jobID)
+	if err != nil {
+		return err
+	}
+
+	// ジョブを取得
+	job, err := s.audioJobRepo.FindByID(ctx, jid)
+	if err != nil {
+		return err
+	}
+
+	// オーナーチェック
+	if job.UserID != uid {
+		return apperror.ErrForbidden.WithMessage("このジョブへのアクセス権限がありません")
+	}
+
+	// キャンセル可能なステータスか確認
+	switch job.Status {
+	case model.AudioJobStatusPending:
+		// pending → canceled に遷移
+		job.Status = model.AudioJobStatusCanceled
+		now := time.Now()
+		job.CompletedAt = &now
+		if err := s.audioJobRepo.Update(ctx, job); err != nil {
+			return err
+		}
+		s.notifyCanceled(job.ID.String(), job.UserID.String())
+		log.Info("audio job canceled (was pending)", "job_id", jobID)
+		return nil
+
+	case model.AudioJobStatusProcessing:
+		// processing → canceling に遷移
+		job.Status = model.AudioJobStatusCanceling
+		if err := s.audioJobRepo.Update(ctx, job); err != nil {
+			return err
+		}
+		s.notifyCanceling(job.ID.String(), job.UserID.String())
+		log.Info("audio job canceling (was processing)", "job_id", jobID)
+		return nil
+
+	case model.AudioJobStatusCanceling:
+		// 既にキャンセル中
+		return apperror.ErrValidation.WithMessage("このジョブは既にキャンセル中です")
+
+	case model.AudioJobStatusCanceled:
+		// 既にキャンセル済み
+		return apperror.ErrValidation.WithMessage("このジョブは既にキャンセルされています")
+
+	case model.AudioJobStatusCompleted, model.AudioJobStatusFailed:
+		// 完了または失敗済みのジョブはキャンセル不可
+		return apperror.ErrValidation.WithMessage("完了または失敗したジョブはキャンセルできません")
+
+	default:
+		return apperror.ErrInternal.WithMessage("不明なジョブステータスです")
+	}
+}
+
+// notifyCanceling はジョブがキャンセル中になったことを WebSocket で通知する
+func (s *audioJobService) notifyCanceling(jobID, userID string) {
+	if s.wsHub == nil {
+		return
+	}
+	s.wsHub.SendToUser(userID, websocket.Message{
+		Type: "audio_canceling",
+		Payload: map[string]interface{}{
+			"jobId": jobID,
+		},
+	})
+}
+
+// notifyCanceled はジョブがキャンセルされたことを WebSocket で通知する
+func (s *audioJobService) notifyCanceled(jobID, userID string) {
+	if s.wsHub == nil {
+		return
+	}
+	s.wsHub.SendToUser(userID, websocket.Message{
+		Type: "audio_canceled",
+		Payload: map[string]interface{}{
+			"jobId": jobID,
 		},
 	})
 }

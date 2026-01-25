@@ -11,3 +11,8 @@ type ErrorDetail struct {
 type ErrorResponse struct {
 	Error ErrorDetail `json:"error" validate:"required"`
 }
+
+// 成功レスポンス（操作が成功したことのみを示す）
+type SuccessResponse struct {
+	Success bool `json:"success" validate:"required" example:"true"`
+}

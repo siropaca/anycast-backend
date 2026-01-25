@@ -28,6 +28,7 @@ type ScriptJobService interface {
 	GetJob(ctx context.Context, userID, jobID string) (*response.ScriptJobResponse, error)
 	ListMyJobs(ctx context.Context, userID string, filter repository.ScriptJobFilter) (*response.ScriptJobListResponse, error)
 	ExecuteJob(ctx context.Context, jobID string) error
+	CancelJob(ctx context.Context, userID, jobID string) error
 }
 
 type scriptJobService struct {
@@ -238,9 +239,24 @@ func (s *scriptJobService) ExecuteJob(ctx context.Context, jobID string) error {
 		return err
 	}
 
-	// 既に完了または失敗している場合はスキップ
-	if job.Status == model.ScriptJobStatusCompleted || job.Status == model.ScriptJobStatusFailed {
+	// 既に完了、失敗、またはキャンセル済みの場合はスキップ
+	if job.Status == model.ScriptJobStatusCompleted ||
+		job.Status == model.ScriptJobStatusFailed ||
+		job.Status == model.ScriptJobStatusCanceled {
 		log.Info("skipping script job as it is already completed", "job_id", jobID, "status", job.Status)
+		return nil
+	}
+
+	// キャンセル中の場合はキャンセル完了にする
+	if job.Status == model.ScriptJobStatusCanceling {
+		log.Info("completing cancellation for script job", "job_id", jobID)
+		job.Status = model.ScriptJobStatusCanceled
+		now := time.Now()
+		job.CompletedAt = &now
+		if err := s.scriptJobRepo.Update(ctx, job); err != nil {
+			return err
+		}
+		s.notifyCanceled(job.ID.String(), job.UserID.String())
 		return nil
 	}
 
@@ -258,6 +274,11 @@ func (s *scriptJobService) ExecuteJob(ctx context.Context, jobID string) error {
 	// 処理実行（エラー時はジョブを失敗状態に）
 	scriptLinesCount, err := s.executeJobInternal(ctx, job)
 	if err != nil {
+		// キャンセルによるエラーの場合は失敗扱いにしない
+		if apperror.IsCode(err, apperror.CodeCanceled) {
+			log.Info("script job was canceled during execution", "job_id", jobID)
+			return nil
+		}
 		log.Error("failed to execute script job", "error", err, "job_id", jobID)
 		s.failJob(ctx, job, err)
 		return err
@@ -311,6 +332,11 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 	// 進捗: 30%
 	s.updateProgress(ctx, job, 30, "AI で台本を生成中...")
 
+	// キャンセルチェック（LLM 開始前）
+	if err := s.checkCanceled(ctx, job); err != nil {
+		return 0, err
+	}
+
 	// LLM で台本生成
 	generatedText, err := s.llmClient.GenerateScript(ctx, sysPrompt, userPrompt)
 	if err != nil {
@@ -340,6 +366,11 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 
 	// 進捗: 85%
 	s.updateProgress(ctx, job, 85, "台本を保存中...")
+
+	// キャンセルチェック（保存前）
+	if err := s.checkCanceled(ctx, job); err != nil {
+		return 0, err
+	}
 
 	// ScriptLine モデルに変換
 	scriptLines := make([]model.ScriptLine, len(parseResult.Lines))
@@ -463,6 +494,31 @@ func (s *scriptJobService) updateProgress(ctx context.Context, job *model.Script
 	s.notifyProgress(job.ID.String(), job.UserID.String(), progress, message)
 }
 
+// checkCanceled はジョブがキャンセルされていないかチェックする
+//
+// キャンセル中の場合は canceled に遷移させ、ErrCanceled を返す
+func (s *scriptJobService) checkCanceled(ctx context.Context, job *model.ScriptJob) error {
+	// 最新のステータスを取得
+	latestJob, err := s.scriptJobRepo.FindByID(ctx, job.ID)
+	if err != nil {
+		return err
+	}
+
+	if latestJob.Status == model.ScriptJobStatusCanceling {
+		// canceled に遷移
+		latestJob.Status = model.ScriptJobStatusCanceled
+		now := time.Now()
+		latestJob.CompletedAt = &now
+		if err := s.scriptJobRepo.Update(ctx, latestJob); err != nil {
+			return err
+		}
+		s.notifyCanceled(latestJob.ID.String(), latestJob.UserID.String())
+		return apperror.ErrCanceled.WithMessage("ジョブがキャンセルされました")
+	}
+
+	return nil
+}
+
 // failJob は指定されたジョブを失敗状態に更新する
 func (s *scriptJobService) failJob(ctx context.Context, job *model.ScriptJob, err error) {
 	completedAt := time.Now()
@@ -510,6 +566,98 @@ func (s *scriptJobService) notifyCompleted(jobID, userID string, scriptLinesCoun
 		Payload: map[string]interface{}{
 			"jobId":            jobID,
 			"scriptLinesCount": scriptLinesCount,
+		},
+	})
+}
+
+// CancelJob は指定されたジョブをキャンセルする
+func (s *scriptJobService) CancelJob(ctx context.Context, userID, jobID string) error {
+	log := logger.FromContext(ctx)
+
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+
+	jid, err := uuid.Parse(jobID)
+	if err != nil {
+		return err
+	}
+
+	// ジョブを取得
+	job, err := s.scriptJobRepo.FindByID(ctx, jid)
+	if err != nil {
+		return err
+	}
+
+	// オーナーチェック
+	if job.UserID != uid {
+		return apperror.ErrForbidden.WithMessage("このジョブへのアクセス権限がありません")
+	}
+
+	// キャンセル可能なステータスか確認
+	switch job.Status {
+	case model.ScriptJobStatusPending:
+		// pending → canceled に遷移
+		job.Status = model.ScriptJobStatusCanceled
+		now := time.Now()
+		job.CompletedAt = &now
+		if err := s.scriptJobRepo.Update(ctx, job); err != nil {
+			return err
+		}
+		s.notifyCanceled(job.ID.String(), job.UserID.String())
+		log.Info("script job canceled (was pending)", "job_id", jobID)
+		return nil
+
+	case model.ScriptJobStatusProcessing:
+		// processing → canceling に遷移
+		job.Status = model.ScriptJobStatusCanceling
+		if err := s.scriptJobRepo.Update(ctx, job); err != nil {
+			return err
+		}
+		s.notifyCanceling(job.ID.String(), job.UserID.String())
+		log.Info("script job canceling (was processing)", "job_id", jobID)
+		return nil
+
+	case model.ScriptJobStatusCanceling:
+		// 既にキャンセル中
+		return apperror.ErrValidation.WithMessage("このジョブは既にキャンセル中です")
+
+	case model.ScriptJobStatusCanceled:
+		// 既にキャンセル済み
+		return apperror.ErrValidation.WithMessage("このジョブは既にキャンセルされています")
+
+	case model.ScriptJobStatusCompleted, model.ScriptJobStatusFailed:
+		// 完了または失敗済みのジョブはキャンセル不可
+		return apperror.ErrValidation.WithMessage("完了または失敗したジョブはキャンセルできません")
+
+	default:
+		return apperror.ErrInternal.WithMessage("不明なジョブステータスです")
+	}
+}
+
+// notifyCanceling はジョブがキャンセル中になったことを WebSocket で通知する
+func (s *scriptJobService) notifyCanceling(jobID, userID string) {
+	if s.wsHub == nil {
+		return
+	}
+	s.wsHub.SendToUser(userID, websocket.Message{
+		Type: "script_canceling",
+		Payload: map[string]interface{}{
+			"jobId": jobID,
+		},
+	})
+}
+
+// notifyCanceled はジョブがキャンセルされたことを WebSocket で通知する
+func (s *scriptJobService) notifyCanceled(jobID, userID string) {
+	if s.wsHub == nil {
+		return
+	}
+	s.wsHub.SendToUser(userID, websocket.Message{
+		Type: "script_canceled",
+		Payload: map[string]interface{}{
+			"jobId": jobID,
 		},
 	})
 }
