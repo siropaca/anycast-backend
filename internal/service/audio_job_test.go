@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -62,6 +63,11 @@ func (m *mockAudioJobRepository) Update(ctx context.Context, job *model.AudioJob
 
 func (m *mockAudioJobRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *mockAudioJobRepository) UpdateProgress(ctx context.Context, id uuid.UUID, progress int) error {
+	args := m.Called(ctx, id, progress)
 	return args.Error(0)
 }
 
@@ -282,7 +288,171 @@ func TestAudioJobStatus(t *testing.T) {
 	t.Run("AudioJobStatus 定数が正しい", func(t *testing.T) {
 		assert.Equal(t, model.AudioJobStatus("pending"), model.AudioJobStatusPending)
 		assert.Equal(t, model.AudioJobStatus("processing"), model.AudioJobStatusProcessing)
+		assert.Equal(t, model.AudioJobStatus("canceling"), model.AudioJobStatusCanceling)
 		assert.Equal(t, model.AudioJobStatus("completed"), model.AudioJobStatusCompleted)
 		assert.Equal(t, model.AudioJobStatus("failed"), model.AudioJobStatusFailed)
+		assert.Equal(t, model.AudioJobStatus("canceled"), model.AudioJobStatusCanceled)
+	})
+}
+
+func TestAudioJobService_CancelJob(t *testing.T) {
+	userID := uuid.New()
+	jobID := uuid.New()
+	episodeID := uuid.New()
+
+	t.Run("pending ジョブをキャンセルすると canceled になる", func(t *testing.T) {
+		mockRepo := new(mockAudioJobRepository)
+		job := &model.AudioJob{
+			ID:        jobID,
+			EpisodeID: episodeID,
+			UserID:    userID,
+			Status:    model.AudioJobStatusPending,
+		}
+		mockRepo.On("FindByID", mock.Anything, jobID).Return(job, nil)
+		mockRepo.On("Update", mock.Anything, mock.MatchedBy(func(j *model.AudioJob) bool {
+			return j.Status == model.AudioJobStatusCanceled
+		})).Return(nil)
+
+		svc := &audioJobService{audioJobRepo: mockRepo}
+		err := svc.CancelJob(context.Background(), userID.String(), jobID.String())
+
+		assert.NoError(t, err)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("processing ジョブをキャンセルすると canceling になる", func(t *testing.T) {
+		mockRepo := new(mockAudioJobRepository)
+		job := &model.AudioJob{
+			ID:        jobID,
+			EpisodeID: episodeID,
+			UserID:    userID,
+			Status:    model.AudioJobStatusProcessing,
+		}
+		mockRepo.On("FindByID", mock.Anything, jobID).Return(job, nil)
+		mockRepo.On("Update", mock.Anything, mock.MatchedBy(func(j *model.AudioJob) bool {
+			return j.Status == model.AudioJobStatusCanceling
+		})).Return(nil)
+
+		svc := &audioJobService{audioJobRepo: mockRepo}
+		err := svc.CancelJob(context.Background(), userID.String(), jobID.String())
+
+		assert.NoError(t, err)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("completed ジョブはキャンセルできない", func(t *testing.T) {
+		mockRepo := new(mockAudioJobRepository)
+		job := &model.AudioJob{
+			ID:        jobID,
+			EpisodeID: episodeID,
+			UserID:    userID,
+			Status:    model.AudioJobStatusCompleted,
+		}
+		mockRepo.On("FindByID", mock.Anything, jobID).Return(job, nil)
+
+		svc := &audioJobService{audioJobRepo: mockRepo}
+		err := svc.CancelJob(context.Background(), userID.String(), jobID.String())
+
+		assert.Error(t, err)
+		var appErr *apperror.AppError
+		assert.True(t, errors.As(err, &appErr))
+		assert.Equal(t, apperror.CodeValidation, appErr.Code)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("他のユーザーのジョブはキャンセルできない", func(t *testing.T) {
+		mockRepo := new(mockAudioJobRepository)
+		otherUserID := uuid.New()
+		job := &model.AudioJob{
+			ID:        jobID,
+			EpisodeID: episodeID,
+			UserID:    otherUserID,
+			Status:    model.AudioJobStatusPending,
+		}
+		mockRepo.On("FindByID", mock.Anything, jobID).Return(job, nil)
+
+		svc := &audioJobService{audioJobRepo: mockRepo}
+		err := svc.CancelJob(context.Background(), userID.String(), jobID.String())
+
+		assert.Error(t, err)
+		var appErr *apperror.AppError
+		assert.True(t, errors.As(err, &appErr))
+		assert.Equal(t, apperror.CodeForbidden, appErr.Code)
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestAudioJobService_updateProgress(t *testing.T) {
+	jobID := uuid.New()
+	userID := uuid.New()
+	episodeID := uuid.New()
+
+	t.Run("UpdateProgress は進捗のみを更新しステータスを上書きしない", func(t *testing.T) {
+		mockRepo := new(mockAudioJobRepository)
+		job := &model.AudioJob{
+			ID:        jobID,
+			EpisodeID: episodeID,
+			UserID:    userID,
+			Status:    model.AudioJobStatusProcessing,
+			Progress:  30,
+		}
+
+		// UpdateProgress が呼ばれることを確認（Update ではなく）
+		mockRepo.On("UpdateProgress", mock.Anything, jobID, 50).Return(nil)
+
+		svc := &audioJobService{audioJobRepo: mockRepo}
+		svc.updateProgress(context.Background(), job, 50, "処理中...")
+
+		// job.Progress がメモリ上で更新されていることを確認
+		assert.Equal(t, 50, job.Progress)
+		// Status は変更されていないことを確認
+		assert.Equal(t, model.AudioJobStatusProcessing, job.Status)
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestAudioJobService_checkCanceled(t *testing.T) {
+	jobID := uuid.New()
+	userID := uuid.New()
+	episodeID := uuid.New()
+
+	t.Run("canceling 状態のジョブは ErrCanceled を返す", func(t *testing.T) {
+		mockRepo := new(mockAudioJobRepository)
+		job := &model.AudioJob{
+			ID:        jobID,
+			EpisodeID: episodeID,
+			UserID:    userID,
+			Status:    model.AudioJobStatusCanceling,
+		}
+		mockRepo.On("FindByID", mock.Anything, jobID).Return(job, nil)
+		mockRepo.On("Update", mock.Anything, mock.MatchedBy(func(j *model.AudioJob) bool {
+			return j.Status == model.AudioJobStatusCanceled
+		})).Return(nil)
+
+		svc := &audioJobService{audioJobRepo: mockRepo}
+		err := svc.checkCanceled(context.Background(), job)
+
+		assert.Error(t, err)
+		var appErr *apperror.AppError
+		assert.True(t, errors.As(err, &appErr))
+		assert.Equal(t, apperror.CodeCanceled, appErr.Code)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("processing 状態のジョブはエラーを返さない", func(t *testing.T) {
+		mockRepo := new(mockAudioJobRepository)
+		job := &model.AudioJob{
+			ID:        jobID,
+			EpisodeID: episodeID,
+			UserID:    userID,
+			Status:    model.AudioJobStatusProcessing,
+		}
+		mockRepo.On("FindByID", mock.Anything, jobID).Return(job, nil)
+
+		svc := &audioJobService{audioJobRepo: mockRepo}
+		err := svc.checkCanceled(context.Background(), job)
+
+		assert.NoError(t, err)
+		mockRepo.AssertExpectations(t)
 	})
 }
