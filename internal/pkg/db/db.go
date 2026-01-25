@@ -14,16 +14,19 @@ import (
 // @param env - 実行環境
 // @returns データベース接続
 func New(databaseURL string, env config.Env) (*gorm.DB, error) {
-	var logLevel logger.LogLevel
+	var gormConfig *gorm.Config
+
 	if env == config.EnvProduction {
-		logLevel = logger.Error
+		gormConfig = &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Silent),
+		}
 	} else {
-		logLevel = logger.Info
+		gormConfig = &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Info),
+		}
 	}
 
-	db, err := gorm.Open(postgres.Open(databaseURL), &gorm.Config{
-		Logger: logger.Default.LogMode(logLevel),
-	})
+	db, err := gorm.Open(postgres.Open(databaseURL), gormConfig)
 	if err != nil {
 		return nil, err
 	}
