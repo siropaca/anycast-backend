@@ -65,7 +65,7 @@ func Init(env config.Env) {
 	if env == config.EnvProduction {
 		opts := &slog.HandlerOptions{
 			AddSource: true,
-			Level:     slog.LevelWarn,
+			Level:     slog.LevelInfo,
 		}
 		handler = slog.NewJSONHandler(os.Stdout, opts)
 	} else {
