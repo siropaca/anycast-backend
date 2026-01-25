@@ -2,7 +2,7 @@
 builder = "nixpacks"
 
 [deploy]
-startCommand = "./bin/migrate -path migrations -database \"$DATABASE_URL\" up && ./bin/server"
+startCommand = "export PATH=$PATH:/app/bin && ./bin/migrate -path migrations -database \"$DATABASE_URL\" up && ./bin/server"
 healthcheckPath = "/health"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"

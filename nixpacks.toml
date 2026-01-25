@@ -6,5 +6,10 @@ aptPkgs = ["ffmpeg"]
 cmds = [
     "go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest",
     "go build -o bin/server main.go",
-    "cp $(go env GOPATH)/bin/migrate bin/migrate"
+    "cp $(go env GOPATH)/bin/migrate bin/migrate",
+    "cp $(which ffmpeg) bin/ffmpeg",
+    "cp $(which ffprobe) bin/ffprobe"
 ]
+
+[start]
+cmd = "export PATH=$PATH:/app/bin && ./bin/migrate -path migrations -database \"$DATABASE_URL\" up && ./bin/server"
