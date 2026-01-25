@@ -100,7 +100,7 @@ func (c *client) enqueueJob(ctx context.Context, jobID, pathSuffix, jobType stri
 					AuthorizationHeader: &taskspb.HttpRequest_OidcToken{
 						OidcToken: &taskspb.OidcToken{
 							ServiceAccountEmail: c.serviceAccountEmail,
-							Audience:            workerURL,
+							Audience:            c.workerEndpointURL,
 						},
 					},
 				},
