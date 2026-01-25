@@ -417,6 +417,11 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 	// 進捗: 95%
 	s.updateProgress(ctx, job, 95, "完了処理中...")
 
+	// キャンセルチェック（完了遷移前）
+	if err := s.checkCanceled(ctx, job); err != nil {
+		return 0, err
+	}
+
 	// ジョブを完了状態に更新
 	completedAt := time.Now()
 	job.Status = model.ScriptJobStatusCompleted

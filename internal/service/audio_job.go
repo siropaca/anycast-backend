@@ -537,6 +537,11 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 		return err
 	}
 
+	// キャンセルチェック（完了遷移前）
+	if err := s.checkCanceled(ctx, job); err != nil {
+		return err
+	}
+
 	// ジョブを完了状態に更新
 	completedAt := time.Now()
 	job.Status = model.AudioJobStatusCompleted
