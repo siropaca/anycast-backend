@@ -121,43 +121,50 @@ GET /search/users
 
 ---
 
-# Likes（お気に入り）
+# Reactions（リアクション）
 
-エピソードへのお気に入り機能。
+エピソードへのリアクション機能（like / bad）。同じエピソードには 1 つのリアクションのみ設定可能（排他的）。
 
-## お気に入り登録
+## リアクション登録・更新
 
 ```
-POST /episodes/:episodeId/like
+POST /episodes/:episodeId/reactions
 ```
 
-**レスポンス（201 Created）:**
+リアクションを登録する。既に同じエピソードにリアクションがある場合は更新する（upsert）。
+
+**リクエスト:**
+```json
+{
+  "reactionType": "like"
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| reactionType | string | ◯ | リアクション種別（`like` / `bad`） |
+
+**レスポンス（201 Created / 200 OK）:**
+
+- 201: 新規登録時
+- 200: 既存リアクションの更新時
+
 ```json
 {
   "data": {
     "id": "uuid",
     "episodeId": "uuid",
+    "reactionType": "like",
     "createdAt": "2025-01-01T00:00:00Z"
   }
 }
-```
-
-**エラー（409 Conflict）:**
-```json
-{
-  "error": {
-    "code": "ALREADY_LIKED",
-    "message": "既にお気に入り済みです"
-  }
-}
-```
 
 ---
 
-## お気に入り解除
+## リアクション解除
 
 ```
-DELETE /episodes/:episodeId/like
+DELETE /episodes/:episodeId/reactions
 ```
 
 **レスポンス（204 No Content）:**
@@ -168,7 +175,7 @@ DELETE /episodes/:episodeId/like
 {
   "error": {
     "code": "NOT_FOUND",
-    "message": "お気に入りが見つかりません"
+    "message": "リアクションが見つかりません"
   }
 }
 ```
@@ -176,6 +183,8 @@ DELETE /episodes/:episodeId/like
 ---
 
 ## お気に入りしたエピソード一覧
+
+like したエピソードの一覧を取得する。
 
 ```
 GET /me/likes

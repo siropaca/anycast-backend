@@ -3,7 +3,7 @@
 DROP TABLE IF EXISTS follows;
 DROP TABLE IF EXISTS playback_histories;
 DROP TABLE IF EXISTS bookmarks;
-DROP TABLE IF EXISTS likes;
+DROP TABLE IF EXISTS reactions;
 DROP TABLE IF EXISTS script_lines;
 DROP TABLE IF EXISTS script_jobs;
 DROP TABLE IF EXISTS audio_jobs;
@@ -22,6 +22,7 @@ DROP TABLE IF EXISTS audios;
 DROP TABLE IF EXISTS images;
 
 -- ENUM 型を削除
+DROP TYPE IF EXISTS reaction_type;
 DROP TYPE IF EXISTS script_job_status;
 DROP TYPE IF EXISTS audio_job_status;
 DROP TYPE IF EXISTS user_role;

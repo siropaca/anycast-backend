@@ -78,7 +78,7 @@ AI 専用のポッドキャストを作成・配信できるプラットフォ�
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                       ユーザーインタラクション                                │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│  Like            : User ─── Episode                                         │
+│  Reaction        : User ─── Episode + リアクション種別（like/bad）          │
 │  Bookmark        : User ─── Episode                                         │
 │  PlaybackHistory : User ─── Episode + 再生状態                              │
 │  Follow          : User ─── Episode（他ユーザーのエピソードのみ）            │
@@ -112,7 +112,7 @@ AI 専用のポッドキャストを作成・配信できるプラットフォ�
 | 種別 | 名前 | 説明 |
 |------|------|------|
 | エンティティ | User, Channel, Character, Episode, ScriptLine | 一意の識別子を持ち、ライフサイクルを通じて追跡される |
-| エンティティ | Like, Bookmark, PlaybackHistory, Follow | ユーザーとエピソードの関連を表す |
+| エンティティ | Reaction, Bookmark, PlaybackHistory, Follow | ユーザーとエピソードの関連を表す |
 | エンティティ | Voice, Category | システム管理のマスタデータ |
 | エンティティ | Audio, Image | メディアファイル（外部ストレージへの参照） |
 | 値オブジェクト | Email, Username, OAuthProvider, Gender, MimeType | ドメイン固有のルール・制約を持つ値 |
@@ -129,6 +129,7 @@ AI 専用のポッドキャストを作成・配信できるプラットフォ�
 | Gender | Enum | `male` / `female` / `neutral` |
 | MimeType | String | 有効な MIME タイプ形式（例: `audio/mpeg`, `image/png`） |
 | Role | Enum | `user` / `admin` |
+| ReactionType | Enum | `like` / `bad` |
 
 #### 値オブジェクトにしない例
 
@@ -438,21 +439,23 @@ emotion は TTS 生成時に text の先頭にカッコで付けて表現する�
 
 ユーザーとエピソードの関係を表すエンティティ群。
 
-### Like（お気に入り）
+### Reaction（リアクション）
 
-ユーザーがエピソードを「お気に入り」に登録したことを記録する。
+ユーザーがエピソードに対して行ったリアクション（like / bad）を記録する。
 
 | 属性 | 型 | 必須 | 説明 |
 |------|-----|:----:|------|
 | id | UUID | ◯ | 識別子 |
 | userId | UUID | ◯ | ユーザー |
 | episodeId | UUID | ◯ | エピソード |
-| createdAt | DateTime | ◯ | お気に入り登録日時 |
+| reactionType | ReactionType | ◯ | リアクション種別（like / bad） |
+| createdAt | DateTime | ◯ | リアクション登録日時 |
 
 #### 制約
 
-- user + episode の組み合わせは一意（同じエピソードを複数回お気に入りにできない）
-- 公開されているエピソードのみお気に入りにできる
+- user + episode の組み合わせは一意（同じエピソードには 1 つのリアクションのみ）
+- 公開されているエピソードのみリアクションできる
+- like は「お気に入り」として一覧表示に使用される
 
 ### Bookmark（後で見る）
 

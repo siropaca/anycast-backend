@@ -10,6 +10,7 @@ CREATE TYPE gender AS ENUM ('male', 'female', 'neutral');
 CREATE TYPE user_role AS ENUM ('user', 'admin');
 CREATE TYPE audio_job_status AS ENUM ('pending', 'processing', 'canceling', 'completed', 'failed', 'canceled');
 CREATE TYPE script_job_status AS ENUM ('pending', 'processing', 'canceling', 'completed', 'failed', 'canceled');
+CREATE TYPE reaction_type AS ENUM ('like', 'bad');
 
 -- ===========================================
 -- メディア関連テーブル
@@ -298,17 +299,18 @@ CREATE INDEX idx_script_lines_episode_id ON script_lines (episode_id);
 -- ユーザーインタラクションテーブル
 -- ===========================================
 
--- いいね
-CREATE TABLE likes (
+-- リアクション
+CREATE TABLE reactions (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 	user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
 	episode_id UUID NOT NULL REFERENCES episodes (id) ON DELETE CASCADE,
+	reaction_type reaction_type NOT NULL,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	UNIQUE (user_id, episode_id)
 );
 
-CREATE INDEX idx_likes_user_id ON likes (user_id);
-CREATE INDEX idx_likes_episode_id ON likes (episode_id);
+CREATE INDEX idx_reactions_user_id ON reactions (user_id);
+CREATE INDEX idx_reactions_episode_id ON reactions (episode_id);
 
 -- ブックマーク
 CREATE TABLE bookmarks (

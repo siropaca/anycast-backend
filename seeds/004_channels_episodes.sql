@@ -11,8 +11,8 @@ DELETE FROM script_lines WHERE episode_id IN (
 DELETE FROM channel_characters WHERE channel_id IN (
 	SELECT id FROM channels WHERE user_id IN ('8def69af-dae9-4641-a0e5-100107626933', '8eada3a5-f413-4eeb-9cd5-12def60d4596')
 );
--- likes, bookmarks, follows はテストユーザーのものを削除
-DELETE FROM likes WHERE user_id IN ('8def69af-dae9-4641-a0e5-100107626933', '8eada3a5-f413-4eeb-9cd5-12def60d4596');
+-- reactions, bookmarks, follows はテストユーザーのものを削除
+DELETE FROM reactions WHERE user_id IN ('8def69af-dae9-4641-a0e5-100107626933', '8eada3a5-f413-4eeb-9cd5-12def60d4596');
 DELETE FROM bookmarks WHERE user_id IN ('8def69af-dae9-4641-a0e5-100107626933', '8eada3a5-f413-4eeb-9cd5-12def60d4596');
 DELETE FROM follows WHERE user_id IN ('8def69af-dae9-4641-a0e5-100107626933', '8eada3a5-f413-4eeb-9cd5-12def60d4596');
 DELETE FROM characters WHERE user_id IN ('8def69af-dae9-4641-a0e5-100107626933', '8eada3a5-f413-4eeb-9cd5-12def60d4596');
@@ -124,10 +124,10 @@ INSERT INTO script_lines (id, episode_id, line_order, speaker_id, text, emotion)
 -- お気に入り・ブックマーク・フォロー
 -- ===========================================
 
--- test_user が test_user2 のエピソードをお気に入り
-INSERT INTO likes (id, user_id, episode_id) VALUES
-	('3c8a7f95-c316-4437-a1ec-138009cd0833', '8def69af-dae9-4641-a0e5-100107626933', 'fcb16526-951a-4ff1-a456-ab1dba96f699'),
-	('14b3cfbb-c080-4518-985c-6cd5c226900c', '8def69af-dae9-4641-a0e5-100107626933', '9cde2abb-30e8-447b-bc8b-bb799b0f6f06');
+-- test_user が test_user2 のエピソードにリアクション（like）
+INSERT INTO reactions (id, user_id, episode_id, reaction_type) VALUES
+	('3c8a7f95-c316-4437-a1ec-138009cd0833', '8def69af-dae9-4641-a0e5-100107626933', 'fcb16526-951a-4ff1-a456-ab1dba96f699', 'like'),
+	('14b3cfbb-c080-4518-985c-6cd5c226900c', '8def69af-dae9-4641-a0e5-100107626933', '9cde2abb-30e8-447b-bc8b-bb799b0f6f06', 'like');
 
 -- test_user が test_user2 のエピソードをブックマーク
 INSERT INTO bookmarks (id, user_id, episode_id) VALUES
