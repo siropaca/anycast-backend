@@ -16,6 +16,10 @@ import (
 
 // Setup はルーターを設定して返す
 func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
+	if cfg.AppEnv == config.EnvProduction {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	r := gin.New()
 
 	// ミドルウェア
