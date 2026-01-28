@@ -651,8 +651,11 @@ TTS ボイスの設定情報。
 
 ### メディア管理
 
-- Audio.path には GCS（Google Cloud Storage）上のパスを保存（例: `audios/xxx.mp3`）
+- Audio.path / Image.path には GCS（Google Cloud Storage）上のパスを保存（例: `audios/xxx.mp3`, `images/xxx.png`）
+- Image.path には外部 URL（`http://` / `https://` で始まるもの）も格納可能
 - API レスポンス時に署名付き URL を動的生成してクライアントに返す
+  - 外部 URL の場合は署名付き URL の生成をスキップし、パスをそのまま URL として返す
 - 同一ファイルを複数箇所から参照可能（BGM の使い回しなど）
 - 参照元が削除されてもメディアファイルは残る（SET NULL）
 - 未使用ファイルのクリーンアップはバッチ処理で実施
+  - 外部 URL の画像は GCS 削除をスキップし、DB レコードのみ削除

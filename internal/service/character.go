@@ -124,14 +124,21 @@ func (s *characterService) toCharacterWithChannelsResponse(ctx context.Context, 
 	// アバター画像の署名付き URL を生成
 	var avatar *response.AvatarResponse
 	if c.Avatar != nil && s.storageClient != nil {
-		signedURL, err := s.storageClient.GenerateSignedURL(ctx, c.Avatar.Path, storage.SignedURLExpirationImage)
-		if err == nil {
+		if storage.IsExternalURL(c.Avatar.Path) {
 			avatar = &response.AvatarResponse{
 				ID:  c.Avatar.ID,
-				URL: signedURL,
+				URL: c.Avatar.Path,
 			}
+		} else {
+			signedURL, err := s.storageClient.GenerateSignedURL(ctx, c.Avatar.Path, storage.SignedURLExpirationImage)
+			if err == nil {
+				avatar = &response.AvatarResponse{
+					ID:  c.Avatar.ID,
+					URL: signedURL,
+				}
+			}
+			// URL 生成に失敗した場合はエラーにせず nil のまま
 		}
-		// URL 生成に失敗した場合はエラーにせず nil のまま
 	}
 
 	return response.CharacterWithChannelsResponse{

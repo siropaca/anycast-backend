@@ -272,9 +272,13 @@ func (s *authService) toUserResponse(ctx context.Context, user *model.User) *res
 	if user.AvatarID != nil {
 		image, err := s.imageRepo.FindByID(ctx, *user.AvatarID)
 		if err == nil {
-			signedURL, err := s.storageClient.GenerateSignedURL(ctx, image.Path, storage.SignedURLExpirationImage)
-			if err == nil {
-				avatarURL = &signedURL
+			if storage.IsExternalURL(image.Path) {
+				avatarURL = &image.Path
+			} else {
+				signedURL, err := s.storageClient.GenerateSignedURL(ctx, image.Path, storage.SignedURLExpirationImage)
+				if err == nil {
+					avatarURL = &signedURL
+				}
 			}
 		}
 		// アバターが見つからない場合やURL生成に失敗した場合はエラーにせず nil のまま
@@ -323,11 +327,18 @@ func (s *authService) GetMe(ctx context.Context, userID string) (*response.MeRes
 	if user.AvatarID != nil {
 		image, err := s.imageRepo.FindByID(ctx, *user.AvatarID)
 		if err == nil {
-			signedURL, err := s.storageClient.GenerateSignedURL(ctx, image.Path, storage.SignedURLExpirationImage)
-			if err == nil {
+			if storage.IsExternalURL(image.Path) {
 				avatar = &response.AvatarResponse{
 					ID:  image.ID,
-					URL: signedURL,
+					URL: image.Path,
+				}
+			} else {
+				signedURL, err := s.storageClient.GenerateSignedURL(ctx, image.Path, storage.SignedURLExpirationImage)
+				if err == nil {
+					avatar = &response.AvatarResponse{
+						ID:  image.ID,
+						URL: signedURL,
+					}
 				}
 			}
 		}

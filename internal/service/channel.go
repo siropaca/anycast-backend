@@ -767,13 +767,19 @@ func (s *channelService) toChannelResponse(ctx context.Context, c *model.Channel
 	}
 
 	if c.Artwork != nil {
-		signedURL, err := s.storageClient.GenerateSignedURL(ctx, c.Artwork.Path, storage.SignedURLExpirationImage)
-		if err != nil {
-			return response.ChannelResponse{}, err
+		var artworkURL string
+		if storage.IsExternalURL(c.Artwork.Path) {
+			artworkURL = c.Artwork.Path
+		} else {
+			var err error
+			artworkURL, err = s.storageClient.GenerateSignedURL(ctx, c.Artwork.Path, storage.SignedURLExpirationImage)
+			if err != nil {
+				return response.ChannelResponse{}, err
+			}
 		}
 		resp.Artwork = &response.ArtworkResponse{
 			ID:  c.Artwork.ID,
-			URL: signedURL,
+			URL: artworkURL,
 		}
 	}
 

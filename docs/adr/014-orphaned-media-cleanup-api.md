@@ -78,7 +78,7 @@ POST /admin/cleanup/orphaned-media
 | 認証 | 管理者専用（Admin 権限） |
 | dry-run | クエリパラメータ `?dry_run=true` で削除対象の確認のみ |
 | 対象条件 | `created_at` から 1 時間以上経過したレコードのみ |
-| 削除順序 | GCS ファイル削除 → DB レコード削除 |
+| 削除順序 | GCS ファイル削除 → DB レコード削除（外部 URL の画像は GCS 削除をスキップ） |
 
 ### 今後の拡張
 

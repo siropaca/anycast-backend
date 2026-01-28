@@ -97,8 +97,8 @@ func (s *cleanupService) CleanupOrphanedMedia(ctx context.Context, dryRun bool) 
 
 	// Image を削除
 	for _, image := range orphanedImages {
-		// GCS から削除
-		if s.storageClient != nil {
+		// GCS から削除（外部 URL の場合はスキップ）
+		if s.storageClient != nil && !storage.IsExternalURL(image.Path) {
 			if err := s.storageClient.Delete(ctx, image.Path); err != nil {
 				log.Warn("failed to delete image from GCS", "image_id", image.ID, "path", image.Path, "error", err)
 				result.FailedImageCount++

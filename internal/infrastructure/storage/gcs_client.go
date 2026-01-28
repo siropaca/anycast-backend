@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/storage"
@@ -12,6 +13,11 @@ import (
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/pkg/logger"
 )
+
+// IsExternalURL はパスが外部 URL かどうかを判定する
+func IsExternalURL(path string) bool {
+	return strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://")
+}
 
 // 署名付き URL の有効期限
 const (

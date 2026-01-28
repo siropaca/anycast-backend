@@ -731,7 +731,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 |----------|-----|:--------:|------------|------|
 | id | UUID | | gen_random_uuid() | 主キー |
 | mime_type | VARCHAR(100) | | - | MIME タイプ（image/png, image/jpeg など） |
-| path | VARCHAR(1024) | | - | GCS 上のパス（例: images/xxx.png） |
+| path | VARCHAR(1024) | | - | GCS 上のパス（例: `images/xxx.png`）または外部 URL（例: `https://example.com/image.png`） |
 | filename | VARCHAR(255) | | - | 元ファイル名 |
 | file_size | INTEGER | | - | ファイルサイズ（バイト） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |

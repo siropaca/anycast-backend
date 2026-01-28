@@ -547,13 +547,19 @@ func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode
 	}
 
 	if e.Artwork != nil {
-		signedURL, err := s.storageClient.GenerateSignedURL(ctx, e.Artwork.Path, storage.SignedURLExpirationImage)
-		if err != nil {
-			return response.EpisodeResponse{}, err
+		var artworkURL string
+		if storage.IsExternalURL(e.Artwork.Path) {
+			artworkURL = e.Artwork.Path
+		} else {
+			var err error
+			artworkURL, err = s.storageClient.GenerateSignedURL(ctx, e.Artwork.Path, storage.SignedURLExpirationImage)
+			if err != nil {
+				return response.EpisodeResponse{}, err
+			}
 		}
 		resp.Artwork = &response.ArtworkResponse{
 			ID:  e.Artwork.ID,
-			URL: signedURL,
+			URL: artworkURL,
 		}
 	}
 

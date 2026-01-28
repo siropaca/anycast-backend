@@ -103,6 +103,11 @@ func (m *mockEpisodeService) DeleteEpisodeBgm(ctx context.Context, userID, chann
 	return args.Get(0).(*response.EpisodeDataResponse), args.Error(1)
 }
 
+func (m *mockEpisodeService) IncrementPlayCount(ctx context.Context, episodeID string) error {
+	args := m.Called(ctx, episodeID)
+	return args.Error(0)
+}
+
 // テスト用のルーターをセットアップする
 func setupEpisodeRouter(h *EpisodeHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)
