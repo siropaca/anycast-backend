@@ -17,6 +17,7 @@ type EpisodeResponse struct {
 	FullAudio     *AudioResponse      `json:"fullAudio" extensions:"x-nullable"`
 	Bgm           *EpisodeBgmResponse `json:"bgm" extensions:"x-nullable"`
 	AudioOutdated bool                `json:"audioOutdated" validate:"required"`
+	PlayCount     int                 `json:"playCount" validate:"required"`
 	PublishedAt   *time.Time          `json:"publishedAt" extensions:"x-nullable"`
 	CreatedAt     time.Time           `json:"createdAt" validate:"required"`
 	UpdatedAt     time.Time           `json:"updatedAt" validate:"required"`

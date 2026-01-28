@@ -26,6 +26,7 @@ type EpisodeService interface {
 	UnpublishEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error)
 	SetEpisodeBgm(ctx context.Context, userID, channelID, episodeID string, req request.SetEpisodeBgmRequest) (*response.EpisodeDataResponse, error)
 	DeleteEpisodeBgm(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error)
+	IncrementPlayCount(ctx context.Context, episodeID string) error
 }
 
 type episodeService struct {
@@ -494,6 +495,27 @@ func (s *episodeService) UnpublishEpisode(ctx context.Context, userID, channelID
 	}, nil
 }
 
+// IncrementPlayCount は指定されたエピソードの再生回数をインクリメントする
+func (s *episodeService) IncrementPlayCount(ctx context.Context, episodeID string) error {
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return err
+	}
+
+	// エピソードの存在確認と公開状態チェック
+	episode, err := s.episodeRepo.FindByID(ctx, eid)
+	if err != nil {
+		return err
+	}
+
+	// 公開中のエピソードのみカウント対象
+	if episode.PublishedAt == nil || episode.PublishedAt.After(time.Now()) {
+		return apperror.ErrValidation.WithMessage("公開中のエピソードのみ再生回数をカウントできます")
+	}
+
+	return s.episodeRepo.IncrementPlayCount(ctx, eid)
+}
+
 // toEpisodeResponses は Episode のスライスをレスポンス DTO のスライスに変換する
 func (s *episodeService) toEpisodeResponses(ctx context.Context, episodes []model.Episode) ([]response.EpisodeResponse, error) {
 	result := make([]response.EpisodeResponse, len(episodes))
@@ -518,6 +540,7 @@ func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode
 		UserPrompt:    e.UserPrompt,
 		VoiceStyle:    e.VoiceStyle,
 		AudioOutdated: e.AudioOutdated,
+		PlayCount:     e.PlayCount,
 		PublishedAt:   e.PublishedAt,
 		CreatedAt:     e.CreatedAt,
 		UpdatedAt:     e.UpdatedAt,

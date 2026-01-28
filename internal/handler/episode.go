@@ -408,6 +408,35 @@ func (h *EpisodeHandler) SetEpisodeBgm(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// IncrementPlayCount godoc
+// @Summary 再生回数カウント
+// @Description エピソードの再生回数をインクリメントします。クライアントは再生開始から30秒経過した時点で呼び出します。
+// @Tags episodes
+// @Accept json
+// @Produce json
+// @Param episodeId path string true "エピソード ID"
+// @Success 204 "No Content"
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /episodes/{episodeId}/play [post]
+func (h *EpisodeHandler) IncrementPlayCount(c *gin.Context) {
+	episodeID := c.Param("episodeId")
+	if episodeID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
+		return
+	}
+
+	if err := h.episodeService.IncrementPlayCount(c.Request.Context(), episodeID); err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
 // DeleteEpisodeBgm godoc
 // @Summary エピソード BGM 削除
 // @Description 指定したエピソードに設定されている BGM を削除します

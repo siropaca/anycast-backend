@@ -20,6 +20,7 @@ type EpisodeRepository interface {
 	Create(ctx context.Context, episode *model.Episode) error
 	Update(ctx context.Context, episode *model.Episode) error
 	Delete(ctx context.Context, id uuid.UUID) error
+	IncrementPlayCount(ctx context.Context, id uuid.UUID) error
 }
 
 // EpisodeFilter はエピソード検索のフィルタ条件を表す
@@ -131,6 +132,24 @@ func (r *episodeRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	if result.Error != nil {
 		logger.FromContext(ctx).Error("failed to delete episode", "error", result.Error, "episode_id", id)
 		return apperror.ErrInternal.WithMessage("エピソードの削除に失敗しました").WithError(result.Error)
+	}
+
+	if result.RowsAffected == 0 {
+		return apperror.ErrNotFound.WithMessage("エピソードが見つかりません")
+	}
+
+	return nil
+}
+
+// IncrementPlayCount は指定されたエピソードの再生回数をアトミックにインクリメントする
+func (r *episodeRepository) IncrementPlayCount(ctx context.Context, id uuid.UUID) error {
+	result := r.db.WithContext(ctx).
+		Model(&model.Episode{}).
+		Where("id = ?", id).
+		UpdateColumn("play_count", gorm.Expr("play_count + 1"))
+	if result.Error != nil {
+		logger.FromContext(ctx).Error("failed to increment play count", "error", result.Error, "episode_id", id)
+		return apperror.ErrInternal.WithMessage("再生回数の更新に失敗しました").WithError(result.Error)
 	}
 
 	if result.RowsAffected == 0 {

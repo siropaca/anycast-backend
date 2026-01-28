@@ -202,6 +202,7 @@ erDiagram
         uuid system_bgm_id FK
         uuid full_audio_id FK
         boolean audio_outdated
+        integer play_count
         timestamp published_at
         timestamp created_at
         timestamp updated_at
@@ -482,6 +483,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | system_bgm_id | UUID | ◯ | - | システム BGM（system_bgms 参照） |
 | full_audio_id | UUID | ◯ | - | 結合済み音声（audios 参照） |
 | audio_outdated | BOOLEAN | | false | 音声生成後に台本が変更されたか |
+| play_count | INTEGER | | 0 | 再生回数 |
 | published_at | TIMESTAMP | ◯ | - | 公開日時（NULL = 下書き） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |

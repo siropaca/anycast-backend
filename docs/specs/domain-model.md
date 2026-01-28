@@ -302,6 +302,7 @@ OAuth プロバイダとの連携情報。
 | bgm | Audio | | BGM 音声ファイル |
 | fullAudio | Audio | | 結合済み音声（全 ScriptLine + BGM） |
 | audioOutdated | Boolean | ◯ | 音声生成後に台本が変更されたか（デフォルト: false） |
+| playCount | Int | ◯ | 再生回数（デフォルト: 0） |
 | publishedAt | DateTime | | 公開日時（NULL = 下書き） |
 
 #### audioOutdated の更新ルール
@@ -310,6 +311,12 @@ OAuth プロバイダとの連携情報。
 - 台本変更時（ScriptLine の追加/更新/削除/並び替え）:
   - `fullAudio` が存在する場合のみ `true` に設定
   - `fullAudio` が存在しない場合は変更なし
+
+#### playCount の更新ルール
+
+- 再生開始から 30 秒経過した時点でクライアントが API を呼び出し、`play_count` を +1 する
+- 同一ユーザーが同じエピソードを複数回再生した場合も毎回カウントする
+- 公開中（`publishedAt <= NOW()`）のエピソードのみカウント対象
 
 #### 入力形式
 

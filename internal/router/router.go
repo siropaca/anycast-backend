@@ -106,6 +106,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.PUT("/channels/:channelId/episodes/:episodeId/bgm", container.EpisodeHandler.SetEpisodeBgm)
 	authenticated.DELETE("/channels/:channelId/episodes/:episodeId/bgm", container.EpisodeHandler.DeleteEpisodeBgm)
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/audio/generate-async", container.AudioJobHandler.GenerateAudioAsync)
+	authenticated.POST("/episodes/:episodeId/play", container.EpisodeHandler.IncrementPlayCount)
 
 	// Audio Jobs
 	authenticated.GET("/audio-jobs/:jobId", container.AudioJobHandler.GetAudioJob)

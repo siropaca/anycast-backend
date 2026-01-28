@@ -24,6 +24,7 @@ GET /channels/:channelId/episodes
       "title": "エピソードタイトル",
       "description": "エピソードの説明",
       "fullAudio": { "id": "uuid", "url": "...", "durationMs": 180000 },
+      "playCount": 123,
       "publishedAt": "2025-01-01T00:00:00Z",
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2025-01-01T00:00:00Z"
@@ -74,6 +75,7 @@ GET /channels/:channelId/episodes/:episodeId
         "emotion": "嬉しそうに"
       }
     ],
+    "playCount": 123,
     "publishedAt": "2025-01-01T00:00:00Z",
     "createdAt": "2025-01-01T00:00:00Z",
     "updatedAt": "2025-01-01T00:00:00Z"
@@ -333,6 +335,7 @@ GET /me/channels/:channelId/episodes
       "description": "エピソードの説明",
       "userPrompt": "今回のテーマについて詳しく解説する",
       "fullAudio": { "id": "uuid", "url": "...", "durationMs": 180000 },
+      "playCount": 123,
       "publishedAt": "2025-01-01T00:00:00Z",
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2025-01-01T00:00:00Z"
@@ -393,6 +396,7 @@ GET /me/channels/:channelId/episodes/:episodeId
     "userPrompt": "今回のテーマについて詳しく解説する",
     "artwork": { "id": "uuid", "url": "..." },
     "fullAudio": { "id": "uuid", "url": "...", "durationMs": 180000 },
+    "playCount": 123,
     "publishedAt": "2025-01-01T00:00:00Z",
     "createdAt": "2025-01-01T00:00:00Z",
     "updatedAt": "2025-01-01T00:00:00Z"
@@ -419,3 +423,35 @@ GET /me/channels/:channelId/episodes/:episodeId
   }
 }
 ```
+
+---
+
+## 再生回数カウント
+
+```
+POST /episodes/:episodeId/play
+```
+
+エピソードの再生回数をインクリメントする。クライアントは再生開始から 30 秒経過した時点でこの API を呼び出す。
+
+**パスパラメータ:**
+
+| パラメータ | 型 | 説明 |
+|------------|-----|------|
+| episodeId | uuid | エピソード ID |
+
+**レスポンス（204 No Content）:**
+
+レスポンスボディなし。
+
+**エラー（404 Not Found）:**
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "エピソードが見つかりません"
+  }
+}
+```
+
+> **Note:** 公開中のエピソードのみカウント対象。同一ユーザーによる重複カウントを許容する（毎回 +1）。

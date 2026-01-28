@@ -9,9 +9,6 @@ import (
 )
 
 // New はデータベース接続を作成して返す
-//
-// @param databaseURL - データベース接続 URL
-// @param dbLogLevel - ログレベル（silent, error, warn, info）
 func New(databaseURL string, dbLogLevel config.DBLogLevel) (*gorm.DB, error) {
 	logLevel := toGormLogLevel(dbLogLevel)
 

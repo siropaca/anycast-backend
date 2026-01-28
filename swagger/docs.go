@@ -2115,6 +2115,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/episodes/{episodeId}/play": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "エピソードの再生回数をインクリメントします。クライアントは再生開始から30秒経過した時点で呼び出します。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "episodes"
+                ],
+                "summary": "再生回数カウント",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "エピソード ID",
+                        "name": "episodeId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/images": {
             "post": {
                 "security": [
@@ -4962,6 +5020,7 @@ const docTemplate = `{
                 "createdAt",
                 "description",
                 "id",
+                "playCount",
                 "title",
                 "updatedAt",
                 "userPrompt",
@@ -5003,6 +5062,9 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "string"
+                },
+                "playCount": {
+                    "type": "integer"
                 },
                 "publishedAt": {
                     "type": "string",
