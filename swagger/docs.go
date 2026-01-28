@@ -4721,6 +4721,7 @@ const docTemplate = `{
                 "characters",
                 "createdAt",
                 "description",
+                "episodes",
                 "id",
                 "name",
                 "updatedAt",
@@ -4757,6 +4758,12 @@ const docTemplate = `{
                 },
                 "description": {
                     "type": "string"
+                },
+                "episodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.EpisodeResponse"
+                    }
                 },
                 "id": {
                     "type": "string"

@@ -4715,6 +4715,7 @@
                 "characters",
                 "createdAt",
                 "description",
+                "episodes",
                 "id",
                 "name",
                 "updatedAt",
@@ -4751,6 +4752,12 @@
                 },
                 "description": {
                     "type": "string"
+                },
+                "episodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.EpisodeResponse"
+                    }
                 },
                 "id": {
                     "type": "string"

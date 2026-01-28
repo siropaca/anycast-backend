@@ -26,6 +26,8 @@ GET /channels
       "description": "説明",
       "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
       "artwork": { "id": "uuid", "url": "..." },
+      "characters": [...],
+      "episodes": [...],
       "publishedAt": "2025-01-01T00:00:00Z",
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2025-01-01T00:00:00Z"
@@ -33,6 +35,8 @@ GET /channels
   ]
 }
 ```
+
+> **Note:** `characters` と `episodes` の詳細な構造は [チャンネル取得](#チャンネル取得) を参照。
 
 ---
 
@@ -81,6 +85,38 @@ GET /channels/:channelId
         }
       }
     ],
+    "episodes": [
+      {
+        "id": "uuid",
+        "title": "第1回 AIについて語る",
+        "description": "AIの未来について...",
+        "userPrompt": "AIの最新動向について...",
+        "voiceStyle": "normal",
+        "artwork": { "id": "uuid", "url": "..." },
+        "fullAudio": {
+          "id": "uuid",
+          "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
+          "mimeType": "audio/mpeg",
+          "fileSize": 1234567,
+          "durationMs": 600000
+        },
+        "bgm": {
+          "id": "uuid",
+          "name": "Chill BGM",
+          "isDefault": false,
+          "audio": {
+            "id": "uuid",
+            "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
+            "durationMs": 180000
+          }
+        },
+        "audioOutdated": false,
+        "playCount": 100,
+        "publishedAt": "2025-01-01T00:00:00Z",
+        "createdAt": "2025-01-01T00:00:00Z",
+        "updatedAt": "2025-01-01T00:00:00Z"
+      }
+    ],
     "publishedAt": "2025-01-01T00:00:00Z",
     "createdAt": "2025-01-01T00:00:00Z",
     "updatedAt": "2025-01-01T00:00:00Z"
@@ -91,6 +127,7 @@ GET /channels/:channelId
 > **Note:**
 > - `userPrompt` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
 > - `defaultBgm.isDefault` が `true` の場合はシステム BGM、`false` の場合はユーザー所有の BGM です。
+> - `episodes` はチャンネルに紐づくエピソード一覧です。
 
 ---
 
@@ -315,6 +352,8 @@ GET /me/channels
       "userPrompt": "明るく楽しい雰囲気で...",
       "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
       "artwork": { "id": "uuid", "url": "..." },
+      "characters": [...],
+      "episodes": [...],
       "publishedAt": "2025-01-01T00:00:00Z",
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2025-01-01T00:00:00Z"
@@ -327,6 +366,8 @@ GET /me/channels
   }
 }
 ```
+
+> **Note:** `characters` と `episodes` の詳細な構造は [チャンネル取得](#チャンネル取得) を参照。
 
 ---
 
@@ -378,6 +419,38 @@ GET /me/channels/:channelId
           "name": "ja-JP-Wavenet-C",
           "gender": "male"
         }
+      }
+    ],
+    "episodes": [
+      {
+        "id": "uuid",
+        "title": "第1回 AIについて語る",
+        "description": "AIの未来について...",
+        "userPrompt": "AIの最新動向について...",
+        "voiceStyle": "normal",
+        "artwork": { "id": "uuid", "url": "..." },
+        "fullAudio": {
+          "id": "uuid",
+          "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
+          "mimeType": "audio/mpeg",
+          "fileSize": 1234567,
+          "durationMs": 600000
+        },
+        "bgm": {
+          "id": "uuid",
+          "name": "Chill BGM",
+          "isDefault": false,
+          "audio": {
+            "id": "uuid",
+            "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
+            "durationMs": 180000
+          }
+        },
+        "audioOutdated": false,
+        "playCount": 100,
+        "publishedAt": "2025-01-01T00:00:00Z",
+        "createdAt": "2025-01-01T00:00:00Z",
+        "updatedAt": "2025-01-01T00:00:00Z"
       }
     ],
     "publishedAt": "2025-01-01T00:00:00Z",

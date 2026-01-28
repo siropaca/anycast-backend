@@ -16,6 +16,7 @@ type ChannelResponse struct {
 	Artwork     *ArtworkResponse           `json:"artwork" extensions:"x-nullable"`
 	DefaultBgm  *ChannelDefaultBgmResponse `json:"defaultBgm" extensions:"x-nullable"`
 	Characters  []CharacterResponse        `json:"characters" validate:"required"`
+	Episodes    []EpisodeResponse          `json:"episodes" validate:"required"`
 	PublishedAt *time.Time                 `json:"publishedAt" extensions:"x-nullable"`
 	CreatedAt   time.Time                  `json:"createdAt" validate:"required"`
 	UpdatedAt   time.Time                  `json:"updatedAt" validate:"required"`

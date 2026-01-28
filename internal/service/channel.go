@@ -748,6 +748,17 @@ func (s *channelService) toChannelResponse(ctx context.Context, c *model.Channel
 		userPrompt = c.UserPrompt
 	}
 
+	// エピソード一覧を取得
+	episodes, _, err := s.episodeRepo.FindByChannelID(ctx, c.ID, repository.EpisodeFilter{Limit: 10000})
+	if err != nil {
+		return response.ChannelResponse{}, err
+	}
+
+	episodeResponses, err := s.toEpisodeResponses(ctx, episodes)
+	if err != nil {
+		return response.ChannelResponse{}, err
+	}
+
 	resp := response.ChannelResponse{
 		ID:          c.ID,
 		Name:        c.Name,
@@ -761,6 +772,7 @@ func (s *channelService) toChannelResponse(ctx context.Context, c *model.Channel
 			IsActive:  c.Category.IsActive,
 		},
 		Characters:  s.toCharacterResponsesFromChannelCharacters(c.ChannelCharacters),
+		Episodes:    episodeResponses,
 		PublishedAt: c.PublishedAt,
 		CreatedAt:   c.CreatedAt,
 		UpdatedAt:   c.UpdatedAt,
@@ -840,4 +852,101 @@ func (s *channelService) toCharacterResponsesFromChannelCharacters(channelCharac
 	}
 
 	return result
+}
+
+// toEpisodeResponses は Episode のスライスをレスポンス DTO のスライスに変換する
+func (s *channelService) toEpisodeResponses(ctx context.Context, episodes []model.Episode) ([]response.EpisodeResponse, error) {
+	result := make([]response.EpisodeResponse, len(episodes))
+
+	for i, e := range episodes {
+		resp, err := s.toEpisodeResponse(ctx, &e)
+		if err != nil {
+			return nil, err
+		}
+		result[i] = resp
+	}
+
+	return result, nil
+}
+
+// toEpisodeResponse は Episode をレスポンス DTO に変換する
+func (s *channelService) toEpisodeResponse(ctx context.Context, e *model.Episode) (response.EpisodeResponse, error) {
+	resp := response.EpisodeResponse{
+		ID:            e.ID,
+		Title:         e.Title,
+		Description:   e.Description,
+		UserPrompt:    e.UserPrompt,
+		VoiceStyle:    e.VoiceStyle,
+		AudioOutdated: e.AudioOutdated,
+		PlayCount:     e.PlayCount,
+		PublishedAt:   e.PublishedAt,
+		CreatedAt:     e.CreatedAt,
+		UpdatedAt:     e.UpdatedAt,
+	}
+
+	if e.Artwork != nil {
+		var artworkURL string
+		if storage.IsExternalURL(e.Artwork.Path) {
+			artworkURL = e.Artwork.Path
+		} else {
+			var err error
+			artworkURL, err = s.storageClient.GenerateSignedURL(ctx, e.Artwork.Path, storage.SignedURLExpirationImage)
+			if err != nil {
+				return response.EpisodeResponse{}, err
+			}
+		}
+		resp.Artwork = &response.ArtworkResponse{
+			ID:  e.Artwork.ID,
+			URL: artworkURL,
+		}
+	}
+
+	if e.FullAudio != nil {
+		signedURL, err := s.storageClient.GenerateSignedURL(ctx, e.FullAudio.Path, storage.SignedURLExpirationAudio)
+		if err != nil {
+			return response.EpisodeResponse{}, err
+		}
+		resp.FullAudio = &response.AudioResponse{
+			ID:         e.FullAudio.ID,
+			URL:        signedURL,
+			MimeType:   e.FullAudio.MimeType,
+			FileSize:   e.FullAudio.FileSize,
+			DurationMs: e.FullAudio.DurationMs,
+		}
+	}
+
+	// Bgm または SystemBgm からレスポンスを構築
+	if e.Bgm != nil && e.Bgm.Audio.ID != uuid.Nil {
+		signedURL, err := s.storageClient.GenerateSignedURL(ctx, e.Bgm.Audio.Path, storage.SignedURLExpirationAudio)
+		if err != nil {
+			return response.EpisodeResponse{}, err
+		}
+		resp.Bgm = &response.EpisodeBgmResponse{
+			ID:        e.Bgm.ID,
+			Name:      e.Bgm.Name,
+			IsDefault: false,
+			Audio: response.BgmAudioResponse{
+				ID:         e.Bgm.Audio.ID,
+				URL:        signedURL,
+				DurationMs: e.Bgm.Audio.DurationMs,
+			},
+		}
+	} else if e.SystemBgm != nil && e.SystemBgm.Audio.ID != uuid.Nil {
+		signedURL, err := s.storageClient.GenerateSignedURL(ctx, e.SystemBgm.Audio.Path, storage.SignedURLExpirationAudio)
+		if err != nil {
+			return response.EpisodeResponse{}, err
+		}
+		resp.Bgm = &response.EpisodeBgmResponse{
+			ID:        e.SystemBgm.ID,
+			Name:      e.SystemBgm.Name,
+			IsDefault: true,
+			Audio: response.BgmAudioResponse{
+				ID:         e.SystemBgm.Audio.ID,
+				URL:        signedURL,
+				DurationMs: e.SystemBgm.Audio.DurationMs,
+			},
+		}
+	}
+
+	return resp, nil
 }

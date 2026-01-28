@@ -12,6 +12,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/model"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
+	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
 // storageClient のモック
@@ -31,6 +32,44 @@ func (m *mockStorageClient) GenerateSignedURL(ctx context.Context, path string, 
 
 func (m *mockStorageClient) Delete(ctx context.Context, path string) error {
 	args := m.Called(ctx, path)
+	return args.Error(0)
+}
+
+// episodeRepository のモック
+type mockEpisodeRepositoryForChannel struct {
+	mock.Mock
+}
+
+func (m *mockEpisodeRepositoryForChannel) FindByID(ctx context.Context, id uuid.UUID) (*model.Episode, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.Episode), args.Error(1)
+}
+
+func (m *mockEpisodeRepositoryForChannel) FindByChannelID(ctx context.Context, channelID uuid.UUID, filter repository.EpisodeFilter) ([]model.Episode, int64, error) {
+	args := m.Called(ctx, channelID, filter)
+	return args.Get(0).([]model.Episode), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *mockEpisodeRepositoryForChannel) Create(ctx context.Context, episode *model.Episode) error {
+	args := m.Called(ctx, episode)
+	return args.Error(0)
+}
+
+func (m *mockEpisodeRepositoryForChannel) Update(ctx context.Context, episode *model.Episode) error {
+	args := m.Called(ctx, episode)
+	return args.Error(0)
+}
+
+func (m *mockEpisodeRepositoryForChannel) Delete(ctx context.Context, id uuid.UUID) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *mockEpisodeRepositoryForChannel) IncrementPlayCount(ctx context.Context, id uuid.UUID) error {
+	args := m.Called(ctx, id)
 	return args.Error(0)
 }
 
@@ -79,7 +118,9 @@ func TestToChannelResponse(t *testing.T) {
 
 	t.Run("isOwner が true の場合、userPrompt が含まれる", func(t *testing.T) {
 		mockStorage := new(mockStorageClient)
-		svc := &channelService{storageClient: mockStorage}
+		mockEpisodeRepo := new(mockEpisodeRepositoryForChannel)
+		mockEpisodeRepo.On("FindByChannelID", mock.Anything, channelID, mock.Anything).Return([]model.Episode{}, int64(0), nil)
+		svc := &channelService{storageClient: mockStorage, episodeRepo: mockEpisodeRepo}
 		ctx := context.Background()
 
 		resp, err := svc.toChannelResponse(ctx, baseChannel, true)
@@ -100,11 +141,15 @@ func TestToChannelResponse(t *testing.T) {
 		assert.Equal(t, voiceID, resp.Characters[0].Voice.ID)
 		assert.Equal(t, "ja-JP-Wavenet-C", resp.Characters[0].Voice.Name)
 		assert.Equal(t, "male", resp.Characters[0].Voice.Gender)
+		assert.NotNil(t, resp.Episodes)
+		assert.Len(t, resp.Episodes, 0)
 	})
 
 	t.Run("isOwner が false の場合、userPrompt が空文字になる", func(t *testing.T) {
 		mockStorage := new(mockStorageClient)
-		svc := &channelService{storageClient: mockStorage}
+		mockEpisodeRepo := new(mockEpisodeRepositoryForChannel)
+		mockEpisodeRepo.On("FindByChannelID", mock.Anything, channelID, mock.Anything).Return([]model.Episode{}, int64(0), nil)
+		svc := &channelService{storageClient: mockStorage, episodeRepo: mockEpisodeRepo}
 		ctx := context.Background()
 
 		resp, err := svc.toChannelResponse(ctx, baseChannel, false)
@@ -118,7 +163,9 @@ func TestToChannelResponse(t *testing.T) {
 
 	t.Run("Artwork が nil の場合、レスポンスの Artwork も nil", func(t *testing.T) {
 		mockStorage := new(mockStorageClient)
-		svc := &channelService{storageClient: mockStorage}
+		mockEpisodeRepo := new(mockEpisodeRepositoryForChannel)
+		mockEpisodeRepo.On("FindByChannelID", mock.Anything, channelID, mock.Anything).Return([]model.Episode{}, int64(0), nil)
+		svc := &channelService{storageClient: mockStorage, episodeRepo: mockEpisodeRepo}
 		ctx := context.Background()
 
 		channel := *baseChannel
@@ -133,7 +180,9 @@ func TestToChannelResponse(t *testing.T) {
 	t.Run("Artwork がある場合、署名 URL が生成される", func(t *testing.T) {
 		mockStorage := new(mockStorageClient)
 		mockStorage.On("GenerateSignedURL", mock.Anything, "images/artwork.png", storage.SignedURLExpirationImage).Return("https://signed-url.example.com/artwork.png", nil)
-		svc := &channelService{storageClient: mockStorage}
+		mockEpisodeRepo := new(mockEpisodeRepositoryForChannel)
+		mockEpisodeRepo.On("FindByChannelID", mock.Anything, channelID, mock.Anything).Return([]model.Episode{}, int64(0), nil)
+		svc := &channelService{storageClient: mockStorage, episodeRepo: mockEpisodeRepo}
 		ctx := context.Background()
 
 		channel := *baseChannel
@@ -154,7 +203,9 @@ func TestToChannelResponse(t *testing.T) {
 
 	t.Run("PublishedAt が nil の場合、レスポンスの PublishedAt も nil", func(t *testing.T) {
 		mockStorage := new(mockStorageClient)
-		svc := &channelService{storageClient: mockStorage}
+		mockEpisodeRepo := new(mockEpisodeRepositoryForChannel)
+		mockEpisodeRepo.On("FindByChannelID", mock.Anything, channelID, mock.Anything).Return([]model.Episode{}, int64(0), nil)
+		svc := &channelService{storageClient: mockStorage, episodeRepo: mockEpisodeRepo}
 		ctx := context.Background()
 
 		channel := *baseChannel
@@ -206,7 +257,9 @@ func TestToChannelResponses(t *testing.T) {
 
 	t.Run("複数チャンネルを正しく変換する", func(t *testing.T) {
 		mockStorage := new(mockStorageClient)
-		svc := &channelService{storageClient: mockStorage}
+		mockEpisodeRepo := new(mockEpisodeRepositoryForChannel)
+		mockEpisodeRepo.On("FindByChannelID", mock.Anything, mock.Anything, mock.Anything).Return([]model.Episode{}, int64(0), nil)
+		svc := &channelService{storageClient: mockStorage, episodeRepo: mockEpisodeRepo}
 		ctx := context.Background()
 
 		result, err := svc.toChannelResponses(ctx, channels)
@@ -219,7 +272,9 @@ func TestToChannelResponses(t *testing.T) {
 
 	t.Run("オーナーとして扱われるため userPrompt が含まれる", func(t *testing.T) {
 		mockStorage := new(mockStorageClient)
-		svc := &channelService{storageClient: mockStorage}
+		mockEpisodeRepo := new(mockEpisodeRepositoryForChannel)
+		mockEpisodeRepo.On("FindByChannelID", mock.Anything, mock.Anything, mock.Anything).Return([]model.Episode{}, int64(0), nil)
+		svc := &channelService{storageClient: mockStorage, episodeRepo: mockEpisodeRepo}
 		ctx := context.Background()
 
 		result, err := svc.toChannelResponses(ctx, channels)
