@@ -6,48 +6,48 @@
 
 -- test_user のチャンネル
 INSERT INTO channels (id, user_id, name, description, user_prompt, category_id, artwork_id) VALUES
-	('ea9a266e-f532-417c-8916-709d0233941c', '8def69af-dae9-4641-a0e5-100107626933', 'テックトーク', '最新のテクノロジーニュースを2人のパーソナリティが楽しく解説するポッドキャスト', '最新のテクノロジーニュースについて、分かりやすく楽しく解説してください。専門用語は避け、具体例を交えて説明してください。', (SELECT id FROM categories WHERE slug = 'technology'), '4946f33c-3c66-40ca-8b35-3bbdfe65b20c'),
-	('efa53d40-2f7b-4abe-a1b0-ba4f7905dbad', '8def69af-dae9-4641-a0e5-100107626933', 'ゆるふわ雑談ラジオ', '日常のあれこれをゆるく語る雑談番組', 'ゆるい雰囲気で日常の話題について雑談してください。リラックスした会話を心がけてください。', (SELECT id FROM categories WHERE slug = 'society-culture'), '9ee172c8-6deb-4598-a379-d7fdf502db9a');
+	('ea9a266e-f532-417c-8916-709d0233941c', '8def69af-dae9-4641-a0e5-100107626933', 'テックトーク', '最新のテクノロジーニュースを2人のパーソナリティが楽しく解説するポッドキャスト', '最新のテクノロジーニュースについて、分かりやすく楽しく解説してください。専門用語は避け、具体例を交えて説明してください。', (SELECT id FROM categories WHERE slug = 'technology'), '6852eda5-db2e-42f0-9870-c00a396e6bf8'),
+	('efa53d40-2f7b-4abe-a1b0-ba4f7905dbad', '8def69af-dae9-4641-a0e5-100107626933', 'ゆるふわ雑談ラジオ', '日常のあれこれをゆるく語る雑談番組', 'ゆるい雰囲気で日常の話題について雑談してください。リラックスした会話を心がけてください。', (SELECT id FROM categories WHERE slug = 'society-culture'), 'a28d9fb9-1c8f-4835-a0ad-96afdb6e3279');
 
 -- test_user2 のチャンネル
 INSERT INTO channels (id, user_id, name, description, user_prompt, category_id, artwork_id) VALUES
-	('e5a50bd3-8990-4344-b470-56fa7329d75c', '8eada3a5-f413-4eeb-9cd5-12def60d4596', 'ビジネス最前線', '起業やキャリアについて実践的なアドバイスを届けるビジネス番組', '起業やキャリアについて、実践的で具体的なアドバイスを提供してください。成功事例や失敗談を交えて説明してください。', (SELECT id FROM categories WHERE slug = 'business'), NULL);
+	('e5a50bd3-8990-4344-b470-56fa7329d75c', '8eada3a5-f413-4eeb-9cd5-12def60d4596', 'ビジネス最前線', '起業やキャリアについて実践的なアドバイスを届けるビジネス番組', '起業やキャリアについて、実践的で具体的なアドバイスを提供してください。成功事例や失敗談を交えて説明してください。', (SELECT id FROM categories WHERE slug = 'business'), 'ef89720a-9e2e-4021-8c28-f4e42d1c3d93');
 
 -- test_user3 (Sakura) のチャンネル
 INSERT INTO channels (id, user_id, name, description, user_prompt, category_id, artwork_id) VALUES
-	('3908d99b-d52d-4a73-96fb-fca7df2dfec9', '4dbc55c2-1d78-4e75-b6ac-b5e2b0d461f5', 'サイエンス・ラボ', '身近な科学をわかりやすく紹介するサイエンス番組', '科学の話題について、身近な例を使ってわかりやすく解説してください。', (SELECT id FROM categories WHERE slug = 'science'), NULL),
-	('395f3bfa-031e-4d90-a53b-19d311392b00', '4dbc55c2-1d78-4e75-b6ac-b5e2b0d461f5', 'ほのぼのライフ', '日常の小さな幸せを見つけるほのぼの番組', 'のんびりした雰囲気で日常の楽しいことについて語ってください。', (SELECT id FROM categories WHERE slug = 'leisure'), NULL);
+	('3908d99b-d52d-4a73-96fb-fca7df2dfec9', '4dbc55c2-1d78-4e75-b6ac-b5e2b0d461f5', 'サイエンス・ラボ', '身近な科学をわかりやすく紹介するサイエンス番組', '科学の話題について、身近な例を使ってわかりやすく解説してください。', (SELECT id FROM categories WHERE slug = 'science'), '3cbba00a-e754-4516-bf68-958c84c288e3'),
+	('395f3bfa-031e-4d90-a53b-19d311392b00', '4dbc55c2-1d78-4e75-b6ac-b5e2b0d461f5', 'ほのぼのライフ', '日常の小さな幸せを見つけるほのぼの番組', 'のんびりした雰囲気で日常の楽しいことについて語ってください。', (SELECT id FROM categories WHERE slug = 'leisure'), '9f17a722-a320-4f6f-a827-05acf96c36c9');
 
 -- test_user4 (Ren) のチャンネル
 INSERT INTO channels (id, user_id, name, description, user_prompt, category_id, artwork_id) VALUES
-	('7f2c8688-c163-40c3-9303-56b4d8a1ed7a', 'd6f829bf-e9bd-4df7-a9f6-64689fa6fcc1', 'ニュースの裏側', '話題のニュースを深掘りして解説する番組', 'ニュースの背景や裏側を分析して、わかりやすく解説してください。', (SELECT id FROM categories WHERE slug = 'news'), NULL);
+	('7f2c8688-c163-40c3-9303-56b4d8a1ed7a', 'd6f829bf-e9bd-4df7-a9f6-64689fa6fcc1', 'ニュースの裏側', '話題のニュースを深掘りして解説する番組', 'ニュースの背景や裏側を分析して、わかりやすく解説してください。', (SELECT id FROM categories WHERE slug = 'news'), '3084384d-2e85-437a-adfd-a15a0b51414d');
 
 -- test_user5 (Hina) のチャンネル
 INSERT INTO channels (id, user_id, name, description, user_prompt, category_id, artwork_id) VALUES
-	('7af3be1e-1555-4f71-9af0-2be26cd6b612', 'b8ad04fd-9afa-474a-a567-1f19e8bcf6b0', '映画レビュー倶楽部', '最新映画から名作まで語る映画レビュー番組', '映画について、ネタバレなしで魅力を伝えてください。', (SELECT id FROM categories WHERE slug = 'tv-film'), NULL),
-	('892d53ff-0633-4b85-a220-afa0682ee467', 'b8ad04fd-9afa-474a-a567-1f19e8bcf6b0', 'アート散歩', 'アートと文化を気軽に楽しむ番組', 'アートの話題をカジュアルに語ってください。', (SELECT id FROM categories WHERE slug = 'arts'), NULL);
+	('7af3be1e-1555-4f71-9af0-2be26cd6b612', 'b8ad04fd-9afa-474a-a567-1f19e8bcf6b0', '映画レビュー倶楽部', '最新映画から名作まで語る映画レビュー番組', '映画について、ネタバレなしで魅力を伝えてください。', (SELECT id FROM categories WHERE slug = 'tv-film'), 'd259698b-7f50-488b-b2c6-5d822be5645d'),
+	('892d53ff-0633-4b85-a220-afa0682ee467', 'b8ad04fd-9afa-474a-a567-1f19e8bcf6b0', 'アート散歩', 'アートと文化を気軽に楽しむ番組', 'アートの話題をカジュアルに語ってください。', (SELECT id FROM categories WHERE slug = 'arts'), 'e9c8d1d7-f953-4f3f-a960-6df46ab6eaff');
 
 -- test_user6 (Kaito) のチャンネル
 INSERT INTO channels (id, user_id, name, description, user_prompt, category_id, artwork_id) VALUES
-	('b77286af-042a-4580-88b6-efe62aaa3eae', '80adf759-b01c-4726-87b4-7b9c659483a4', 'スポーツダイジェスト', 'スポーツの最新情報を熱く語る番組', 'スポーツの話題を熱く、でも分かりやすく伝えてください。', (SELECT id FROM categories WHERE slug = 'sports'), NULL);
+	('b77286af-042a-4580-88b6-efe62aaa3eae', '80adf759-b01c-4726-87b4-7b9c659483a4', 'スポーツダイジェスト', 'スポーツの最新情報を熱く語る番組', 'スポーツの話題を熱く、でも分かりやすく伝えてください。', (SELECT id FROM categories WHERE slug = 'sports'), 'f562344f-1bf0-4767-8dd3-34743c92c101');
 
 -- test_user7 (Mio) のチャンネル
 INSERT INTO channels (id, user_id, name, description, user_prompt, category_id, artwork_id) VALUES
-	('f602c66d-6111-495a-8b9c-e46fa3740d49', '8450d256-8630-4044-8a69-fc8671e6e5c1', 'ヘルシーライフ', '健康とフィットネスの情報を届ける番組', '健康やフィットネスについて実践的なアドバイスをしてください。', (SELECT id FROM categories WHERE slug = 'health-fitness'), NULL),
-	('bcf2efb2-8a47-46bf-aac4-af593ad0257f', '8450d256-8630-4044-8a69-fc8671e6e5c1', 'ミュージックステーション', '音楽の魅力を語る番組', '音楽について、ジャンルを問わず幅広く語ってください。', (SELECT id FROM categories WHERE slug = 'music'), NULL);
+	('f602c66d-6111-495a-8b9c-e46fa3740d49', '8450d256-8630-4044-8a69-fc8671e6e5c1', 'ヘルシーライフ', '健康とフィットネスの情報を届ける番組', '健康やフィットネスについて実践的なアドバイスをしてください。', (SELECT id FROM categories WHERE slug = 'health-fitness'), 'eb07435e-b994-422f-9d35-f8c7b9e437d3'),
+	('bcf2efb2-8a47-46bf-aac4-af593ad0257f', '8450d256-8630-4044-8a69-fc8671e6e5c1', 'ミュージックステーション', '音楽の魅力を語る番組', '音楽について、ジャンルを問わず幅広く語ってください。', (SELECT id FROM categories WHERE slug = 'music'), '90d6d166-3dc0-41f1-bf5e-78c11b25598c');
 
 -- test_user8 (Yuto) のチャンネル
 INSERT INTO channels (id, user_id, name, description, user_prompt, category_id, artwork_id) VALUES
-	('f02d6a25-4166-4632-812d-446ee6d5be38', '7d4e20d4-98ca-4b79-901d-c51e43c38e2f', '歴史探訪', '歴史の面白エピソードを紹介する番組', '歴史の面白い話を、臨場感たっぷりに語ってください。', (SELECT id FROM categories WHERE slug = 'history'), NULL);
+	('f02d6a25-4166-4632-812d-446ee6d5be38', '7d4e20d4-98ca-4b79-901d-c51e43c38e2f', '歴史探訪', '歴史の面白エピソードを紹介する番組', '歴史の面白い話を、臨場感たっぷりに語ってください。', (SELECT id FROM categories WHERE slug = 'history'), '1731f558-78bd-4caa-bdc1-aaf7f4875f87');
 
 -- test_user9 (Aoi) のチャンネル
 INSERT INTO channels (id, user_id, name, description, user_prompt, category_id, artwork_id) VALUES
-	('1737fa8f-75ff-41ba-9775-8d3496d38344', 'c878a2b4-ade5-44d3-b8ec-d5be985f6dcb', 'コメディナイト', '笑いで元気を届けるコメディ番組', '面白おかしく、笑える会話を展開してください。', (SELECT id FROM categories WHERE slug = 'comedy'), NULL),
-	('06891da2-4124-492f-826c-1072dcf27ee6', 'c878a2b4-ade5-44d3-b8ec-d5be985f6dcb', '教育チャンネル', '学びをもっと楽しくする教育番組', '教育的な内容を、楽しく分かりやすく伝えてください。', (SELECT id FROM categories WHERE slug = 'education'), NULL);
+	('1737fa8f-75ff-41ba-9775-8d3496d38344', 'c878a2b4-ade5-44d3-b8ec-d5be985f6dcb', 'コメディナイト', '笑いで元気を届けるコメディ番組', '面白おかしく、笑える会話を展開してください。', (SELECT id FROM categories WHERE slug = 'comedy'), 'bb6b9e97-2a5e-4bf0-bc60-814d8cbd99d9'),
+	('06891da2-4124-492f-826c-1072dcf27ee6', 'c878a2b4-ade5-44d3-b8ec-d5be985f6dcb', '教育チャンネル', '学びをもっと楽しくする教育番組', '教育的な内容を、楽しく分かりやすく伝えてください。', (SELECT id FROM categories WHERE slug = 'education'), 'ec3b5427-e883-466b-a98d-0f3bc0084da1');
 
 -- test_user10 (Sora) のチャンネル
 INSERT INTO channels (id, user_id, name, description, user_prompt, category_id, artwork_id) VALUES
-	('70ccbc05-a072-47a2-93c1-e0730d4d2bb9', '767b5ed0-a663-437a-9cc9-b8cef6d0731e', 'フィクション工房', '短編フィクションを朗読する番組', 'オリジナルの短編フィクションを魅力的に語ってください。', (SELECT id FROM categories WHERE slug = 'fiction'), NULL);
+	('70ccbc05-a072-47a2-93c1-e0730d4d2bb9', '767b5ed0-a663-437a-9cc9-b8cef6d0731e', 'フィクション工房', '短編フィクションを朗読する番組', 'オリジナルの短編フィクションを魅力的に語ってください。', (SELECT id FROM categories WHERE slug = 'fiction'), 'bdf2b1f0-735a-489b-be3b-97c97c06a2c8');
 
 -- ===========================================
 -- キャラクター（user_id で所有）
@@ -189,70 +189,70 @@ INSERT INTO channel_characters (channel_id, character_id) VALUES
 -- ===========================================
 
 -- test_user のエピソード
-INSERT INTO episodes (id, channel_id, title, description, user_prompt, published_at) VALUES
-	('eb960304-f86e-4364-be5d-d3d5126c9601', 'ea9a266e-f532-417c-8916-709d0233941c', 'AI の未来を語る', 'ChatGPT から始まった AI ブームの今後について', 'AIの未来について、最新のトレンドを踏まえて議論してください。', NOW()),
-	('67e8e26d-20c8-492a-ac2c-5c79d8050aa3', 'ea9a266e-f532-417c-8916-709d0233941c', 'スマートホームのすすめ', '自宅を便利にするガジェット紹介', 'スマートホームガジェットについて、初心者向けに分かりやすく紹介してください。', NOW()),
-	('198d7e19-7d40-4299-95bf-a641f5c83911', 'efa53d40-2f7b-4abe-a1b0-ba4f7905dbad', '最近ハマってること', 'お互いの趣味について語り合う回', '最近の趣味について、リラックスした雰囲気で語り合ってください。', NULL);
+INSERT INTO episodes (id, channel_id, title, description, user_prompt, published_at, artwork_id) VALUES
+	('eb960304-f86e-4364-be5d-d3d5126c9601', 'ea9a266e-f532-417c-8916-709d0233941c', 'AI の未来を語る', 'ChatGPT から始まった AI ブームの今後について', 'AIの未来について、最新のトレンドを踏まえて議論してください。', NOW(), '209e8d96-dbc1-4dcf-a747-a0ac4ec37a0c'),
+	('67e8e26d-20c8-492a-ac2c-5c79d8050aa3', 'ea9a266e-f532-417c-8916-709d0233941c', 'スマートホームのすすめ', '自宅を便利にするガジェット紹介', 'スマートホームガジェットについて、初心者向けに分かりやすく紹介してください。', NOW(), 'e463cd78-0e09-4d6b-ac83-ec01fb25d5a9'),
+	('198d7e19-7d40-4299-95bf-a641f5c83911', 'efa53d40-2f7b-4abe-a1b0-ba4f7905dbad', '最近ハマってること', 'お互いの趣味について語り合う回', '最近の趣味について、リラックスした雰囲気で語り合ってください。', NULL, '783ac817-5deb-4711-a8d1-b3e9721b891c');
 
 -- test_user2 のエピソード
-INSERT INTO episodes (id, channel_id, title, description, user_prompt, published_at) VALUES
-	('fcb16526-951a-4ff1-a456-ab1dba96f699', 'e5a50bd3-8990-4344-b470-56fa7329d75c', '副業から始める起業入門', 'リスクを抑えながら起業にチャレンジする方法', '副業から起業を始める方法について、実践的なアドバイスを提供してください。', NOW()),
-	('9cde2abb-30e8-447b-bc8b-bb799b0f6f06', 'e5a50bd3-8990-4344-b470-56fa7329d75c', '失敗しない資金調達の秘訣', 'スタートアップの資金調達で気をつけるべきポイント', '資金調達のコツについて、経験に基づいたアドバイスを提供してください。', NOW());
+INSERT INTO episodes (id, channel_id, title, description, user_prompt, published_at, artwork_id) VALUES
+	('fcb16526-951a-4ff1-a456-ab1dba96f699', 'e5a50bd3-8990-4344-b470-56fa7329d75c', '副業から始める起業入門', 'リスクを抑えながら起業にチャレンジする方法', '副業から起業を始める方法について、実践的なアドバイスを提供してください。', NOW(), '45886285-2b5b-4575-8c5c-9c95d139a803'),
+	('9cde2abb-30e8-447b-bc8b-bb799b0f6f06', 'e5a50bd3-8990-4344-b470-56fa7329d75c', '失敗しない資金調達の秘訣', 'スタートアップの資金調達で気をつけるべきポイント', '資金調達のコツについて、経験に基づいたアドバイスを提供してください。', NOW(), '2a2dacc8-670e-4d3d-965c-9c8ae6679bd5');
 
 -- test_user3 (Sakura) のエピソード
-INSERT INTO episodes (id, channel_id, title, description, user_prompt, published_at) VALUES
-	('b1c1e7d7-b3eb-4783-82d0-6857832daf09', '3908d99b-d52d-4a73-96fb-fca7df2dfec9', '量子コンピュータ入門', '量子コンピュータの仕組みをゼロから解説', '量子コンピュータについて初心者でもわかるように解説してください。', NOW()),
-	('682c05ed-3ae8-4558-a74c-62f8cdc7b344', '3908d99b-d52d-4a73-96fb-fca7df2dfec9', '宇宙の神秘に迫る', 'ブラックホールやダークマターの最新研究', '宇宙に関する最新の科学的発見について語ってください。', NOW()),
-	('1a4aad00-fd65-4960-a11f-45f2b5ff504c', '3908d99b-d52d-4a73-96fb-fca7df2dfec9', 'DNA と遺伝子の不思議', '遺伝子編集技術の現在と未来', '遺伝子編集技術について、倫理的な側面も含めて解説してください。', NOW()),
-	('98f515d1-ca1f-4810-b8b6-a147aac641f4', '395f3bfa-031e-4d90-a53b-19d311392b00', 'お気に入りのカフェ巡り', '街の隠れた名店を紹介する回', 'お気に入りのカフェについてのんびり語ってください。', NOW()),
-	('29c31347-3078-4ab0-9773-f6d408462c39', '395f3bfa-031e-4d90-a53b-19d311392b00', '休日の過ごし方', '理想の休日について語る回', '休日の過ごし方についてゆったり語ってください。', NULL);
+INSERT INTO episodes (id, channel_id, title, description, user_prompt, published_at, artwork_id) VALUES
+	('b1c1e7d7-b3eb-4783-82d0-6857832daf09', '3908d99b-d52d-4a73-96fb-fca7df2dfec9', '量子コンピュータ入門', '量子コンピュータの仕組みをゼロから解説', '量子コンピュータについて初心者でもわかるように解説してください。', NOW(), 'aae14562-a3a1-4507-8f24-bb72a11dda5c'),
+	('682c05ed-3ae8-4558-a74c-62f8cdc7b344', '3908d99b-d52d-4a73-96fb-fca7df2dfec9', '宇宙の神秘に迫る', 'ブラックホールやダークマターの最新研究', '宇宙に関する最新の科学的発見について語ってください。', NOW(), '9a7dc980-2da8-4bf1-9557-9a52193af39b'),
+	('1a4aad00-fd65-4960-a11f-45f2b5ff504c', '3908d99b-d52d-4a73-96fb-fca7df2dfec9', 'DNA と遺伝子の不思議', '遺伝子編集技術の現在と未来', '遺伝子編集技術について、倫理的な側面も含めて解説してください。', NOW(), 'ccaedc4a-59bc-4736-980e-699d85dd822b'),
+	('98f515d1-ca1f-4810-b8b6-a147aac641f4', '395f3bfa-031e-4d90-a53b-19d311392b00', 'お気に入りのカフェ巡り', '街の隠れた名店を紹介する回', 'お気に入りのカフェについてのんびり語ってください。', NOW(), '21188860-1bc2-45f2-a15c-10462e2c20cc'),
+	('29c31347-3078-4ab0-9773-f6d408462c39', '395f3bfa-031e-4d90-a53b-19d311392b00', '休日の過ごし方', '理想の休日について語る回', '休日の過ごし方についてゆったり語ってください。', NULL, '8b53c1a7-a536-4acb-8a61-aaf6eea880db');
 
 -- test_user4 (Ren) のエピソード
-INSERT INTO episodes (id, channel_id, title, description, user_prompt, published_at) VALUES
-	('436043d0-9a74-4541-9639-6b9566125bd7', '7f2c8688-c163-40c3-9303-56b4d8a1ed7a', 'SNS 時代のメディアリテラシー', 'フェイクニュースにどう向き合うか', 'SNS 時代のメディアリテラシーについて解説してください。', NOW()),
-	('c4d39d21-4e39-4150-bd3d-5ceb27718a38', '7f2c8688-c163-40c3-9303-56b4d8a1ed7a', '選挙と民主主義の未来', '投票率低下の問題を考える', '選挙と民主主義の課題について議論してください。', NOW()),
-	('8cfcfff0-87c8-4db9-a250-7ccc5fba1407', '7f2c8688-c163-40c3-9303-56b4d8a1ed7a', '気候変動と私たちの暮らし', '身近にできる環境対策を考える', '気候変動が日常に与える影響について語ってください。', NOW()),
-	('7c2d9c7a-e3e3-4388-bfe7-d36162a19768', '7f2c8688-c163-40c3-9303-56b4d8a1ed7a', 'リモートワーク革命', '働き方の変化を追う', 'リモートワークの現状と課題について話してください。', NOW());
+INSERT INTO episodes (id, channel_id, title, description, user_prompt, published_at, artwork_id) VALUES
+	('436043d0-9a74-4541-9639-6b9566125bd7', '7f2c8688-c163-40c3-9303-56b4d8a1ed7a', 'SNS 時代のメディアリテラシー', 'フェイクニュースにどう向き合うか', 'SNS 時代のメディアリテラシーについて解説してください。', NOW(), '679e7f0d-ca8a-46ca-b7c5-a4c44ddecc28'),
+	('c4d39d21-4e39-4150-bd3d-5ceb27718a38', '7f2c8688-c163-40c3-9303-56b4d8a1ed7a', '選挙と民主主義の未来', '投票率低下の問題を考える', '選挙と民主主義の課題について議論してください。', NOW(), '467ae4ef-5302-4750-b71e-12a74d5c9860'),
+	('8cfcfff0-87c8-4db9-a250-7ccc5fba1407', '7f2c8688-c163-40c3-9303-56b4d8a1ed7a', '気候変動と私たちの暮らし', '身近にできる環境対策を考える', '気候変動が日常に与える影響について語ってください。', NOW(), '1971d88a-91f5-4b72-9e0b-9319fe0c3e1a'),
+	('7c2d9c7a-e3e3-4388-bfe7-d36162a19768', '7f2c8688-c163-40c3-9303-56b4d8a1ed7a', 'リモートワーク革命', '働き方の変化を追う', 'リモートワークの現状と課題について話してください。', NOW(), '4010aa53-c71b-4640-94c2-283cf3ff0a02');
 
 -- test_user5 (Hina) のエピソード
-INSERT INTO episodes (id, channel_id, title, description, user_prompt, published_at) VALUES
-	('b7a74a63-a9e2-4f60-ba58-bfa887598e07', '7af3be1e-1555-4f71-9af0-2be26cd6b612', '今年のベスト映画 TOP5', '年間ベスト映画を発表', '今年の映画ランキングについて熱く語ってください。', NOW()),
-	('105d9802-0133-4a06-a1b4-de87eb26f5ac', '7af3be1e-1555-4f71-9af0-2be26cd6b612', 'ホラー映画の魅力', 'なぜ人はホラーに惹かれるのか', 'ホラー映画の魅力について語ってください。', NOW()),
-	('ec47dd8e-34c5-4ba4-a101-02713e87ba74', '892d53ff-0633-4b85-a220-afa0682ee467', '現代アートの楽しみ方', '難しくない！現代アート入門', '現代アートの楽しみ方を初心者向けに解説してください。', NOW());
+INSERT INTO episodes (id, channel_id, title, description, user_prompt, published_at, artwork_id) VALUES
+	('b7a74a63-a9e2-4f60-ba58-bfa887598e07', '7af3be1e-1555-4f71-9af0-2be26cd6b612', '今年のベスト映画 TOP5', '年間ベスト映画を発表', '今年の映画ランキングについて熱く語ってください。', NOW(), '7af37cf0-88a3-48e8-bb87-aea3a3e36c47'),
+	('105d9802-0133-4a06-a1b4-de87eb26f5ac', '7af3be1e-1555-4f71-9af0-2be26cd6b612', 'ホラー映画の魅力', 'なぜ人はホラーに惹かれるのか', 'ホラー映画の魅力について語ってください。', NOW(), 'd758437f-1920-43f1-b690-ae4703632baf'),
+	('ec47dd8e-34c5-4ba4-a101-02713e87ba74', '892d53ff-0633-4b85-a220-afa0682ee467', '現代アートの楽しみ方', '難しくない！現代アート入門', '現代アートの楽しみ方を初心者向けに解説してください。', NOW(), 'd17cf2a2-cdfa-4556-bdbd-e8a06a232edf');
 
 -- test_user6 (Kaito) のエピソード
-INSERT INTO episodes (id, channel_id, title, description, user_prompt, published_at) VALUES
-	('4697c3c7-a89a-4ce5-9b39-f4bb8d6ed69a', 'b77286af-042a-4580-88b6-efe62aaa3eae', 'サッカー W 杯を振り返る', 'W 杯の名場面を語る', 'サッカー W 杯の名場面について熱く語ってください。', NOW()),
-	('ecd6cb92-597d-4367-9c65-9f98fb38fc9b', 'b77286af-042a-4580-88b6-efe62aaa3eae', 'マラソンの科学', '市民ランナーのための科学的トレーニング', 'マラソンの科学的なトレーニング法を紹介してください。', NOW()),
-	('f270e88b-4c7f-4fd5-a06d-5a52ab0ff501', 'b77286af-042a-4580-88b6-efe62aaa3eae', '筋トレとメンタルの関係', '運動がメンタルヘルスに与える影響', '運動とメンタルヘルスの関係について解説してください。', NOW()),
-	('80d5ac1d-4a0c-44b9-8e4c-61b2ac333b00', 'b77286af-042a-4580-88b6-efe62aaa3eae', 'eスポーツの今', 'eスポーツは本当のスポーツか？', 'eスポーツの現状と将来性について議論してください。', NOW()),
-	('948ee16d-ef1b-4e54-8dcb-cf6b7b46c7fd', 'b77286af-042a-4580-88b6-efe62aaa3eae', '野球データ分析入門', 'セイバーメトリクスで野球を楽しむ', 'セイバーメトリクスについて初心者向けに解説してください。', NOW()),
-	('4288967f-f224-452a-bf4d-f0c61a1ecaa9', 'b77286af-042a-4580-88b6-efe62aaa3eae', 'オリンピックの感動秘話', 'オリンピック選手のドラマチックなエピソード', 'オリンピックの感動的なエピソードを紹介してください。', NOW());
+INSERT INTO episodes (id, channel_id, title, description, user_prompt, published_at, artwork_id) VALUES
+	('4697c3c7-a89a-4ce5-9b39-f4bb8d6ed69a', 'b77286af-042a-4580-88b6-efe62aaa3eae', 'サッカー W 杯を振り返る', 'W 杯の名場面を語る', 'サッカー W 杯の名場面について熱く語ってください。', NOW(), '6fe7ff8c-62c8-4cfe-9f2e-7bed3205b54b'),
+	('ecd6cb92-597d-4367-9c65-9f98fb38fc9b', 'b77286af-042a-4580-88b6-efe62aaa3eae', 'マラソンの科学', '市民ランナーのための科学的トレーニング', 'マラソンの科学的なトレーニング法を紹介してください。', NOW(), '7e53858c-0052-4559-97a4-82d1061b4dd4'),
+	('f270e88b-4c7f-4fd5-a06d-5a52ab0ff501', 'b77286af-042a-4580-88b6-efe62aaa3eae', '筋トレとメンタルの関係', '運動がメンタルヘルスに与える影響', '運動とメンタルヘルスの関係について解説してください。', NOW(), '12b007e2-dbbb-4d56-85bf-18f7f0d93c56'),
+	('80d5ac1d-4a0c-44b9-8e4c-61b2ac333b00', 'b77286af-042a-4580-88b6-efe62aaa3eae', 'eスポーツの今', 'eスポーツは本当のスポーツか？', 'eスポーツの現状と将来性について議論してください。', NOW(), '020f1678-90c8-41e5-91a0-6158ca18895c'),
+	('948ee16d-ef1b-4e54-8dcb-cf6b7b46c7fd', 'b77286af-042a-4580-88b6-efe62aaa3eae', '野球データ分析入門', 'セイバーメトリクスで野球を楽しむ', 'セイバーメトリクスについて初心者向けに解説してください。', NOW(), '7a28f39a-14ef-4351-8cdb-5ed5f681db6d'),
+	('4288967f-f224-452a-bf4d-f0c61a1ecaa9', 'b77286af-042a-4580-88b6-efe62aaa3eae', 'オリンピックの感動秘話', 'オリンピック選手のドラマチックなエピソード', 'オリンピックの感動的なエピソードを紹介してください。', NOW(), '686e985c-6150-40e9-aaf6-02eb233e983c');
 
 -- test_user7 (Mio) のエピソード
-INSERT INTO episodes (id, channel_id, title, description, user_prompt, published_at) VALUES
-	('9890df9b-05cd-4962-9c7f-42e05b5c6ced', 'f602c66d-6111-495a-8b9c-e46fa3740d49', '朝ヨガのすすめ', '朝の 10 分ヨガで一日を変える', '朝ヨガの効果とおすすめポーズを紹介してください。', NOW()),
-	('fa2a8e34-234b-4d40-acad-e4448d1476d0', 'f602c66d-6111-495a-8b9c-e46fa3740d49', '腸活で健康に', '腸内環境を整える食事法', '腸活について実践的なアドバイスをしてください。', NOW()),
-	('a787628e-8dd9-4cac-853d-8d84b0aec6ec', 'bcf2efb2-8a47-46bf-aac4-af593ad0257f', 'J-POP の歴史を辿る', '90 年代から現在までの J-POP の変遷', 'J-POP の歴史について振り返ってください。', NOW());
+INSERT INTO episodes (id, channel_id, title, description, user_prompt, published_at, artwork_id) VALUES
+	('9890df9b-05cd-4962-9c7f-42e05b5c6ced', 'f602c66d-6111-495a-8b9c-e46fa3740d49', '朝ヨガのすすめ', '朝の 10 分ヨガで一日を変える', '朝ヨガの効果とおすすめポーズを紹介してください。', NOW(), '9cf4598f-5c99-4fa1-9c0a-9170e9301e2c'),
+	('fa2a8e34-234b-4d40-acad-e4448d1476d0', 'f602c66d-6111-495a-8b9c-e46fa3740d49', '腸活で健康に', '腸内環境を整える食事法', '腸活について実践的なアドバイスをしてください。', NOW(), '6f2686c6-b0c4-4013-a3cc-4703ab02c7c5'),
+	('a787628e-8dd9-4cac-853d-8d84b0aec6ec', 'bcf2efb2-8a47-46bf-aac4-af593ad0257f', 'J-POP の歴史を辿る', '90 年代から現在までの J-POP の変遷', 'J-POP の歴史について振り返ってください。', NOW(), '2fc9b069-d198-4347-8b64-bdf2c9e1cd7e');
 
 -- test_user8 (Yuto) のエピソード
-INSERT INTO episodes (id, channel_id, title, description, user_prompt, published_at) VALUES
-	('2267a065-9958-493b-9cb3-c62e578b7c23', 'f02d6a25-4166-4632-812d-446ee6d5be38', '戦国武将の意外な一面', '教科書には載らない武将エピソード', '戦国武将の知られざるエピソードを面白く語ってください。', NOW()),
-	('3c8a7f95-0001-4437-a1ec-138009cd0001', 'f02d6a25-4166-4632-812d-446ee6d5be38', '古代エジプトの謎', 'ピラミッドの建設方法を考える', '古代エジプトのピラミッドについて最新の研究成果を交えて語ってください。', NOW()),
-	('3c8a7f95-0002-4437-a1ec-138009cd0002', 'f02d6a25-4166-4632-812d-446ee6d5be38', '幕末の志士たち', '明治維新を支えた若者たちの物語', '幕末の志士たちの生き様について語ってください。', NOW()),
-	('3c8a7f95-0003-4437-a1ec-138009cd0003', 'f02d6a25-4166-4632-812d-446ee6d5be38', 'ローマ帝国の栄光と衰退', '世界史最大の帝国の物語', 'ローマ帝国の歴史について壮大に語ってください。', NOW()),
-	('3c8a7f95-0004-4437-a1ec-138009cd0004', 'f02d6a25-4166-4632-812d-446ee6d5be38', '日本の城の秘密', 'お城に隠された建築の知恵', '日本の城の建築的な工夫について語ってください。', NOW());
+INSERT INTO episodes (id, channel_id, title, description, user_prompt, published_at, artwork_id) VALUES
+	('2267a065-9958-493b-9cb3-c62e578b7c23', 'f02d6a25-4166-4632-812d-446ee6d5be38', '戦国武将の意外な一面', '教科書には載らない武将エピソード', '戦国武将の知られざるエピソードを面白く語ってください。', NOW(), '9b2ff367-dc63-48d9-b2a4-4632d4baddf7'),
+	('3c8a7f95-0001-4437-a1ec-138009cd0001', 'f02d6a25-4166-4632-812d-446ee6d5be38', '古代エジプトの謎', 'ピラミッドの建設方法を考える', '古代エジプトのピラミッドについて最新の研究成果を交えて語ってください。', NOW(), '6b8d6599-655c-4305-b8c6-10ed8d0eb5f4'),
+	('3c8a7f95-0002-4437-a1ec-138009cd0002', 'f02d6a25-4166-4632-812d-446ee6d5be38', '幕末の志士たち', '明治維新を支えた若者たちの物語', '幕末の志士たちの生き様について語ってください。', NOW(), '9f01a36e-fa79-48c3-8eb8-c31a899b357e'),
+	('3c8a7f95-0003-4437-a1ec-138009cd0003', 'f02d6a25-4166-4632-812d-446ee6d5be38', 'ローマ帝国の栄光と衰退', '世界史最大の帝国の物語', 'ローマ帝国の歴史について壮大に語ってください。', NOW(), '0d26d157-ce7b-42dc-a6bd-033d0d902e31'),
+	('3c8a7f95-0004-4437-a1ec-138009cd0004', 'f02d6a25-4166-4632-812d-446ee6d5be38', '日本の城の秘密', 'お城に隠された建築の知恵', '日本の城の建築的な工夫について語ってください。', NOW(), '9aa4bc6c-635f-41ee-9ef7-1ed8b39a1b37');
 
 -- test_user9 (Aoi) のエピソード
-INSERT INTO episodes (id, channel_id, title, description, user_prompt, published_at) VALUES
-	('3c8a7f95-0005-4437-a1ec-138009cd0005', '1737fa8f-75ff-41ba-9775-8d3496d38344', '笑ってはいけない早口言葉', '早口言葉チャレンジで爆笑', '早口言葉をテーマにした面白い会話を展開してください。', NOW()),
-	('3c8a7f95-0006-4437-a1ec-138009cd0006', '1737fa8f-75ff-41ba-9775-8d3496d38344', 'あるあるネタ大会', '日常のあるあるで盛り上がる回', '日常の「あるある」ネタで面白おかしく盛り上がってください。', NOW()),
-	('3c8a7f95-0007-4437-a1ec-138009cd0007', '06891da2-4124-492f-826c-1072dcf27ee6', '数学を好きになる方法', '苦手意識を克服するコツ', '数学の楽しさを伝えてください。', NOW());
+INSERT INTO episodes (id, channel_id, title, description, user_prompt, published_at, artwork_id) VALUES
+	('3c8a7f95-0005-4437-a1ec-138009cd0005', '1737fa8f-75ff-41ba-9775-8d3496d38344', '笑ってはいけない早口言葉', '早口言葉チャレンジで爆笑', '早口言葉をテーマにした面白い会話を展開してください。', NOW(), 'ce424dd4-d8d8-407b-9b8a-655350859e20'),
+	('3c8a7f95-0006-4437-a1ec-138009cd0006', '1737fa8f-75ff-41ba-9775-8d3496d38344', 'あるあるネタ大会', '日常のあるあるで盛り上がる回', '日常の「あるある」ネタで面白おかしく盛り上がってください。', NOW(), 'fff56536-6457-4a09-b4d1-70407c377138'),
+	('3c8a7f95-0007-4437-a1ec-138009cd0007', '06891da2-4124-492f-826c-1072dcf27ee6', '数学を好きになる方法', '苦手意識を克服するコツ', '数学の楽しさを伝えてください。', NOW(), 'f457b96d-ff33-4ddd-be36-ad4147da8c31');
 
 -- test_user10 (Sora) のエピソード
-INSERT INTO episodes (id, channel_id, title, description, user_prompt, published_at) VALUES
-	('3c8a7f95-0008-4437-a1ec-138009cd0008', '70ccbc05-a072-47a2-93c1-e0730d4d2bb9', '星降る夜の物語', 'ファンタジー短編：星の世界への冒険', '星をテーマにしたファンタジー短編を朗読してください。', NOW()),
-	('3c8a7f95-0009-4437-a1ec-138009cd0009', '70ccbc05-a072-47a2-93c1-e0730d4d2bb9', '猫と魔法使い', 'ファンタジー短編：猫が魔法を使う物語', '猫が主人公のファンタジー短編を朗読してください。', NOW());
+INSERT INTO episodes (id, channel_id, title, description, user_prompt, published_at, artwork_id) VALUES
+	('3c8a7f95-0008-4437-a1ec-138009cd0008', '70ccbc05-a072-47a2-93c1-e0730d4d2bb9', '星降る夜の物語', 'ファンタジー短編：星の世界への冒険', '星をテーマにしたファンタジー短編を朗読してください。', NOW(), '53dc6aad-560d-4c48-989c-381187164566'),
+	('3c8a7f95-0009-4437-a1ec-138009cd0009', '70ccbc05-a072-47a2-93c1-e0730d4d2bb9', '猫と魔法使い', 'ファンタジー短編：猫が魔法を使う物語', '猫が主人公のファンタジー短編を朗読してください。', NOW(), '2bc1cfe9-a3c2-4542-839b-4c23532385db');
 
 -- ===========================================
 -- 台本（ScriptLines）
