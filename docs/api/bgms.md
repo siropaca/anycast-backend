@@ -14,18 +14,18 @@ GET /me/bgms
 
 | パラメータ | 型 | デフォルト | 説明 |
 |------------|-----|------------|------|
-| include_default | boolean | false | true の場合、デフォルト BGM も含める |
+| include_system | boolean | false | true の場合、システム BGM も含める |
 | limit | int | 20 | 取得件数（最大 100） |
 | offset | int | 0 | オフセット |
 
-**レスポンス（include_default=false）:**
+**レスポンス（include_system=false）:**
 ```json
 {
   "data": [
     {
       "id": "uuid",
       "name": "お気に入り曲",
-      "isDefault": false,
+      "isSystem": false,
       "audio": {
         "id": "uuid",
         "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
@@ -59,14 +59,14 @@ GET /me/bgms
 }
 ```
 
-**レスポンス（include_default=true）:**
+**レスポンス（include_system=true）:**
 ```json
 {
   "data": [
     {
       "id": "uuid",
       "name": "明るいポップ",
-      "isDefault": true,
+      "isSystem": true,
       "audio": {
         "id": "uuid",
         "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
@@ -80,7 +80,7 @@ GET /me/bgms
     {
       "id": "uuid",
       "name": "お気に入り曲",
-      "isDefault": false,
+      "isSystem": false,
       "audio": {
         "id": "uuid",
         "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
@@ -114,7 +114,7 @@ GET /me/bgms
 }
 ```
 
-> **Note:** `include_default=true` の場合、デフォルト BGM → ユーザー BGM の順で返却。デフォルト BGM は `sort_order` 順、ユーザー BGM は `created_at` 降順。
+> **Note:** `include_system=true` の場合、システム BGM → ユーザー BGM の順で返却。システム BGM は `sort_order` 順、ユーザー BGM は `created_at` 降順。
 
 ---
 
@@ -130,7 +130,7 @@ GET /me/bgms/:bgmId
   "data": {
     "id": "uuid",
     "name": "お気に入り曲",
-    "isDefault": false,
+    "isSystem": false,
     "audio": {
       "id": "uuid",
       "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
@@ -187,7 +187,7 @@ POST /me/bgms
   "data": {
     "id": "uuid",
     "name": "お気に入り曲",
-    "isDefault": false,
+    "isSystem": false,
     "audio": {
       "id": "uuid",
       "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
@@ -238,7 +238,7 @@ PATCH /me/bgms/:bgmId
   "data": {
     "id": "uuid",
     "name": "新しい名前",
-    "isDefault": false,
+    "isSystem": false,
     "audio": {
       "id": "uuid",
       "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
@@ -276,14 +276,14 @@ DELETE /me/bgms/:bgmId
 
 ---
 
-# Default BGMs（デフォルト BGM）
+# System BGMs（システム BGM）
 
-管理者が提供するデフォルト BGM。全ユーザーが利用可能。
+管理者が提供するシステム BGM。全ユーザーが利用可能。
 
-## デフォルト BGM 一覧取得
+## システム BGM 一覧取得
 
 ```
-GET /default-bgms
+GET /system-bgms
 ```
 
 **クエリパラメータ:**
@@ -319,10 +319,10 @@ GET /default-bgms
 
 ---
 
-## デフォルト BGM 取得
+## システム BGM 取得
 
 ```
-GET /default-bgms/:bgmId
+GET /system-bgms/:bgmId
 ```
 
 **レスポンス:**
@@ -344,10 +344,10 @@ GET /default-bgms/:bgmId
 
 ---
 
-## デフォルト BGM 作成
+## システム BGM 作成
 
 ```
-POST /default-bgms
+POST /system-bgms
 ```
 
 **権限:** Admin
@@ -393,17 +393,17 @@ POST /default-bgms
 {
   "error": {
     "code": "DUPLICATE_NAME",
-    "message": "同じ名前のデフォルト BGM が既に存在します"
+    "message": "同じ名前のシステム BGM が既に存在します"
   }
 }
 ```
 
 ---
 
-## デフォルト BGM 更新
+## システム BGM 更新
 
 ```
-PATCH /default-bgms/:bgmId
+PATCH /system-bgms/:bgmId
 ```
 
 **権限:** Admin
@@ -425,7 +425,7 @@ PATCH /default-bgms/:bgmId
 | sortOrder | 0 以上の整数 |
 | isActive | boolean |
 
-> **Note:** audioId は更新不可。音声ファイルを変更したい場合は、新しいデフォルト BGM を作成する。
+> **Note:** audioId は更新不可。音声ファイルを変更したい場合は、新しいシステム BGM を作成する。
 
 **レスポンス（200 OK）:**
 ```json
@@ -448,16 +448,16 @@ PATCH /default-bgms/:bgmId
 
 ---
 
-## デフォルト BGM 削除
+## システム BGM 削除
 
 ```
-DELETE /default-bgms/:bgmId
+DELETE /system-bgms/:bgmId
 ```
 
 **権限:** Admin
 
 **制約:**
-- いずれかのエピソードで使用中のデフォルト BGM は削除不可
+- いずれかのエピソードで使用中のシステム BGM は削除不可
 
 **レスポンス（204 No Content）:**
 レスポンスボディなし

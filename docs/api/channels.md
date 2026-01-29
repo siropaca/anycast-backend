@@ -61,7 +61,7 @@ GET /channels/:channelId
     "defaultBgm": {
       "id": "uuid",
       "name": "Chill BGM",
-      "isDefault": false,
+      "isSystem": false,
       "audio": {
         "id": "uuid",
         "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
@@ -103,7 +103,7 @@ GET /channels/:channelId
         "bgm": {
           "id": "uuid",
           "name": "Chill BGM",
-          "isDefault": false,
+          "isSystem": false,
           "audio": {
             "id": "uuid",
             "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
@@ -126,7 +126,7 @@ GET /channels/:channelId
 
 > **Note:**
 > - `userPrompt` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
-> - `defaultBgm.isDefault` が `true` の場合はシステム BGM、`false` の場合はユーザー所有の BGM です。
+> - `defaultBgm.isSystem` が `true` の場合はシステム BGM、`false` の場合はユーザー所有の BGM です。
 > - `episodes` はチャンネルに紐づくエピソード一覧です。
 
 ---
@@ -398,7 +398,7 @@ GET /me/channels/:channelId
     "defaultBgm": {
       "id": "uuid",
       "name": "Chill BGM",
-      "isDefault": false,
+      "isSystem": false,
       "audio": {
         "id": "uuid",
         "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
@@ -439,7 +439,7 @@ GET /me/channels/:channelId
         "bgm": {
           "id": "uuid",
           "name": "Chill BGM",
-          "isDefault": false,
+          "isSystem": false,
           "audio": {
             "id": "uuid",
             "url": "https://storage.example.com/audios/xxx.mp3?signature=...",

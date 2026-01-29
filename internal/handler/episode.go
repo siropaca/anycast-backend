@@ -359,7 +359,7 @@ func (h *EpisodeHandler) UnpublishEpisode(c *gin.Context) {
 
 // SetEpisodeBgm godoc
 // @Summary エピソード BGM 設定
-// @Description 指定したエピソードに BGM を設定します。ユーザー BGM またはデフォルト BGM のどちらかを指定します。
+// @Description 指定したエピソードに BGM を設定します。ユーザー BGM またはシステム BGM のどちらかを指定します。
 // @Tags episodes
 // @Accept json
 // @Produce json

@@ -252,7 +252,7 @@ PUT /channels/:channelId/episodes/:episodeId/bgm
     "bgm": {
       "id": "uuid",
       "name": "明るいポップ",
-      "isDefault": true,
+      "isSystem": true,
       "audio": {
         "id": "uuid",
         "url": "https://storage.example.com/audios/xxx.mp3?signature=...",

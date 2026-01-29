@@ -121,7 +121,7 @@ func TestListMyBgms(t *testing.T) {
 
 		req := request.ListMyBgmsRequest{
 			PaginationRequest: request.PaginationRequest{Limit: 10, Offset: 0},
-			IncludeDefault:    false,
+			IncludeSystem:    false,
 		}
 
 		mockBgmRepo.On("FindByUserID", mock.Anything, userID, repository.BgmFilter{Limit: 10, Offset: 0}).Return(bgms, int64(1), nil)
@@ -134,7 +134,7 @@ func TestListMyBgms(t *testing.T) {
 		assert.Len(t, result.Data, 1)
 		assert.Equal(t, bgmID, result.Data[0].ID)
 		assert.Equal(t, "Test BGM", result.Data[0].Name)
-		assert.False(t, result.Data[0].IsDefault)
+		assert.False(t, result.Data[0].IsSystem)
 		assert.Equal(t, int64(1), result.Pagination.Total)
 		mockBgmRepo.AssertExpectations(t)
 	})
@@ -190,7 +190,7 @@ func TestListMyBgms(t *testing.T) {
 
 		req := request.ListMyBgmsRequest{
 			PaginationRequest: request.PaginationRequest{Limit: 10, Offset: 0},
-			IncludeDefault:    true,
+			IncludeSystem:    true,
 		}
 
 		mockSystemBgmRepo.On("CountActive", mock.Anything).Return(int64(1), nil)
@@ -205,8 +205,8 @@ func TestListMyBgms(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		assert.Len(t, result.Data, 2)
-		assert.True(t, result.Data[0].IsDefault)
-		assert.False(t, result.Data[1].IsDefault)
+		assert.True(t, result.Data[0].IsSystem)
+		assert.False(t, result.Data[1].IsSystem)
 		assert.Equal(t, int64(2), result.Pagination.Total)
 	})
 
@@ -220,7 +220,7 @@ func TestListMyBgms(t *testing.T) {
 
 		req := request.ListMyBgmsRequest{
 			PaginationRequest: request.PaginationRequest{Limit: 10, Offset: 0},
-			IncludeDefault:    false,
+			IncludeSystem:    false,
 		}
 
 		result, err := svc.ListMyBgms(ctx, "invalid-uuid", req)
@@ -350,7 +350,7 @@ func TestCreateBgm(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		assert.Equal(t, "New BGM", result.Data.Name)
-		assert.False(t, result.Data.IsDefault)
+		assert.False(t, result.Data.IsSystem)
 	})
 
 	t.Run("異常系: 同名の BGM が既に存在する場合エラーを返す", func(t *testing.T) {

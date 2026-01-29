@@ -34,7 +34,7 @@
 | DELETE | `/api/v1/channels/:channelId` | チャンネル削除 | Owner | ✅ | [詳細](./channels.md#チャンネル削除) |
 | POST | `/api/v1/channels/:channelId/publish` | チャンネル公開 | Owner | ✅ | [詳細](./channels.md#チャンネル公開) |
 | POST | `/api/v1/channels/:channelId/unpublish` | チャンネル非公開 | Owner | ✅ | [詳細](./channels.md#チャンネル非公開) |
-| DELETE | `/api/v1/channels/:channelId/default-bgm` | デフォルト BGM 削除 | Owner | ✅ | [詳細](./channels.md#デフォルト-bgm-削除) |
+| DELETE | `/api/v1/channels/:channelId/default-bgm` | システム BGM 削除 | Owner | ✅ | [詳細](./channels.md#デフォルト-bgm-削除) |
 | GET | `/api/v1/me/channels` | 自分のチャンネル一覧 | Owner | ✅ | [詳細](./channels.md#自分のチャンネル一覧取得) |
 | GET | `/api/v1/me/channels/:channelId` | 自分のチャンネル取得 | Owner | ✅ | [詳細](./channels.md#自分のチャンネル取得) |
 | **Characters** | - | - | - | - | [characters.md](./characters.md) |
@@ -50,12 +50,12 @@
 | POST | `/api/v1/me/bgms` | BGM 作成 | Owner | ✅ | [詳細](./bgms.md#bgm-作成) |
 | PATCH | `/api/v1/me/bgms/:bgmId` | BGM 更新 | Owner | ✅ | [詳細](./bgms.md#bgm-更新) |
 | DELETE | `/api/v1/me/bgms/:bgmId` | BGM 削除 | Owner | ✅ | [詳細](./bgms.md#bgm-削除) |
-| **Default BGMs（デフォルト BGM）** | - | - | - | - | [bgms.md](./bgms.md#default-bgmsデフォルト-bgm) |
-| GET | `/api/v1/default-bgms` | デフォルト BGM 一覧取得 | Public | | [詳細](./bgms.md#デフォルト-bgm-一覧取得) |
-| GET | `/api/v1/default-bgms/:bgmId` | デフォルト BGM 取得 | Public | | [詳細](./bgms.md#デフォルト-bgm-取得) |
-| POST | `/api/v1/default-bgms` | デフォルト BGM 作成 | Admin | | [詳細](./bgms.md#デフォルト-bgm-作成) |
-| PATCH | `/api/v1/default-bgms/:bgmId` | デフォルト BGM 更新 | Admin | | [詳細](./bgms.md#デフォルト-bgm-更新) |
-| DELETE | `/api/v1/default-bgms/:bgmId` | デフォルト BGM 削除 | Admin | | [詳細](./bgms.md#デフォルト-bgm-削除) |
+| **System BGMs（システム BGM）** | - | - | - | - | [bgms.md](./bgms.md#default-bgmsデフォルト-bgm) |
+| GET | `/api/v1/system-bgms` | システム BGM 一覧取得 | Public | | [詳細](./bgms.md#デフォルト-bgm-一覧取得) |
+| GET | `/api/v1/system-bgms/:bgmId` | システム BGM 取得 | Public | | [詳細](./bgms.md#デフォルト-bgm-取得) |
+| POST | `/api/v1/system-bgms` | システム BGM 作成 | Admin | | [詳細](./bgms.md#デフォルト-bgm-作成) |
+| PATCH | `/api/v1/system-bgms/:bgmId` | システム BGM 更新 | Admin | | [詳細](./bgms.md#デフォルト-bgm-更新) |
+| DELETE | `/api/v1/system-bgms/:bgmId` | システム BGM 削除 | Admin | | [詳細](./bgms.md#デフォルト-bgm-削除) |
 | **Episodes** | - | - | - | - | [episodes.md](./episodes.md) |
 | GET | `/api/v1/channels/:channelId/episodes` | エピソード一覧取得 | Public | | [詳細](./episodes.md#エピソード一覧取得公開用) |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード取得 | Public | | [詳細](./episodes.md#エピソード取得) |
@@ -90,6 +90,9 @@
 | WS | `/ws/jobs` | ジョブのリアルタイム通知（音声・台本共通） | Owner | ✅ | [詳細](./media.md#websocket-接続) |
 | **Images（画像ファイル）** | - | - | - | - | [media.md](./media.md#images画像ファイル) |
 | POST | `/api/v1/images` | 画像アップロード | Owner | ✅ | [詳細](./media.md#画像アップロード) |
+| **Recommendations（おすすめ）** | - | - | - | - | [recommendations.md](./recommendations.md) |
+| GET | `/api/v1/recommendations/channels` | おすすめチャンネル取得 | Optional | | [詳細](./recommendations.md#おすすめチャンネル取得) |
+| GET | `/api/v1/recommendations/episodes` | おすすめエピソード取得 | Optional | | [詳細](./recommendations.md#おすすめエピソード取得) |
 | **Search（検索）** | - | - | - | - | [engagement.md](./engagement.md) |
 | GET | `/api/v1/search/channels` | チャンネル検索 | Public | | [詳細](./engagement.md#チャンネル検索) |
 | GET | `/api/v1/search/episodes` | エピソード検索 | Public | | [詳細](./engagement.md#エピソード検索) |

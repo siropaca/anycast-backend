@@ -25,10 +25,10 @@ type EpisodeResponse struct {
 
 // エピソードに設定された BGM のレスポンス
 type EpisodeBgmResponse struct {
-	ID        uuid.UUID        `json:"id" validate:"required"`
-	Name      string           `json:"name" validate:"required"`
-	IsDefault bool             `json:"isDefault" validate:"required"`
-	Audio     BgmAudioResponse `json:"audio" validate:"required"`
+	ID       uuid.UUID        `json:"id" validate:"required"`
+	Name     string           `json:"name" validate:"required"`
+	IsSystem bool             `json:"isSystem" validate:"required"`
+	Audio    BgmAudioResponse `json:"audio" validate:"required"`
 }
 
 // エピソード一覧（ページネーション付き）のレスポンス

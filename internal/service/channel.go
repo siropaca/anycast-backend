@@ -802,9 +802,9 @@ func (s *channelService) toChannelResponse(ctx context.Context, c *model.Channel
 			return response.ChannelResponse{}, err
 		}
 		resp.DefaultBgm = &response.ChannelDefaultBgmResponse{
-			ID:        c.DefaultBgm.ID,
-			Name:      c.DefaultBgm.Name,
-			IsDefault: false,
+			ID:       c.DefaultBgm.ID,
+			Name:     c.DefaultBgm.Name,
+			IsSystem: false,
 			Audio: response.BgmAudioResponse{
 				ID:         c.DefaultBgm.Audio.ID,
 				URL:        signedURL,
@@ -817,9 +817,9 @@ func (s *channelService) toChannelResponse(ctx context.Context, c *model.Channel
 			return response.ChannelResponse{}, err
 		}
 		resp.DefaultBgm = &response.ChannelDefaultBgmResponse{
-			ID:        c.DefaultSystemBgm.ID,
-			Name:      c.DefaultSystemBgm.Name,
-			IsDefault: true,
+			ID:       c.DefaultSystemBgm.ID,
+			Name:     c.DefaultSystemBgm.Name,
+			IsSystem: true,
 			Audio: response.BgmAudioResponse{
 				ID:         c.DefaultSystemBgm.Audio.ID,
 				URL:        signedURL,
@@ -922,9 +922,9 @@ func (s *channelService) toEpisodeResponse(ctx context.Context, e *model.Episode
 			return response.EpisodeResponse{}, err
 		}
 		resp.Bgm = &response.EpisodeBgmResponse{
-			ID:        e.Bgm.ID,
-			Name:      e.Bgm.Name,
-			IsDefault: false,
+			ID:       e.Bgm.ID,
+			Name:     e.Bgm.Name,
+			IsSystem: false,
 			Audio: response.BgmAudioResponse{
 				ID:         e.Bgm.Audio.ID,
 				URL:        signedURL,
@@ -937,9 +937,9 @@ func (s *channelService) toEpisodeResponse(ctx context.Context, e *model.Episode
 			return response.EpisodeResponse{}, err
 		}
 		resp.Bgm = &response.EpisodeBgmResponse{
-			ID:        e.SystemBgm.ID,
-			Name:      e.SystemBgm.Name,
-			IsDefault: true,
+			ID:       e.SystemBgm.ID,
+			Name:     e.SystemBgm.Name,
+			IsSystem: true,
 			Audio: response.BgmAudioResponse{
 				ID:         e.SystemBgm.Audio.ID,
 				URL:        signedURL,

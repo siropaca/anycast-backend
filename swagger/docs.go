@@ -1058,7 +1058,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "指定したエピソードに BGM を設定します。ユーザー BGM またはデフォルト BGM のどちらかを指定します。",
+                "description": "指定したエピソードに BGM を設定します。ユーザー BGM またはシステム BGM のどちらかを指定します。",
                 "consumes": [
                     "application/json"
                 ],
@@ -2752,7 +2752,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "認証ユーザーの所有する BGM 一覧を取得します。include_default=true の場合はデフォルト BGM も含めます。",
+                "description": "認証ユーザーの所有する BGM 一覧を取得します。include_system=true の場合はシステム BGM も含めます。",
                 "consumes": [
                     "application/json"
                 ],
@@ -2766,8 +2766,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "boolean",
-                        "description": "デフォルト BGM を含めるかどうか（デフォルト: false）",
-                        "name": "include_default",
+                        "description": "システム BGM を含めるかどうか（デフォルト: false）",
+                        "name": "include_system",
                         "in": "query"
                     },
                     {
@@ -5620,7 +5620,7 @@ const docTemplate = `{
                 "createdAt",
                 "episodes",
                 "id",
-                "isDefault",
+                "isSystem",
                 "name",
                 "updatedAt"
             ],
@@ -5646,7 +5646,7 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "isDefault": {
+                "isSystem": {
                     "type": "boolean"
                 },
                 "name": {
@@ -5714,7 +5714,7 @@ const docTemplate = `{
             "required": [
                 "audio",
                 "id",
-                "isDefault",
+                "isSystem",
                 "name"
             ],
             "properties": {
@@ -5724,7 +5724,7 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "isDefault": {
+                "isSystem": {
                     "description": "true=システムBGM",
                     "type": "boolean"
                 },
@@ -6010,7 +6010,7 @@ const docTemplate = `{
             "required": [
                 "audio",
                 "id",
-                "isDefault",
+                "isSystem",
                 "name"
             ],
             "properties": {
@@ -6020,7 +6020,7 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "isDefault": {
+                "isSystem": {
                     "type": "boolean"
                 },
                 "name": {

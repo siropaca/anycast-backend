@@ -50,8 +50,8 @@ func (s *bgmService) ListMyBgms(ctx context.Context, userID string, req request.
 		return nil, err
 	}
 
-	if req.IncludeDefault {
-		return s.listBgmsWithDefault(ctx, uid, req)
+	if req.IncludeSystem {
+		return s.listBgmsWithSystem(ctx, uid, req)
 	}
 
 	return s.listUserBgmsOnly(ctx, uid, req)
@@ -80,8 +80,8 @@ func (s *bgmService) listUserBgmsOnly(ctx context.Context, userID uuid.UUID, req
 	}, nil
 }
 
-// listBgmsWithDefault はシステム BGM とユーザー BGM を結合して取得する
-func (s *bgmService) listBgmsWithDefault(ctx context.Context, userID uuid.UUID, req request.ListMyBgmsRequest) (*response.BgmListWithPaginationResponse, error) {
+// listBgmsWithSystem はシステム BGM とユーザー BGM を結合して取得する
+func (s *bgmService) listBgmsWithSystem(ctx context.Context, userID uuid.UUID, req request.ListMyBgmsRequest) (*response.BgmListWithPaginationResponse, error) {
 	// システム BGM の総件数を取得
 	systemTotal, err := s.systemBgmRepo.CountActive(ctx)
 	if err != nil {
@@ -205,7 +205,7 @@ func (s *bgmService) toBgmWithEpisodesResponse(ctx context.Context, b model.Bgm)
 	return response.BgmWithEpisodesResponse{
 		ID:        b.ID,
 		Name:      b.Name,
-		IsDefault: false,
+		IsSystem: false,
 		Audio:     audioResponse,
 		Episodes:  episodes,
 		Channels:  channels,
@@ -240,7 +240,7 @@ func (s *bgmService) toSystemBgmWithEpisodesResponse(ctx context.Context, b mode
 	return response.BgmWithEpisodesResponse{
 		ID:        b.ID,
 		Name:      b.Name,
-		IsDefault: true,
+		IsSystem: true,
 		Audio:     audioResponse,
 		Episodes:  []response.BgmEpisodeResponse{},
 		Channels:  []response.BgmChannelResponse{},

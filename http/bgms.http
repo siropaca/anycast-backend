@@ -11,12 +11,12 @@ Authorization: Bearer {{token}}
 GET {{baseUrl}}/me/bgms?limit=10&offset=0
 Authorization: Bearer {{token}}
 
-### 自分の BGM 一覧取得（デフォルト BGM を含む）
-GET {{baseUrl}}/me/bgms?include_default=true
+### 自分の BGM 一覧取得（システム BGM を含む）
+GET {{baseUrl}}/me/bgms?include_system=true
 Authorization: Bearer {{token}}
 
-### 自分の BGM 一覧取得（デフォルト BGM を含む + ページネーション）
-GET {{baseUrl}}/me/bgms?include_default=true&limit=10&offset=0
+### 自分の BGM 一覧取得（システム BGM を含む + ページネーション）
+GET {{baseUrl}}/me/bgms?include_system=true&limit=10&offset=0
 Authorization: Bearer {{token}}
 
 ### 音声ファイルアップロード

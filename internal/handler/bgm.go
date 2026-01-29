@@ -23,11 +23,11 @@ func NewBgmHandler(bs service.BgmService) *BgmHandler {
 
 // ListMyBgms godoc
 // @Summary 自分の BGM 一覧取得
-// @Description 認証ユーザーの所有する BGM 一覧を取得します。include_default=true の場合はデフォルト BGM も含めます。
+// @Description 認証ユーザーの所有する BGM 一覧を取得します。include_system=true の場合はシステム BGM も含めます。
 // @Tags me
 // @Accept json
 // @Produce json
-// @Param include_default query bool false "デフォルト BGM を含めるかどうか（デフォルト: false）"
+// @Param include_system query bool false "システム BGM を含めるかどうか（デフォルト: false）"
 // @Param limit query int false "取得件数（デフォルト: 20、最大: 100）"
 // @Param offset query int false "オフセット（デフォルト: 0）"
 // @Success 200 {object} response.BgmListWithPaginationResponse

@@ -577,16 +577,16 @@ func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode
 		}
 	}
 
-	// Bgm または DefaultBgm からレスポンスを構築
+	// Bgm または SystemBgm からレスポンスを構築
 	if e.Bgm != nil && e.Bgm.Audio.ID != uuid.Nil {
 		signedURL, err := s.storageClient.GenerateSignedURL(ctx, e.Bgm.Audio.Path, storage.SignedURLExpirationAudio)
 		if err != nil {
 			return response.EpisodeResponse{}, err
 		}
 		resp.Bgm = &response.EpisodeBgmResponse{
-			ID:        e.Bgm.ID,
-			Name:      e.Bgm.Name,
-			IsDefault: false,
+			ID:       e.Bgm.ID,
+			Name:     e.Bgm.Name,
+			IsSystem: false,
 			Audio: response.BgmAudioResponse{
 				ID:         e.Bgm.Audio.ID,
 				URL:        signedURL,
@@ -599,9 +599,9 @@ func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode
 			return response.EpisodeResponse{}, err
 		}
 		resp.Bgm = &response.EpisodeBgmResponse{
-			ID:        e.SystemBgm.ID,
-			Name:      e.SystemBgm.Name,
-			IsDefault: true,
+			ID:       e.SystemBgm.ID,
+			Name:     e.SystemBgm.Name,
+			IsSystem: true,
 			Audio: response.BgmAudioResponse{
 				ID:         e.SystemBgm.Audio.ID,
 				URL:        signedURL,

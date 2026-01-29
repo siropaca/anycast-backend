@@ -24,10 +24,10 @@ type ChannelResponse struct {
 
 // チャンネルのデフォルト BGM 情報のレスポンス
 type ChannelDefaultBgmResponse struct {
-	ID        uuid.UUID        `json:"id" validate:"required"`
-	Name      string           `json:"name" validate:"required"`
-	IsDefault bool             `json:"isDefault" validate:"required"` // true=システムBGM
-	Audio     BgmAudioResponse `json:"audio" validate:"required"`
+	ID       uuid.UUID        `json:"id" validate:"required"`
+	Name     string           `json:"name" validate:"required"`
+	IsSystem bool             `json:"isSystem" validate:"required"` // true=システムBGM
+	Audio    BgmAudioResponse `json:"audio" validate:"required"`
 }
 
 // キャラクター情報のレスポンス

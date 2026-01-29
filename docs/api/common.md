@@ -45,6 +45,7 @@
 | 権限レベル | 説明 |
 |------------|------|
 | Guest | ログインなしでアクセス可能（現時点では該当なし） |
+| Optional | ログイン任意（ログイン有無で挙動が変わる） |
 | Public | ログイン済みユーザーであれば誰でもアクセス可能 |
 | Owner | 自身のリソースのみ操作可能 |
 | Admin | 運営のみ操作可能 |
@@ -59,7 +60,7 @@
 | Channels | Public | Owner | Owner | Owner |
 | Characters | Owner | Owner | Owner | Owner |
 | BGMs | Owner | Owner | Owner | Owner |
-| Default BGMs | Public | Admin | Admin | Admin |
+| System BGMs | Public | Admin | Admin | Admin |
 | Episodes | Public | Owner | Owner | Owner |
 | Script / ScriptLines | Owner | Owner | Owner | Owner |
 | Likes | Owner | Owner | - | Owner |
@@ -70,6 +71,7 @@
 | Audios（アップロード） | Owner | Owner | - | Owner |
 | Images（アップロード） | Owner | Owner | - | Owner |
 | Search | Public | - | - | - |
+| Recommendations | Optional | - | - | - |
 | Voices | Public | Admin | Admin | Admin |
 | Categories | Public | Admin | Admin | Admin |
 | Admin（孤児メディア削除） | - | Admin | - | - |
