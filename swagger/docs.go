@@ -2296,6 +2296,126 @@ const docTemplate = `{
                 }
             }
         },
+        "/episodes/{episodeId}/playback": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "再生位置や完了状態を更新します（なければ作成）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "episodes"
+                ],
+                "summary": "再生履歴を更新",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "エピソード ID",
+                        "name": "episodeId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "再生状態更新リクエスト",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdatePlaybackRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.PlaybackDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したエピソードの再生履歴を削除します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "episodes"
+                ],
+                "summary": "再生履歴を削除",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "エピソード ID",
+                        "name": "episodeId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/feedbacks": {
             "post": {
                 "security": [
@@ -3604,6 +3724,66 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/me/playback-history": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "自分の再生履歴一覧を取得します（最近再生した順）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "me"
+                ],
+                "summary": "再生履歴一覧取得",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "完了状態でフィルタ",
+                        "name": "completed",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "取得件数（デフォルト: 20、最大: 100）",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "オフセット（デフォルト: 0）",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.PlaybackHistoryListWithPaginationResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
                         }
@@ -5021,6 +5201,18 @@ const docTemplate = `{
                 }
             }
         },
+        "request.UpdatePlaybackRequest": {
+            "type": "object",
+            "properties": {
+                "completed": {
+                    "type": "boolean"
+                },
+                "progressMs": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
         "request.UpdatePlaylistRequest": {
             "type": "object",
             "properties": {
@@ -6183,6 +6375,139 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.PlaybackDataResponse": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.PlaybackResponse"
+                }
+            }
+        },
+        "response.PlaybackHistoryChannelResponse": {
+            "type": "object",
+            "required": [
+                "id",
+                "name"
+            ],
+            "properties": {
+                "artwork": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.ArtworkResponse"
+                        }
+                    ],
+                    "x-nullable": true
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.PlaybackHistoryEpisodeResponse": {
+            "type": "object",
+            "required": [
+                "channel",
+                "description",
+                "id",
+                "title"
+            ],
+            "properties": {
+                "channel": {
+                    "$ref": "#/definitions/response.PlaybackHistoryChannelResponse"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "fullAudio": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.AudioResponse"
+                        }
+                    ],
+                    "x-nullable": true
+                },
+                "id": {
+                    "type": "string"
+                },
+                "publishedAt": {
+                    "type": "string",
+                    "x-nullable": true
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.PlaybackHistoryItemResponse": {
+            "type": "object",
+            "required": [
+                "completed",
+                "episode",
+                "playedAt",
+                "progressMs"
+            ],
+            "properties": {
+                "completed": {
+                    "type": "boolean"
+                },
+                "episode": {
+                    "$ref": "#/definitions/response.PlaybackHistoryEpisodeResponse"
+                },
+                "playedAt": {
+                    "type": "string"
+                },
+                "progressMs": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.PlaybackHistoryListWithPaginationResponse": {
+            "type": "object",
+            "required": [
+                "data",
+                "pagination"
+            ],
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.PlaybackHistoryItemResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/response.PaginationResponse"
+                }
+            }
+        },
+        "response.PlaybackResponse": {
+            "type": "object",
+            "required": [
+                "completed",
+                "episodeId",
+                "playedAt",
+                "progressMs"
+            ],
+            "properties": {
+                "completed": {
+                    "type": "boolean"
+                },
+                "episodeId": {
+                    "type": "string"
+                },
+                "playedAt": {
+                    "type": "string"
+                },
+                "progressMs": {
                     "type": "integer"
                 }
             }
