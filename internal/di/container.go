@@ -40,6 +40,7 @@ type Container struct {
 	WorkerHandler     *handler.WorkerHandler
 	WebSocketHandler  *handler.WebSocketHandler
 	FeedbackHandler   *handler.FeedbackHandler
+	PlaylistHandler   *handler.PlaylistHandler
 	TokenManager      jwt.TokenManager
 	UserRepository    repository.UserRepository
 	WebSocketHub      *websocket.Hub
@@ -120,10 +121,11 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	audioJobRepo := repository.NewAudioJobRepository(db)
 	scriptJobRepo := repository.NewScriptJobRepository(db)
 	feedbackRepo := repository.NewFeedbackRepository(db)
+	playlistRepo := repository.NewPlaylistRepository(db)
 
 	// Service 層
 	voiceService := service.NewVoiceService(voiceRepo)
-	authService := service.NewAuthService(userRepo, credentialRepo, oauthAccountRepo, imageRepo, passwordHasher, storageClient)
+	authService := service.NewAuthService(userRepo, credentialRepo, oauthAccountRepo, imageRepo, playlistRepo, passwordHasher, storageClient)
 	channelService := service.NewChannelService(db, channelRepo, characterRepo, categoryRepo, imageRepo, voiceRepo, episodeRepo, bgmRepo, systemBgmRepo, storageClient)
 	characterService := service.NewCharacterService(characterRepo, voiceRepo, imageRepo, storageClient)
 	categoryService := service.NewCategoryService(categoryRepo)
@@ -160,6 +162,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		wsHub,
 	)
 	feedbackService := service.NewFeedbackService(feedbackRepo, imageRepo, userRepo, storageClient, slackClient)
+	playlistService := service.NewPlaylistService(playlistRepo, episodeRepo, storageClient)
 
 	// Handler 層
 	voiceHandler := handler.NewVoiceHandler(voiceService)
@@ -179,6 +182,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	workerHandler := handler.NewWorkerHandler(audioJobService, scriptJobService)
 	webSocketHandler := handler.NewWebSocketHandler(wsHub, tokenManager)
 	feedbackHandler := handler.NewFeedbackHandler(feedbackService)
+	playlistHandler := handler.NewPlaylistHandler(playlistService)
 
 	return &Container{
 		VoiceHandler:      voiceHandler,
@@ -198,6 +202,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		WorkerHandler:     workerHandler,
 		WebSocketHandler:  webSocketHandler,
 		FeedbackHandler:   feedbackHandler,
+		PlaylistHandler:   playlistHandler,
 		TokenManager:      tokenManager,
 		UserRepository:    userRepo,
 		WebSocketHub:      wsHub,

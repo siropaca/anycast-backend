@@ -12,8 +12,9 @@
 | DUPLICATE_USERNAME | 409 | ユーザー名が既に使用されている |
 | DUPLICATE_NAME | 409 | 名前が重複している |
 | ALREADY_LIKED | 409 | 既にお気に入り済み |
-| ALREADY_BOOKMARKED | 409 | 既にブックマーク済み |
+| ALREADY_IN_PLAYLIST | 409 | 既にプレイリストに追加済み |
 | ALREADY_FOLLOWED | 409 | 既にフォロー済み |
+| DEFAULT_PLAYLIST | 409 | デフォルトプレイリストは変更不可 |
 | SELF_FOLLOW_NOT_ALLOWED | 400 | 自分のエピソードはフォロー不可 |
 | CHARACTER_IN_USE | 409 | キャラクターが使用中のため削除不可 |
 | BGM_IN_USE | 409 | BGM が使用中のため削除不可 |

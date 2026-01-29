@@ -1,0 +1,108 @@
+@baseUrl = http://localhost:8081/api/v1
+
+# トークン生成: make token
+@token = YOUR_TOKEN_HERE
+
+### ===========================
+### プレイリスト管理
+### ===========================
+
+### 自分のプレイリスト一覧取得
+GET {{baseUrl}}/me/playlists
+Authorization: Bearer {{token}}
+
+### 自分のプレイリスト一覧取得（ページネーション）
+GET {{baseUrl}}/me/playlists?limit=10&offset=0
+Authorization: Bearer {{token}}
+
+### プレイリスト詳細取得
+GET {{baseUrl}}/me/playlists/YOUR_PLAYLIST_ID_HERE
+Authorization: Bearer {{token}}
+
+### プレイリスト作成
+POST {{baseUrl}}/me/playlists
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "お気に入り",
+  "description": "お気に入りのエピソード"
+}
+
+### プレイリスト作成（説明なし）
+POST {{baseUrl}}/me/playlists
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "通勤用"
+}
+
+### プレイリスト更新
+PATCH {{baseUrl}}/me/playlists/YOUR_PLAYLIST_ID_HERE
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "新しい名前",
+  "description": "新しい説明"
+}
+
+### プレイリスト更新（名前のみ）
+PATCH {{baseUrl}}/me/playlists/YOUR_PLAYLIST_ID_HERE
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "更新された名前"
+}
+
+### プレイリスト削除
+DELETE {{baseUrl}}/me/playlists/YOUR_PLAYLIST_ID_HERE
+Authorization: Bearer {{token}}
+
+### ===========================
+### プレイリストアイテム管理
+### ===========================
+
+### プレイリストにエピソード追加
+POST {{baseUrl}}/me/playlists/YOUR_PLAYLIST_ID_HERE/items
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "episodeId": "YOUR_EPISODE_ID_HERE"
+}
+
+### プレイリストからアイテム削除
+DELETE {{baseUrl}}/me/playlists/YOUR_PLAYLIST_ID_HERE/items/YOUR_ITEM_ID_HERE
+Authorization: Bearer {{token}}
+
+### プレイリストアイテム並び替え
+POST {{baseUrl}}/me/playlists/YOUR_PLAYLIST_ID_HERE/items/reorder
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "itemIds": [
+    "ITEM_ID_1",
+    "ITEM_ID_2",
+    "ITEM_ID_3"
+  ]
+}
+
+### ===========================
+### 「後で聴く」ショートカット
+### ===========================
+
+### 後で聴く一覧取得
+GET {{baseUrl}}/me/listen-later
+Authorization: Bearer {{token}}
+
+### 後で聴くに追加
+POST {{baseUrl}}/episodes/YOUR_EPISODE_ID_HERE/listen-later
+Authorization: Bearer {{token}}
+
+### 後で聴くから削除
+DELETE {{baseUrl}}/episodes/YOUR_EPISODE_ID_HERE/listen-later
+Authorization: Bearer {{token}}

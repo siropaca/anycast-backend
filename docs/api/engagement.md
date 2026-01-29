@@ -226,64 +226,14 @@ GET /me/likes
 
 ---
 
-# Bookmarks（後で見る）
+# Playlists（プレイリスト）
 
-エピソードへの「後で見る」機能。
+YouTube 式のプレイリスト機能。各ユーザーには「後で聴く」デフォルトプレイリストが自動作成される。
 
-## ブックマーク登録
-
-```
-POST /episodes/:episodeId/bookmark
-```
-
-**レスポンス（201 Created）:**
-```json
-{
-  "data": {
-    "id": "uuid",
-    "episodeId": "uuid",
-    "createdAt": "2025-01-01T00:00:00Z"
-  }
-}
-```
-
-**エラー（409 Conflict）:**
-```json
-{
-  "error": {
-    "code": "ALREADY_BOOKMARKED",
-    "message": "既にブックマーク済みです"
-  }
-}
-```
-
----
-
-## ブックマーク解除
+## プレイリスト一覧取得
 
 ```
-DELETE /episodes/:episodeId/bookmark
-```
-
-**レスポンス（204 No Content）:**
-レスポンスボディなし
-
-**エラー（404 Not Found）:**
-```json
-{
-  "error": {
-    "code": "NOT_FOUND",
-    "message": "ブックマークが見つかりません"
-  }
-}
-```
-
----
-
-## ブックマークしたエピソード一覧
-
-```
-GET /me/bookmarks
+GET /me/playlists
 ```
 
 **クエリパラメータ:**
@@ -298,27 +248,312 @@ GET /me/bookmarks
 {
   "data": [
     {
-      "episode": {
-        "id": "uuid",
-        "title": "エピソードタイトル",
-        "description": "説明",
-        "channel": {
-          "id": "uuid",
-          "name": "チャンネル名",
-          "artwork": { "id": "uuid", "url": "..." }
-        },
-        "publishedAt": "2025-01-01T00:00:00Z"
-      },
-      "bookmarkedAt": "2025-01-01T00:00:00Z"
+      "id": "uuid",
+      "name": "後で聴く",
+      "description": "",
+      "isDefault": true,
+      "itemCount": 5,
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
     }
   ],
   "pagination": {
-    "total": 100,
+    "total": 3,
     "limit": 20,
     "offset": 0
   }
 }
 ```
+
+---
+
+## プレイリスト詳細取得
+
+```
+GET /me/playlists/:playlistId
+```
+
+**レスポンス:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "name": "お気に入り",
+    "description": "お気に入りのエピソード",
+    "isDefault": false,
+    "items": [
+      {
+        "id": "uuid",
+        "position": 0,
+        "episode": {
+          "id": "uuid",
+          "title": "エピソードタイトル",
+          "description": "説明",
+          "artwork": { "id": "uuid", "url": "..." },
+          "fullAudio": { "id": "uuid", "url": "...", "durationMs": 180000 },
+          "playCount": 100,
+          "publishedAt": "2025-01-01T00:00:00Z",
+          "channel": {
+            "id": "uuid",
+            "name": "チャンネル名",
+            "artwork": { "id": "uuid", "url": "..." }
+          }
+        },
+        "addedAt": "2025-01-01T00:00:00Z"
+      }
+    ],
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+---
+
+## プレイリスト作成
+
+```
+POST /me/playlists
+```
+
+**リクエスト:**
+```json
+{
+  "name": "お気に入り",
+  "description": "お気に入りのエピソード"
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| name | string | ◯ | プレイリスト名（100文字以内） |
+| description | string | | 説明（500文字以内） |
+
+**レスポンス（201 Created）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "name": "お気に入り",
+    "description": "お気に入りのエピソード",
+    "isDefault": false,
+    "itemCount": 0,
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+**エラー（409 Conflict）:**
+```json
+{
+  "error": {
+    "code": "DUPLICATE_NAME",
+    "message": "この名前のプレイリストは既に存在します"
+  }
+}
+```
+
+---
+
+## プレイリスト更新
+
+```
+PATCH /me/playlists/:playlistId
+```
+
+**リクエスト:**
+```json
+{
+  "name": "新しい名前",
+  "description": "新しい説明"
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| name | string | | プレイリスト名（100文字以内、デフォルトプレイリストは変更不可） |
+| description | string | | 説明（500文字以内） |
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "name": "新しい名前",
+    "description": "新しい説明",
+    "isDefault": false,
+    "itemCount": 5,
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:01Z"
+  }
+}
+```
+
+**エラー（409 Conflict）:**
+```json
+{
+  "error": {
+    "code": "DEFAULT_PLAYLIST",
+    "message": "デフォルトプレイリストの名前は変更できません"
+  }
+}
+```
+
+---
+
+## プレイリスト削除
+
+```
+DELETE /me/playlists/:playlistId
+```
+
+デフォルトプレイリストは削除不可。
+
+**レスポンス（204 No Content）:**
+レスポンスボディなし
+
+**エラー（409 Conflict）:**
+```json
+{
+  "error": {
+    "code": "DEFAULT_PLAYLIST",
+    "message": "デフォルトプレイリストは削除できません"
+  }
+}
+```
+
+---
+
+## プレイリストにアイテム追加
+
+```
+POST /me/playlists/:playlistId/items
+```
+
+**リクエスト:**
+```json
+{
+  "episodeId": "uuid"
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| episodeId | uuid | ◯ | 追加するエピソードの ID |
+
+**レスポンス（201 Created）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "position": 0,
+    "episode": {
+      "id": "uuid",
+      "title": "エピソードタイトル",
+      "description": "説明",
+      "artwork": { "id": "uuid", "url": "..." },
+      "fullAudio": { "id": "uuid", "url": "...", "durationMs": 180000 },
+      "playCount": 100,
+      "publishedAt": "2025-01-01T00:00:00Z",
+      "channel": {
+        "id": "uuid",
+        "name": "チャンネル名",
+        "artwork": { "id": "uuid", "url": "..." }
+      }
+    },
+    "addedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+**エラー（409 Conflict）:**
+```json
+{
+  "error": {
+    "code": "ALREADY_IN_PLAYLIST",
+    "message": "このエピソードは既にプレイリストに追加されています"
+  }
+}
+```
+
+---
+
+## プレイリストからアイテム削除
+
+```
+DELETE /me/playlists/:playlistId/items/:itemId
+```
+
+**レスポンス（204 No Content）:**
+レスポンスボディなし
+
+---
+
+## プレイリストアイテム並び替え
+
+```
+POST /me/playlists/:playlistId/items/reorder
+```
+
+**リクエスト:**
+```json
+{
+  "itemIds": ["uuid1", "uuid2", "uuid3"]
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| itemIds | uuid[] | ◯ | 新しい順序でのアイテム ID 配列 |
+
+**レスポンス（200 OK）:**
+プレイリスト詳細と同じ形式
+
+---
+
+## 後で聴く一覧取得
+
+デフォルトプレイリスト（後で聴く）の内容を取得するショートカット。
+
+```
+GET /me/listen-later
+```
+
+**レスポンス:**
+プレイリスト詳細と同じ形式
+
+---
+
+## 後で聴くに追加
+
+```
+POST /episodes/:episodeId/listen-later
+```
+
+**レスポンス（201 Created）:**
+プレイリストアイテムと同じ形式
+
+**エラー（409 Conflict）:**
+```json
+{
+  "error": {
+    "code": "ALREADY_IN_PLAYLIST",
+    "message": "このエピソードは既にプレイリストに追加されています"
+  }
+}
+```
+
+---
+
+## 後で聴くから削除
+
+```
+DELETE /episodes/:episodeId/listen-later
+```
+
+**レスポンス（204 No Content）:**
+レスポンスボディなし
 
 ---
 

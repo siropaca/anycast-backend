@@ -88,6 +88,17 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.GET("/me/audio-jobs", container.AudioJobHandler.ListMyAudioJobs)
 	authenticated.GET("/me/script-jobs", container.ScriptJobHandler.ListMyScriptJobs)
 
+	// Playlists
+	authenticated.GET("/me/playlists", container.PlaylistHandler.ListPlaylists)
+	authenticated.GET("/me/playlists/:playlistId", container.PlaylistHandler.GetPlaylist)
+	authenticated.POST("/me/playlists", container.PlaylistHandler.CreatePlaylist)
+	authenticated.PATCH("/me/playlists/:playlistId", container.PlaylistHandler.UpdatePlaylist)
+	authenticated.DELETE("/me/playlists/:playlistId", container.PlaylistHandler.DeletePlaylist)
+	authenticated.POST("/me/playlists/:playlistId/items", container.PlaylistHandler.AddItem)
+	authenticated.DELETE("/me/playlists/:playlistId/items/:itemId", container.PlaylistHandler.RemoveItem)
+	authenticated.POST("/me/playlists/:playlistId/items/reorder", container.PlaylistHandler.ReorderItems)
+	authenticated.GET("/me/listen-later", container.PlaylistHandler.GetListenLater)
+
 	// Channels
 	authenticated.GET("/channels/:channelId", container.ChannelHandler.GetChannel)
 	authenticated.POST("/channels", container.ChannelHandler.CreateChannel)
@@ -107,6 +118,8 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.DELETE("/channels/:channelId/episodes/:episodeId/bgm", container.EpisodeHandler.DeleteEpisodeBgm)
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/audio/generate-async", container.AudioJobHandler.GenerateAudioAsync)
 	authenticated.POST("/episodes/:episodeId/play", container.EpisodeHandler.IncrementPlayCount)
+	authenticated.POST("/episodes/:episodeId/listen-later", container.PlaylistHandler.AddToListenLater)
+	authenticated.DELETE("/episodes/:episodeId/listen-later", container.PlaylistHandler.RemoveFromListenLater)
 
 	// Audio Jobs
 	authenticated.GET("/audio-jobs/:jobId", container.AudioJobHandler.GetAudioJob)

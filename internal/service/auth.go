@@ -39,6 +39,7 @@ type authService struct {
 	credentialRepo   repository.CredentialRepository
 	oauthAccountRepo repository.OAuthAccountRepository
 	imageRepo        repository.ImageRepository
+	playlistRepo     repository.PlaylistRepository
 	passwordHasher   crypto.PasswordHasher
 	storageClient    storage.Client
 }
@@ -49,6 +50,7 @@ func NewAuthService(
 	credentialRepo repository.CredentialRepository,
 	oauthAccountRepo repository.OAuthAccountRepository,
 	imageRepo repository.ImageRepository,
+	playlistRepo repository.PlaylistRepository,
 	passwordHasher crypto.PasswordHasher,
 	storageClient storage.Client,
 ) AuthService {
@@ -57,6 +59,7 @@ func NewAuthService(
 		credentialRepo:   credentialRepo,
 		oauthAccountRepo: oauthAccountRepo,
 		imageRepo:        imageRepo,
+		playlistRepo:     playlistRepo,
 		passwordHasher:   passwordHasher,
 		storageClient:    storageClient,
 	}
@@ -103,6 +106,12 @@ func (s *authService) Register(ctx context.Context, req request.RegisterRequest)
 	}
 	if err := s.credentialRepo.Create(ctx, credential); err != nil {
 		return nil, err
+	}
+
+	// デフォルトプレイリストを作成
+	if err := s.createDefaultPlaylist(ctx, user.ID); err != nil {
+		logger.FromContext(ctx).Error("failed to create default playlist", "error", err, "user_id", user.ID)
+		// エラーでもユーザー登録は成功させる（ログだけ残す）
 	}
 
 	return s.toUserResponse(ctx, user), nil
@@ -206,6 +215,12 @@ func (s *authService) OAuthGoogle(ctx context.Context, req request.OAuthGoogleRe
 
 	if err := s.oauthAccountRepo.Create(ctx, oauthAccount); err != nil {
 		return nil, err
+	}
+
+	// デフォルトプレイリストを作成
+	if err := s.createDefaultPlaylist(ctx, user.ID); err != nil {
+		logger.FromContext(ctx).Error("failed to create default playlist", "error", err, "user_id", user.ID)
+		// エラーでもユーザー登録は成功させる（ログだけ残す）
 	}
 
 	return &AuthResult{
@@ -385,4 +400,16 @@ func (s *authService) UpdatePrompt(ctx context.Context, userID string, req reque
 
 	// 更新後のユーザー情報を返す
 	return s.GetMe(ctx, userID)
+}
+
+// createDefaultPlaylist はユーザーのデフォルトプレイリストを作成する
+func (s *authService) createDefaultPlaylist(ctx context.Context, userID uuid.UUID) error {
+	playlist := &model.Playlist{
+		UserID:      userID,
+		Name:        DefaultPlaylistName,
+		Description: "",
+		IsDefault:   true,
+	}
+
+	return s.playlistRepo.Create(ctx, playlist)
 }

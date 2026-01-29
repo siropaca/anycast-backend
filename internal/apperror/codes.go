@@ -18,8 +18,9 @@ const (
 	CodeDuplicateUsername    ErrorCode = "DUPLICATE_USERNAME"      // 409
 	CodeDuplicateName        ErrorCode = "DUPLICATE_NAME"          // 409
 	CodeAlreadyLiked         ErrorCode = "ALREADY_LIKED"           // 409
-	CodeAlreadyBookmarked    ErrorCode = "ALREADY_BOOKMARKED"      // 409
+	CodeAlreadyInPlaylist    ErrorCode = "ALREADY_IN_PLAYLIST"     // 409
 	CodeAlreadyFollowed      ErrorCode = "ALREADY_FOLLOWED"        // 409
+	CodeDefaultPlaylist      ErrorCode = "DEFAULT_PLAYLIST"        // 409
 	CodeCharacterInUse       ErrorCode = "CHARACTER_IN_USE"        // 409
 	CodeBgmInUse             ErrorCode = "BGM_IN_USE"              // 409
 	CodeCanceled             ErrorCode = "CANCELED"                // 499
@@ -55,8 +56,9 @@ var (
 	ErrDuplicateUsername = newError(CodeDuplicateUsername, "このユーザー名は既に使用されています", http.StatusConflict)
 	ErrDuplicateName     = newError(CodeDuplicateName, "この名前は既に使用されています", http.StatusConflict)
 	ErrAlreadyLiked      = newError(CodeAlreadyLiked, "既にお気に入りに追加されています", http.StatusConflict)
-	ErrAlreadyBookmarked = newError(CodeAlreadyBookmarked, "既にブックマークに追加されています", http.StatusConflict)
+	ErrAlreadyInPlaylist = newError(CodeAlreadyInPlaylist, "既にプレイリストに追加されています", http.StatusConflict)
 	ErrAlreadyFollowed   = newError(CodeAlreadyFollowed, "既にフォローしています", http.StatusConflict)
+	ErrDefaultPlaylist   = newError(CodeDefaultPlaylist, "デフォルトプレイリストは変更できません", http.StatusConflict)
 	ErrCharacterInUse    = newError(CodeCharacterInUse, "このキャラクターは使用中です", http.StatusConflict)
 	ErrBgmInUse          = newError(CodeBgmInUse, "この BGM は使用中です", http.StatusConflict)
 

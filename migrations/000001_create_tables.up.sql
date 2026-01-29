@@ -313,17 +313,34 @@ CREATE TABLE reactions (
 CREATE INDEX idx_reactions_user_id ON reactions (user_id);
 CREATE INDEX idx_reactions_episode_id ON reactions (episode_id);
 
--- ブックマーク
-CREATE TABLE bookmarks (
+-- プレイリスト
+CREATE TABLE playlists (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 	user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-	episode_id UUID NOT NULL REFERENCES episodes (id) ON DELETE CASCADE,
+	name VARCHAR(100) NOT NULL,
+	description TEXT NOT NULL DEFAULT '',
+	is_default BOOLEAN NOT NULL DEFAULT false,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	UNIQUE (user_id, episode_id)
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	UNIQUE (user_id, name)
 );
 
-CREATE INDEX idx_bookmarks_user_id ON bookmarks (user_id);
-CREATE INDEX idx_bookmarks_episode_id ON bookmarks (episode_id);
+CREATE INDEX idx_playlists_user_id ON playlists (user_id);
+CREATE UNIQUE INDEX idx_playlists_user_id_default ON playlists (user_id) WHERE is_default = true;
+
+-- プレイリストアイテム
+CREATE TABLE playlist_items (
+	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+	playlist_id UUID NOT NULL REFERENCES playlists (id) ON DELETE CASCADE,
+	episode_id UUID NOT NULL REFERENCES episodes (id) ON DELETE CASCADE,
+	position INTEGER NOT NULL,
+	added_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	UNIQUE (playlist_id, episode_id),
+	UNIQUE (playlist_id, position) DEFERRABLE INITIALLY DEFERRED
+);
+
+CREATE INDEX idx_playlist_items_playlist_id ON playlist_items (playlist_id);
+CREATE INDEX idx_playlist_items_episode_id ON playlist_items (episode_id);
 
 -- 再生履歴
 CREATE TABLE playback_histories (

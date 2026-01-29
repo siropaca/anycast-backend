@@ -10,7 +10,7 @@ erDiagram
     users ||--o{ characters : owns
     users ||--o{ bgms : owns
     users ||--o{ reactions : has
-    users ||--o{ bookmarks : has
+    users ||--o{ playlists : has
     users ||--o{ playback_histories : has
     users ||--o{ follows : has
     users ||--o{ comments : has
@@ -28,7 +28,7 @@ erDiagram
     characters ||--o| images : avatar
     episodes ||--o{ script_lines : has
     episodes ||--o{ reactions : has
-    episodes ||--o{ bookmarks : has
+    episodes ||--o{ playlist_items : has
     episodes ||--o{ playback_histories : has
     episodes ||--o{ follows : has
     episodes ||--o{ comments : has
@@ -37,6 +37,7 @@ erDiagram
     episodes ||--o| bgms : user_bgm
     episodes ||--o| system_bgms : system_bgm
     episodes ||--o| audios : full_audio
+    playlists ||--o{ playlist_items : has
     bgms ||--|| audios : has
     system_bgms ||--|| audios : has
     script_lines ||--|| characters : speaker
@@ -49,11 +50,22 @@ erDiagram
         timestamp created_at
     }
 
-    bookmarks {
+    playlists {
         uuid id PK
         uuid user_id FK
-        uuid episode_id FK
+        varchar name
+        text description
+        boolean is_default
         timestamp created_at
+        timestamp updated_at
+    }
+
+    playlist_items {
+        uuid id PK
+        uuid playlist_id FK
+        uuid episode_id FK
+        integer position
+        timestamp added_at
     }
 
     playback_histories {
@@ -540,26 +552,60 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 
 ---
 
-#### bookmarks
+#### playlists
 
-エピソードへの「後で見る」を管理する。
+ユーザーのプレイリストを管理する。
 
 | カラム名 | 型 | NULLABLE | デフォルト | 説明 |
 |----------|-----|:--------:|------------|------|
 | id | UUID | | gen_random_uuid() | 主キー |
-| user_id | UUID | | - | ユーザー（users 参照） |
-| episode_id | UUID | | - | エピソード（episodes 参照） |
-| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | ブックマーク登録日時 |
+| user_id | UUID | | - | 所有ユーザー（users 参照） |
+| name | VARCHAR(100) | | - | プレイリスト名 |
+| description | TEXT | | '' | 説明 |
+| is_default | BOOLEAN | | false | デフォルトプレイリストフラグ |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
+| updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
 
 **インデックス:**
 - PRIMARY KEY (id)
-- UNIQUE (user_id, episode_id)
+- UNIQUE (user_id, name)
 - INDEX (user_id)
-- INDEX (episode_id)
+- UNIQUE (user_id) WHERE is_default = true（部分インデックス）
 
 **外部キー:**
 - user_id → users(id) ON DELETE CASCADE
+
+**制約:**
+- 各ユーザーにつき is_default = true のプレイリストは 1 つのみ
+
+---
+
+#### playlist_items
+
+プレイリスト内のアイテム（エピソード）を管理する。
+
+| カラム名 | 型 | NULLABLE | デフォルト | 説明 |
+|----------|-----|:--------:|------------|------|
+| id | UUID | | gen_random_uuid() | 主キー |
+| playlist_id | UUID | | - | プレイリスト（playlists 参照） |
+| episode_id | UUID | | - | エピソード（episodes 参照） |
+| position | INTEGER | | - | プレイリスト内の順序（0始まり） |
+| added_at | TIMESTAMP | | CURRENT_TIMESTAMP | 追加日時 |
+
+**インデックス:**
+- PRIMARY KEY (id)
+- UNIQUE (playlist_id, episode_id)
+- UNIQUE (playlist_id, position) DEFERRABLE INITIALLY DEFERRED
+- INDEX (playlist_id)
+- INDEX (episode_id)
+
+**外部キー:**
+- playlist_id → playlists(id) ON DELETE CASCADE
 - episode_id → episodes(id) ON DELETE CASCADE
+
+**制約:**
+- 同一プレイリスト内で同じエピソードは 1 回のみ
+- position の一意性は DEFERRABLE で並び替え時の一時的な重複を許容
 
 ---
 

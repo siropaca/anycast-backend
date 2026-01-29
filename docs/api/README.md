@@ -98,10 +98,18 @@
 | POST | `/api/v1/episodes/:episodeId/reactions` | リアクション登録（like/bad） | Owner | | [詳細](./engagement.md#リアクション登録) |
 | DELETE | `/api/v1/episodes/:episodeId/reactions` | リアクション解除 | Owner | | [詳細](./engagement.md#リアクション解除) |
 | GET | `/api/v1/me/likes` | お気に入りしたエピソード一覧 | Owner | | [詳細](./engagement.md#お気に入りしたエピソード一覧) |
-| **Bookmarks（後で見る）** | - | - | - | - | [engagement.md](./engagement.md#bookmarks後で見る) |
-| POST | `/api/v1/episodes/:episodeId/bookmark` | ブックマーク登録 | Owner | | [詳細](./engagement.md#ブックマーク登録) |
-| DELETE | `/api/v1/episodes/:episodeId/bookmark` | ブックマーク解除 | Owner | | [詳細](./engagement.md#ブックマーク解除) |
-| GET | `/api/v1/me/bookmarks` | ブックマークしたエピソード一覧 | Owner | | [詳細](./engagement.md#ブックマークしたエピソード一覧) |
+| **Playlists（プレイリスト）** | - | - | - | - | [engagement.md](./engagement.md#playlistsプレイリスト) |
+| GET | `/api/v1/me/playlists` | プレイリスト一覧取得 | Owner | ✅ | [詳細](./engagement.md#プレイリスト一覧取得) |
+| GET | `/api/v1/me/playlists/:playlistId` | プレイリスト詳細取得 | Owner | ✅ | [詳細](./engagement.md#プレイリスト詳細取得) |
+| POST | `/api/v1/me/playlists` | プレイリスト作成 | Owner | ✅ | [詳細](./engagement.md#プレイリスト作成) |
+| PATCH | `/api/v1/me/playlists/:playlistId` | プレイリスト更新 | Owner | ✅ | [詳細](./engagement.md#プレイリスト更新) |
+| DELETE | `/api/v1/me/playlists/:playlistId` | プレイリスト削除 | Owner | ✅ | [詳細](./engagement.md#プレイリスト削除) |
+| POST | `/api/v1/me/playlists/:playlistId/items` | プレイリストにアイテム追加 | Owner | ✅ | [詳細](./engagement.md#プレイリストにアイテム追加) |
+| DELETE | `/api/v1/me/playlists/:playlistId/items/:itemId` | プレイリストからアイテム削除 | Owner | ✅ | [詳細](./engagement.md#プレイリストからアイテム削除) |
+| POST | `/api/v1/me/playlists/:playlistId/items/reorder` | プレイリストアイテム並び替え | Owner | ✅ | [詳細](./engagement.md#プレイリストアイテム並び替え) |
+| GET | `/api/v1/me/listen-later` | 後で聴く一覧取得 | Owner | ✅ | [詳細](./engagement.md#後で聴く一覧取得) |
+| POST | `/api/v1/episodes/:episodeId/listen-later` | 後で聴くに追加 | Owner | ✅ | [詳細](./engagement.md#後で聴くに追加) |
+| DELETE | `/api/v1/episodes/:episodeId/listen-later` | 後で聴くから削除 | Owner | ✅ | [詳細](./engagement.md#後で聴くから削除) |
 | **Playback History（再生履歴）** | - | - | - | - | [engagement.md](./engagement.md#playback-history再生履歴) |
 | PUT | `/api/v1/episodes/:episodeId/playback` | 再生履歴を更新 | Owner | | [詳細](./engagement.md#再生履歴を更新) |
 | DELETE | `/api/v1/episodes/:episodeId/playback` | 再生履歴を削除 | Owner | | [詳細](./engagement.md#再生履歴を削除) |

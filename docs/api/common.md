@@ -63,7 +63,7 @@
 | Episodes | Public | Owner | Owner | Owner |
 | Script / ScriptLines | Owner | Owner | Owner | Owner |
 | Likes | Owner | Owner | - | Owner |
-| Bookmarks | Owner | Owner | - | Owner |
+| Playlists | Owner | Owner | Owner | Owner |
 | Playback History | Owner | Owner | Owner | Owner |
 | Follows | Owner | Owner | - | Owner |
 | Audio（生成） | - | Owner | - | - |
