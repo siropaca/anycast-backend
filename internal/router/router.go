@@ -141,6 +141,9 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	// Audios
 	authenticated.POST("/audios", container.AudioHandler.UploadAudio)
 
+	// Feedbacks
+	authenticated.POST("/feedbacks", container.FeedbackHandler.CreateFeedback)
+
 	// Admin（認証必須 + 管理者権限必須）
 	admin := r.Group("/admin")
 	admin.Use(middleware.Auth(container.TokenManager))

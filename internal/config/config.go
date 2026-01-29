@@ -41,6 +41,8 @@ type Config struct {
 	GoogleCloudTasksWorkerURL           string
 	// Gemini TTS の location（デフォルト: us-central1）
 	GoogleCloudTTSLocation string
+	// Slack Webhook URL（空の場合は通知無効）
+	SlackWebhookURL string
 }
 
 // Load は環境変数から設定を読み込む
@@ -61,6 +63,7 @@ func Load() *Config {
 		GoogleCloudTasksServiceAccountEmail: getEnv("GOOGLE_CLOUD_TASKS_SERVICE_ACCOUNT_EMAIL", ""),
 		GoogleCloudTasksWorkerURL:           getEnv("GOOGLE_CLOUD_TASKS_WORKER_URL", ""),
 		GoogleCloudTTSLocation:              getEnv("GOOGLE_CLOUD_TTS_LOCATION", "us-central1"),
+		SlackWebhookURL:                     getEnv("SLACK_WEBHOOK_URL", ""),
 	}
 }
 

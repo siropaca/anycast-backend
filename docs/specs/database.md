@@ -15,6 +15,7 @@ erDiagram
     users ||--o{ follows : has
     users ||--o{ comments : has
     users ||--o{ audio_jobs : has
+    users ||--o{ feedbacks : has
     users ||--o| images : avatar
     categories ||--o{ channels : has
     channels ||--o{ channel_characters : has
@@ -101,6 +102,16 @@ erDiagram
         timestamp completed_at
         timestamp created_at
         timestamp updated_at
+    }
+
+    feedbacks {
+        uuid id PK
+        uuid user_id FK
+        text content
+        uuid screenshot_id FK
+        varchar page_url
+        varchar user_agent
+        timestamp created_at
     }
 
     users {
@@ -672,6 +683,34 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 - episode_id → episodes(id) ON DELETE CASCADE
 - user_id → users(id) ON DELETE CASCADE
 - result_audio_id → audios(id) ON DELETE SET NULL
+
+---
+
+#### feedbacks
+
+ユーザーからのフィードバックを管理する。
+
+| カラム名 | 型 | NULLABLE | デフォルト | 説明 |
+|----------|-----|:--------:|------------|------|
+| id | UUID | | gen_random_uuid() | 主キー |
+| user_id | UUID | | - | 送信ユーザー（users 参照） |
+| content | TEXT | | - | フィードバック内容（1〜5000文字） |
+| screenshot_id | UUID | ◯ | - | スクリーンショット画像（images 参照） |
+| page_url | VARCHAR(2048) | ◯ | - | 送信時のページ URL |
+| user_agent | VARCHAR(1024) | ◯ | - | ブラウザの User-Agent |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
+
+**インデックス:**
+- PRIMARY KEY (id)
+- INDEX (user_id)
+- INDEX (created_at DESC)
+
+**外部キー:**
+- user_id → users(id) ON DELETE CASCADE
+- screenshot_id → images(id) ON DELETE SET NULL
+
+**制約:**
+- content は 1〜5000 文字（CHECK 制約）
 
 ---
 

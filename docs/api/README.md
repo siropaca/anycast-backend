@@ -121,6 +121,8 @@
 | GET | `/api/v1/voices/:voiceId` | ボイス取得 | Public | ✅ | [詳細](./master.md#ボイス取得) |
 | **Categories（カテゴリ）** | - | - | - | - | [master.md](./master.md#categoriesカテゴリ) |
 | GET | `/api/v1/categories` | カテゴリ一覧取得 | Public | ✅ | [詳細](./master.md#カテゴリ一覧取得) |
+| **Feedbacks（フィードバック）** | - | - | - | - | [feedbacks.md](./feedbacks.md) |
+| POST | `/api/v1/feedbacks` | フィードバック送信 | Owner | ✅ | [詳細](./feedbacks.md#フィードバック送信) |
 | **Admin（管理者）** | - | - | - | - | [admin.md](./admin.md) |
 | POST | `/admin/cleanup/orphaned-media` | 孤児メディアファイル削除 | Admin | ✅ | [詳細](./admin.md#孤児メディアファイル削除) |
 

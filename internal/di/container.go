@@ -10,6 +10,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/handler"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/cloudtasks"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/llm"
+	"github.com/siropaca/anycast-backend/internal/infrastructure/slack"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/tts"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/websocket"
@@ -38,6 +39,7 @@ type Container struct {
 	AudioJobHandler   *handler.AudioJobHandler
 	WorkerHandler     *handler.WorkerHandler
 	WebSocketHandler  *handler.WebSocketHandler
+	FeedbackHandler   *handler.FeedbackHandler
 	TokenManager      jwt.TokenManager
 	UserRepository    repository.UserRepository
 	WebSocketHub      *websocket.Hub
@@ -95,6 +97,9 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	wsHub := websocket.NewHub()
 	go wsHub.Run()
 
+	// Slack クライアント
+	slackClient := slack.NewClient(cfg.SlackWebhookURL)
+
 	// FFmpeg サービス
 	ffmpegService := service.NewFFmpegService()
 
@@ -114,6 +119,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	systemBgmRepo := repository.NewSystemBgmRepository(db)
 	audioJobRepo := repository.NewAudioJobRepository(db)
 	scriptJobRepo := repository.NewScriptJobRepository(db)
+	feedbackRepo := repository.NewFeedbackRepository(db)
 
 	// Service 層
 	voiceService := service.NewVoiceService(voiceRepo)
@@ -153,6 +159,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		tasksClient,
 		wsHub,
 	)
+	feedbackService := service.NewFeedbackService(feedbackRepo, imageRepo, userRepo, storageClient, slackClient)
 
 	// Handler 層
 	voiceHandler := handler.NewVoiceHandler(voiceService)
@@ -171,6 +178,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	audioJobHandler := handler.NewAudioJobHandler(audioJobService)
 	workerHandler := handler.NewWorkerHandler(audioJobService, scriptJobService)
 	webSocketHandler := handler.NewWebSocketHandler(wsHub, tokenManager)
+	feedbackHandler := handler.NewFeedbackHandler(feedbackService)
 
 	return &Container{
 		VoiceHandler:      voiceHandler,
@@ -189,6 +197,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		AudioJobHandler:   audioJobHandler,
 		WorkerHandler:     workerHandler,
 		WebSocketHandler:  webSocketHandler,
+		FeedbackHandler:   feedbackHandler,
 		TokenManager:      tokenManager,
 		UserRepository:    userRepo,
 		WebSocketHub:      wsHub,

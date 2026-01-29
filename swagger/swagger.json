@@ -2167,6 +2167,79 @@
                 }
             }
         },
+        "/feedbacks": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "フィードバックを送信します",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "feedbacks"
+                ],
+                "summary": "フィードバック送信",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "フィードバック内容（1〜5000文字）",
+                        "name": "content",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "スクリーンショット画像（png, jpeg, webp）",
+                        "name": "screenshot",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "現在のページ URL",
+                        "name": "pageUrl",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "ブラウザの User-Agent",
+                        "name": "userAgent",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.FeedbackDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/images": {
             "post": {
                 "security": [
@@ -5111,6 +5184,52 @@
             "properties": {
                 "error": {
                     "$ref": "#/definitions/response.ErrorDetail"
+                }
+            }
+        },
+        "response.FeedbackDataResponse": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.FeedbackResponse"
+                }
+            }
+        },
+        "response.FeedbackResponse": {
+            "type": "object",
+            "required": [
+                "content",
+                "createdAt",
+                "id"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "pageUrl": {
+                    "type": "string",
+                    "x-nullable": true
+                },
+                "screenshot": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.ArtworkResponse"
+                        }
+                    ],
+                    "x-nullable": true
+                },
+                "userAgent": {
+                    "type": "string",
+                    "x-nullable": true
                 }
             }
         },
