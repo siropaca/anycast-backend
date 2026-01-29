@@ -23,27 +23,28 @@ import (
 
 // DI コンテナ
 type Container struct {
-	VoiceHandler      *handler.VoiceHandler
-	AuthHandler       *handler.AuthHandler
-	ChannelHandler    *handler.ChannelHandler
-	CharacterHandler  *handler.CharacterHandler
-	CategoryHandler   *handler.CategoryHandler
-	EpisodeHandler    *handler.EpisodeHandler
-	ScriptLineHandler *handler.ScriptLineHandler
-	ScriptHandler     *handler.ScriptHandler
-	ScriptJobHandler  *handler.ScriptJobHandler
-	CleanupHandler    *handler.CleanupHandler
-	ImageHandler      *handler.ImageHandler
-	AudioHandler      *handler.AudioHandler
-	BgmHandler        *handler.BgmHandler
-	AudioJobHandler   *handler.AudioJobHandler
-	WorkerHandler     *handler.WorkerHandler
-	WebSocketHandler  *handler.WebSocketHandler
-	FeedbackHandler   *handler.FeedbackHandler
-	PlaylistHandler   *handler.PlaylistHandler
-	TokenManager      jwt.TokenManager
-	UserRepository    repository.UserRepository
-	WebSocketHub      *websocket.Hub
+	VoiceHandler           *handler.VoiceHandler
+	AuthHandler            *handler.AuthHandler
+	ChannelHandler         *handler.ChannelHandler
+	CharacterHandler       *handler.CharacterHandler
+	CategoryHandler        *handler.CategoryHandler
+	EpisodeHandler         *handler.EpisodeHandler
+	ScriptLineHandler      *handler.ScriptLineHandler
+	ScriptHandler          *handler.ScriptHandler
+	ScriptJobHandler       *handler.ScriptJobHandler
+	CleanupHandler         *handler.CleanupHandler
+	ImageHandler           *handler.ImageHandler
+	AudioHandler           *handler.AudioHandler
+	BgmHandler             *handler.BgmHandler
+	AudioJobHandler        *handler.AudioJobHandler
+	WorkerHandler          *handler.WorkerHandler
+	WebSocketHandler       *handler.WebSocketHandler
+	FeedbackHandler        *handler.FeedbackHandler
+	PlaylistHandler        *handler.PlaylistHandler
+	PlaybackHistoryHandler *handler.PlaybackHistoryHandler
+	TokenManager           jwt.TokenManager
+	UserRepository         repository.UserRepository
+	WebSocketHub           *websocket.Hub
 }
 
 // 依存関係を構築して Container を返す
@@ -122,6 +123,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	scriptJobRepo := repository.NewScriptJobRepository(db)
 	feedbackRepo := repository.NewFeedbackRepository(db)
 	playlistRepo := repository.NewPlaylistRepository(db)
+	playbackHistoryRepo := repository.NewPlaybackHistoryRepository(db)
 
 	// Service 層
 	voiceService := service.NewVoiceService(voiceRepo)
@@ -163,6 +165,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	)
 	feedbackService := service.NewFeedbackService(feedbackRepo, imageRepo, userRepo, storageClient, slackClient)
 	playlistService := service.NewPlaylistService(playlistRepo, episodeRepo, storageClient)
+	playbackHistoryService := service.NewPlaybackHistoryService(playbackHistoryRepo, episodeRepo, storageClient)
 
 	// Handler 層
 	voiceHandler := handler.NewVoiceHandler(voiceService)
@@ -183,28 +186,30 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	webSocketHandler := handler.NewWebSocketHandler(wsHub, tokenManager)
 	feedbackHandler := handler.NewFeedbackHandler(feedbackService)
 	playlistHandler := handler.NewPlaylistHandler(playlistService)
+	playbackHistoryHandler := handler.NewPlaybackHistoryHandler(playbackHistoryService)
 
 	return &Container{
-		VoiceHandler:      voiceHandler,
-		AuthHandler:       authHandler,
-		ChannelHandler:    channelHandler,
-		CharacterHandler:  characterHandler,
-		CategoryHandler:   categoryHandler,
-		EpisodeHandler:    episodeHandler,
-		ScriptLineHandler: scriptLineHandler,
-		ScriptHandler:     scriptHandler,
-		ScriptJobHandler:  scriptJobHandler,
-		CleanupHandler:    cleanupHandler,
-		ImageHandler:      imageHandler,
-		AudioHandler:      audioHandler,
-		BgmHandler:        bgmHandler,
-		AudioJobHandler:   audioJobHandler,
-		WorkerHandler:     workerHandler,
-		WebSocketHandler:  webSocketHandler,
-		FeedbackHandler:   feedbackHandler,
-		PlaylistHandler:   playlistHandler,
-		TokenManager:      tokenManager,
-		UserRepository:    userRepo,
-		WebSocketHub:      wsHub,
+		VoiceHandler:           voiceHandler,
+		AuthHandler:            authHandler,
+		ChannelHandler:         channelHandler,
+		CharacterHandler:       characterHandler,
+		CategoryHandler:        categoryHandler,
+		EpisodeHandler:         episodeHandler,
+		ScriptLineHandler:      scriptLineHandler,
+		ScriptHandler:          scriptHandler,
+		ScriptJobHandler:       scriptJobHandler,
+		CleanupHandler:         cleanupHandler,
+		ImageHandler:           imageHandler,
+		AudioHandler:           audioHandler,
+		BgmHandler:             bgmHandler,
+		AudioJobHandler:        audioJobHandler,
+		WorkerHandler:          workerHandler,
+		WebSocketHandler:       webSocketHandler,
+		FeedbackHandler:        feedbackHandler,
+		PlaylistHandler:        playlistHandler,
+		PlaybackHistoryHandler: playbackHistoryHandler,
+		TokenManager:           tokenManager,
+		UserRepository:         userRepo,
+		WebSocketHub:           wsHub,
 	}
 }

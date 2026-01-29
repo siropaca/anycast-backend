@@ -99,6 +99,9 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.POST("/me/playlists/:playlistId/items/reorder", container.PlaylistHandler.ReorderItems)
 	authenticated.GET("/me/listen-later", container.PlaylistHandler.GetListenLater)
 
+	// Playback History
+	authenticated.GET("/me/playback-history", container.PlaybackHistoryHandler.ListPlaybackHistory)
+
 	// Channels
 	authenticated.GET("/channels/:channelId", container.ChannelHandler.GetChannel)
 	authenticated.POST("/channels", container.ChannelHandler.CreateChannel)
@@ -120,6 +123,8 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.POST("/episodes/:episodeId/play", container.EpisodeHandler.IncrementPlayCount)
 	authenticated.POST("/episodes/:episodeId/listen-later", container.PlaylistHandler.AddToListenLater)
 	authenticated.DELETE("/episodes/:episodeId/listen-later", container.PlaylistHandler.RemoveFromListenLater)
+	authenticated.PUT("/episodes/:episodeId/playback", container.PlaybackHistoryHandler.UpdatePlayback)
+	authenticated.DELETE("/episodes/:episodeId/playback", container.PlaybackHistoryHandler.DeletePlayback)
 
 	// Audio Jobs
 	authenticated.GET("/audio-jobs/:jobId", container.AudioJobHandler.GetAudioJob)

@@ -1,0 +1,48 @@
+### Playback History API テスト
+
+@baseUrl = http://localhost:8080/api/v1
+@token = YOUR_TOKEN_HERE
+@episodeId = YOUR_EPISODE_ID_HERE
+
+### 再生履歴一覧を取得
+GET {{baseUrl}}/me/playback-history
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### 再生履歴一覧を取得（完了済みのみ）
+GET {{baseUrl}}/me/playback-history?completed=true
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### 再生履歴一覧を取得（未完了のみ）
+GET {{baseUrl}}/me/playback-history?completed=false
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### 再生履歴一覧を取得（ページネーション）
+GET {{baseUrl}}/me/playback-history?limit=10&offset=0
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+### 再生履歴を更新（再生位置のみ）
+PUT {{baseUrl}}/episodes/{{episodeId}}/playback
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "progressMs": 60000
+}
+
+### 再生履歴を更新（完了）
+PUT {{baseUrl}}/episodes/{{episodeId}}/playback
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "progressMs": 180000,
+  "completed": true
+}
+
+### 再生履歴を削除
+DELETE {{baseUrl}}/episodes/{{episodeId}}/playback
+Authorization: Bearer {{token}}

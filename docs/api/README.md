@@ -111,9 +111,9 @@
 | POST | `/api/v1/episodes/:episodeId/listen-later` | 後で聴くに追加 | Owner | ✅ | [詳細](./engagement.md#後で聴くに追加) |
 | DELETE | `/api/v1/episodes/:episodeId/listen-later` | 後で聴くから削除 | Owner | ✅ | [詳細](./engagement.md#後で聴くから削除) |
 | **Playback History（再生履歴）** | - | - | - | - | [engagement.md](./engagement.md#playback-history再生履歴) |
-| PUT | `/api/v1/episodes/:episodeId/playback` | 再生履歴を更新 | Owner | | [詳細](./engagement.md#再生履歴を更新) |
-| DELETE | `/api/v1/episodes/:episodeId/playback` | 再生履歴を削除 | Owner | | [詳細](./engagement.md#再生履歴を削除) |
-| GET | `/api/v1/me/playback-history` | 再生履歴一覧を取得 | Owner | | [詳細](./engagement.md#再生履歴一覧を取得) |
+| PUT | `/api/v1/episodes/:episodeId/playback` | 再生履歴を更新 | Owner | ✅ | [詳細](./engagement.md#再生履歴を更新) |
+| DELETE | `/api/v1/episodes/:episodeId/playback` | 再生履歴を削除 | Owner | ✅ | [詳細](./engagement.md#再生履歴を削除) |
+| GET | `/api/v1/me/playback-history` | 再生履歴一覧を取得 | Owner | ✅ | [詳細](./engagement.md#再生履歴一覧を取得) |
 | **Follows（フォロー）** | - | - | - | - | [engagement.md](./engagement.md#followsフォロー) |
 | POST | `/api/v1/episodes/:episodeId/follow` | フォロー登録 | Owner | | [詳細](./engagement.md#フォロー登録) |
 | DELETE | `/api/v1/episodes/:episodeId/follow` | フォロー解除 | Owner | | [詳細](./engagement.md#フォロー解除) |
