@@ -23,6 +23,16 @@ type OAuthGoogleRequest struct {
 	ExpiresAt      *int64  `json:"expiresAt"`
 }
 
+// トークンリフレッシュリクエスト
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refreshToken" binding:"required"`
+}
+
+// ログアウトリクエスト
+type LogoutRequest struct {
+	RefreshToken string `json:"refreshToken" binding:"required"`
+}
+
 // ユーザープロンプト更新リクエスト
 type UpdateUserPromptRequest struct {
 	UserPrompt *string `json:"userPrompt"`

@@ -15,8 +15,8 @@ import (
 	"github.com/siropaca/anycast-backend/internal/service"
 )
 
-// トークンの有効期限
-const tokenExpiration = 24 * time.Hour
+// アクセストークンの有効期限
+const accessTokenExpiration = 1 * time.Hour
 
 // 認証関連のハンドラー
 type AuthHandler struct {
@@ -51,22 +51,23 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	user, err := h.authService.Register(c.Request.Context(), req)
+	result, err := h.authService.Register(c.Request.Context(), req)
 	if err != nil {
 		Error(c, err)
 		return
 	}
 
-	token, err := h.tokenManager.Generate(user.ID.String(), tokenExpiration)
+	accessToken, err := h.tokenManager.Generate(result.User.ID.String(), accessTokenExpiration)
 	if err != nil {
-		logger.FromContext(c.Request.Context()).Error("failed to generate token", "error", err, "user_id", user.ID)
+		logger.FromContext(c.Request.Context()).Error("failed to generate token", "error", err, "user_id", result.User.ID)
 		Error(c, apperror.ErrInternal.WithMessage("トークンの生成に失敗しました").WithError(err))
 		return
 	}
 
 	Success(c, http.StatusCreated, response.AuthResponse{
-		User:  *user,
-		Token: token,
+		User:         result.User,
+		AccessToken:  accessToken,
+		RefreshToken: result.RefreshToken,
 	})
 }
 
@@ -89,22 +90,23 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	user, err := h.authService.Login(c.Request.Context(), req)
+	result, err := h.authService.Login(c.Request.Context(), req)
 	if err != nil {
 		Error(c, err)
 		return
 	}
 
-	token, err := h.tokenManager.Generate(user.ID.String(), tokenExpiration)
+	accessToken, err := h.tokenManager.Generate(result.User.ID.String(), accessTokenExpiration)
 	if err != nil {
-		logger.FromContext(c.Request.Context()).Error("failed to generate token", "error", err, "user_id", user.ID)
+		logger.FromContext(c.Request.Context()).Error("failed to generate token", "error", err, "user_id", result.User.ID)
 		Error(c, apperror.ErrInternal.WithMessage("トークンの生成に失敗しました").WithError(err))
 		return
 	}
 
 	Success(c, http.StatusOK, response.AuthResponse{
-		User:  *user,
-		Token: token,
+		User:         result.User,
+		AccessToken:  accessToken,
+		RefreshToken: result.RefreshToken,
 	})
 }
 
@@ -133,7 +135,7 @@ func (h *AuthHandler) OAuthGoogle(c *gin.Context) {
 		return
 	}
 
-	token, err := h.tokenManager.Generate(result.User.ID.String(), tokenExpiration)
+	accessToken, err := h.tokenManager.Generate(result.User.ID.String(), accessTokenExpiration)
 	if err != nil {
 		logger.FromContext(c.Request.Context()).Error("failed to generate token", "error", err, "user_id", result.User.ID)
 		Error(c, apperror.ErrInternal.WithMessage("トークンの生成に失敗しました").WithError(err))
@@ -141,8 +143,9 @@ func (h *AuthHandler) OAuthGoogle(c *gin.Context) {
 	}
 
 	authResponse := response.AuthResponse{
-		User:  result.User,
-		Token: token,
+		User:         result.User,
+		AccessToken:  accessToken,
+		RefreshToken: result.RefreshToken,
 	}
 
 	if result.IsCreated {
@@ -150,6 +153,78 @@ func (h *AuthHandler) OAuthGoogle(c *gin.Context) {
 	} else {
 		Success(c, http.StatusOK, authResponse)
 	}
+}
+
+// RefreshToken godoc
+// @Summary トークンリフレッシュ
+// @Description リフレッシュトークンを使って新しいアクセストークンとリフレッシュトークンを発行します
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body request.RefreshTokenRequest true "リフレッシュトークン"
+// @Success 200 {object} response.TokenRefreshDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /auth/refresh [post]
+func (h *AuthHandler) RefreshToken(c *gin.Context) {
+	var req request.RefreshTokenRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
+		return
+	}
+
+	result, err := h.authService.RefreshToken(c.Request.Context(), req)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	accessToken, err := h.tokenManager.Generate(result.UserID.String(), accessTokenExpiration)
+	if err != nil {
+		logger.FromContext(c.Request.Context()).Error("failed to generate token", "error", err, "user_id", result.UserID)
+		Error(c, apperror.ErrInternal.WithMessage("トークンの生成に失敗しました").WithError(err))
+		return
+	}
+
+	Success(c, http.StatusOK, response.TokenRefreshResponse{
+		AccessToken:  accessToken,
+		RefreshToken: result.RefreshToken,
+	})
+}
+
+// Logout godoc
+// @Summary ログアウト
+// @Description リフレッシュトークンを無効化してログアウトします
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body request.LogoutRequest true "ログアウトリクエスト"
+// @Security BearerAuth
+// @Success 204
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /auth/logout [post]
+func (h *AuthHandler) Logout(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	var req request.LogoutRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
+		return
+	}
+
+	if err := h.authService.Logout(c.Request.Context(), userID, req); err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
 }
 
 // GetMe godoc

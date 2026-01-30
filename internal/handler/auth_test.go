@@ -28,20 +28,20 @@ type mockAuthService struct {
 	mock.Mock
 }
 
-func (m *mockAuthService) Register(ctx context.Context, req request.RegisterRequest) (*response.UserResponse, error) {
+func (m *mockAuthService) Register(ctx context.Context, req request.RegisterRequest) (*service.AuthResult, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*response.UserResponse), args.Error(1)
+	return args.Get(0).(*service.AuthResult), args.Error(1)
 }
 
-func (m *mockAuthService) Login(ctx context.Context, req request.LoginRequest) (*response.UserResponse, error) {
+func (m *mockAuthService) Login(ctx context.Context, req request.LoginRequest) (*service.AuthResult, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*response.UserResponse), args.Error(1)
+	return args.Get(0).(*service.AuthResult), args.Error(1)
 }
 
 func (m *mockAuthService) OAuthGoogle(ctx context.Context, req request.OAuthGoogleRequest) (*service.AuthResult, error) {
@@ -50,6 +50,19 @@ func (m *mockAuthService) OAuthGoogle(ctx context.Context, req request.OAuthGoog
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*service.AuthResult), args.Error(1)
+}
+
+func (m *mockAuthService) RefreshToken(ctx context.Context, req request.RefreshTokenRequest) (*service.RefreshResult, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*service.RefreshResult), args.Error(1)
+}
+
+func (m *mockAuthService) Logout(ctx context.Context, userID string, req request.LogoutRequest) error {
+	args := m.Called(ctx, userID, req)
+	return args.Error(0)
 }
 
 func (m *mockAuthService) GetMe(ctx context.Context, userID string) (*response.MeResponse, error) {
@@ -93,6 +106,7 @@ func setupAuthRouter(h *AuthHandler) *gin.Engine {
 	r.POST("/auth/register", h.Register)
 	r.POST("/auth/login", h.Login)
 	r.POST("/auth/oauth/google", h.OAuthGoogle)
+	r.POST("/auth/refresh", h.RefreshToken)
 	r.GET("/me", h.GetMe)
 	return r
 }
@@ -106,17 +120,21 @@ func setupAuthenticatedAuthRouter(h *AuthHandler, userID string) *gin.Engine {
 		c.Next()
 	})
 	r.GET("/me", h.GetMe)
+	r.POST("/auth/logout", h.Logout)
 	return r
 }
 
-// テスト用のユーザーレスポンスを生成する
-func createTestUserResponse() *response.UserResponse {
-	return &response.UserResponse{
-		ID:          uuid.New(),
-		Email:       "test@example.com",
-		Username:    "testuser",
-		DisplayName: "Test User",
-		Role:        "user",
+// テスト用の AuthResult を生成する
+func createTestAuthResult() *service.AuthResult {
+	return &service.AuthResult{
+		User: response.UserResponse{
+			ID:          uuid.New(),
+			Email:       "test@example.com",
+			Username:    "testuser",
+			DisplayName: "Test User",
+			Role:        "user",
+		},
+		RefreshToken: "test-refresh-token",
 	}
 }
 
@@ -125,9 +143,9 @@ func TestAuthHandler_Register(t *testing.T) {
 		mockSvc := new(mockAuthService)
 		mockTM := new(mockTokenManager)
 
-		user := createTestUserResponse()
-		mockSvc.On("Register", mock.Anything, mock.AnythingOfType("request.RegisterRequest")).Return(user, nil)
-		mockTM.On("Generate", user.ID.String(), tokenExpiration).Return("test-token", nil)
+		result := createTestAuthResult()
+		mockSvc.On("Register", mock.Anything, mock.AnythingOfType("request.RegisterRequest")).Return(result, nil)
+		mockTM.On("Generate", result.User.ID.String(), accessTokenExpiration).Return("test-access-token", nil)
 
 		handler := NewAuthHandler(mockSvc, mockTM)
 		router := setupAuthRouter(handler)
@@ -149,8 +167,9 @@ func TestAuthHandler_Register(t *testing.T) {
 		var resp map[string]response.AuthResponse
 		err := json.Unmarshal(w.Body.Bytes(), &resp)
 		assert.NoError(t, err)
-		assert.Equal(t, "test-token", resp["data"].Token)
-		assert.Equal(t, user.Email, resp["data"].User.Email)
+		assert.Equal(t, "test-access-token", resp["data"].AccessToken)
+		assert.Equal(t, "test-refresh-token", resp["data"].RefreshToken)
+		assert.Equal(t, result.User.Email, resp["data"].User.Email)
 		mockSvc.AssertExpectations(t)
 		mockTM.AssertExpectations(t)
 	})
@@ -207,9 +226,9 @@ func TestAuthHandler_Register(t *testing.T) {
 		mockSvc := new(mockAuthService)
 		mockTM := new(mockTokenManager)
 
-		user := createTestUserResponse()
-		mockSvc.On("Register", mock.Anything, mock.AnythingOfType("request.RegisterRequest")).Return(user, nil)
-		mockTM.On("Generate", user.ID.String(), tokenExpiration).Return("", errors.New("token generation failed"))
+		result := createTestAuthResult()
+		mockSvc.On("Register", mock.Anything, mock.AnythingOfType("request.RegisterRequest")).Return(result, nil)
+		mockTM.On("Generate", result.User.ID.String(), accessTokenExpiration).Return("", errors.New("token generation failed"))
 
 		handler := NewAuthHandler(mockSvc, mockTM)
 		router := setupAuthRouter(handler)
@@ -237,9 +256,9 @@ func TestAuthHandler_Login(t *testing.T) {
 		mockSvc := new(mockAuthService)
 		mockTM := new(mockTokenManager)
 
-		user := createTestUserResponse()
-		mockSvc.On("Login", mock.Anything, mock.AnythingOfType("request.LoginRequest")).Return(user, nil)
-		mockTM.On("Generate", user.ID.String(), tokenExpiration).Return("test-token", nil)
+		result := createTestAuthResult()
+		mockSvc.On("Login", mock.Anything, mock.AnythingOfType("request.LoginRequest")).Return(result, nil)
+		mockTM.On("Generate", result.User.ID.String(), accessTokenExpiration).Return("test-access-token", nil)
 
 		handler := NewAuthHandler(mockSvc, mockTM)
 		router := setupAuthRouter(handler)
@@ -260,7 +279,8 @@ func TestAuthHandler_Login(t *testing.T) {
 		var resp map[string]response.AuthResponse
 		err := json.Unmarshal(w.Body.Bytes(), &resp)
 		assert.NoError(t, err)
-		assert.Equal(t, "test-token", resp["data"].Token)
+		assert.Equal(t, "test-access-token", resp["data"].AccessToken)
+		assert.Equal(t, "test-refresh-token", resp["data"].RefreshToken)
 		mockSvc.AssertExpectations(t)
 		mockTM.AssertExpectations(t)
 	})
@@ -315,9 +335,9 @@ func TestAuthHandler_Login(t *testing.T) {
 		mockSvc := new(mockAuthService)
 		mockTM := new(mockTokenManager)
 
-		user := createTestUserResponse()
-		mockSvc.On("Login", mock.Anything, mock.AnythingOfType("request.LoginRequest")).Return(user, nil)
-		mockTM.On("Generate", user.ID.String(), tokenExpiration).Return("", errors.New("token generation failed"))
+		result := createTestAuthResult()
+		mockSvc.On("Login", mock.Anything, mock.AnythingOfType("request.LoginRequest")).Return(result, nil)
+		mockTM.On("Generate", result.User.ID.String(), accessTokenExpiration).Return("", errors.New("token generation failed"))
 
 		handler := NewAuthHandler(mockSvc, mockTM)
 		router := setupAuthRouter(handler)
@@ -351,9 +371,9 @@ func TestAuthHandler_OAuthGoogle(t *testing.T) {
 			DisplayName: "OAuth User",
 			Role:        "user",
 		}
-		result := &service.AuthResult{User: user, IsCreated: true}
+		result := &service.AuthResult{User: user, RefreshToken: "test-refresh-token", IsCreated: true}
 		mockSvc.On("OAuthGoogle", mock.Anything, mock.AnythingOfType("request.OAuthGoogleRequest")).Return(result, nil)
-		mockTM.On("Generate", user.ID.String(), tokenExpiration).Return("test-token", nil)
+		mockTM.On("Generate", user.ID.String(), accessTokenExpiration).Return("test-access-token", nil)
 
 		handler := NewAuthHandler(mockSvc, mockTM)
 		router := setupAuthRouter(handler)
@@ -387,9 +407,9 @@ func TestAuthHandler_OAuthGoogle(t *testing.T) {
 			DisplayName: "Existing User",
 			Role:        "user",
 		}
-		result := &service.AuthResult{User: user, IsCreated: false}
+		result := &service.AuthResult{User: user, RefreshToken: "test-refresh-token", IsCreated: false}
 		mockSvc.On("OAuthGoogle", mock.Anything, mock.AnythingOfType("request.OAuthGoogleRequest")).Return(result, nil)
-		mockTM.On("Generate", user.ID.String(), tokenExpiration).Return("test-token", nil)
+		mockTM.On("Generate", user.ID.String(), accessTokenExpiration).Return("test-access-token", nil)
 
 		handler := NewAuthHandler(mockSvc, mockTM)
 		router := setupAuthRouter(handler)
@@ -470,9 +490,9 @@ func TestAuthHandler_OAuthGoogle(t *testing.T) {
 			DisplayName: "OAuth User",
 			Role:        "user",
 		}
-		result := &service.AuthResult{User: user, IsCreated: true}
+		result := &service.AuthResult{User: user, RefreshToken: "test-refresh-token", IsCreated: true}
 		mockSvc.On("OAuthGoogle", mock.Anything, mock.AnythingOfType("request.OAuthGoogleRequest")).Return(result, nil)
-		mockTM.On("Generate", user.ID.String(), tokenExpiration).Return("", errors.New("token generation failed"))
+		mockTM.On("Generate", user.ID.String(), accessTokenExpiration).Return("", errors.New("token generation failed"))
 
 		handler := NewAuthHandler(mockSvc, mockTM)
 		router := setupAuthRouter(handler)
@@ -493,6 +513,185 @@ func TestAuthHandler_OAuthGoogle(t *testing.T) {
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
 		mockSvc.AssertExpectations(t)
 		mockTM.AssertExpectations(t)
+	})
+}
+
+func TestAuthHandler_RefreshToken(t *testing.T) {
+	t.Run("トークンリフレッシュが成功する", func(t *testing.T) {
+		mockSvc := new(mockAuthService)
+		mockTM := new(mockTokenManager)
+
+		userID := uuid.New()
+		refreshResult := &service.RefreshResult{
+			UserID:       userID,
+			RefreshToken: "new-refresh-token",
+		}
+		mockSvc.On("RefreshToken", mock.Anything, mock.AnythingOfType("request.RefreshTokenRequest")).Return(refreshResult, nil)
+		mockTM.On("Generate", userID.String(), accessTokenExpiration).Return("new-access-token", nil)
+
+		handler := NewAuthHandler(mockSvc, mockTM)
+		router := setupAuthRouter(handler)
+
+		reqBody := request.RefreshTokenRequest{
+			RefreshToken: "old-refresh-token",
+		}
+		body, _ := json.Marshal(reqBody)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/auth/refresh", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var resp map[string]response.TokenRefreshResponse
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+		assert.Equal(t, "new-access-token", resp["data"].AccessToken)
+		assert.Equal(t, "new-refresh-token", resp["data"].RefreshToken)
+		mockSvc.AssertExpectations(t)
+		mockTM.AssertExpectations(t)
+	})
+
+	t.Run("バリデーションエラーの場合は 400 を返す", func(t *testing.T) {
+		mockSvc := new(mockAuthService)
+		mockTM := new(mockTokenManager)
+
+		handler := NewAuthHandler(mockSvc, mockTM)
+		router := setupAuthRouter(handler)
+
+		// refreshToken が空
+		reqBody := map[string]string{}
+		body, _ := json.Marshal(reqBody)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/auth/refresh", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("無効なリフレッシュトークンの場合は 401 を返す", func(t *testing.T) {
+		mockSvc := new(mockAuthService)
+		mockTM := new(mockTokenManager)
+
+		mockSvc.On("RefreshToken", mock.Anything, mock.AnythingOfType("request.RefreshTokenRequest")).Return(nil, apperror.ErrInvalidRefreshToken)
+
+		handler := NewAuthHandler(mockSvc, mockTM)
+		router := setupAuthRouter(handler)
+
+		reqBody := request.RefreshTokenRequest{
+			RefreshToken: "invalid-token",
+		}
+		body, _ := json.Marshal(reqBody)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/auth/refresh", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("アクセストークン生成が失敗した場合は 500 を返す", func(t *testing.T) {
+		mockSvc := new(mockAuthService)
+		mockTM := new(mockTokenManager)
+
+		userID := uuid.New()
+		refreshResult := &service.RefreshResult{
+			UserID:       userID,
+			RefreshToken: "new-refresh-token",
+		}
+		mockSvc.On("RefreshToken", mock.Anything, mock.AnythingOfType("request.RefreshTokenRequest")).Return(refreshResult, nil)
+		mockTM.On("Generate", userID.String(), accessTokenExpiration).Return("", errors.New("token generation failed"))
+
+		handler := NewAuthHandler(mockSvc, mockTM)
+		router := setupAuthRouter(handler)
+
+		reqBody := request.RefreshTokenRequest{
+			RefreshToken: "old-refresh-token",
+		}
+		body, _ := json.Marshal(reqBody)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/auth/refresh", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		mockSvc.AssertExpectations(t)
+		mockTM.AssertExpectations(t)
+	})
+}
+
+func TestAuthHandler_Logout(t *testing.T) {
+	userID := uuid.New().String()
+
+	t.Run("ログアウトが成功する", func(t *testing.T) {
+		mockSvc := new(mockAuthService)
+		mockTM := new(mockTokenManager)
+
+		mockSvc.On("Logout", mock.Anything, userID, mock.AnythingOfType("request.LogoutRequest")).Return(nil)
+
+		handler := NewAuthHandler(mockSvc, mockTM)
+		router := setupAuthenticatedAuthRouter(handler, userID)
+
+		reqBody := request.LogoutRequest{
+			RefreshToken: "refresh-token-to-revoke",
+		}
+		body, _ := json.Marshal(reqBody)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/auth/logout", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNoContent, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("バリデーションエラーの場合は 400 を返す", func(t *testing.T) {
+		mockSvc := new(mockAuthService)
+		mockTM := new(mockTokenManager)
+
+		handler := NewAuthHandler(mockSvc, mockTM)
+		router := setupAuthenticatedAuthRouter(handler, userID)
+
+		// refreshToken が空
+		reqBody := map[string]string{}
+		body, _ := json.Marshal(reqBody)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/auth/logout", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("無効なリフレッシュトークンの場合は 401 を返す", func(t *testing.T) {
+		mockSvc := new(mockAuthService)
+		mockTM := new(mockTokenManager)
+
+		mockSvc.On("Logout", mock.Anything, userID, mock.AnythingOfType("request.LogoutRequest")).Return(apperror.ErrInvalidRefreshToken)
+
+		handler := NewAuthHandler(mockSvc, mockTM)
+		router := setupAuthenticatedAuthRouter(handler, userID)
+
+		reqBody := request.LogoutRequest{
+			RefreshToken: "invalid-token",
+		}
+		body, _ := json.Marshal(reqBody)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/auth/logout", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		mockSvc.AssertExpectations(t)
 	})
 }
 

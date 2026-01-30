@@ -15,21 +15,34 @@ import (
 	"github.com/siropaca/anycast-backend/internal/model"
 	"github.com/siropaca/anycast-backend/internal/pkg/crypto"
 	"github.com/siropaca/anycast-backend/internal/pkg/logger"
+	"github.com/siropaca/anycast-backend/internal/pkg/token"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
+// リフレッシュトークンの有効期限
+const refreshTokenExpiration = 30 * 24 * time.Hour
+
 // AuthResult は認証結果を表す
 type AuthResult struct {
-	User      response.UserResponse
-	IsCreated bool // 新規作成されたかどうか（OAuth 用）
+	User         response.UserResponse
+	RefreshToken string
+	IsCreated    bool // 新規作成されたかどうか（OAuth 用）
+}
+
+// RefreshResult はトークンリフレッシュの結果を表す
+type RefreshResult struct {
+	UserID       uuid.UUID
+	RefreshToken string
 }
 
 // AuthService は認証関連のビジネスロジックインターフェースを表す
 type AuthService interface {
-	Register(ctx context.Context, req request.RegisterRequest) (*response.UserResponse, error)
-	Login(ctx context.Context, req request.LoginRequest) (*response.UserResponse, error)
+	Register(ctx context.Context, req request.RegisterRequest) (*AuthResult, error)
+	Login(ctx context.Context, req request.LoginRequest) (*AuthResult, error)
 	OAuthGoogle(ctx context.Context, req request.OAuthGoogleRequest) (*AuthResult, error)
+	RefreshToken(ctx context.Context, req request.RefreshTokenRequest) (*RefreshResult, error)
+	Logout(ctx context.Context, userID string, req request.LogoutRequest) error
 	GetMe(ctx context.Context, userID string) (*response.MeResponse, error)
 	UpdatePrompt(ctx context.Context, userID string, req request.UpdateUserPromptRequest) (*response.MeResponse, error)
 }
@@ -38,6 +51,7 @@ type authService struct {
 	userRepo         repository.UserRepository
 	credentialRepo   repository.CredentialRepository
 	oauthAccountRepo repository.OAuthAccountRepository
+	refreshTokenRepo repository.RefreshTokenRepository
 	imageRepo        repository.ImageRepository
 	playlistRepo     repository.PlaylistRepository
 	passwordHasher   crypto.PasswordHasher
@@ -49,6 +63,7 @@ func NewAuthService(
 	userRepo repository.UserRepository,
 	credentialRepo repository.CredentialRepository,
 	oauthAccountRepo repository.OAuthAccountRepository,
+	refreshTokenRepo repository.RefreshTokenRepository,
 	imageRepo repository.ImageRepository,
 	playlistRepo repository.PlaylistRepository,
 	passwordHasher crypto.PasswordHasher,
@@ -58,6 +73,7 @@ func NewAuthService(
 		userRepo:         userRepo,
 		credentialRepo:   credentialRepo,
 		oauthAccountRepo: oauthAccountRepo,
+		refreshTokenRepo: refreshTokenRepo,
 		imageRepo:        imageRepo,
 		playlistRepo:     playlistRepo,
 		passwordHasher:   passwordHasher,
@@ -66,7 +82,7 @@ func NewAuthService(
 }
 
 // Register は新規ユーザーを登録する
-func (s *authService) Register(ctx context.Context, req request.RegisterRequest) (*response.UserResponse, error) {
+func (s *authService) Register(ctx context.Context, req request.RegisterRequest) (*AuthResult, error) {
 	// メールアドレスの重複チェック
 	exists, err := s.userRepo.ExistsByEmail(ctx, req.Email)
 	if err != nil {
@@ -114,11 +130,20 @@ func (s *authService) Register(ctx context.Context, req request.RegisterRequest)
 		// エラーでもユーザー登録は成功させる（ログだけ残す）
 	}
 
-	return s.toUserResponse(ctx, user), nil
+	// リフレッシュトークンを生成
+	refreshToken, err := s.createRefreshToken(ctx, user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AuthResult{
+		User:         *s.toUserResponse(ctx, user),
+		RefreshToken: refreshToken,
+	}, nil
 }
 
 // Login はメールアドレスとパスワードで認証する
-func (s *authService) Login(ctx context.Context, req request.LoginRequest) (*response.UserResponse, error) {
+func (s *authService) Login(ctx context.Context, req request.LoginRequest) (*AuthResult, error) {
 	// ユーザーを取得
 	user, err := s.userRepo.FindByEmail(ctx, req.Email)
 	if err != nil {
@@ -144,7 +169,16 @@ func (s *authService) Login(ctx context.Context, req request.LoginRequest) (*res
 		return nil, apperror.ErrInvalidCredentials.WithMessage("メールアドレスまたはパスワードが正しくありません")
 	}
 
-	return s.toUserResponse(ctx, user), nil
+	// リフレッシュトークンを生成
+	refreshToken, err := s.createRefreshToken(ctx, user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AuthResult{
+		User:         *s.toUserResponse(ctx, user),
+		RefreshToken: refreshToken,
+	}, nil
 }
 
 // OAuthGoogle は Google OAuth で認証する
@@ -179,9 +213,16 @@ func (s *authService) OAuthGoogle(ctx context.Context, req request.OAuthGoogleRe
 			return nil, err
 		}
 
+		// リフレッシュトークンを生成
+		refreshToken, err := s.createRefreshToken(ctx, existingAccount.UserID)
+		if err != nil {
+			return nil, err
+		}
+
 		return &AuthResult{
-			User:      *s.toUserResponse(ctx, user),
-			IsCreated: false,
+			User:         *s.toUserResponse(ctx, user),
+			RefreshToken: refreshToken,
+			IsCreated:    false,
 		}, nil
 	}
 
@@ -223,10 +264,92 @@ func (s *authService) OAuthGoogle(ctx context.Context, req request.OAuthGoogleRe
 		// エラーでもユーザー登録は成功させる（ログだけ残す）
 	}
 
+	// リフレッシュトークンを生成
+	refreshToken, err := s.createRefreshToken(ctx, user.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	return &AuthResult{
-		User:      *s.toUserResponse(ctx, user),
-		IsCreated: true,
+		User:         *s.toUserResponse(ctx, user),
+		RefreshToken: refreshToken,
+		IsCreated:    true,
 	}, nil
+}
+
+// RefreshToken はリフレッシュトークンを使って新しいトークンを発行する
+func (s *authService) RefreshToken(ctx context.Context, req request.RefreshTokenRequest) (*RefreshResult, error) {
+	// リフレッシュトークンを検索
+	existing, err := s.refreshTokenRepo.FindByToken(ctx, req.RefreshToken)
+	if err != nil {
+		if apperror.IsCode(err, apperror.CodeNotFound) {
+			return nil, apperror.ErrInvalidRefreshToken.WithMessage("リフレッシュトークンが無効です")
+		}
+		return nil, err
+	}
+
+	// 有効期限をチェック
+	if time.Now().After(existing.ExpiresAt) {
+		// 期限切れのトークンを削除（エラーはログのみ）
+		if delErr := s.refreshTokenRepo.DeleteByToken(ctx, req.RefreshToken); delErr != nil {
+			logger.FromContext(ctx).Error("failed to delete expired refresh token", "error", delErr)
+		}
+		return nil, apperror.ErrInvalidRefreshToken.WithMessage("リフレッシュトークンの有効期限が切れています")
+	}
+
+	// トークンローテーション: 古いトークンを削除して新しいトークンを生成
+	if err := s.refreshTokenRepo.DeleteByToken(ctx, req.RefreshToken); err != nil {
+		return nil, err
+	}
+
+	newToken, err := s.createRefreshToken(ctx, existing.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &RefreshResult{
+		UserID:       existing.UserID,
+		RefreshToken: newToken,
+	}, nil
+}
+
+// Logout はリフレッシュトークンを無効化する
+func (s *authService) Logout(ctx context.Context, userID string, req request.LogoutRequest) error {
+	// リフレッシュトークンを検索して所有者を確認
+	existing, err := s.refreshTokenRepo.FindByToken(ctx, req.RefreshToken)
+	if err != nil {
+		if apperror.IsCode(err, apperror.CodeNotFound) {
+			return apperror.ErrInvalidRefreshToken.WithMessage("リフレッシュトークンが無効です")
+		}
+		return err
+	}
+
+	// トークンの所有者を確認
+	if existing.UserID.String() != userID {
+		return apperror.ErrInvalidRefreshToken.WithMessage("リフレッシュトークンが無効です")
+	}
+
+	return s.refreshTokenRepo.DeleteByToken(ctx, req.RefreshToken)
+}
+
+// createRefreshToken はリフレッシュトークンを生成して DB に保存する
+func (s *authService) createRefreshToken(ctx context.Context, userID uuid.UUID) (string, error) {
+	tokenStr, err := token.Generate()
+	if err != nil {
+		logger.FromContext(ctx).Error("failed to generate refresh token", "error", err)
+		return "", apperror.ErrInternal.WithMessage("リフレッシュトークンの生成に失敗しました").WithError(err)
+	}
+
+	refreshToken := &model.RefreshToken{
+		UserID:    userID,
+		Token:     tokenStr,
+		ExpiresAt: time.Now().Add(refreshTokenExpiration),
+	}
+	if err := s.refreshTokenRepo.Create(ctx, refreshToken); err != nil {
+		return "", err
+	}
+
+	return tokenStr, nil
 }
 
 // multiSpaceRegex は連続する半角スペースにマッチする正規表現

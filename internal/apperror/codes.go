@@ -12,6 +12,7 @@ const (
 	CodeSelfFollowNotAllowed ErrorCode = "SELF_FOLLOW_NOT_ALLOWED" // 400
 	CodeUnauthorized         ErrorCode = "UNAUTHORIZED"            // 401
 	CodeInvalidCredentials   ErrorCode = "INVALID_CREDENTIALS"     // 401
+	CodeInvalidRefreshToken  ErrorCode = "INVALID_REFRESH_TOKEN"   // 401
 	CodeForbidden            ErrorCode = "FORBIDDEN"               // 403
 	CodeNotFound             ErrorCode = "NOT_FOUND"               // 404
 	CodeDuplicateEmail       ErrorCode = "DUPLICATE_EMAIL"         // 409
@@ -42,8 +43,9 @@ var (
 	ErrSelfFollowNotAllowed = newError(CodeSelfFollowNotAllowed, "自分のエピソードはフォローできません", http.StatusBadRequest)
 
 	// 401 Unauthorized
-	ErrUnauthorized       = newError(CodeUnauthorized, "認証が必要です", http.StatusUnauthorized)
-	ErrInvalidCredentials = newError(CodeInvalidCredentials, "メールアドレスまたはパスワードが正しくありません", http.StatusUnauthorized)
+	ErrUnauthorized        = newError(CodeUnauthorized, "認証が必要です", http.StatusUnauthorized)
+	ErrInvalidCredentials  = newError(CodeInvalidCredentials, "メールアドレスまたはパスワードが正しくありません", http.StatusUnauthorized)
+	ErrInvalidRefreshToken = newError(CodeInvalidRefreshToken, "リフレッシュトークンが無効です", http.StatusUnauthorized)
 
 	// 403 Forbidden
 	ErrForbidden = newError(CodeForbidden, "アクセス権限がありません", http.StatusForbidden)

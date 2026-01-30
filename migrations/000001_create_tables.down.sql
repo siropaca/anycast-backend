@@ -15,6 +15,7 @@ DROP TABLE IF EXISTS channel_characters;
 DROP TABLE IF EXISTS bgms;
 DROP TABLE IF EXISTS characters;
 DROP TABLE IF EXISTS channels;
+DROP TABLE IF EXISTS refresh_tokens;
 DROP TABLE IF EXISTS oauth_accounts;
 DROP TABLE IF EXISTS credentials;
 DROP TABLE IF EXISTS users;

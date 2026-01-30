@@ -63,10 +63,14 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	auth.POST("/register", container.AuthHandler.Register)
 	auth.POST("/login", container.AuthHandler.Login)
 	auth.POST("/oauth/google", container.AuthHandler.OAuthGoogle)
+	auth.POST("/refresh", container.AuthHandler.RefreshToken)
 
 	// 認証必須のエンドポイント
 	authenticated := api.Group("")
 	authenticated.Use(middleware.Auth(container.TokenManager))
+
+	// Auth（認証必須）
+	authenticated.POST("/auth/logout", container.AuthHandler.Logout)
 
 	// Me（自分のリソース）
 	authenticated.GET("/me", container.AuthHandler.GetMe)

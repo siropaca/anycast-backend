@@ -35,6 +35,23 @@ Content-Type: application/json
   "expiresAt": 1735689600
 }
 
+### トークンリフレッシュ
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "YOUR_REFRESH_TOKEN_HERE"
+}
+
+### ログアウト
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "refreshToken": "YOUR_REFRESH_TOKEN_HERE"
+}
+
 ### 現在のユーザー取得
 GET {{baseUrl}}/me
 Authorization: Bearer {{token}}

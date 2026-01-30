@@ -28,11 +28,11 @@ func main() {
 		userID = os.Args[1]
 	}
 
-	// トークンを生成（有効期限: 30日）
+	// トークンを生成（有効期限: 1時間）
 	claims := jwt.MapClaims{
 		"sub": userID,
 		"iat": time.Now().Unix(),
-		"exp": time.Now().Add(30 * 24 * time.Hour).Unix(),
+		"exp": time.Now().Add(1 * time.Hour).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

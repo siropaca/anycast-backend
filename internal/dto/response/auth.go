@@ -48,11 +48,23 @@ type UserDataResponse struct {
 
 // 認証成功時のレスポンス
 type AuthResponse struct {
-	User  UserResponse `json:"user" validate:"required"`
-	Token string       `json:"token" validate:"required"`
+	User         UserResponse `json:"user" validate:"required"`
+	AccessToken  string       `json:"accessToken" validate:"required"`
+	RefreshToken string       `json:"refreshToken" validate:"required"`
 }
 
 // 認証成功時のレスポンス（data ラッパー）
 type AuthDataResponse struct {
 	Data AuthResponse `json:"data" validate:"required"`
+}
+
+// トークンリフレッシュ成功時のレスポンス
+type TokenRefreshResponse struct {
+	AccessToken  string `json:"accessToken" validate:"required"`
+	RefreshToken string `json:"refreshToken" validate:"required"`
+}
+
+// トークンリフレッシュ成功時のレスポンス（data ラッパー）
+type TokenRefreshDataResponse struct {
+	Data TokenRefreshResponse `json:"data" validate:"required"`
 }
