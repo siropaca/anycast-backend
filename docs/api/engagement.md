@@ -667,12 +667,12 @@ GET /me/playback-history
 
 # Follows（フォロー）
 
-他のユーザーのエピソードをフォローする機能。自分のチャンネルのエピソードはフォロー不可。
+他のユーザーをフォローする機能。自分自身はフォロー不可。
 
 ## フォロー登録
 
 ```
-POST /episodes/:episodeId/follow
+POST /users/:userId/follow
 ```
 
 **レスポンス（201 Created）:**
@@ -680,7 +680,7 @@ POST /episodes/:episodeId/follow
 {
   "data": {
     "id": "uuid",
-    "episodeId": "uuid",
+    "targetUserId": "uuid",
     "createdAt": "2025-01-01T00:00:00Z"
   }
 }
@@ -691,7 +691,7 @@ POST /episodes/:episodeId/follow
 {
   "error": {
     "code": "SELF_FOLLOW_NOT_ALLOWED",
-    "message": "自分のエピソードはフォローできません"
+    "message": "自分自身はフォローできません"
   }
 }
 ```
@@ -711,7 +711,7 @@ POST /episodes/:episodeId/follow
 ## フォロー解除
 
 ```
-DELETE /episodes/:episodeId/follow
+DELETE /users/:userId/follow
 ```
 
 **レスポンス（204 No Content）:**
@@ -729,7 +729,7 @@ DELETE /episodes/:episodeId/follow
 
 ---
 
-## フォロー中のエピソード一覧
+## フォロー中のユーザー一覧
 
 ```
 GET /me/follows
@@ -747,16 +747,11 @@ GET /me/follows
 {
   "data": [
     {
-      "episode": {
+      "user": {
         "id": "uuid",
-        "title": "エピソードタイトル",
-        "description": "説明",
-        "channel": {
-          "id": "uuid",
-          "name": "チャンネル名",
-          "artwork": { "id": "uuid", "url": "..." }
-        },
-        "publishedAt": "2025-01-01T00:00:00Z"
+        "username": "user_name",
+        "displayName": "ユーザー名",
+        "avatar": { "id": "uuid", "url": "..." }
       },
       "followedAt": "2025-01-01T00:00:00Z"
     }

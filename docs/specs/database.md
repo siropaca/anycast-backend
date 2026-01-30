@@ -13,7 +13,8 @@ erDiagram
     users ||--o{ reactions : has
     users ||--o{ playlists : has
     users ||--o{ playback_histories : has
-    users ||--o{ follows : has
+    users ||--o{ follows : "has (follower)"
+    users ||--o{ follows : "has (target)"
     users ||--o{ comments : has
     users ||--o{ audio_jobs : has
     users ||--o{ feedbacks : has
@@ -31,7 +32,6 @@ erDiagram
     episodes ||--o{ reactions : has
     episodes ||--o{ playlist_items : has
     episodes ||--o{ playback_histories : has
-    episodes ||--o{ follows : has
     episodes ||--o{ comments : has
     episodes ||--o{ audio_jobs : has
     episodes ||--o| images : artwork
@@ -83,7 +83,7 @@ erDiagram
     follows {
         uuid id PK
         uuid user_id FK
-        uuid episode_id FK
+        uuid target_user_id FK
         timestamp created_at
     }
 
@@ -671,27 +671,27 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 
 #### follows
 
-エピソードへのフォローを管理する。自分のチャンネルのエピソードはフォロー不可。
+ユーザーへのフォローを管理する。自分自身はフォロー不可。
 
 | カラム名 | 型 | NULLABLE | デフォルト | 説明 |
 |----------|-----|:--------:|------------|------|
 | id | UUID | | gen_random_uuid() | 主キー |
-| user_id | UUID | | - | ユーザー（users 参照） |
-| episode_id | UUID | | - | エピソード（episodes 参照） |
+| user_id | UUID | | - | フォローしたユーザー（users 参照） |
+| target_user_id | UUID | | - | フォロー対象のユーザー（users 参照） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | フォロー登録日時 |
 
 **インデックス:**
 - PRIMARY KEY (id)
-- UNIQUE (user_id, episode_id)
+- UNIQUE (user_id, target_user_id)
 - INDEX (user_id)
-- INDEX (episode_id)
+- INDEX (target_user_id)
 
 **外部キー:**
 - user_id → users(id) ON DELETE CASCADE
-- episode_id → episodes(id) ON DELETE CASCADE
+- target_user_id → users(id) ON DELETE CASCADE
 
 **制約:**
-- 自分が所有するチャンネルのエピソードはフォロー不可（アプリケーション層で検証）
+- 自分自身はフォロー不可（CHECK 制約: user_id != target_user_id）
 
 ---
 

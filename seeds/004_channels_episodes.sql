@@ -458,22 +458,22 @@ INSERT INTO script_lines (id, episode_id, line_order, speaker_id, text, emotion)
 -- お気に入り・ブックマーク・フォロー
 -- ===========================================
 
--- test_user (8def69af) が 5 人のエピソードをフォロー
--- フォロー先: test_user2, test_user3, test_user4, test_user5, test_user6 のエピソード
-INSERT INTO follows (user_id, episode_id) VALUES
-	('8def69af-dae9-4641-a0e5-100107626933', 'fcb16526-951a-4ff1-a456-ab1dba96f699'),
-	('8def69af-dae9-4641-a0e5-100107626933', 'b1c1e7d7-b3eb-4783-82d0-6857832daf09'),
-	('8def69af-dae9-4641-a0e5-100107626933', '436043d0-9a74-4541-9639-6b9566125bd7'),
-	('8def69af-dae9-4641-a0e5-100107626933', 'b7a74a63-a9e2-4f60-ba58-bfa887598e07'),
-	('8def69af-dae9-4641-a0e5-100107626933', '4697c3c7-a89a-4ce5-9b39-f4bb8d6ed69a');
+-- test_user (8def69af) が 5 人のユーザーをフォロー
+-- フォロー先: test_user2, test_user3, test_user4, test_user5, test_user6
+INSERT INTO follows (user_id, target_user_id) VALUES
+	('8def69af-dae9-4641-a0e5-100107626933', '8eada3a5-f413-4eeb-9cd5-12def60d4596'),
+	('8def69af-dae9-4641-a0e5-100107626933', '4dbc55c2-1d78-4e75-b6ac-b5e2b0d461f5'),
+	('8def69af-dae9-4641-a0e5-100107626933', 'd6f829bf-e9bd-4df7-a9f6-64689fa6fcc1'),
+	('8def69af-dae9-4641-a0e5-100107626933', 'b8ad04fd-9afa-474a-a567-1f19e8bcf6b0'),
+	('8def69af-dae9-4641-a0e5-100107626933', '80adf759-b01c-4726-87b4-7b9c659483a4');
 
--- 4 人が test_user のエピソードをフォロー
+-- 4 人が test_user をフォロー
 -- フォロワー: test_user2, test_user3, test_user7, test_user9
-INSERT INTO follows (user_id, episode_id) VALUES
-	('8eada3a5-f413-4eeb-9cd5-12def60d4596', 'eb960304-f86e-4364-be5d-d3d5126c9601'),
-	('4dbc55c2-1d78-4e75-b6ac-b5e2b0d461f5', '67e8e26d-20c8-492a-ac2c-5c79d8050aa3'),
-	('8450d256-8630-4044-8a69-fc8671e6e5c1', 'eb960304-f86e-4364-be5d-d3d5126c9601'),
-	('c878a2b4-ade5-44d3-b8ec-d5be985f6dcb', '198d7e19-7d40-4299-95bf-a641f5c83911');
+INSERT INTO follows (user_id, target_user_id) VALUES
+	('8eada3a5-f413-4eeb-9cd5-12def60d4596', '8def69af-dae9-4641-a0e5-100107626933'),
+	('4dbc55c2-1d78-4e75-b6ac-b5e2b0d461f5', '8def69af-dae9-4641-a0e5-100107626933'),
+	('8450d256-8630-4044-8a69-fc8671e6e5c1', '8def69af-dae9-4641-a0e5-100107626933'),
+	('c878a2b4-ade5-44d3-b8ec-d5be985f6dcb', '8def69af-dae9-4641-a0e5-100107626933');
 
 -- 全ユーザーにデフォルトプレイリスト「後で聴く」を作成
 INSERT INTO playlists (id, user_id, name, is_default) VALUES
