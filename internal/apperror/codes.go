@@ -40,7 +40,7 @@ var (
 	// 400 Bad Request
 	ErrValidation           = newError(CodeValidation, "入力内容に誤りがあります", http.StatusBadRequest)
 	ErrScriptParse          = newError(CodeScriptParse, "台本の解析に失敗しました", http.StatusBadRequest)
-	ErrSelfFollowNotAllowed = newError(CodeSelfFollowNotAllowed, "自分のエピソードはフォローできません", http.StatusBadRequest)
+	ErrSelfFollowNotAllowed = newError(CodeSelfFollowNotAllowed, "自分自身はフォローできません", http.StatusBadRequest)
 
 	// 401 Unauthorized
 	ErrUnauthorized        = newError(CodeUnauthorized, "認証が必要です", http.StatusUnauthorized)

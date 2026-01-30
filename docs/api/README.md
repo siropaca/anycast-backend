@@ -122,7 +122,7 @@
 | **Follows（フォロー）** | - | - | - | - | [engagement.md](./engagement.md#followsフォロー) |
 | POST | `/api/v1/users/:userId/follow` | フォロー登録 | Owner | | [詳細](./engagement.md#フォロー登録) |
 | DELETE | `/api/v1/users/:userId/follow` | フォロー解除 | Owner | | [詳細](./engagement.md#フォロー解除) |
-| GET | `/api/v1/me/follows` | フォロー中のユーザー一覧 | Owner | | [詳細](./engagement.md#フォロー中のユーザー一覧) |
+| GET | `/api/v1/me/follows` | フォロー中のユーザー一覧 | Owner | ✅ | [詳細](./engagement.md#フォロー中のユーザー一覧) |
 | **Comments（コメント）** | - | - | - | - | [engagement.md](./engagement.md#commentsコメント) |
 | POST | `/api/v1/episodes/:episodeId/comments` | コメント投稿 | Owner | | [詳細](./engagement.md#コメント投稿) |
 | GET | `/api/v1/episodes/:episodeId/comments` | コメント一覧取得 | Public | | [詳細](./engagement.md#コメント一覧取得) |

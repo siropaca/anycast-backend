@@ -17,6 +17,8 @@ type User struct {
 	UserPrompt  string     `gorm:"type:text;not null;default:'';column:user_prompt"`
 	CreatedAt   time.Time  `gorm:"not null;default:CURRENT_TIMESTAMP"`
 	UpdatedAt   time.Time  `gorm:"not null;default:CURRENT_TIMESTAMP"`
+
+	Avatar *Image `gorm:"foreignKey:AvatarID"`
 }
 
 // Credential はパスワード認証情報を表す

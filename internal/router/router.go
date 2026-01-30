@@ -106,6 +106,9 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	// Playback History
 	authenticated.GET("/me/playback-history", container.PlaybackHistoryHandler.ListPlaybackHistory)
 
+	// Follows
+	authenticated.GET("/me/follows", container.FollowHandler.ListFollows)
+
 	// Channels
 	authenticated.GET("/channels/:channelId", container.ChannelHandler.GetChannel)
 	authenticated.POST("/channels", container.ChannelHandler.CreateChannel)

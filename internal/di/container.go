@@ -42,6 +42,7 @@ type Container struct {
 	FeedbackHandler        *handler.FeedbackHandler
 	PlaylistHandler        *handler.PlaylistHandler
 	PlaybackHistoryHandler *handler.PlaybackHistoryHandler
+	FollowHandler          *handler.FollowHandler
 	RecommendationHandler  *handler.RecommendationHandler
 	TokenManager           jwt.TokenManager
 	UserRepository         repository.UserRepository
@@ -125,6 +126,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	feedbackRepo := repository.NewFeedbackRepository(db)
 	playlistRepo := repository.NewPlaylistRepository(db)
 	playbackHistoryRepo := repository.NewPlaybackHistoryRepository(db)
+	followRepo := repository.NewFollowRepository(db)
 	recommendationRepo := repository.NewRecommendationRepository(db)
 	refreshTokenRepo := repository.NewRefreshTokenRepository(db)
 
@@ -169,6 +171,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	feedbackService := service.NewFeedbackService(feedbackRepo, imageRepo, userRepo, storageClient, slackClient)
 	playlistService := service.NewPlaylistService(playlistRepo, episodeRepo, storageClient)
 	playbackHistoryService := service.NewPlaybackHistoryService(playbackHistoryRepo, episodeRepo, storageClient)
+	followService := service.NewFollowService(followRepo, storageClient)
 	recommendationService := service.NewRecommendationService(recommendationRepo, storageClient)
 
 	// Handler 層
@@ -191,6 +194,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	feedbackHandler := handler.NewFeedbackHandler(feedbackService)
 	playlistHandler := handler.NewPlaylistHandler(playlistService)
 	playbackHistoryHandler := handler.NewPlaybackHistoryHandler(playbackHistoryService)
+	followHandler := handler.NewFollowHandler(followService)
 	recommendationHandler := handler.NewRecommendationHandler(recommendationService)
 
 	return &Container{
@@ -213,6 +217,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		FeedbackHandler:        feedbackHandler,
 		PlaylistHandler:        playlistHandler,
 		PlaybackHistoryHandler: playbackHistoryHandler,
+		FollowHandler:          followHandler,
 		RecommendationHandler:  recommendationHandler,
 		TokenManager:           tokenManager,
 		UserRepository:         userRepo,
