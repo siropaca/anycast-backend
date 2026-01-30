@@ -139,7 +139,7 @@ func TestListMyBgms(t *testing.T) {
 		mockBgmRepo.AssertExpectations(t)
 	})
 
-	t.Run("正常系: システム BGM とユーザー BGM を含めて取得する", func(t *testing.T) {
+	t.Run("正常系: ユーザー BGM → システム BGM の順で取得する", func(t *testing.T) {
 		mockBgmRepo := new(mockBgmRepository)
 		mockSystemBgmRepo := new(mockSystemBgmRepository)
 		mockAudioRepo := new(mockAudioRepository)
@@ -193,20 +193,20 @@ func TestListMyBgms(t *testing.T) {
 			IncludeSystem:     true,
 		}
 
-		mockSystemBgmRepo.On("CountActive", mock.Anything).Return(int64(1), nil)
 		mockBgmRepo.On("FindByUserID", mock.Anything, userID, repository.BgmFilter{Limit: 0, Offset: 0}).Return(userBgms, int64(1), nil)
-		mockSystemBgmRepo.On("FindActive", mock.Anything, repository.SystemBgmFilter{Limit: 10, Offset: 0}).Return(systemBgms, int64(1), nil)
-		mockStorage.On("GenerateSignedURL", mock.Anything, "audios/system.mp3", mock.Anything).Return("https://signed-url.example.com/system.mp3", nil)
-		mockBgmRepo.On("FindByUserID", mock.Anything, userID, repository.BgmFilter{Limit: 9, Offset: 0}).Return(userBgms, int64(1), nil)
+		mockSystemBgmRepo.On("CountActive", mock.Anything).Return(int64(1), nil)
+		mockBgmRepo.On("FindByUserID", mock.Anything, userID, repository.BgmFilter{Limit: 10, Offset: 0}).Return(userBgms, int64(1), nil)
 		mockStorage.On("GenerateSignedURL", mock.Anything, "audios/user.mp3", mock.Anything).Return("https://signed-url.example.com/user.mp3", nil)
+		mockSystemBgmRepo.On("FindActive", mock.Anything, repository.SystemBgmFilter{Limit: 9, Offset: 0}).Return(systemBgms, int64(1), nil)
+		mockStorage.On("GenerateSignedURL", mock.Anything, "audios/system.mp3", mock.Anything).Return("https://signed-url.example.com/system.mp3", nil)
 
 		result, err := svc.ListMyBgms(ctx, userID.String(), req)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		assert.Len(t, result.Data, 2)
-		assert.True(t, result.Data[0].IsSystem)
-		assert.False(t, result.Data[1].IsSystem)
+		assert.False(t, result.Data[0].IsSystem)
+		assert.True(t, result.Data[1].IsSystem)
 		assert.Equal(t, int64(2), result.Pagination.Total)
 	})
 

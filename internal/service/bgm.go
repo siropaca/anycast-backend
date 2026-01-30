@@ -80,67 +80,31 @@ func (s *bgmService) listUserBgmsOnly(ctx context.Context, userID uuid.UUID, req
 	}, nil
 }
 
-// listBgmsWithSystem はシステム BGM とユーザー BGM を結合して取得する
+// listBgmsWithSystem はユーザー BGM とシステム BGM を結合して取得する
+// ユーザー BGM → システム BGM の順に返す
 func (s *bgmService) listBgmsWithSystem(ctx context.Context, userID uuid.UUID, req request.ListMyBgmsRequest) (*response.BgmListWithPaginationResponse, error) {
+	// ユーザー BGM の総件数を取得
+	_, userTotal, err := s.bgmRepo.FindByUserID(ctx, userID, repository.BgmFilter{Limit: 0, Offset: 0})
+	if err != nil {
+		return nil, err
+	}
+
 	// システム BGM の総件数を取得
 	systemTotal, err := s.systemBgmRepo.CountActive(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	// ユーザー BGM の総件数を取得
-	userBgms, userTotal, err := s.bgmRepo.FindByUserID(ctx, userID, repository.BgmFilter{Limit: 0, Offset: 0})
-	if err != nil {
-		return nil, err
-	}
-	_ = userBgms // 総件数のみ使用
-
-	total := systemTotal + userTotal
+	total := userTotal + systemTotal
 
 	responses := make([]response.BgmWithEpisodesResponse, 0)
 
-	// オフセットがシステム BGM の範囲内の場合
-	if int64(req.Offset) < systemTotal {
-		// システム BGM を取得
-		systemFilter := repository.SystemBgmFilter{
-			Limit:  req.Limit,
-			Offset: req.Offset,
-		}
-		systemBgms, _, err := s.systemBgmRepo.FindActive(ctx, systemFilter)
-		if err != nil {
-			return nil, err
-		}
-
-		systemResponses, err := s.toSystemBgmWithEpisodesResponses(ctx, systemBgms)
-		if err != nil {
-			return nil, err
-		}
-		responses = append(responses, systemResponses...)
-
-		// システム BGM だけで limit を満たさない場合、ユーザー BGM も取得
-		remaining := req.Limit - len(responses)
-		if remaining > 0 {
-			userFilter := repository.BgmFilter{
-				Limit:  remaining,
-				Offset: 0,
-			}
-			userBgms, _, err := s.bgmRepo.FindByUserID(ctx, userID, userFilter)
-			if err != nil {
-				return nil, err
-			}
-
-			userResponses, err := s.toBgmWithEpisodesResponses(ctx, userBgms)
-			if err != nil {
-				return nil, err
-			}
-			responses = append(responses, userResponses...)
-		}
-	} else {
-		// オフセットがシステム BGM の範囲外の場合、ユーザー BGM のみ取得
-		userOffset := req.Offset - int(systemTotal)
+	// オフセットがユーザー BGM の範囲内の場合
+	if int64(req.Offset) < userTotal {
+		// ユーザー BGM を取得
 		userFilter := repository.BgmFilter{
 			Limit:  req.Limit,
-			Offset: userOffset,
+			Offset: req.Offset,
 		}
 		userBgms, _, err := s.bgmRepo.FindByUserID(ctx, userID, userFilter)
 		if err != nil {
@@ -152,6 +116,42 @@ func (s *bgmService) listBgmsWithSystem(ctx context.Context, userID uuid.UUID, r
 			return nil, err
 		}
 		responses = append(responses, userResponses...)
+
+		// ユーザー BGM だけで limit を満たさない場合、システム BGM も取得
+		remaining := req.Limit - len(responses)
+		if remaining > 0 {
+			systemFilter := repository.SystemBgmFilter{
+				Limit:  remaining,
+				Offset: 0,
+			}
+			systemBgms, _, err := s.systemBgmRepo.FindActive(ctx, systemFilter)
+			if err != nil {
+				return nil, err
+			}
+
+			systemResponses, err := s.toSystemBgmWithEpisodesResponses(ctx, systemBgms)
+			if err != nil {
+				return nil, err
+			}
+			responses = append(responses, systemResponses...)
+		}
+	} else {
+		// オフセットがユーザー BGM の範囲外の場合、システム BGM のみ取得
+		systemOffset := req.Offset - int(userTotal)
+		systemFilter := repository.SystemBgmFilter{
+			Limit:  req.Limit,
+			Offset: systemOffset,
+		}
+		systemBgms, _, err := s.systemBgmRepo.FindActive(ctx, systemFilter)
+		if err != nil {
+			return nil, err
+		}
+
+		systemResponses, err := s.toSystemBgmWithEpisodesResponses(ctx, systemBgms)
+		if err != nil {
+			return nil, err
+		}
+		responses = append(responses, systemResponses...)
 	}
 
 	return &response.BgmListWithPaginationResponse{

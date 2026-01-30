@@ -65,20 +65,6 @@ GET /me/bgms
   "data": [
     {
       "id": "uuid",
-      "name": "明るいポップ",
-      "isSystem": true,
-      "audio": {
-        "id": "uuid",
-        "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
-        "durationMs": 180000
-      },
-      "episodes": [],
-      "channels": [],
-      "createdAt": "2025-01-01T00:00:00Z",
-      "updatedAt": "2025-01-01T00:00:00Z"
-    },
-    {
-      "id": "uuid",
       "name": "お気に入り曲",
       "isSystem": false,
       "audio": {
@@ -104,6 +90,20 @@ GET /me/bgms
       ],
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2025-01-01T00:00:00Z"
+    },
+    {
+      "id": "uuid",
+      "name": "明るいポップ",
+      "isSystem": true,
+      "audio": {
+        "id": "uuid",
+        "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
+        "durationMs": 180000
+      },
+      "episodes": [],
+      "channels": [],
+      "createdAt": "2025-01-01T00:00:00Z",
+      "updatedAt": "2025-01-01T00:00:00Z"
     }
   ],
   "pagination": {
@@ -114,7 +114,7 @@ GET /me/bgms
 }
 ```
 
-> **Note:** `include_system=true` の場合、システム BGM → ユーザー BGM の順で返却。システム BGM は `sort_order` 順、ユーザー BGM は `created_at` 降順。
+> **Note:** `include_system=true` の場合、ユーザー BGM → システム BGM の順で返却。ユーザー BGM は `created_at` 降順、システム BGM は `sort_order` 順。
 
 ---
 
