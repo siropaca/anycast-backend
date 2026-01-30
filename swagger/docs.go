@@ -2221,14 +2221,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/episodes/{episodeId}/listen-later": {
+        "/episodes/{episodeId}/default-playlist": {
             "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "指定したエピソードを「後で聴く」プレイリストに追加します",
+                "description": "指定したエピソードをデフォルトプレイリスト（再生リスト）に追加します",
                 "consumes": [
                     "application/json"
                 ],
@@ -2238,7 +2238,7 @@ const docTemplate = `{
                 "tags": [
                     "episodes"
                 ],
-                "summary": "後で聴くに追加",
+                "summary": "再生リストに追加",
                 "parameters": [
                     {
                         "type": "string",
@@ -2293,7 +2293,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "指定したエピソードを「後で聴く」プレイリストから削除します",
+                "description": "指定したエピソードをデフォルトプレイリスト（再生リスト）から削除します",
                 "consumes": [
                     "application/json"
                 ],
@@ -2303,7 +2303,7 @@ const docTemplate = `{
                 "tags": [
                     "episodes"
                 ],
-                "summary": "後で聴くから削除",
+                "summary": "再生リストから削除",
                 "parameters": [
                     {
                         "type": "string",
@@ -3797,14 +3797,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/me/listen-later": {
+        "/me/default-playlist": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "「後で聴く」プレイリストの内容を取得します",
+                "description": "デフォルトプレイリスト（再生リスト）の内容を取得します",
                 "consumes": [
                     "application/json"
                 ],
@@ -3814,7 +3814,7 @@ const docTemplate = `{
                 "tags": [
                     "me"
                 ],
-                "summary": "後で聴く一覧取得",
+                "summary": "再生リスト一覧取得",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -4618,7 +4618,7 @@ const docTemplate = `{
         },
         "/recommendations/episodes": {
             "get": {
-                "description": "おすすめエピソード一覧を取得します。未ログイン時は人気順・新着順、ログイン時は途中再生・後で聴く・パーソナライズに基づく結果を返します。",
+                "description": "おすすめエピソード一覧を取得します。未ログイン時は人気順・新着順、ログイン時は途中再生・再生リスト・パーソナライズに基づく結果を返します。",
                 "consumes": [
                     "application/json"
                 ],
@@ -7098,7 +7098,7 @@ const docTemplate = `{
                 "channel",
                 "description",
                 "id",
-                "inListenLater",
+                "inDefaultPlaylist",
                 "playCount",
                 "title"
             ],
@@ -7128,7 +7128,7 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "inListenLater": {
+                "inDefaultPlaylist": {
                     "type": "boolean"
                 },
                 "playCount": {

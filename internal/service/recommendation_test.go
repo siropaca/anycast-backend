@@ -43,7 +43,7 @@ func (m *mockRecommendationRepository) FindUserPlayedChannelIDs(ctx context.Cont
 	return args.Get(0).([]uuid.UUID), args.Error(1)
 }
 
-func (m *mockRecommendationRepository) FindUserListenLaterCategoryPreferences(ctx context.Context, userID uuid.UUID) ([]repository.CategoryPreference, error) {
+func (m *mockRecommendationRepository) FindUserDefaultPlaylistCategoryPreferences(ctx context.Context, userID uuid.UUID) ([]repository.CategoryPreference, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -75,7 +75,7 @@ func (m *mockRecommendationRepository) FindUserPlaybackHistories(ctx context.Con
 	return args.Get(0).([]model.PlaybackHistory), args.Error(1)
 }
 
-func (m *mockRecommendationRepository) FindUserListenLaterEpisodeIDs(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error) {
+func (m *mockRecommendationRepository) FindUserDefaultPlaylistEpisodeIDs(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -152,7 +152,7 @@ func TestRecommendationService_GetRecommendedChannels(t *testing.T) {
 		mockRepo.On("FindUserCategoryPreferences", mock.Anything, userID).Return([]repository.CategoryPreference{
 			{CategoryID: categoryID, PlayCount: 10},
 		}, nil)
-		mockRepo.On("FindUserListenLaterCategoryPreferences", mock.Anything, userID).Return([]repository.CategoryPreference{}, nil)
+		mockRepo.On("FindUserDefaultPlaylistCategoryPreferences", mock.Anything, userID).Return([]repository.CategoryPreference{}, nil)
 		mockRepo.On("FindUserPlayedChannelIDs", mock.Anything, userID).Return([]uuid.UUID{}, nil)
 		mockRepo.On("FindUserChannelIDs", mock.Anything, userID).Return([]uuid.UUID{ownChannelID}, nil)
 
@@ -387,7 +387,7 @@ func TestRecommendationService_applyPersonalizedScores(t *testing.T) {
 		}
 
 		mockRepo.On("FindUserCategoryPreferences", mock.Anything, userID).Return([]repository.CategoryPreference{}, nil)
-		mockRepo.On("FindUserListenLaterCategoryPreferences", mock.Anything, userID).Return([]repository.CategoryPreference{}, nil)
+		mockRepo.On("FindUserDefaultPlaylistCategoryPreferences", mock.Anything, userID).Return([]repository.CategoryPreference{}, nil)
 		mockRepo.On("FindUserPlayedChannelIDs", mock.Anything, userID).Return([]uuid.UUID{}, nil)
 		mockRepo.On("FindUserChannelIDs", mock.Anything, userID).Return([]uuid.UUID{ownChannelID}, nil)
 
@@ -414,7 +414,7 @@ func TestRecommendationService_applyPersonalizedScores(t *testing.T) {
 		mockRepo.On("FindUserCategoryPreferences", mock.Anything, userID).Return([]repository.CategoryPreference{
 			{CategoryID: favCatID, PlayCount: 20},
 		}, nil)
-		mockRepo.On("FindUserListenLaterCategoryPreferences", mock.Anything, userID).Return([]repository.CategoryPreference{}, nil)
+		mockRepo.On("FindUserDefaultPlaylistCategoryPreferences", mock.Anything, userID).Return([]repository.CategoryPreference{}, nil)
 		mockRepo.On("FindUserPlayedChannelIDs", mock.Anything, userID).Return([]uuid.UUID{}, nil)
 		mockRepo.On("FindUserChannelIDs", mock.Anything, userID).Return([]uuid.UUID{}, nil)
 
@@ -449,7 +449,7 @@ func TestRecommendationService_applyPersonalizedScores(t *testing.T) {
 		}
 
 		mockRepo.On("FindUserCategoryPreferences", mock.Anything, userID).Return([]repository.CategoryPreference{}, nil)
-		mockRepo.On("FindUserListenLaterCategoryPreferences", mock.Anything, userID).Return([]repository.CategoryPreference{}, nil)
+		mockRepo.On("FindUserDefaultPlaylistCategoryPreferences", mock.Anything, userID).Return([]repository.CategoryPreference{}, nil)
 		mockRepo.On("FindUserPlayedChannelIDs", mock.Anything, userID).Return([]uuid.UUID{playedChannelID}, nil)
 		mockRepo.On("FindUserChannelIDs", mock.Anything, userID).Return([]uuid.UUID{}, nil)
 
@@ -538,15 +538,15 @@ func TestRecommendationService_GetRecommendedEpisodes(t *testing.T) {
 		assert.NotNil(t, result)
 		assert.Len(t, result.Data, 2)
 		assert.Equal(t, int64(2), result.Pagination.Total)
-		// 全て playbackProgress=nil, inListenLater=false
+		// 全て playbackProgress=nil, inDefaultPlaylist=false
 		for _, ep := range result.Data {
 			assert.Nil(t, ep.PlaybackProgress)
-			assert.False(t, ep.InListenLater)
+			assert.False(t, ep.InDefaultPlaylist)
 		}
 		mockRepo.AssertExpectations(t)
 	})
 
-	t.Run("ログイン時は途中再生→後で聴く→パーソナライズの順で返す", func(t *testing.T) {
+	t.Run("ログイン時は途中再生→再生リスト→パーソナライズの順で返す", func(t *testing.T) {
 		mockRepo := new(mockRecommendationRepository)
 		mockStorage := new(mockStorageClient)
 
@@ -558,12 +558,12 @@ func TestRecommendationService_GetRecommendedEpisodes(t *testing.T) {
 		catB := uuid.New()
 
 		inProgressEpID := uuid.New()
-		listenLaterEpID := uuid.New()
+		defaultPlaylistEpID := uuid.New()
 		normalEpID := uuid.New()
 
 		episodes := []model.Episode{
 			createTestEpisode(inProgressEpID, channelA, catA, 200, &now),
-			createTestEpisode(listenLaterEpID, channelB, catB, 100, &now),
+			createTestEpisode(defaultPlaylistEpID, channelB, catB, 100, &now),
 			createTestEpisode(normalEpID, channelA, catA, 50, &now),
 		}
 
@@ -571,7 +571,7 @@ func TestRecommendationService_GetRecommendedEpisodes(t *testing.T) {
 		mockRepo.On("FindUserPlaybackHistories", mock.Anything, userID).Return([]model.PlaybackHistory{
 			{EpisodeID: inProgressEpID, ProgressMs: 30000, Completed: false, PlayedAt: now},
 		}, nil)
-		mockRepo.On("FindUserListenLaterEpisodeIDs", mock.Anything, userID).Return([]uuid.UUID{listenLaterEpID}, nil)
+		mockRepo.On("FindUserDefaultPlaylistEpisodeIDs", mock.Anything, userID).Return([]uuid.UUID{defaultPlaylistEpID}, nil)
 		mockRepo.On("FindUserChannelIDs", mock.Anything, userID).Return([]uuid.UUID{}, nil)
 		mockRepo.On("FindUserCategoryPreferences", mock.Anything, userID).Return([]repository.CategoryPreference{}, nil)
 
@@ -587,9 +587,9 @@ func TestRecommendationService_GetRecommendedEpisodes(t *testing.T) {
 		assert.Len(t, result.Data, 3)
 		// 途中再生が最初
 		assert.Equal(t, inProgressEpID, result.Data[0].ID)
-		// 後で聴くが次
-		assert.Equal(t, listenLaterEpID, result.Data[1].ID)
-		assert.True(t, result.Data[1].InListenLater)
+		// 再生リストが次
+		assert.Equal(t, defaultPlaylistEpID, result.Data[1].ID)
+		assert.True(t, result.Data[1].InDefaultPlaylist)
 		// 途中再生のエピソードには再生進捗がある
 		assert.NotNil(t, result.Data[0].PlaybackProgress)
 		assert.Equal(t, 30000, result.Data[0].PlaybackProgress.ProgressMs)
@@ -614,7 +614,7 @@ func TestRecommendationService_GetRecommendedEpisodes(t *testing.T) {
 		mockRepo.On("FindUserPlaybackHistories", mock.Anything, userID).Return([]model.PlaybackHistory{
 			{EpisodeID: completedEpID, ProgressMs: 180000, Completed: true, PlayedAt: now},
 		}, nil)
-		mockRepo.On("FindUserListenLaterEpisodeIDs", mock.Anything, userID).Return([]uuid.UUID{}, nil)
+		mockRepo.On("FindUserDefaultPlaylistEpisodeIDs", mock.Anything, userID).Return([]uuid.UUID{}, nil)
 		mockRepo.On("FindUserChannelIDs", mock.Anything, userID).Return([]uuid.UUID{}, nil)
 		mockRepo.On("FindUserCategoryPreferences", mock.Anything, userID).Return([]repository.CategoryPreference{}, nil)
 

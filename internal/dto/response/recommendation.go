@@ -26,16 +26,16 @@ type RecommendedChannelListResponse struct {
 
 // おすすめエピソード情報のレスポンス
 type RecommendedEpisodeResponse struct {
-	ID               uuid.UUID                         `json:"id" validate:"required"`
-	Title            string                            `json:"title" validate:"required"`
-	Description      string                            `json:"description" validate:"required"`
-	Artwork          *ArtworkResponse                  `json:"artwork" extensions:"x-nullable"`
-	FullAudio        *AudioResponse                    `json:"fullAudio" extensions:"x-nullable"`
-	PlayCount        int                               `json:"playCount" validate:"required"`
-	PublishedAt      *time.Time                        `json:"publishedAt" extensions:"x-nullable"`
-	Channel          RecommendedEpisodeChannelResponse `json:"channel" validate:"required"`
-	PlaybackProgress *PlaybackProgressResponse         `json:"playbackProgress" extensions:"x-nullable"`
-	InListenLater    bool                              `json:"inListenLater" validate:"required"`
+	ID                uuid.UUID                         `json:"id" validate:"required"`
+	Title             string                            `json:"title" validate:"required"`
+	Description       string                            `json:"description" validate:"required"`
+	Artwork           *ArtworkResponse                  `json:"artwork" extensions:"x-nullable"`
+	FullAudio         *AudioResponse                    `json:"fullAudio" extensions:"x-nullable"`
+	PlayCount         int                               `json:"playCount" validate:"required"`
+	PublishedAt       *time.Time                        `json:"publishedAt" extensions:"x-nullable"`
+	Channel           RecommendedEpisodeChannelResponse `json:"channel" validate:"required"`
+	PlaybackProgress  *PlaybackProgressResponse         `json:"playbackProgress" extensions:"x-nullable"`
+	InDefaultPlaylist bool                              `json:"inDefaultPlaylist" validate:"required"`
 }
 
 // おすすめエピソード内のチャンネル情報のレスポンス

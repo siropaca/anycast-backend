@@ -42,18 +42,18 @@ const (
 	recencyWeight   = 0.6
 	recencyHalfLife = 30.0 // 日数ベースの半減期
 
-	categoryBonusWeight    = 50.0
-	listenLaterBonusWeight = 30.0
-	playedChannelPenalty   = -40.0
-	maxConsecutiveCategory = 3
-	maxRecommendationLimit = 50
+	categoryBonusWeight        = 50.0
+	defaultPlaylistBonusWeight = 30.0
+	playedChannelPenalty       = -40.0
+	maxConsecutiveCategory     = 3
+	maxRecommendationLimit     = 50
 
 	// エピソード用定数
 	episodeRecencyHalfLife     = 14.0 // エピソードは 2 週間の半減期
 	episodeCategoryBonusWeight = 30.0
 	maxConsecutiveChannel      = 2
 	maxInProgressEpisodes      = 3
-	maxListenLaterEpisodes     = 3
+	maxDefaultPlaylistEpisodes = 3
 )
 
 // scoredChannel はスコア付きチャンネルを表す
@@ -194,11 +194,11 @@ func (s *recommendationService) applyPersonalizedScores(ctx context.Context, sco
 		categoryBonus[pref.CategoryID] = math.Log1p(float64(pref.PlayCount)) * categoryBonusWeight
 	}
 
-	// 「後で聴く」カテゴリ傾向
-	listenLaterPrefs, err := s.recommendationRepo.FindUserListenLaterCategoryPreferences(ctx, userID)
+	// デフォルトプレイリスト（再生リスト）カテゴリ傾向
+	defaultPlaylistPrefs, err := s.recommendationRepo.FindUserDefaultPlaylistCategoryPreferences(ctx, userID)
 	if err == nil {
-		for _, pref := range listenLaterPrefs {
-			categoryBonus[pref.CategoryID] += math.Log1p(float64(pref.PlayCount)) * listenLaterBonusWeight
+		for _, pref := range defaultPlaylistPrefs {
+			categoryBonus[pref.CategoryID] += math.Log1p(float64(pref.PlayCount)) * defaultPlaylistBonusWeight
 		}
 	}
 
@@ -332,18 +332,18 @@ func (s *recommendationService) GetRecommendedEpisodes(ctx context.Context, user
 
 	var scored []scoredEpisode
 	var progressMap map[uuid.UUID]*model.PlaybackHistory
-	var listenLaterSet map[uuid.UUID]bool
+	var defaultPlaylistSet map[uuid.UUID]bool
 
 	if userID != nil {
 		uid, err := uuid.Parse(*userID)
 		if err != nil {
 			return nil, err
 		}
-		scored, progressMap, listenLaterSet = s.buildPersonalizedEpisodeList(ctx, episodes, episodeMap, uid)
+		scored, progressMap, defaultPlaylistSet = s.buildPersonalizedEpisodeList(ctx, episodes, episodeMap, uid)
 	} else {
 		scored = s.buildBaseEpisodeList(episodes)
 		progressMap = make(map[uuid.UUID]*model.PlaybackHistory)
-		listenLaterSet = make(map[uuid.UUID]bool)
+		defaultPlaylistSet = make(map[uuid.UUID]bool)
 	}
 
 	// 多様性フィルタを適用
@@ -364,7 +364,7 @@ func (s *recommendationService) GetRecommendedEpisodes(ctx context.Context, user
 	// レスポンスに変換
 	data := make([]response.RecommendedEpisodeResponse, 0, len(paged))
 	for _, se := range paged {
-		item := s.toRecommendedEpisodeResponse(ctx, se.episode, progressMap, listenLaterSet)
+		item := s.toRecommendedEpisodeResponse(ctx, se.episode, progressMap, defaultPlaylistSet)
 		data = append(data, item)
 	}
 
@@ -403,7 +403,7 @@ func (s *recommendationService) buildPersonalizedEpisodeList(
 	episodes []model.Episode,
 	episodeMap map[uuid.UUID]*model.Episode,
 	userID uuid.UUID,
-) (scored []scoredEpisode, progressMap map[uuid.UUID]*model.PlaybackHistory, listenLaterSet map[uuid.UUID]bool) {
+) (scored []scoredEpisode, progressMap map[uuid.UUID]*model.PlaybackHistory, defaultPlaylistSet map[uuid.UUID]bool) {
 	now := time.Now()
 
 	// 再生履歴を取得
@@ -426,14 +426,14 @@ func (s *recommendationService) buildPersonalizedEpisodeList(
 
 	// 途中再生は played_at DESC でソート済み（リポジトリで ORDER BY played_at DESC）
 
-	// 「後で聴く」エピソード ID を取得
-	listenLaterIDs, err := s.recommendationRepo.FindUserListenLaterEpisodeIDs(ctx, userID)
+	// デフォルトプレイリスト（再生リスト）エピソード ID を取得
+	defaultPlaylistIDs, err := s.recommendationRepo.FindUserDefaultPlaylistEpisodeIDs(ctx, userID)
 	if err != nil {
-		listenLaterIDs = nil
+		defaultPlaylistIDs = nil
 	}
-	listenLaterSet = make(map[uuid.UUID]bool, len(listenLaterIDs))
-	for _, id := range listenLaterIDs {
-		listenLaterSet[id] = true
+	defaultPlaylistSet = make(map[uuid.UUID]bool, len(defaultPlaylistIDs))
+	for _, id := range defaultPlaylistIDs {
+		defaultPlaylistSet[id] = true
 	}
 
 	// 自分のチャンネル ID
@@ -473,14 +473,14 @@ func (s *recommendationService) buildPersonalizedEpisodeList(
 		count++
 	}
 
-	// 2. 「後で聴く」の未再生エピソード（最大 3 件）
+	// 2. デフォルトプレイリスト（再生リスト）の未再生エピソード（最大 3 件）
 	count = 0
 	for i := range episodes {
-		if count >= maxListenLaterEpisodes {
+		if count >= maxDefaultPlaylistEpisodes {
 			break
 		}
 		ep := &episodes[i]
-		if !listenLaterSet[ep.ID] || included[ep.ID] || completedSet[ep.ID] || ownChannelSet[ep.ChannelID] {
+		if !defaultPlaylistSet[ep.ID] || included[ep.ID] || completedSet[ep.ID] || ownChannelSet[ep.ChannelID] {
 			continue
 		}
 		// 再生履歴がないエピソードのみ（途中再生は上のグループで処理済み）
@@ -581,7 +581,7 @@ func (s *recommendationService) toRecommendedEpisodeResponse(
 	ctx context.Context,
 	ep *model.Episode,
 	progressMap map[uuid.UUID]*model.PlaybackHistory,
-	listenLaterSet map[uuid.UUID]bool,
+	defaultPlaylistSet map[uuid.UUID]bool,
 ) response.RecommendedEpisodeResponse {
 	// エピソードのアートワーク
 	var artwork *response.ArtworkResponse
@@ -668,8 +668,8 @@ func (s *recommendationService) toRecommendedEpisodeResponse(
 				IsActive:  channel.Category.IsActive,
 			},
 		},
-		PlaybackProgress: playbackProgress,
-		InListenLater:    listenLaterSet[ep.ID],
+		PlaybackProgress:  playbackProgress,
+		InDefaultPlaylist: defaultPlaylistSet[ep.ID],
 	}
 }
 

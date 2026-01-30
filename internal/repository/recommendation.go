@@ -44,13 +44,13 @@ type RecommendationRepository interface {
 	FindRecommendedChannels(ctx context.Context, params RecommendChannelParams) ([]RecommendedChannel, int64, error)
 	FindUserCategoryPreferences(ctx context.Context, userID uuid.UUID) ([]CategoryPreference, error)
 	FindUserPlayedChannelIDs(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error)
-	FindUserListenLaterCategoryPreferences(ctx context.Context, userID uuid.UUID) ([]CategoryPreference, error)
+	FindUserDefaultPlaylistCategoryPreferences(ctx context.Context, userID uuid.UUID) ([]CategoryPreference, error)
 	FindUserChannelIDs(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error)
 
 	// エピソード関連
 	FindPublishedEpisodes(ctx context.Context, params RecommendEpisodeParams) ([]model.Episode, int64, error)
 	FindUserPlaybackHistories(ctx context.Context, userID uuid.UUID) ([]model.PlaybackHistory, error)
-	FindUserListenLaterEpisodeIDs(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error)
+	FindUserDefaultPlaylistEpisodeIDs(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error)
 }
 
 type recommendationRepository struct {
@@ -174,8 +174,8 @@ func (r *recommendationRepository) FindUserPlayedChannelIDs(ctx context.Context,
 	return channelIDs, nil
 }
 
-// FindUserListenLaterCategoryPreferences は「後で聴く」プレイリストからカテゴリ傾向を取得する
-func (r *recommendationRepository) FindUserListenLaterCategoryPreferences(ctx context.Context, userID uuid.UUID) ([]CategoryPreference, error) {
+// FindUserDefaultPlaylistCategoryPreferences はデフォルトプレイリスト（再生リスト）からカテゴリ傾向を取得する
+func (r *recommendationRepository) FindUserDefaultPlaylistCategoryPreferences(ctx context.Context, userID uuid.UUID) ([]CategoryPreference, error) {
 	var preferences []CategoryPreference
 
 	if err := r.db.WithContext(ctx).
@@ -264,8 +264,8 @@ func (r *recommendationRepository) FindUserPlaybackHistories(ctx context.Context
 	return histories, nil
 }
 
-// FindUserListenLaterEpisodeIDs はユーザーの「後で聴く」プレイリストのエピソード ID を取得する
-func (r *recommendationRepository) FindUserListenLaterEpisodeIDs(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error) {
+// FindUserDefaultPlaylistEpisodeIDs はユーザーのデフォルトプレイリスト（再生リスト）のエピソード ID を取得する
+func (r *recommendationRepository) FindUserDefaultPlaylistEpisodeIDs(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error) {
 	var episodeIDs []uuid.UUID
 
 	if err := r.db.WithContext(ctx).

@@ -14,7 +14,7 @@ import (
 )
 
 // DefaultPlaylistName はデフォルトプレイリストの名前
-const DefaultPlaylistName = "後で聴く"
+const DefaultPlaylistName = "再生リスト"
 
 // PlaylistService はプレイリスト関連のビジネスロジックインターフェースを表す
 type PlaylistService interface {
@@ -30,10 +30,10 @@ type PlaylistService interface {
 	RemoveItem(ctx context.Context, userID, playlistID, itemID string) error
 	ReorderItems(ctx context.Context, userID, playlistID string, req request.ReorderPlaylistItemsRequest) (*response.PlaylistDetailDataResponse, error)
 
-	// 「後で聴く」ショートカット
-	AddToListenLater(ctx context.Context, userID, episodeID string) (*response.PlaylistItemDataResponse, error)
-	RemoveFromListenLater(ctx context.Context, userID, episodeID string) error
-	GetListenLater(ctx context.Context, userID string) (*response.PlaylistDetailDataResponse, error)
+	// デフォルトプレイリスト（再生リスト）ショートカット
+	AddToDefaultPlaylist(ctx context.Context, userID, episodeID string) (*response.PlaylistItemDataResponse, error)
+	RemoveFromDefaultPlaylist(ctx context.Context, userID, episodeID string) error
+	GetDefaultPlaylist(ctx context.Context, userID string) (*response.PlaylistDetailDataResponse, error)
 
 	// デフォルトプレイリスト作成（ユーザー登録時に呼び出される）
 	CreateDefaultPlaylist(ctx context.Context, userID uuid.UUID) error
@@ -432,8 +432,8 @@ func (s *playlistService) ReorderItems(ctx context.Context, userID, playlistID s
 	}, nil
 }
 
-// AddToListenLater は「後で聴く」プレイリストにエピソードを追加する
-func (s *playlistService) AddToListenLater(ctx context.Context, userID, episodeID string) (*response.PlaylistItemDataResponse, error) {
+// AddToDefaultPlaylist はデフォルトプレイリスト（再生リスト）にエピソードを追加する
+func (s *playlistService) AddToDefaultPlaylist(ctx context.Context, userID, episodeID string) (*response.PlaylistItemDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
 		return nil, err
@@ -450,8 +450,8 @@ func (s *playlistService) AddToListenLater(ctx context.Context, userID, episodeI
 	})
 }
 
-// RemoveFromListenLater は「後で聴く」プレイリストからエピソードを削除する
-func (s *playlistService) RemoveFromListenLater(ctx context.Context, userID, episodeID string) error {
+// RemoveFromDefaultPlaylist はデフォルトプレイリスト（再生リスト）からエピソードを削除する
+func (s *playlistService) RemoveFromDefaultPlaylist(ctx context.Context, userID, episodeID string) error {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
 		return err
@@ -483,8 +483,8 @@ func (s *playlistService) RemoveFromListenLater(ctx context.Context, userID, epi
 	return s.playlistRepo.DecrementPositionsAfter(ctx, playlist.ID, item.Position)
 }
 
-// GetListenLater は「後で聴く」プレイリストを取得する
-func (s *playlistService) GetListenLater(ctx context.Context, userID string) (*response.PlaylistDetailDataResponse, error) {
+// GetDefaultPlaylist はデフォルトプレイリスト（再生リスト）を取得する
+func (s *playlistService) GetDefaultPlaylist(ctx context.Context, userID string) (*response.PlaylistDetailDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
 		return nil, err

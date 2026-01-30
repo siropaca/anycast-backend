@@ -251,7 +251,7 @@ func TestRecommendationHandler_GetRecommendedEpisodes(t *testing.T) {
 						Name: "テクノロジー",
 					},
 				},
-				InListenLater: false,
+				InDefaultPlaylist: false,
 			},
 		},
 		Pagination: response.PaginationResponse{

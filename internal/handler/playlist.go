@@ -341,9 +341,9 @@ func (h *PlaylistHandler) ReorderItems(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-// AddToListenLater godoc
-// @Summary 後で聴くに追加
-// @Description 指定したエピソードを「後で聴く」プレイリストに追加します
+// AddToDefaultPlaylist godoc
+// @Summary 再生リストに追加
+// @Description 指定したエピソードをデフォルトプレイリスト（再生リスト）に追加します
 // @Tags episodes
 // @Accept json
 // @Produce json
@@ -355,8 +355,8 @@ func (h *PlaylistHandler) ReorderItems(c *gin.Context) {
 // @Failure 409 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
 // @Security BearerAuth
-// @Router /episodes/{episodeId}/listen-later [post]
-func (h *PlaylistHandler) AddToListenLater(c *gin.Context) {
+// @Router /episodes/{episodeId}/default-playlist [post]
+func (h *PlaylistHandler) AddToDefaultPlaylist(c *gin.Context) {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
 		Error(c, apperror.ErrUnauthorized)
@@ -369,7 +369,7 @@ func (h *PlaylistHandler) AddToListenLater(c *gin.Context) {
 		return
 	}
 
-	result, err := h.playlistService.AddToListenLater(c.Request.Context(), userID, episodeID)
+	result, err := h.playlistService.AddToDefaultPlaylist(c.Request.Context(), userID, episodeID)
 	if err != nil {
 		Error(c, err)
 		return
@@ -378,9 +378,9 @@ func (h *PlaylistHandler) AddToListenLater(c *gin.Context) {
 	c.JSON(http.StatusCreated, result)
 }
 
-// RemoveFromListenLater godoc
-// @Summary 後で聴くから削除
-// @Description 指定したエピソードを「後で聴く」プレイリストから削除します
+// RemoveFromDefaultPlaylist godoc
+// @Summary 再生リストから削除
+// @Description 指定したエピソードをデフォルトプレイリスト（再生リスト）から削除します
 // @Tags episodes
 // @Accept json
 // @Produce json
@@ -391,8 +391,8 @@ func (h *PlaylistHandler) AddToListenLater(c *gin.Context) {
 // @Failure 404 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
 // @Security BearerAuth
-// @Router /episodes/{episodeId}/listen-later [delete]
-func (h *PlaylistHandler) RemoveFromListenLater(c *gin.Context) {
+// @Router /episodes/{episodeId}/default-playlist [delete]
+func (h *PlaylistHandler) RemoveFromDefaultPlaylist(c *gin.Context) {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
 		Error(c, apperror.ErrUnauthorized)
@@ -405,7 +405,7 @@ func (h *PlaylistHandler) RemoveFromListenLater(c *gin.Context) {
 		return
 	}
 
-	if err := h.playlistService.RemoveFromListenLater(c.Request.Context(), userID, episodeID); err != nil {
+	if err := h.playlistService.RemoveFromDefaultPlaylist(c.Request.Context(), userID, episodeID); err != nil {
 		Error(c, err)
 		return
 	}
@@ -413,9 +413,9 @@ func (h *PlaylistHandler) RemoveFromListenLater(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-// GetListenLater godoc
-// @Summary 後で聴く一覧取得
-// @Description 「後で聴く」プレイリストの内容を取得します
+// GetDefaultPlaylist godoc
+// @Summary 再生リスト一覧取得
+// @Description デフォルトプレイリスト（再生リスト）の内容を取得します
 // @Tags me
 // @Accept json
 // @Produce json
@@ -424,15 +424,15 @@ func (h *PlaylistHandler) RemoveFromListenLater(c *gin.Context) {
 // @Failure 404 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
 // @Security BearerAuth
-// @Router /me/listen-later [get]
-func (h *PlaylistHandler) GetListenLater(c *gin.Context) {
+// @Router /me/default-playlist [get]
+func (h *PlaylistHandler) GetDefaultPlaylist(c *gin.Context) {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
 		Error(c, apperror.ErrUnauthorized)
 		return
 	}
 
-	result, err := h.playlistService.GetListenLater(c.Request.Context(), userID)
+	result, err := h.playlistService.GetDefaultPlaylist(c.Request.Context(), userID)
 	if err != nil {
 		Error(c, err)
 		return

@@ -101,7 +101,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.POST("/me/playlists/:playlistId/items", container.PlaylistHandler.AddItem)
 	authenticated.DELETE("/me/playlists/:playlistId/items/:itemId", container.PlaylistHandler.RemoveItem)
 	authenticated.POST("/me/playlists/:playlistId/items/reorder", container.PlaylistHandler.ReorderItems)
-	authenticated.GET("/me/listen-later", container.PlaylistHandler.GetListenLater)
+	authenticated.GET("/me/default-playlist", container.PlaylistHandler.GetDefaultPlaylist)
 
 	// Playback History
 	authenticated.GET("/me/playback-history", container.PlaybackHistoryHandler.ListPlaybackHistory)
@@ -125,8 +125,8 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.DELETE("/channels/:channelId/episodes/:episodeId/bgm", container.EpisodeHandler.DeleteEpisodeBgm)
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/audio/generate-async", container.AudioJobHandler.GenerateAudioAsync)
 	authenticated.POST("/episodes/:episodeId/play", container.EpisodeHandler.IncrementPlayCount)
-	authenticated.POST("/episodes/:episodeId/listen-later", container.PlaylistHandler.AddToListenLater)
-	authenticated.DELETE("/episodes/:episodeId/listen-later", container.PlaylistHandler.RemoveFromListenLater)
+	authenticated.POST("/episodes/:episodeId/default-playlist", container.PlaylistHandler.AddToDefaultPlaylist)
+	authenticated.DELETE("/episodes/:episodeId/default-playlist", container.PlaylistHandler.RemoveFromDefaultPlaylist)
 	authenticated.PUT("/episodes/:episodeId/playback", container.PlaybackHistoryHandler.UpdatePlayback)
 	authenticated.DELETE("/episodes/:episodeId/playback", container.PlaybackHistoryHandler.DeletePlayback)
 

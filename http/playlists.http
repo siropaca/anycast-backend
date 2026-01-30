@@ -91,18 +91,18 @@ Authorization: Bearer {{token}}
   ]
 }
 
-### ===========================
-### 「後で聴く」ショートカット
-### ===========================
+### =======================================
+### デフォルトプレイリスト（再生リスト）ショートカット
+### =======================================
 
-### 後で聴く一覧取得
-GET {{baseUrl}}/me/listen-later
+### 再生リスト一覧取得
+GET {{baseUrl}}/me/default-playlist
 Authorization: Bearer {{token}}
 
-### 後で聴くに追加
-POST {{baseUrl}}/episodes/YOUR_EPISODE_ID_HERE/listen-later
+### 再生リストに追加
+POST {{baseUrl}}/episodes/YOUR_EPISODE_ID_HERE/default-playlist
 Authorization: Bearer {{token}}
 
-### 後で聴くから削除
-DELETE {{baseUrl}}/episodes/YOUR_EPISODE_ID_HERE/listen-later
+### 再生リストから削除
+DELETE {{baseUrl}}/episodes/YOUR_EPISODE_ID_HERE/default-playlist
 Authorization: Bearer {{token}}
