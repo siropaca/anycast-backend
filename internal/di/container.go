@@ -42,6 +42,7 @@ type Container struct {
 	FeedbackHandler        *handler.FeedbackHandler
 	PlaylistHandler        *handler.PlaylistHandler
 	PlaybackHistoryHandler *handler.PlaybackHistoryHandler
+	RecommendationHandler  *handler.RecommendationHandler
 	TokenManager           jwt.TokenManager
 	UserRepository         repository.UserRepository
 	WebSocketHub           *websocket.Hub
@@ -124,6 +125,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	feedbackRepo := repository.NewFeedbackRepository(db)
 	playlistRepo := repository.NewPlaylistRepository(db)
 	playbackHistoryRepo := repository.NewPlaybackHistoryRepository(db)
+	recommendationRepo := repository.NewRecommendationRepository(db)
 
 	// Service 層
 	voiceService := service.NewVoiceService(voiceRepo)
@@ -166,6 +168,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	feedbackService := service.NewFeedbackService(feedbackRepo, imageRepo, userRepo, storageClient, slackClient)
 	playlistService := service.NewPlaylistService(playlistRepo, episodeRepo, storageClient)
 	playbackHistoryService := service.NewPlaybackHistoryService(playbackHistoryRepo, episodeRepo, storageClient)
+	recommendationService := service.NewRecommendationService(recommendationRepo, storageClient)
 
 	// Handler 層
 	voiceHandler := handler.NewVoiceHandler(voiceService)
@@ -187,6 +190,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	feedbackHandler := handler.NewFeedbackHandler(feedbackService)
 	playlistHandler := handler.NewPlaylistHandler(playlistService)
 	playbackHistoryHandler := handler.NewPlaybackHistoryHandler(playbackHistoryService)
+	recommendationHandler := handler.NewRecommendationHandler(recommendationService)
 
 	return &Container{
 		VoiceHandler:           voiceHandler,
@@ -208,6 +212,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		FeedbackHandler:        feedbackHandler,
 		PlaylistHandler:        playlistHandler,
 		PlaybackHistoryHandler: playbackHistoryHandler,
+		RecommendationHandler:  recommendationHandler,
 		TokenManager:           tokenManager,
 		UserRepository:         userRepo,
 		WebSocketHub:           wsHub,

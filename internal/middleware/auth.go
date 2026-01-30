@@ -66,6 +66,37 @@ func abortWithUnauthorized(c *gin.Context) {
 	})
 }
 
+// OptionalAuth はトークンがあれば検証し、なければスキップするミドルウェア
+//
+// トークンが存在しない場合はそのままリクエストを通し、
+// トークンが存在するが無効な場合は 401 を返す。
+func OptionalAuth(tokenManager jwt.TokenManager) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.Next()
+			return
+		}
+
+		parts := strings.SplitN(authHeader, " ", 2)
+		if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
+			abortWithUnauthorized(c)
+			return
+		}
+
+		claims, err := tokenManager.Validate(parts[1])
+		if err != nil {
+			log := logger.FromContext(c.Request.Context())
+			log.Warn("invalid token", "error", err)
+			abortWithUnauthorized(c)
+			return
+		}
+
+		c.Set(string(UserIDKey), claims.UserID)
+		c.Next()
+	}
+}
+
 // GetUserID はコンテキストからユーザー ID を取得する
 func GetUserID(c *gin.Context) (string, bool) {
 	userID, exists := c.Get(string(UserIDKey))

@@ -162,6 +162,11 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	// Feedbacks
 	authenticated.POST("/feedbacks", container.FeedbackHandler.CreateFeedback)
 
+	// Recommendations（任意認証）
+	optionalAuth := api.Group("")
+	optionalAuth.Use(middleware.OptionalAuth(container.TokenManager))
+	optionalAuth.GET("/recommendations/channels", container.RecommendationHandler.GetRecommendedChannels)
+
 	// Admin（認証必須 + 管理者権限必須）
 	admin := r.Group("/admin")
 	admin.Use(middleware.Auth(container.TokenManager))
