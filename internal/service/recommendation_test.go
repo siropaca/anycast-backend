@@ -59,6 +59,30 @@ func (m *mockRecommendationRepository) FindUserChannelIDs(ctx context.Context, u
 	return args.Get(0).([]uuid.UUID), args.Error(1)
 }
 
+func (m *mockRecommendationRepository) FindPublishedEpisodes(ctx context.Context, params repository.RecommendEpisodeParams) ([]model.Episode, int64, error) {
+	args := m.Called(ctx, params)
+	if args.Get(0) == nil {
+		return nil, 0, args.Error(2)
+	}
+	return args.Get(0).([]model.Episode), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *mockRecommendationRepository) FindUserPlaybackHistories(ctx context.Context, userID uuid.UUID) ([]model.PlaybackHistory, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]model.PlaybackHistory), args.Error(1)
+}
+
+func (m *mockRecommendationRepository) FindUserListenLaterEpisodeIDs(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]uuid.UUID), args.Error(1)
+}
+
 // テスト用チャンネルデータを生成するヘルパー
 func createTestChannel(id, categoryID uuid.UUID, playCount int, latestEpisodeAt *time.Time) repository.RecommendedChannel {
 	return repository.RecommendedChannel{
@@ -462,5 +486,245 @@ func TestRecommendationService_applyPersonalizedScores(t *testing.T) {
 		assert.Len(t, result, 1)
 		assert.Equal(t, 100.0, result[0].score)
 		mockRepo.AssertExpectations(t)
+	})
+}
+
+// テスト用エピソードを生成するヘルパー
+func createTestEpisode(id, channelID, categoryID uuid.UUID, playCount int, publishedAt *time.Time) model.Episode {
+	return model.Episode{
+		ID:          id,
+		ChannelID:   channelID,
+		Title:       "Episode " + id.String()[:8],
+		Description: "Test episode",
+		PlayCount:   playCount,
+		PublishedAt: publishedAt,
+		Channel: model.Channel{
+			ID:         channelID,
+			CategoryID: categoryID,
+			Name:       "Channel " + channelID.String()[:8],
+			Category: model.Category{
+				ID:   categoryID,
+				Slug: "cat-" + categoryID.String()[:8],
+				Name: "Category " + categoryID.String()[:8],
+			},
+		},
+	}
+}
+
+func TestRecommendationService_GetRecommendedEpisodes(t *testing.T) {
+	ctx := context.Background()
+	now := time.Now()
+	categoryID := uuid.New()
+	channelID := uuid.New()
+
+	t.Run("未ログインでおすすめエピソード一覧を取得できる", func(t *testing.T) {
+		mockRepo := new(mockRecommendationRepository)
+		mockStorage := new(mockStorageClient)
+
+		episodes := []model.Episode{
+			createTestEpisode(uuid.New(), channelID, categoryID, 100, &now),
+			createTestEpisode(uuid.New(), channelID, categoryID, 50, &now),
+		}
+		mockRepo.On("FindPublishedEpisodes", mock.Anything, mock.AnythingOfType("repository.RecommendEpisodeParams")).Return(episodes, int64(2), nil)
+
+		svc := NewRecommendationService(mockRepo, mockStorage)
+
+		req := request.RecommendEpisodesRequest{
+			PaginationRequest: request.PaginationRequest{Limit: 20, Offset: 0},
+		}
+		result, err := svc.GetRecommendedEpisodes(ctx, nil, req)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Len(t, result.Data, 2)
+		assert.Equal(t, int64(2), result.Pagination.Total)
+		// 全て playbackProgress=nil, inListenLater=false
+		for _, ep := range result.Data {
+			assert.Nil(t, ep.PlaybackProgress)
+			assert.False(t, ep.InListenLater)
+		}
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("ログイン時は途中再生→後で聴く→パーソナライズの順で返す", func(t *testing.T) {
+		mockRepo := new(mockRecommendationRepository)
+		mockStorage := new(mockStorageClient)
+
+		userID := uuid.New()
+		userIDStr := userID.String()
+		channelA := uuid.New()
+		channelB := uuid.New()
+		catA := uuid.New()
+		catB := uuid.New()
+
+		inProgressEpID := uuid.New()
+		listenLaterEpID := uuid.New()
+		normalEpID := uuid.New()
+
+		episodes := []model.Episode{
+			createTestEpisode(inProgressEpID, channelA, catA, 200, &now),
+			createTestEpisode(listenLaterEpID, channelB, catB, 100, &now),
+			createTestEpisode(normalEpID, channelA, catA, 50, &now),
+		}
+
+		mockRepo.On("FindPublishedEpisodes", mock.Anything, mock.AnythingOfType("repository.RecommendEpisodeParams")).Return(episodes, int64(3), nil)
+		mockRepo.On("FindUserPlaybackHistories", mock.Anything, userID).Return([]model.PlaybackHistory{
+			{EpisodeID: inProgressEpID, ProgressMs: 30000, Completed: false, PlayedAt: now},
+		}, nil)
+		mockRepo.On("FindUserListenLaterEpisodeIDs", mock.Anything, userID).Return([]uuid.UUID{listenLaterEpID}, nil)
+		mockRepo.On("FindUserChannelIDs", mock.Anything, userID).Return([]uuid.UUID{}, nil)
+		mockRepo.On("FindUserCategoryPreferences", mock.Anything, userID).Return([]repository.CategoryPreference{}, nil)
+
+		svc := NewRecommendationService(mockRepo, mockStorage)
+
+		req := request.RecommendEpisodesRequest{
+			PaginationRequest: request.PaginationRequest{Limit: 20, Offset: 0},
+		}
+		result, err := svc.GetRecommendedEpisodes(ctx, &userIDStr, req)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Len(t, result.Data, 3)
+		// 途中再生が最初
+		assert.Equal(t, inProgressEpID, result.Data[0].ID)
+		// 後で聴くが次
+		assert.Equal(t, listenLaterEpID, result.Data[1].ID)
+		assert.True(t, result.Data[1].InListenLater)
+		// 途中再生のエピソードには再生進捗がある
+		assert.NotNil(t, result.Data[0].PlaybackProgress)
+		assert.Equal(t, 30000, result.Data[0].PlaybackProgress.ProgressMs)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("完了済みエピソードはパーソナライズから除外される", func(t *testing.T) {
+		mockRepo := new(mockRecommendationRepository)
+		mockStorage := new(mockStorageClient)
+
+		userID := uuid.New()
+		userIDStr := userID.String()
+		completedEpID := uuid.New()
+		normalEpID := uuid.New()
+
+		episodes := []model.Episode{
+			createTestEpisode(completedEpID, channelID, categoryID, 200, &now),
+			createTestEpisode(normalEpID, channelID, categoryID, 50, &now),
+		}
+
+		mockRepo.On("FindPublishedEpisodes", mock.Anything, mock.AnythingOfType("repository.RecommendEpisodeParams")).Return(episodes, int64(2), nil)
+		mockRepo.On("FindUserPlaybackHistories", mock.Anything, userID).Return([]model.PlaybackHistory{
+			{EpisodeID: completedEpID, ProgressMs: 180000, Completed: true, PlayedAt: now},
+		}, nil)
+		mockRepo.On("FindUserListenLaterEpisodeIDs", mock.Anything, userID).Return([]uuid.UUID{}, nil)
+		mockRepo.On("FindUserChannelIDs", mock.Anything, userID).Return([]uuid.UUID{}, nil)
+		mockRepo.On("FindUserCategoryPreferences", mock.Anything, userID).Return([]repository.CategoryPreference{}, nil)
+
+		svc := NewRecommendationService(mockRepo, mockStorage)
+
+		req := request.RecommendEpisodesRequest{
+			PaginationRequest: request.PaginationRequest{Limit: 20, Offset: 0},
+		}
+		result, err := svc.GetRecommendedEpisodes(ctx, &userIDStr, req)
+
+		assert.NoError(t, err)
+		assert.Len(t, result.Data, 1)
+		assert.Equal(t, normalEpID, result.Data[0].ID)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("リポジトリエラー時はエラーを返す", func(t *testing.T) {
+		mockRepo := new(mockRecommendationRepository)
+		mockStorage := new(mockStorageClient)
+
+		mockRepo.On("FindPublishedEpisodes", mock.Anything, mock.AnythingOfType("repository.RecommendEpisodeParams")).Return(nil, int64(0), assert.AnError)
+
+		svc := NewRecommendationService(mockRepo, mockStorage)
+
+		req := request.RecommendEpisodesRequest{
+			PaginationRequest: request.PaginationRequest{Limit: 20, Offset: 0},
+		}
+		result, err := svc.GetRecommendedEpisodes(ctx, nil, req)
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestRecommendationService_calculateEpisodeBaseScore(t *testing.T) {
+	svc := &recommendationService{}
+	now := time.Now()
+
+	t.Run("再生回数が多いほどスコアが高い", func(t *testing.T) {
+		ep1 := &model.Episode{PlayCount: 10, PublishedAt: &now}
+		ep2 := &model.Episode{PlayCount: 1000, PublishedAt: &now}
+
+		score1 := svc.calculateEpisodeBaseScore(ep1, now)
+		score2 := svc.calculateEpisodeBaseScore(ep2, now)
+
+		assert.Greater(t, score2, score1)
+	})
+
+	t.Run("新しいエピソードほどスコアが高い", func(t *testing.T) {
+		recent := now.Add(-1 * 24 * time.Hour)
+		old := now.Add(-60 * 24 * time.Hour)
+
+		ep1 := &model.Episode{PlayCount: 100, PublishedAt: &old}
+		ep2 := &model.Episode{PlayCount: 100, PublishedAt: &recent}
+
+		score1 := svc.calculateEpisodeBaseScore(ep1, now)
+		score2 := svc.calculateEpisodeBaseScore(ep2, now)
+
+		assert.Greater(t, score2, score1)
+	})
+}
+
+func TestRecommendationService_applyEpisodeDiversityFilter(t *testing.T) {
+	svc := &recommendationService{}
+
+	t.Run("空のスライスではエラーにならない", func(t *testing.T) {
+		result := svc.applyEpisodeDiversityFilter([]scoredEpisode{})
+		assert.Empty(t, result)
+	})
+
+	t.Run("同一チャンネルが 2 件以上連続しない", func(t *testing.T) {
+		chA := uuid.New()
+		chB := uuid.New()
+
+		scored := []scoredEpisode{
+			{episode: &model.Episode{ID: uuid.New(), ChannelID: chA}, score: 100},
+			{episode: &model.Episode{ID: uuid.New(), ChannelID: chA}, score: 90},
+			{episode: &model.Episode{ID: uuid.New(), ChannelID: chA}, score: 80},
+			{episode: &model.Episode{ID: uuid.New(), ChannelID: chB}, score: 70},
+		}
+
+		result := svc.applyEpisodeDiversityFilter(scored)
+
+		assert.Len(t, result, 4)
+		// 同一チャンネルが 3 件連続しないことを確認
+		for i := 2; i < len(result); i++ {
+			if result[i].episode.ChannelID == result[i-1].episode.ChannelID &&
+				result[i-1].episode.ChannelID == result[i-2].episode.ChannelID {
+				t.Error("同一チャンネルが 3 件以上連続している")
+			}
+		}
+	})
+
+	t.Run("異なるチャンネルの場合はスコア順のまま", func(t *testing.T) {
+		chA := uuid.New()
+		chB := uuid.New()
+		chC := uuid.New()
+
+		scored := []scoredEpisode{
+			{episode: &model.Episode{ID: uuid.New(), ChannelID: chA}, score: 100},
+			{episode: &model.Episode{ID: uuid.New(), ChannelID: chB}, score: 90},
+			{episode: &model.Episode{ID: uuid.New(), ChannelID: chC}, score: 80},
+		}
+
+		result := svc.applyEpisodeDiversityFilter(scored)
+
+		assert.Len(t, result, 3)
+		assert.Equal(t, 100.0, result[0].score)
+		assert.Equal(t, 90.0, result[1].score)
+		assert.Equal(t, 80.0, result[2].score)
 	})
 }

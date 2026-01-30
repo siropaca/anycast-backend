@@ -32,11 +32,20 @@ func (m *mockRecommendationService) GetRecommendedChannels(ctx context.Context, 
 	return args.Get(0).(*response.RecommendedChannelListResponse), args.Error(1)
 }
 
+func (m *mockRecommendationService) GetRecommendedEpisodes(ctx context.Context, userID *string, req request.RecommendEpisodesRequest) (*response.RecommendedEpisodeListResponse, error) {
+	args := m.Called(ctx, userID, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.RecommendedEpisodeListResponse), args.Error(1)
+}
+
 // 未ログインのルーターをセットアップする
 func setupRecommendationRouter(h *RecommendationHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	r.GET("/recommendations/channels", h.GetRecommendedChannels)
+	r.GET("/recommendations/episodes", h.GetRecommendedEpisodes)
 	return r
 }
 
@@ -49,6 +58,7 @@ func setupRecommendationRouterWithAuth(h *RecommendationHandler, userID string) 
 		c.Next()
 	})
 	r.GET("/recommendations/channels", h.GetRecommendedChannels)
+	r.GET("/recommendations/episodes", h.GetRecommendedEpisodes)
 	return r
 }
 
@@ -214,6 +224,108 @@ func TestRecommendationHandler_GetRecommendedChannels(t *testing.T) {
 		data := resp["data"].([]any)
 		assert.Empty(t, data)
 
+		mockSvc.AssertExpectations(t)
+	})
+}
+
+func TestRecommendationHandler_GetRecommendedEpisodes(t *testing.T) {
+	now := time.Now()
+	episodeID := uuid.New()
+	channelID := uuid.New()
+	categoryID := uuid.New()
+
+	baseResult := &response.RecommendedEpisodeListResponse{
+		Data: []response.RecommendedEpisodeResponse{
+			{
+				ID:          episodeID,
+				Title:       "テストエピソード",
+				Description: "テスト説明",
+				PlayCount:   100,
+				PublishedAt: &now,
+				Channel: response.RecommendedEpisodeChannelResponse{
+					ID:   channelID,
+					Name: "テストチャンネル",
+					Category: response.CategoryResponse{
+						ID:   categoryID,
+						Slug: "technology",
+						Name: "テクノロジー",
+					},
+				},
+				InListenLater: false,
+			},
+		},
+		Pagination: response.PaginationResponse{
+			Total:  1,
+			Limit:  20,
+			Offset: 0,
+		},
+	}
+
+	t.Run("未ログインでおすすめエピソード一覧を取得できる", func(t *testing.T) {
+		mockSvc := new(mockRecommendationService)
+		mockSvc.On("GetRecommendedEpisodes", mock.Anything, (*string)(nil), mock.AnythingOfType("request.RecommendEpisodesRequest")).Return(baseResult, nil)
+
+		handler := NewRecommendationHandler(mockSvc)
+		router := setupRecommendationRouter(handler)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/recommendations/episodes", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var resp map[string]any
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+
+		data := resp["data"].([]any)
+		assert.Len(t, data, 1)
+
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("ログイン済みでおすすめエピソード一覧を取得できる", func(t *testing.T) {
+		mockSvc := new(mockRecommendationService)
+		userID := uuid.New().String()
+		mockSvc.On("GetRecommendedEpisodes", mock.Anything, &userID, mock.AnythingOfType("request.RecommendEpisodesRequest")).Return(baseResult, nil)
+
+		handler := NewRecommendationHandler(mockSvc)
+		router := setupRecommendationRouterWithAuth(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/recommendations/episodes", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("無効なカテゴリ ID の場合は 400 を返す", func(t *testing.T) {
+		mockSvc := new(mockRecommendationService)
+
+		handler := NewRecommendationHandler(mockSvc)
+		router := setupRecommendationRouter(handler)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/recommendations/episodes?categoryId=invalid-uuid", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		mockSvc.AssertNotCalled(t, "GetRecommendedEpisodes")
+	})
+
+	t.Run("サービスがエラーを返すとエラーレスポンスを返す", func(t *testing.T) {
+		mockSvc := new(mockRecommendationService)
+		mockSvc.On("GetRecommendedEpisodes", mock.Anything, (*string)(nil), mock.AnythingOfType("request.RecommendEpisodesRequest")).Return(nil, apperror.ErrInternal)
+
+		handler := NewRecommendationHandler(mockSvc)
+		router := setupRecommendationRouter(handler)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/recommendations/episodes", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
 		mockSvc.AssertExpectations(t)
 	})
 }
