@@ -4455,6 +4455,61 @@ const docTemplate = `{
                 }
             }
         },
+        "/recommendations/channels": {
+            "get": {
+                "description": "おすすめチャンネル一覧を取得します。未ログイン時は人気順・新着順、ログイン時はパーソナライズされた結果を返します。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recommendations"
+                ],
+                "summary": "おすすめチャンネル一覧取得",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "カテゴリ ID でフィルタ",
+                        "name": "categoryId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "取得件数（デフォルト: 20、最大: 50）",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "オフセット（デフォルト: 0）",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.RecommendedChannelListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/script-jobs/{jobId}": {
             "get": {
                 "security": [
@@ -6726,6 +6781,67 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
+                }
+            }
+        },
+        "response.RecommendedChannelListResponse": {
+            "type": "object",
+            "required": [
+                "data",
+                "pagination"
+            ],
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.RecommendedChannelResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/response.PaginationResponse"
+                }
+            }
+        },
+        "response.RecommendedChannelResponse": {
+            "type": "object",
+            "required": [
+                "category",
+                "description",
+                "episodeCount",
+                "id",
+                "name",
+                "totalPlayCount"
+            ],
+            "properties": {
+                "artwork": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.ArtworkResponse"
+                        }
+                    ],
+                    "x-nullable": true
+                },
+                "category": {
+                    "$ref": "#/definitions/response.CategoryResponse"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "episodeCount": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "latestEpisodeAt": {
+                    "type": "string",
+                    "x-nullable": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "totalPlayCount": {
+                    "type": "integer"
                 }
             }
         },
