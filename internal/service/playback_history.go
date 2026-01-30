@@ -155,21 +155,25 @@ func (s *playbackHistoryService) toPlaybackHistoryItemResponse(ctx context.Conte
 	// チャンネルのアートワーク URL
 	var channelArtwork *response.ArtworkResponse
 	if channel.Artwork != nil {
-		url, _ := s.storageClient.GenerateSignedURL(ctx, channel.Artwork.Path, storage.SignedURLExpirationImage)
-		channelArtwork = &response.ArtworkResponse{
-			ID:  channel.Artwork.ID,
-			URL: url,
+		url, err := s.storageClient.GenerateSignedURL(ctx, channel.Artwork.Path, storage.SignedURLExpirationImage)
+		if err == nil {
+			channelArtwork = &response.ArtworkResponse{
+				ID:  channel.Artwork.ID,
+				URL: url,
+			}
 		}
 	}
 
 	// エピソードの音声 URL
 	var fullAudio *response.AudioResponse
 	if episode.FullAudio != nil {
-		url, _ := s.storageClient.GenerateSignedURL(ctx, episode.FullAudio.Path, storage.SignedURLExpirationAudio)
-		fullAudio = &response.AudioResponse{
-			ID:         episode.FullAudio.ID,
-			URL:        url,
-			DurationMs: episode.FullAudio.DurationMs,
+		url, err := s.storageClient.GenerateSignedURL(ctx, episode.FullAudio.Path, storage.SignedURLExpirationAudio)
+		if err == nil {
+			fullAudio = &response.AudioResponse{
+				ID:         episode.FullAudio.ID,
+				URL:        url,
+				DurationMs: episode.FullAudio.DurationMs,
+			}
 		}
 	}
 

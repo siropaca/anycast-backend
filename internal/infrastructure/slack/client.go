@@ -106,7 +106,7 @@ func (c *slackClient) SendFeedback(ctx context.Context, feedback FeedbackNotific
 	// スクリーンショットがある場合
 	if feedback.ScreenshotURL != nil && *feedback.ScreenshotURL != "" {
 		blocks = append(blocks, map[string]any{
-			"type": "image",
+			"type":      "image",
 			"image_url": *feedback.ScreenshotURL,
 			"alt_text":  "Screenshot",
 		})

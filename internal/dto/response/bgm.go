@@ -31,10 +31,10 @@ type BgmWithEpisodesResponse struct {
 
 // BGM のレスポンス
 type BgmResponse struct {
-	ID       uuid.UUID        `json:"id" validate:"required"`
-	Name     string           `json:"name" validate:"required"`
-	IsSystem bool             `json:"isSystem" validate:"required"`
-	Audio    BgmAudioResponse `json:"audio" validate:"required"`
+	ID        uuid.UUID        `json:"id" validate:"required"`
+	Name      string           `json:"name" validate:"required"`
+	IsSystem  bool             `json:"isSystem" validate:"required"`
+	Audio     BgmAudioResponse `json:"audio" validate:"required"`
 	CreatedAt time.Time        `json:"createdAt" validate:"required"`
 	UpdatedAt time.Time        `json:"updatedAt" validate:"required"`
 }

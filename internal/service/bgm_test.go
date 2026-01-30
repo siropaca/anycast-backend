@@ -121,7 +121,7 @@ func TestListMyBgms(t *testing.T) {
 
 		req := request.ListMyBgmsRequest{
 			PaginationRequest: request.PaginationRequest{Limit: 10, Offset: 0},
-			IncludeSystem:    false,
+			IncludeSystem:     false,
 		}
 
 		mockBgmRepo.On("FindByUserID", mock.Anything, userID, repository.BgmFilter{Limit: 10, Offset: 0}).Return(bgms, int64(1), nil)
@@ -190,7 +190,7 @@ func TestListMyBgms(t *testing.T) {
 
 		req := request.ListMyBgmsRequest{
 			PaginationRequest: request.PaginationRequest{Limit: 10, Offset: 0},
-			IncludeSystem:    true,
+			IncludeSystem:     true,
 		}
 
 		mockSystemBgmRepo.On("CountActive", mock.Anything).Return(int64(1), nil)
@@ -220,7 +220,7 @@ func TestListMyBgms(t *testing.T) {
 
 		req := request.ListMyBgmsRequest{
 			PaginationRequest: request.PaginationRequest{Limit: 10, Offset: 0},
-			IncludeSystem:    false,
+			IncludeSystem:     false,
 		}
 
 		result, err := svc.ListMyBgms(ctx, "invalid-uuid", req)

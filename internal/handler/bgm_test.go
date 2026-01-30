@@ -99,9 +99,9 @@ func setupAuthenticatedBgmRouter(h *BgmHandler, userID string) *gin.Engine {
 func createTestBgmWithEpisodesResponse() response.BgmWithEpisodesResponse {
 	now := time.Now()
 	return response.BgmWithEpisodesResponse{
-		ID:        uuid.New(),
-		Name:      "Test BGM",
-		IsDefault: false,
+		ID:       uuid.New(),
+		Name:     "Test BGM",
+		IsSystem: false,
 		Audio: response.BgmAudioResponse{
 			ID:         uuid.New(),
 			URL:        "https://example.com/audio.mp3",

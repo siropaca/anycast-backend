@@ -8,12 +8,12 @@ import (
 
 // 再生履歴内のエピソード情報のレスポンス
 type PlaybackHistoryEpisodeResponse struct {
-	ID          uuid.UUID                       `json:"id" validate:"required"`
-	Title       string                          `json:"title" validate:"required"`
-	Description string                          `json:"description" validate:"required"`
-	FullAudio   *AudioResponse                  `json:"fullAudio" extensions:"x-nullable"`
-	Channel     PlaybackHistoryChannelResponse  `json:"channel" validate:"required"`
-	PublishedAt *time.Time                      `json:"publishedAt" extensions:"x-nullable"`
+	ID          uuid.UUID                      `json:"id" validate:"required"`
+	Title       string                         `json:"title" validate:"required"`
+	Description string                         `json:"description" validate:"required"`
+	FullAudio   *AudioResponse                 `json:"fullAudio" extensions:"x-nullable"`
+	Channel     PlaybackHistoryChannelResponse `json:"channel" validate:"required"`
+	PublishedAt *time.Time                     `json:"publishedAt" extensions:"x-nullable"`
 }
 
 // 再生履歴内のチャンネル情報のレスポンス

@@ -205,7 +205,7 @@ func (s *bgmService) toBgmWithEpisodesResponse(ctx context.Context, b model.Bgm)
 	return response.BgmWithEpisodesResponse{
 		ID:        b.ID,
 		Name:      b.Name,
-		IsSystem: false,
+		IsSystem:  false,
 		Audio:     audioResponse,
 		Episodes:  episodes,
 		Channels:  channels,
@@ -240,7 +240,7 @@ func (s *bgmService) toSystemBgmWithEpisodesResponse(ctx context.Context, b mode
 	return response.BgmWithEpisodesResponse{
 		ID:        b.ID,
 		Name:      b.Name,
-		IsSystem: true,
+		IsSystem:  true,
 		Audio:     audioResponse,
 		Episodes:  []response.BgmEpisodeResponse{},
 		Channels:  []response.BgmChannelResponse{},
