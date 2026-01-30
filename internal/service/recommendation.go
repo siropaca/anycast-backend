@@ -586,11 +586,20 @@ func (s *recommendationService) toRecommendedEpisodeResponse(
 	// エピソードのアートワーク
 	var artwork *response.ArtworkResponse
 	if ep.Artwork != nil {
-		url, err := s.storageClient.GenerateSignedURL(ctx, ep.Artwork.Path, storage.SignedURLExpirationImage)
-		if err == nil {
+		var artworkURL string
+		if storage.IsExternalURL(ep.Artwork.Path) {
+			artworkURL = ep.Artwork.Path
+		} else {
+			var err error
+			artworkURL, err = s.storageClient.GenerateSignedURL(ctx, ep.Artwork.Path, storage.SignedURLExpirationImage)
+			if err != nil {
+				artworkURL = ""
+			}
+		}
+		if artworkURL != "" {
 			artwork = &response.ArtworkResponse{
 				ID:  ep.Artwork.ID,
-				URL: url,
+				URL: artworkURL,
 			}
 		}
 	}
@@ -612,11 +621,20 @@ func (s *recommendationService) toRecommendedEpisodeResponse(
 	channel := ep.Channel
 	var channelArtwork *response.ArtworkResponse
 	if channel.Artwork != nil {
-		url, err := s.storageClient.GenerateSignedURL(ctx, channel.Artwork.Path, storage.SignedURLExpirationImage)
-		if err == nil {
+		var chArtworkURL string
+		if storage.IsExternalURL(channel.Artwork.Path) {
+			chArtworkURL = channel.Artwork.Path
+		} else {
+			var err error
+			chArtworkURL, err = s.storageClient.GenerateSignedURL(ctx, channel.Artwork.Path, storage.SignedURLExpirationImage)
+			if err != nil {
+				chArtworkURL = ""
+			}
+		}
+		if chArtworkURL != "" {
 			channelArtwork = &response.ArtworkResponse{
 				ID:  channel.Artwork.ID,
-				URL: url,
+				URL: chArtworkURL,
 			}
 		}
 	}
@@ -659,13 +677,19 @@ func (s *recommendationService) toRecommendedEpisodeResponse(
 func (s *recommendationService) toRecommendedChannelResponse(ctx context.Context, ch *repository.RecommendedChannel) response.RecommendedChannelResponse {
 	var artwork *response.ArtworkResponse
 	if ch.Artwork != nil {
-		url, err := s.storageClient.GenerateSignedURL(ctx, ch.Artwork.Path, storage.SignedURLExpirationImage)
-		if err != nil {
-			return response.RecommendedChannelResponse{}
+		var artworkURL string
+		if storage.IsExternalURL(ch.Artwork.Path) {
+			artworkURL = ch.Artwork.Path
+		} else {
+			var err error
+			artworkURL, err = s.storageClient.GenerateSignedURL(ctx, ch.Artwork.Path, storage.SignedURLExpirationImage)
+			if err != nil {
+				return response.RecommendedChannelResponse{}
+			}
 		}
 		artwork = &response.ArtworkResponse{
 			ID:  ch.Artwork.ID,
-			URL: url,
+			URL: artworkURL,
 		}
 	}
 

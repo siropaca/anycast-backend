@@ -155,11 +155,20 @@ func (s *playbackHistoryService) toPlaybackHistoryItemResponse(ctx context.Conte
 	// チャンネルのアートワーク URL
 	var channelArtwork *response.ArtworkResponse
 	if channel.Artwork != nil {
-		url, err := s.storageClient.GenerateSignedURL(ctx, channel.Artwork.Path, storage.SignedURLExpirationImage)
-		if err == nil {
+		var chArtworkURL string
+		if storage.IsExternalURL(channel.Artwork.Path) {
+			chArtworkURL = channel.Artwork.Path
+		} else {
+			var err error
+			chArtworkURL, err = s.storageClient.GenerateSignedURL(ctx, channel.Artwork.Path, storage.SignedURLExpirationImage)
+			if err != nil {
+				chArtworkURL = ""
+			}
+		}
+		if chArtworkURL != "" {
 			channelArtwork = &response.ArtworkResponse{
 				ID:  channel.Artwork.ID,
-				URL: url,
+				URL: chArtworkURL,
 			}
 		}
 	}
