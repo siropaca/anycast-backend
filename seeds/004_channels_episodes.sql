@@ -517,3 +517,101 @@ INSERT INTO comments (user_id, episode_id, content) VALUES
 INSERT INTO comments (user_id, episode_id, content) VALUES
 	('8eada3a5-f413-4eeb-9cd5-12def60d4596', 'eb960304-f86e-4364-be5d-d3d5126c9601', 'AIの未来について、とても興味深い内容でした！'),
 	('8eada3a5-f413-4eeb-9cd5-12def60d4596', '67e8e26d-20c8-492a-ac2c-5c79d8050aa3', 'スマートホーム、私も導入を検討してみます。');
+
+-- ===========================================
+-- チャンネル公開設定（約 80% = 12/15 チャンネルを公開）
+-- 未公開: ゆるふわ雑談ラジオ, ミュージックステーション, フィクション工房
+-- ===========================================
+
+UPDATE channels SET published_at = NOW() - INTERVAL '30 days' WHERE id = 'ea9a266e-f532-417c-8916-709d0233941c'; -- テックトーク
+UPDATE channels SET published_at = NOW() - INTERVAL '28 days' WHERE id = 'e5a50bd3-8990-4344-b470-56fa7329d75c'; -- ビジネス最前線
+UPDATE channels SET published_at = NOW() - INTERVAL '25 days' WHERE id = '3908d99b-d52d-4a73-96fb-fca7df2dfec9'; -- サイエンス・ラボ
+UPDATE channels SET published_at = NOW() - INTERVAL '24 days' WHERE id = '395f3bfa-031e-4d90-a53b-19d311392b00'; -- ほのぼのライフ
+UPDATE channels SET published_at = NOW() - INTERVAL '22 days' WHERE id = '7f2c8688-c163-40c3-9303-56b4d8a1ed7a'; -- ニュースの裏側
+UPDATE channels SET published_at = NOW() - INTERVAL '20 days' WHERE id = '7af3be1e-1555-4f71-9af0-2be26cd6b612'; -- 映画レビュー倶楽部
+UPDATE channels SET published_at = NOW() - INTERVAL '18 days' WHERE id = '892d53ff-0633-4b85-a220-afa0682ee467'; -- アート散歩
+UPDATE channels SET published_at = NOW() - INTERVAL '15 days' WHERE id = 'b77286af-042a-4580-88b6-efe62aaa3eae'; -- スポーツダイジェスト
+UPDATE channels SET published_at = NOW() - INTERVAL '12 days' WHERE id = 'f602c66d-6111-495a-8b9c-e46fa3740d49'; -- ヘルシーライフ
+UPDATE channels SET published_at = NOW() - INTERVAL '10 days' WHERE id = 'f02d6a25-4166-4632-812d-446ee6d5be38'; -- 歴史探訪
+UPDATE channels SET published_at = NOW() - INTERVAL '7 days'  WHERE id = '1737fa8f-75ff-41ba-9775-8d3496d38344'; -- コメディナイト
+UPDATE channels SET published_at = NOW() - INTERVAL '5 days'  WHERE id = '06891da2-4124-492f-826c-1072dcf27ee6'; -- 教育チャンネル
+
+-- ===========================================
+-- エピソード用音声データ（既存 BGM ファイルを流用）
+-- ===========================================
+
+INSERT INTO audios (id, mime_type, path, filename, file_size, duration_ms) VALUES
+	('b0a00001-0001-4000-b000-000000000001', 'audio/mpeg', 'audios/You_and_Me.mp3',                    'You_and_Me.mp3',                    4508877, 108000),
+	('b0a00001-0001-4000-b000-000000000002', 'audio/mpeg', 'audios/2_23_AM.mp3',                       '2_23_AM.mp3',                       8074035, 192000),
+	('b0a00001-0001-4000-b000-000000000003', 'audio/mpeg', 'audios/しゅわしゅわハニーレモン350ml.mp3', 'しゅわしゅわハニーレモン350ml.mp3', 3879731,  92000),
+	('b0a00001-0001-4000-b000-000000000004', 'audio/mpeg', 'audios/10℃.mp3',                           '10℃.mp3',                           7340032, 174000),
+	('b0a00001-0001-4000-b000-000000000005', 'audio/mpeg', 'audios/SUMMER_TRIANGLE.mp3',               'SUMMER_TRIANGLE.mp3',               4823450, 115000),
+	('b0a00001-0001-4000-b000-000000000006', 'audio/mpeg', 'audios/パステルハウス.mp3',                'パステルハウス.mp3',                7549747, 180000),
+	('b0a00001-0001-4000-b000-000000000007', 'audio/mpeg', 'audios/野良猫は宇宙を目指した.mp3',        '野良猫は宇宙を目指した.mp3',        1992295,  48000),
+	('b0a00001-0001-4000-b000-000000000008', 'audio/mpeg', 'audios/昼下がり気分.mp3',                  '昼下がり気分.mp3',                  6396314, 302000),
+	('b0a00001-0001-4000-b000-000000000009', 'audio/mpeg', 'audios/You_and_Me.mp3',                    'You_and_Me.mp3',                    4508877, 108000),
+	('b0a00001-0001-4000-b000-00000000000a', 'audio/mpeg', 'audios/2_23_AM.mp3',                       '2_23_AM.mp3',                       8074035, 192000),
+	('b0a00001-0001-4000-b000-00000000000b', 'audio/mpeg', 'audios/しゅわしゅわハニーレモン350ml.mp3', 'しゅわしゅわハニーレモン350ml.mp3', 3879731,  92000),
+	('b0a00001-0001-4000-b000-00000000000c', 'audio/mpeg', 'audios/10℃.mp3',                           '10℃.mp3',                           7340032, 174000),
+	('b0a00001-0001-4000-b000-00000000000d', 'audio/mpeg', 'audios/SUMMER_TRIANGLE.mp3',               'SUMMER_TRIANGLE.mp3',               4823450, 115000),
+	('b0a00001-0001-4000-b000-00000000000e', 'audio/mpeg', 'audios/パステルハウス.mp3',                'パステルハウス.mp3',                7549747, 180000),
+	('b0a00001-0001-4000-b000-00000000000f', 'audio/mpeg', 'audios/野良猫は宇宙を目指した.mp3',        '野良猫は宇宙を目指した.mp3',        1992295,  48000),
+	('b0a00001-0001-4000-b000-000000000010', 'audio/mpeg', 'audios/昼下がり気分.mp3',                  '昼下がり気分.mp3',                  6396314, 302000),
+	('b0a00001-0001-4000-b000-000000000011', 'audio/mpeg', 'audios/You_and_Me.mp3',                    'You_and_Me.mp3',                    4508877, 108000),
+	('b0a00001-0001-4000-b000-000000000012', 'audio/mpeg', 'audios/2_23_AM.mp3',                       '2_23_AM.mp3',                       8074035, 192000),
+	('b0a00001-0001-4000-b000-000000000013', 'audio/mpeg', 'audios/しゅわしゅわハニーレモン350ml.mp3', 'しゅわしゅわハニーレモン350ml.mp3', 3879731,  92000),
+	('b0a00001-0001-4000-b000-000000000014', 'audio/mpeg', 'audios/10℃.mp3',                           '10℃.mp3',                           7340032, 174000),
+	('b0a00001-0001-4000-b000-000000000015', 'audio/mpeg', 'audios/SUMMER_TRIANGLE.mp3',               'SUMMER_TRIANGLE.mp3',               4823450, 115000),
+	('b0a00001-0001-4000-b000-000000000016', 'audio/mpeg', 'audios/パステルハウス.mp3',                'パステルハウス.mp3',                7549747, 180000),
+	('b0a00001-0001-4000-b000-000000000017', 'audio/mpeg', 'audios/野良猫は宇宙を目指した.mp3',        '野良猫は宇宙を目指した.mp3',        1992295,  48000),
+	('b0a00001-0001-4000-b000-000000000018', 'audio/mpeg', 'audios/昼下がり気分.mp3',                  '昼下がり気分.mp3',                  6396314, 302000),
+	('b0a00001-0001-4000-b000-000000000019', 'audio/mpeg', 'audios/You_and_Me.mp3',                    'You_and_Me.mp3',                    4508877, 108000),
+	('b0a00001-0001-4000-b000-00000000001a', 'audio/mpeg', 'audios/2_23_AM.mp3',                       '2_23_AM.mp3',                       8074035, 192000),
+	('b0a00001-0001-4000-b000-00000000001b', 'audio/mpeg', 'audios/しゅわしゅわハニーレモン350ml.mp3', 'しゅわしゅわハニーレモン350ml.mp3', 3879731,  92000),
+	('b0a00001-0001-4000-b000-00000000001c', 'audio/mpeg', 'audios/10℃.mp3',                           '10℃.mp3',                           7340032, 174000),
+	('b0a00001-0001-4000-b000-00000000001d', 'audio/mpeg', 'audios/SUMMER_TRIANGLE.mp3',               'SUMMER_TRIANGLE.mp3',               4823450, 115000),
+	('b0a00001-0001-4000-b000-00000000001e', 'audio/mpeg', 'audios/パステルハウス.mp3',                'パステルハウス.mp3',                7549747, 180000),
+	('b0a00001-0001-4000-b000-00000000001f', 'audio/mpeg', 'audios/野良猫は宇宙を目指した.mp3',        '野良猫は宇宙を目指した.mp3',        1992295,  48000),
+	('b0a00001-0001-4000-b000-000000000020', 'audio/mpeg', 'audios/昼下がり気分.mp3',                  '昼下がり気分.mp3',                  6396314, 302000),
+	('b0a00001-0001-4000-b000-000000000021', 'audio/mpeg', 'audios/You_and_Me.mp3',                    'You_and_Me.mp3',                    4508877, 108000),
+	('b0a00001-0001-4000-b000-000000000022', 'audio/mpeg', 'audios/2_23_AM.mp3',                       '2_23_AM.mp3',                       8074035, 192000),
+	('b0a00001-0001-4000-b000-000000000023', 'audio/mpeg', 'audios/しゅわしゅわハニーレモン350ml.mp3', 'しゅわしゅわハニーレモン350ml.mp3', 3879731,  92000),
+	('b0a00001-0001-4000-b000-000000000024', 'audio/mpeg', 'audios/10℃.mp3',                           '10℃.mp3',                           7340032, 174000);
+
+-- エピソードに音声を紐づけ
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000001' WHERE id = 'eb960304-f86e-4364-be5d-d3d5126c9601'; -- AI の未来を語る
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000002' WHERE id = '67e8e26d-20c8-492a-ac2c-5c79d8050aa3'; -- スマートホームのすすめ
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000003' WHERE id = '198d7e19-7d40-4299-95bf-a641f5c83911'; -- 最近ハマってること
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000004' WHERE id = 'fcb16526-951a-4ff1-a456-ab1dba96f699'; -- 副業から始める起業入門
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000005' WHERE id = '9cde2abb-30e8-447b-bc8b-bb799b0f6f06'; -- 失敗しない資金調達の秘訣
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000006' WHERE id = 'b1c1e7d7-b3eb-4783-82d0-6857832daf09'; -- 量子コンピュータ入門
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000007' WHERE id = '682c05ed-3ae8-4558-a74c-62f8cdc7b344'; -- 宇宙の神秘に迫る
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000008' WHERE id = '1a4aad00-fd65-4960-a11f-45f2b5ff504c'; -- DNA と遺伝子の不思議
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000009' WHERE id = '98f515d1-ca1f-4810-b8b6-a147aac641f4'; -- お気に入りのカフェ巡り
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-00000000000a' WHERE id = '29c31347-3078-4ab0-9773-f6d408462c39'; -- 休日の過ごし方
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-00000000000b' WHERE id = '436043d0-9a74-4541-9639-6b9566125bd7'; -- SNS 時代のメディアリテラシー
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-00000000000c' WHERE id = 'c4d39d21-4e39-4150-bd3d-5ceb27718a38'; -- 選挙と民主主義の未来
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-00000000000d' WHERE id = '8cfcfff0-87c8-4db9-a250-7ccc5fba1407'; -- 気候変動と私たちの暮らし
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-00000000000e' WHERE id = '7c2d9c7a-e3e3-4388-bfe7-d36162a19768'; -- リモートワーク革命
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-00000000000f' WHERE id = 'b7a74a63-a9e2-4f60-ba58-bfa887598e07'; -- 今年のベスト映画 TOP5
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000010' WHERE id = '105d9802-0133-4a06-a1b4-de87eb26f5ac'; -- ホラー映画の魅力
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000011' WHERE id = 'ec47dd8e-34c5-4ba4-a101-02713e87ba74'; -- 現代アートの楽しみ方
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000012' WHERE id = '4697c3c7-a89a-4ce5-9b39-f4bb8d6ed69a'; -- サッカー W 杯を振り返る
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000013' WHERE id = 'ecd6cb92-597d-4367-9c65-9f98fb38fc9b'; -- マラソンの科学
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000014' WHERE id = 'f270e88b-4c7f-4fd5-a06d-5a52ab0ff501'; -- 筋トレとメンタルの関係
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000015' WHERE id = '80d5ac1d-4a0c-44b9-8e4c-61b2ac333b00'; -- eスポーツの今
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000016' WHERE id = '948ee16d-ef1b-4e54-8dcb-cf6b7b46c7fd'; -- 野球データ分析入門
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000017' WHERE id = '4288967f-f224-452a-bf4d-f0c61a1ecaa9'; -- オリンピックの感動秘話
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000018' WHERE id = '9890df9b-05cd-4962-9c7f-42e05b5c6ced'; -- 朝ヨガのすすめ
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000019' WHERE id = 'fa2a8e34-234b-4d40-acad-e4448d1476d0'; -- 腸活で健康に
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-00000000001a' WHERE id = 'a787628e-8dd9-4cac-853d-8d84b0aec6ec'; -- J-POP の歴史を辿る
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-00000000001b' WHERE id = '2267a065-9958-493b-9cb3-c62e578b7c23'; -- 戦国武将の意外な一面
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-00000000001c' WHERE id = '3c8a7f95-0001-4437-a1ec-138009cd0001'; -- 古代エジプトの謎
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-00000000001d' WHERE id = '3c8a7f95-0002-4437-a1ec-138009cd0002'; -- 幕末の志士たち
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-00000000001e' WHERE id = '3c8a7f95-0003-4437-a1ec-138009cd0003'; -- ローマ帝国の栄光と衰退
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-00000000001f' WHERE id = '3c8a7f95-0004-4437-a1ec-138009cd0004'; -- 日本の城の秘密
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000020' WHERE id = '3c8a7f95-0005-4437-a1ec-138009cd0005'; -- 笑ってはいけない早口言葉
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000021' WHERE id = '3c8a7f95-0006-4437-a1ec-138009cd0006'; -- あるあるネタ大会
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000022' WHERE id = '3c8a7f95-0007-4437-a1ec-138009cd0007'; -- 数学を好きになる方法
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000023' WHERE id = '3c8a7f95-0008-4437-a1ec-138009cd0008'; -- 星降る夜の物語
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000024' WHERE id = '3c8a7f95-0009-4437-a1ec-138009cd0009'; -- 猫と魔法使い
