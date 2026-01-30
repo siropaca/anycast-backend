@@ -182,7 +182,7 @@ DELETE /episodes/:episodeId/reactions
 
 ---
 
-## お気に入りしたエピソード一覧
+## 高評価したエピソード一覧
 
 like したエピソードの一覧を取得する。
 

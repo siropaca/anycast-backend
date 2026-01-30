@@ -421,7 +421,7 @@ func TestRecommendationService_applyPersonalizedScores(t *testing.T) {
 		result := svc.applyPersonalizedScores(ctx, scored, userID)
 
 		assert.Len(t, result, 2)
-		// お気に入りカテゴリのチャンネルのスコアが高い
+		// 高評価カテゴリのチャンネルのスコアが高い
 		var favScore, otherScore float64
 		for _, sc := range result {
 			if sc.channel.CategoryID == favCatID {

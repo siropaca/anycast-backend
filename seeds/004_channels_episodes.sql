@@ -455,7 +455,7 @@ INSERT INTO script_lines (id, episode_id, line_order, speaker_id, text, emotion)
 	('a0000023-0001-4000-a000-000000000004', '3c8a7f95-0009-4437-a1ec-138009cd0009', 3, '13efec0a-fcd2-4a02-a4bd-9e9b7b6afcf2', '少年は目を丸くしました。「きみ、魔法使いなの？」', NULL);
 
 -- ===========================================
--- お気に入り・ブックマーク・フォロー
+-- 高評価・ブックマーク・フォロー
 -- ===========================================
 
 -- test_user (8def69af) が 5 人のユーザーをフォロー
@@ -496,7 +496,7 @@ INSERT INTO playlist_items (playlist_id, episode_id, position) VALUES
 	('11111111-1111-1111-1111-111111111111', '105d9802-0133-4a06-a1b4-de87eb26f5ac', 3),
 	('11111111-1111-1111-1111-111111111111', '2267a065-9958-493b-9cb3-c62e578b7c23', 4);
 
--- test_user が 5 個のエピソードにお気に入り（reaction: like）
+-- test_user が 5 個のエピソードに高評価（reaction: like）
 INSERT INTO reactions (user_id, episode_id, reaction_type) VALUES
 	('8def69af-dae9-4641-a0e5-100107626933', 'fcb16526-951a-4ff1-a456-ab1dba96f699', 'like'),
 	('8def69af-dae9-4641-a0e5-100107626933', 'b1c1e7d7-b3eb-4783-82d0-6857832daf09', 'like'),

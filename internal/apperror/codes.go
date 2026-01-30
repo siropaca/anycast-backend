@@ -57,7 +57,7 @@ var (
 	ErrDuplicateEmail    = newError(CodeDuplicateEmail, "このメールアドレスは既に使用されています", http.StatusConflict)
 	ErrDuplicateUsername = newError(CodeDuplicateUsername, "このユーザー名は既に使用されています", http.StatusConflict)
 	ErrDuplicateName     = newError(CodeDuplicateName, "この名前は既に使用されています", http.StatusConflict)
-	ErrAlreadyLiked      = newError(CodeAlreadyLiked, "既にお気に入りに追加されています", http.StatusConflict)
+	ErrAlreadyLiked      = newError(CodeAlreadyLiked, "既に高評価に追加されています", http.StatusConflict)
 	ErrAlreadyInPlaylist = newError(CodeAlreadyInPlaylist, "既にプレイリストに追加されています", http.StatusConflict)
 	ErrAlreadyFollowed   = newError(CodeAlreadyFollowed, "既にフォローしています", http.StatusConflict)
 	ErrDefaultPlaylist   = newError(CodeDefaultPlaylist, "デフォルトプレイリストは変更できません", http.StatusConflict)
