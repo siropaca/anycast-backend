@@ -116,6 +116,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.DELETE("/channels/:channelId/default-bgm", container.ChannelHandler.DeleteDefaultBgm)
 
 	// Episodes
+	authenticated.GET("/channels/:channelId/episodes/:episodeId", container.EpisodeHandler.GetEpisode)
 	authenticated.POST("/channels/:channelId/episodes", container.EpisodeHandler.CreateEpisode)
 	authenticated.PATCH("/channels/:channelId/episodes/:episodeId", container.EpisodeHandler.UpdateEpisode)
 	authenticated.DELETE("/channels/:channelId/episodes/:episodeId", container.EpisodeHandler.DeleteEpisode)

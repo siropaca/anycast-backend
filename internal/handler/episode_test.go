@@ -34,6 +34,14 @@ func (m *mockEpisodeService) ListMyChannelEpisodes(ctx context.Context, userID, 
 	return args.Get(0).(*response.EpisodeListWithPaginationResponse), args.Error(1)
 }
 
+func (m *mockEpisodeService) GetEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error) {
+	args := m.Called(ctx, userID, channelID, episodeID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.EpisodeDataResponse), args.Error(1)
+}
+
 func (m *mockEpisodeService) GetMyChannelEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error) {
 	args := m.Called(ctx, userID, channelID, episodeID)
 	if args.Get(0) == nil {

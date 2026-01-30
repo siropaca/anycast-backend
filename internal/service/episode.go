@@ -17,6 +17,7 @@ import (
 
 // EpisodeService はエピソード関連のビジネスロジックインターフェースを表す
 type EpisodeService interface {
+	GetEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error)
 	GetMyChannelEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error)
 	ListMyChannelEpisodes(ctx context.Context, userID, channelID string, filter repository.EpisodeFilter) (*response.EpisodeListWithPaginationResponse, error)
 	CreateEpisode(ctx context.Context, userID, channelID, title, description string, artworkImageID *string) (*response.EpisodeResponse, error)
@@ -64,6 +65,65 @@ func NewEpisodeService(
 		storageClient:  storageClient,
 		ttsClient:      ttsClient,
 	}
+}
+
+// GetEpisode は指定されたエピソードを取得する
+func (s *episodeService) GetEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	// チャンネルの存在確認
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	isOwner := channel.UserID == uid
+	isChannelPublished := channel.PublishedAt != nil && !channel.PublishedAt.After(time.Now())
+
+	// オーナーでなく、かつチャンネルが公開されていない場合は 404
+	if !isOwner && !isChannelPublished {
+		return nil, apperror.ErrNotFound.WithMessage("チャンネルが見つかりません")
+	}
+
+	// エピソードの存在確認とチャンネルの一致チェック
+	episode, err := s.episodeRepo.FindByID(ctx, eid)
+	if err != nil {
+		return nil, err
+	}
+
+	if episode.ChannelID != cid {
+		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
+	}
+
+	// 非オーナーの場合、エピソードの公開状態チェック
+	if !isOwner {
+		isEpisodePublished := episode.PublishedAt != nil && !episode.PublishedAt.After(time.Now())
+		if !isEpisodePublished {
+			return nil, apperror.ErrNotFound.WithMessage("エピソードが見つかりません")
+		}
+	}
+
+	resp, err := s.toEpisodeResponse(ctx, episode)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.EpisodeDataResponse{
+		Data: resp,
+	}, nil
 }
 
 // GetMyChannelEpisode は自分のチャンネルのエピソードを取得する

@@ -22,6 +22,49 @@ func NewEpisodeHandler(es service.EpisodeService) *EpisodeHandler {
 	return &EpisodeHandler{episodeService: es}
 }
 
+// GetEpisode godoc
+// @Summary エピソード取得
+// @Description エピソードを取得します（公開中、または自分のチャンネルのエピソードのみ）
+// @Tags episodes
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param episodeId path string true "エピソード ID"
+// @Success 200 {object} response.EpisodeDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/episodes/{episodeId} [get]
+func (h *EpisodeHandler) GetEpisode(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
+		return
+	}
+
+	episodeID := c.Param("episodeId")
+	if episodeID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
+		return
+	}
+
+	result, err := h.episodeService.GetEpisode(c.Request.Context(), userID, channelID, episodeID)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
 // ListMyChannelEpisodes godoc
 // @Summary 自分のチャンネルのエピソード一覧取得
 // @Description 自分のチャンネルに紐付くエピソード一覧を取得します（非公開含む）
