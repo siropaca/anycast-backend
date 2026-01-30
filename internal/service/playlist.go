@@ -14,7 +14,7 @@ import (
 )
 
 // DefaultPlaylistName はデフォルトプレイリストの名前
-const DefaultPlaylistName = "再生リスト"
+const DefaultPlaylistName = "後で聴く"
 
 // PlaylistService はプレイリスト関連のビジネスロジックインターフェースを表す
 type PlaylistService interface {
