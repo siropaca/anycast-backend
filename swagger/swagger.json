@@ -4504,6 +4504,61 @@
                 }
             }
         },
+        "/recommendations/episodes": {
+            "get": {
+                "description": "おすすめエピソード一覧を取得します。未ログイン時は人気順・新着順、ログイン時は途中再生・後で聴く・パーソナライズに基づく結果を返します。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recommendations"
+                ],
+                "summary": "おすすめエピソード一覧取得",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "カテゴリ ID でフィルタ（チャンネルのカテゴリ）",
+                        "name": "categoryId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "取得件数（デフォルト: 20、最大: 50）",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "オフセット（デフォルト: 0）",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.RecommendedEpisodeListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/script-jobs/{jobId}": {
             "get": {
                 "security": [
@@ -6538,6 +6593,21 @@
                 }
             }
         },
+        "response.PlaybackProgressResponse": {
+            "type": "object",
+            "required": [
+                "completed",
+                "progressMs"
+            ],
+            "properties": {
+                "completed": {
+                    "type": "boolean"
+                },
+                "progressMs": {
+                    "type": "integer"
+                }
+            }
+        },
         "response.PlaybackResponse": {
             "type": "object",
             "required": [
@@ -6836,6 +6906,110 @@
                 },
                 "totalPlayCount": {
                     "type": "integer"
+                }
+            }
+        },
+        "response.RecommendedEpisodeChannelResponse": {
+            "type": "object",
+            "required": [
+                "category",
+                "id",
+                "name"
+            ],
+            "properties": {
+                "artwork": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.ArtworkResponse"
+                        }
+                    ],
+                    "x-nullable": true
+                },
+                "category": {
+                    "$ref": "#/definitions/response.CategoryResponse"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.RecommendedEpisodeListResponse": {
+            "type": "object",
+            "required": [
+                "data",
+                "pagination"
+            ],
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.RecommendedEpisodeResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/response.PaginationResponse"
+                }
+            }
+        },
+        "response.RecommendedEpisodeResponse": {
+            "type": "object",
+            "required": [
+                "channel",
+                "description",
+                "id",
+                "inListenLater",
+                "playCount",
+                "title"
+            ],
+            "properties": {
+                "artwork": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.ArtworkResponse"
+                        }
+                    ],
+                    "x-nullable": true
+                },
+                "channel": {
+                    "$ref": "#/definitions/response.RecommendedEpisodeChannelResponse"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "fullAudio": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.AudioResponse"
+                        }
+                    ],
+                    "x-nullable": true
+                },
+                "id": {
+                    "type": "string"
+                },
+                "inListenLater": {
+                    "type": "boolean"
+                },
+                "playCount": {
+                    "type": "integer"
+                },
+                "playbackProgress": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.PlaybackProgressResponse"
+                        }
+                    ],
+                    "x-nullable": true
+                },
+                "publishedAt": {
+                    "type": "string",
+                    "x-nullable": true
+                },
+                "title": {
+                    "type": "string"
                 }
             }
         },
