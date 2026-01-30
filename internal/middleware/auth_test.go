@@ -119,6 +119,96 @@ func TestAuth(t *testing.T) {
 	})
 }
 
+func setupOptionalAuthRouter(tokenManager jwt.TokenManager) *gin.Engine {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(OptionalAuth(tokenManager))
+	r.GET("/test", func(c *gin.Context) {
+		userID, ok := GetUserID(c)
+		c.JSON(http.StatusOK, gin.H{"user_id": userID, "authenticated": ok})
+	})
+	return r
+}
+
+func TestOptionalAuth(t *testing.T) {
+	tokenManager := jwt.NewTokenManager(testSecret)
+
+	t.Run("Authorization ヘッダーがない場合はそのまま通す", func(t *testing.T) {
+		router := setupOptionalAuthRouter(tokenManager)
+		req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
+		rec := httptest.NewRecorder()
+
+		router.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), `"authenticated":false`)
+	})
+
+	t.Run("有効なトークンの場合はユーザー ID がセットされる", func(t *testing.T) {
+		router := setupOptionalAuthRouter(tokenManager)
+		validToken, _ := tokenManager.Generate("user-123", 1*time.Hour)
+		req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
+		req.Header.Set("Authorization", "Bearer "+validToken)
+		rec := httptest.NewRecorder()
+
+		router.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "user-123")
+		assert.Contains(t, rec.Body.String(), `"authenticated":true`)
+	})
+
+	t.Run("無効なトークンの場合は 401 を返す", func(t *testing.T) {
+		router := setupOptionalAuthRouter(tokenManager)
+		req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
+		req.Header.Set("Authorization", "Bearer invalid-token")
+		rec := httptest.NewRecorder()
+
+		router.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+		assert.Contains(t, rec.Body.String(), "UNAUTHORIZED")
+	})
+
+	t.Run("Bearer プレフィックスがない場合は 401 を返す", func(t *testing.T) {
+		router := setupOptionalAuthRouter(tokenManager)
+		req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
+		req.Header.Set("Authorization", "InvalidFormat")
+		rec := httptest.NewRecorder()
+
+		router.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+		assert.Contains(t, rec.Body.String(), "UNAUTHORIZED")
+	})
+
+	t.Run("期限切れのトークンの場合は 401 を返す", func(t *testing.T) {
+		router := setupOptionalAuthRouter(tokenManager)
+		expiredToken, _ := tokenManager.Generate("user-123", -1*time.Hour)
+		req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
+		req.Header.Set("Authorization", "Bearer "+expiredToken)
+		rec := httptest.NewRecorder()
+
+		router.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusUnauthorized, rec.Code)
+		assert.Contains(t, rec.Body.String(), "UNAUTHORIZED")
+	})
+
+	t.Run("Bearer の大文字小文字を区別しない", func(t *testing.T) {
+		router := setupOptionalAuthRouter(tokenManager)
+		validToken, _ := tokenManager.Generate("user-789", 1*time.Hour)
+		req := httptest.NewRequest(http.MethodGet, "/test", http.NoBody)
+		req.Header.Set("Authorization", "bearer "+validToken)
+		rec := httptest.NewRecorder()
+
+		router.ServeHTTP(rec, req)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "user-789")
+	})
+}
+
 func TestGetUserID(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
