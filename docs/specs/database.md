@@ -6,6 +6,7 @@
 erDiagram
     users ||--o| credentials : has
     users ||--o{ oauth_accounts : has
+    users ||--o{ refresh_tokens : has
     users ||--o{ channels : owns
     users ||--o{ characters : owns
     users ||--o{ bgms : owns
@@ -156,6 +157,14 @@ erDiagram
         timestamp expires_at
         timestamp created_at
         timestamp updated_at
+    }
+
+    refresh_tokens {
+        uuid id PK
+        uuid user_id FK
+        varchar token
+        timestamp expires_at
+        timestamp created_at
     }
 
     categories {
@@ -358,6 +367,29 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 - PRIMARY KEY (id)
 - UNIQUE (provider, provider_user_id)
 - INDEX (user_id)
+
+**外部キー:**
+- user_id → users(id) ON DELETE CASCADE
+
+---
+
+#### refresh_tokens
+
+リフレッシュトークンを管理する。アクセストークンの再発行に使用。
+
+| カラム名 | 型 | NULLABLE | デフォルト | 説明 |
+|----------|-----|:--------:|------------|------|
+| id | UUID | | gen_random_uuid() | 主キー |
+| user_id | UUID | | - | ユーザー（users 参照） |
+| token | VARCHAR(255) | | - | トークン文字列（ランダム生成） |
+| expires_at | TIMESTAMP | | - | 有効期限 |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
+
+**インデックス:**
+- PRIMARY KEY (id)
+- UNIQUE (token)
+- INDEX (user_id)
+- INDEX (expires_at)
 
 **外部キー:**
 - user_id → users(id) ON DELETE CASCADE
@@ -927,7 +959,7 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 
 ### カスケード削除
 
-- User 削除時: 関連する Characters, BGMs, Channels, Episodes, ScriptLines が削除
+- User 削除時: 関連する RefreshTokens, Characters, BGMs, Channels, Episodes, ScriptLines が削除
 - Channel 削除時: 関連する channel_characters, Episodes, ScriptLines が削除
 - Episode 削除時: 関連する ScriptLines が削除
 - Character 削除時: channel_characters で使用中の場合は RESTRICT（削除不可）

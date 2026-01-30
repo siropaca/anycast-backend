@@ -6,6 +6,7 @@
 | SCRIPT_PARSE_ERROR | 400 | 台本のパースに失敗 |
 | UNAUTHORIZED | 401 | 認証が必要 |
 | INVALID_CREDENTIALS | 401 | メールアドレスまたはパスワードが正しくない |
+| INVALID_REFRESH_TOKEN | 401 | リフレッシュトークンが無効または期限切れ |
 | FORBIDDEN | 403 | アクセス権限がない |
 | NOT_FOUND | 404 | リソースが見つからない |
 | DUPLICATE_EMAIL | 409 | メールアドレスが既に登録済み |

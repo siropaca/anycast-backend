@@ -55,6 +55,8 @@
 | リソース | 参照 | 作成 | 更新 | 削除 |
 |----------|:----:|:----:|:----:|:----:|
 | Auth（登録・ログイン） | - | Guest | - | - |
+| Auth（トークンリフレッシュ） | - | Guest | - | - |
+| Auth（ログアウト） | - | - | - | Owner |
 | Auth（パスワード更新） | - | - | Owner | - |
 | Users | Owner | - | Owner | Owner |
 | Channels | Public | Owner | Owner | Owner |
