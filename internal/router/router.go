@@ -166,6 +166,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	optionalAuth := api.Group("")
 	optionalAuth.Use(middleware.OptionalAuth(container.TokenManager))
 	optionalAuth.GET("/recommendations/channels", container.RecommendationHandler.GetRecommendedChannels)
+	optionalAuth.GET("/recommendations/episodes", container.RecommendationHandler.GetRecommendedEpisodes)
 
 	// Admin（認証必須 + 管理者権限必須）
 	admin := r.Group("/admin")

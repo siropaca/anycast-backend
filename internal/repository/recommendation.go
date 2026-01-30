@@ -31,13 +31,26 @@ type RecommendChannelParams struct {
 	Offset     int
 }
 
-// RecommendationRepository はおすすめチャンネル取得用のリポジトリインターフェースを表す
+// RecommendEpisodeParams はおすすめエピソード取得のパラメータ
+type RecommendEpisodeParams struct {
+	CategoryID *uuid.UUID
+	Limit      int
+	Offset     int
+}
+
+// RecommendationRepository はおすすめ取得用のリポジトリインターフェースを表す
 type RecommendationRepository interface {
+	// チャンネル関連
 	FindRecommendedChannels(ctx context.Context, params RecommendChannelParams) ([]RecommendedChannel, int64, error)
 	FindUserCategoryPreferences(ctx context.Context, userID uuid.UUID) ([]CategoryPreference, error)
 	FindUserPlayedChannelIDs(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error)
 	FindUserListenLaterCategoryPreferences(ctx context.Context, userID uuid.UUID) ([]CategoryPreference, error)
 	FindUserChannelIDs(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error)
+
+	// エピソード関連
+	FindPublishedEpisodes(ctx context.Context, params RecommendEpisodeParams) ([]model.Episode, int64, error)
+	FindUserPlaybackHistories(ctx context.Context, userID uuid.UUID) ([]model.PlaybackHistory, error)
+	FindUserListenLaterEpisodeIDs(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error)
 }
 
 type recommendationRepository struct {
@@ -194,4 +207,75 @@ func (r *recommendationRepository) FindUserChannelIDs(ctx context.Context, userI
 	}
 
 	return channelIDs, nil
+}
+
+// FindPublishedEpisodes は公開中エピソードを Channel・Category・Artwork・FullAudio 付きで取得する
+func (r *recommendationRepository) FindPublishedEpisodes(ctx context.Context, params RecommendEpisodeParams) ([]model.Episode, int64, error) {
+	var episodes []model.Episode
+	var total int64
+
+	now := time.Now()
+
+	channelSubquery := r.db.Table("channels").Select("id").
+		Where("published_at IS NOT NULL AND published_at <= ?", now)
+	if params.CategoryID != nil {
+		channelSubquery = channelSubquery.Where("category_id = ?", *params.CategoryID)
+	}
+
+	// 総件数を取得
+	if err := r.db.WithContext(ctx).
+		Model(&model.Episode{}).
+		Where("published_at IS NOT NULL AND published_at <= ?", now).
+		Where("channel_id IN (?)", channelSubquery).
+		Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// データを取得
+	if err := r.db.WithContext(ctx).
+		Where("episodes.published_at IS NOT NULL AND episodes.published_at <= ?", now).
+		Where("episodes.channel_id IN (?)", channelSubquery).
+		Preload("Channel").
+		Preload("Channel.Category").
+		Preload("Channel.Artwork").
+		Preload("Artwork").
+		Preload("FullAudio").
+		Order("episodes.play_count DESC, episodes.published_at DESC NULLS LAST").
+		Limit(params.Limit).
+		Offset(params.Offset).
+		Find(&episodes).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return episodes, total, nil
+}
+
+// FindUserPlaybackHistories はユーザーの全再生履歴を取得する
+func (r *recommendationRepository) FindUserPlaybackHistories(ctx context.Context, userID uuid.UUID) ([]model.PlaybackHistory, error) {
+	var histories []model.PlaybackHistory
+
+	if err := r.db.WithContext(ctx).
+		Where("user_id = ?", userID).
+		Order("played_at DESC").
+		Find(&histories).Error; err != nil {
+		return nil, err
+	}
+
+	return histories, nil
+}
+
+// FindUserListenLaterEpisodeIDs はユーザーの「後で聴く」プレイリストのエピソード ID を取得する
+func (r *recommendationRepository) FindUserListenLaterEpisodeIDs(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error) {
+	var episodeIDs []uuid.UUID
+
+	if err := r.db.WithContext(ctx).
+		Table("playlist_items").
+		Select("playlist_items.episode_id").
+		Joins("JOIN playlists ON playlists.id = playlist_items.playlist_id").
+		Where("playlists.user_id = ? AND playlists.is_default = true", userID).
+		Find(&episodeIDs).Error; err != nil {
+		return nil, err
+	}
+
+	return episodeIDs, nil
 }
