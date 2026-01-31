@@ -55,3 +55,73 @@ func (h *FollowHandler) ListFollows(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+
+// CreateFollow godoc
+// @Summary フォロー登録
+// @Description ユーザーをフォローします
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param userId path string true "ユーザー ID"
+// @Success 201 {object} response.FollowDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /users/{userId}/follow [post]
+func (h *FollowHandler) CreateFollow(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	targetUserID := c.Param("userId")
+	if targetUserID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("userId は必須です"))
+		return
+	}
+
+	result, err := h.followService.CreateFollow(c.Request.Context(), userID, targetUserID)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, result)
+}
+
+// DeleteFollow godoc
+// @Summary フォロー解除
+// @Description ユーザーのフォローを解除します
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param userId path string true "ユーザー ID"
+// @Success 204 "No Content"
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /users/{userId}/follow [delete]
+func (h *FollowHandler) DeleteFollow(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	targetUserID := c.Param("userId")
+	if targetUserID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("userId は必須です"))
+		return
+	}
+
+	if err := h.followService.DeleteFollow(c.Request.Context(), userID, targetUserID); err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}

@@ -112,16 +112,16 @@
 | POST | `/api/v1/me/playlists/:playlistId/items` | プレイリストにアイテム追加 | Owner | ✅ | [詳細](./engagement.md#プレイリストにアイテム追加) |
 | DELETE | `/api/v1/me/playlists/:playlistId/items/:itemId` | プレイリストからアイテム削除 | Owner | ✅ | [詳細](./engagement.md#プレイリストからアイテム削除) |
 | POST | `/api/v1/me/playlists/:playlistId/items/reorder` | プレイリストアイテム並び替え | Owner | ✅ | [詳細](./engagement.md#プレイリストアイテム並び替え) |
-| GET | `/api/v1/me/default-playlist` | 再生リスト一覧取得 | Owner | ✅ | [詳細](./engagement.md#再生リスト一覧取得) |
-| POST | `/api/v1/episodes/:episodeId/default-playlist` | 再生リストに追加 | Owner | ✅ | [詳細](./engagement.md#再生リストに追加) |
-| DELETE | `/api/v1/episodes/:episodeId/default-playlist` | 再生リストから削除 | Owner | ✅ | [詳細](./engagement.md#再生リストから削除) |
+| GET | `/api/v1/me/default-playlist` | 後で聴く一覧取得 | Owner | ✅ | [詳細](./engagement.md#後で聴く一覧取得) |
+| POST | `/api/v1/episodes/:episodeId/default-playlist` | 後で聴くに追加 | Owner | ✅ | [詳細](./engagement.md#後で聴くに追加) |
+| DELETE | `/api/v1/episodes/:episodeId/default-playlist` | 後で聴くから削除 | Owner | ✅ | [詳細](./engagement.md#後で聴くから削除) |
 | **Playback History（再生履歴）** | - | - | - | - | [engagement.md](./engagement.md#playback-history再生履歴) |
 | PUT | `/api/v1/episodes/:episodeId/playback` | 再生履歴を更新 | Owner | ✅ | [詳細](./engagement.md#再生履歴を更新) |
 | DELETE | `/api/v1/episodes/:episodeId/playback` | 再生履歴を削除 | Owner | ✅ | [詳細](./engagement.md#再生履歴を削除) |
 | GET | `/api/v1/me/playback-history` | 再生履歴一覧を取得 | Owner | ✅ | [詳細](./engagement.md#再生履歴一覧を取得) |
 | **Follows（フォロー）** | - | - | - | - | [engagement.md](./engagement.md#followsフォロー) |
-| POST | `/api/v1/users/:userId/follow` | フォロー登録 | Owner | | [詳細](./engagement.md#フォロー登録) |
-| DELETE | `/api/v1/users/:userId/follow` | フォロー解除 | Owner | | [詳細](./engagement.md#フォロー解除) |
+| POST | `/api/v1/users/:userId/follow` | フォロー登録 | Owner | ✅ | [詳細](./engagement.md#フォロー登録) |
+| DELETE | `/api/v1/users/:userId/follow` | フォロー解除 | Owner | ✅ | [詳細](./engagement.md#フォロー解除) |
 | GET | `/api/v1/me/follows` | フォロー中のユーザー一覧 | Owner | ✅ | [詳細](./engagement.md#フォロー中のユーザー一覧) |
 | **Comments（コメント）** | - | - | - | - | [engagement.md](./engagement.md#commentsコメント) |
 | POST | `/api/v1/episodes/:episodeId/comments` | コメント投稿 | Owner | | [詳細](./engagement.md#コメント投稿) |

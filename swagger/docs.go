@@ -2294,7 +2294,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "指定したエピソードをデフォルトプレイリスト（再生リスト）に追加します",
+                "description": "指定したエピソードをデフォルトプレイリスト（後で聴く）に追加します",
                 "consumes": [
                     "application/json"
                 ],
@@ -2304,7 +2304,7 @@ const docTemplate = `{
                 "tags": [
                     "episodes"
                 ],
-                "summary": "再生リストに追加",
+                "summary": "後で聴くに追加",
                 "parameters": [
                     {
                         "type": "string",
@@ -2359,7 +2359,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "指定したエピソードをデフォルトプレイリスト（再生リスト）から削除します",
+                "description": "指定したエピソードをデフォルトプレイリスト（後で聴く）から削除します",
                 "consumes": [
                     "application/json"
                 ],
@@ -2369,7 +2369,7 @@ const docTemplate = `{
                 "tags": [
                     "episodes"
                 ],
-                "summary": "再生リストから削除",
+                "summary": "後で聴くから削除",
                 "parameters": [
                     {
                         "type": "string",
@@ -3990,7 +3990,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "デフォルトプレイリスト（再生リスト）の内容を取得します",
+                "description": "デフォルトプレイリスト（後で聴く）の内容を取得します",
                 "consumes": [
                     "application/json"
                 ],
@@ -4000,7 +4000,7 @@ const docTemplate = `{
                 "tags": [
                     "me"
                 ],
-                "summary": "再生リスト一覧取得",
+                "summary": "後で聴く一覧取得",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -4912,7 +4912,7 @@ const docTemplate = `{
         },
         "/recommendations/episodes": {
             "get": {
-                "description": "おすすめエピソード一覧を取得します。未ログイン時は人気順・新着順、ログイン時は途中再生・再生リスト・パーソナライズに基づく結果を返します。",
+                "description": "おすすめエピソード一覧を取得します。未ログイン時は人気順・新着順、ログイン時は途中再生・後で聴く・パーソナライズに基づく結果を返します。",
                 "consumes": [
                     "application/json"
                 ],
@@ -5080,6 +5080,117 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{userId}/follow": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "ユーザーをフォローします",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "フォロー登録",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ユーザー ID",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.FollowDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "ユーザーのフォローを解除します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "フォロー解除",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ユーザー ID",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
                         }
@@ -6754,6 +6865,17 @@ const docTemplate = `{
                 }
             }
         },
+        "response.FollowDataResponse": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.FollowResponse"
+                }
+            }
+        },
         "response.FollowItemResponse": {
             "type": "object",
             "required": [
@@ -6784,6 +6906,25 @@ const docTemplate = `{
                 },
                 "pagination": {
                     "$ref": "#/definitions/response.PaginationResponse"
+                }
+            }
+        },
+        "response.FollowResponse": {
+            "type": "object",
+            "required": [
+                "createdAt",
+                "id",
+                "targetUserId"
+            ],
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "targetUserId": {
+                    "type": "string"
                 }
             }
         },

@@ -25,3 +25,15 @@ type FollowListWithPaginationResponse struct {
 	Data       []FollowItemResponse `json:"data" validate:"required"`
 	Pagination PaginationResponse   `json:"pagination" validate:"required"`
 }
+
+// フォローのレスポンス
+type FollowResponse struct {
+	ID           uuid.UUID `json:"id" validate:"required"`
+	TargetUserID uuid.UUID `json:"targetUserId" validate:"required"`
+	CreatedAt    time.Time `json:"createdAt" validate:"required"`
+}
+
+// フォロー登録のラッパーレスポンス
+type FollowDataResponse struct {
+	Data FollowResponse `json:"data" validate:"required"`
+}

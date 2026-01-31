@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/model"
@@ -13,6 +14,8 @@ import (
 // FollowService はフォロー関連のビジネスロジックインターフェースを表す
 type FollowService interface {
 	ListFollows(ctx context.Context, userID string, limit, offset int) (*response.FollowListWithPaginationResponse, error)
+	CreateFollow(ctx context.Context, userID, targetUserID string) (*response.FollowDataResponse, error)
+	DeleteFollow(ctx context.Context, userID, targetUserID string) error
 }
 
 type followService struct {
@@ -57,6 +60,63 @@ func (s *followService) ListFollows(ctx context.Context, userID string, limit, o
 			Offset: offset,
 		},
 	}, nil
+}
+
+// CreateFollow はフォローを登録する
+func (s *followService) CreateFollow(ctx context.Context, userID, targetUserID string) (*response.FollowDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	tid, err := uuid.Parse(targetUserID)
+	if err != nil {
+		return nil, err
+	}
+
+	if uid == tid {
+		return nil, apperror.ErrSelfFollowNotAllowed
+	}
+
+	exists, err := s.followRepo.ExistsByUserIDAndTargetUserID(ctx, uid, tid)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, apperror.ErrAlreadyFollowed
+	}
+
+	follow := &model.Follow{
+		UserID:       uid,
+		TargetUserID: tid,
+	}
+
+	if err := s.followRepo.Create(ctx, follow); err != nil {
+		return nil, err
+	}
+
+	return &response.FollowDataResponse{
+		Data: response.FollowResponse{
+			ID:           follow.ID,
+			TargetUserID: follow.TargetUserID,
+			CreatedAt:    follow.CreatedAt,
+		},
+	}, nil
+}
+
+// DeleteFollow はフォローを解除する
+func (s *followService) DeleteFollow(ctx context.Context, userID, targetUserID string) error {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+
+	tid, err := uuid.Parse(targetUserID)
+	if err != nil {
+		return err
+	}
+
+	return s.followRepo.DeleteByUserIDAndTargetUserID(ctx, uid, tid)
 }
 
 // toFollowItemResponse は Follow を FollowItemResponse に変換する
