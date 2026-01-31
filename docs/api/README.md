@@ -112,9 +112,9 @@
 | POST | `/api/v1/me/playlists/:playlistId/items` | プレイリストにアイテム追加 | Owner | ✅ | [詳細](./engagement.md#プレイリストにアイテム追加) |
 | DELETE | `/api/v1/me/playlists/:playlistId/items/:itemId` | プレイリストからアイテム削除 | Owner | ✅ | [詳細](./engagement.md#プレイリストからアイテム削除) |
 | POST | `/api/v1/me/playlists/:playlistId/items/reorder` | プレイリストアイテム並び替え | Owner | ✅ | [詳細](./engagement.md#プレイリストアイテム並び替え) |
-| GET | `/api/v1/me/default-playlist` | 後で聴く一覧取得 | Owner | ✅ | [詳細](./engagement.md#後で聴く一覧取得) |
-| POST | `/api/v1/episodes/:episodeId/default-playlist` | 後で聴くに追加 | Owner | ✅ | [詳細](./engagement.md#後で聴くに追加) |
-| DELETE | `/api/v1/episodes/:episodeId/default-playlist` | 後で聴くから削除 | Owner | ✅ | [詳細](./engagement.md#後で聴くから削除) |
+| GET | `/api/v1/me/default-playlist` | デフォルトプレイリスト（後で聴く）一覧取得 | Owner | ✅ | [詳細](./engagement.md#デフォルトプレイリスト後で聴く一覧取得) |
+| POST | `/api/v1/episodes/:episodeId/default-playlist` | デフォルトプレイリスト（後で聴く）に追加 | Owner | ✅ | [詳細](./engagement.md#デフォルトプレイリスト後で聴くに追加) |
+| DELETE | `/api/v1/episodes/:episodeId/default-playlist` | デフォルトプレイリスト（後で聴く）から削除 | Owner | ✅ | [詳細](./engagement.md#デフォルトプレイリスト後で聴くから削除) |
 | **Playback History（再生履歴）** | - | - | - | - | [engagement.md](./engagement.md#playback-history再生履歴) |
 | PUT | `/api/v1/episodes/:episodeId/playback` | 再生履歴を更新 | Owner | ✅ | [詳細](./engagement.md#再生履歴を更新) |
 | DELETE | `/api/v1/episodes/:episodeId/playback` | 再生履歴を削除 | Owner | ✅ | [詳細](./engagement.md#再生履歴を削除) |

@@ -194,7 +194,7 @@ func (s *recommendationService) applyPersonalizedScores(ctx context.Context, sco
 		categoryBonus[pref.CategoryID] = math.Log1p(float64(pref.PlayCount)) * categoryBonusWeight
 	}
 
-	// デフォルトプレイリスト（再生リスト）カテゴリ傾向
+	// デフォルトプレイリスト（後で聴く）カテゴリ傾向
 	defaultPlaylistPrefs, err := s.recommendationRepo.FindUserDefaultPlaylistCategoryPreferences(ctx, userID)
 	if err == nil {
 		for _, pref := range defaultPlaylistPrefs {
@@ -426,7 +426,7 @@ func (s *recommendationService) buildPersonalizedEpisodeList(
 
 	// 途中再生は played_at DESC でソート済み（リポジトリで ORDER BY played_at DESC）
 
-	// デフォルトプレイリスト（再生リスト）エピソード ID を取得
+	// デフォルトプレイリスト（後で聴く）エピソード ID を取得
 	defaultPlaylistIDs, err := s.recommendationRepo.FindUserDefaultPlaylistEpisodeIDs(ctx, userID)
 	if err != nil {
 		defaultPlaylistIDs = nil
@@ -473,7 +473,7 @@ func (s *recommendationService) buildPersonalizedEpisodeList(
 		count++
 	}
 
-	// 2. デフォルトプレイリスト（再生リスト）の未再生エピソード（最大 3 件）
+	// 2. デフォルトプレイリスト（後で聴く）の未再生エピソード（最大 3 件）
 	count = 0
 	for i := range episodes {
 		if count >= maxDefaultPlaylistEpisodes {

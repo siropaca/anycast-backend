@@ -30,7 +30,7 @@ type PlaylistService interface {
 	RemoveItem(ctx context.Context, userID, playlistID, itemID string) error
 	ReorderItems(ctx context.Context, userID, playlistID string, req request.ReorderPlaylistItemsRequest) (*response.PlaylistDetailDataResponse, error)
 
-	// デフォルトプレイリスト（再生リスト）ショートカット
+	// デフォルトプレイリスト（後で聴く）ショートカット
 	AddToDefaultPlaylist(ctx context.Context, userID, episodeID string) (*response.PlaylistItemDataResponse, error)
 	RemoveFromDefaultPlaylist(ctx context.Context, userID, episodeID string) error
 	GetDefaultPlaylist(ctx context.Context, userID string) (*response.PlaylistDetailDataResponse, error)
@@ -432,7 +432,7 @@ func (s *playlistService) ReorderItems(ctx context.Context, userID, playlistID s
 	}, nil
 }
 
-// AddToDefaultPlaylist はデフォルトプレイリスト（再生リスト）にエピソードを追加する
+// AddToDefaultPlaylist はデフォルトプレイリスト（後で聴く）にエピソードを追加する
 func (s *playlistService) AddToDefaultPlaylist(ctx context.Context, userID, episodeID string) (*response.PlaylistItemDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -450,7 +450,7 @@ func (s *playlistService) AddToDefaultPlaylist(ctx context.Context, userID, epis
 	})
 }
 
-// RemoveFromDefaultPlaylist はデフォルトプレイリスト（再生リスト）からエピソードを削除する
+// RemoveFromDefaultPlaylist はデフォルトプレイリスト（後で聴く）からエピソードを削除する
 func (s *playlistService) RemoveFromDefaultPlaylist(ctx context.Context, userID, episodeID string) error {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -483,7 +483,7 @@ func (s *playlistService) RemoveFromDefaultPlaylist(ctx context.Context, userID,
 	return s.playlistRepo.DecrementPositionsAfter(ctx, playlist.ID, item.Position)
 }
 
-// GetDefaultPlaylist はデフォルトプレイリスト（再生リスト）を取得する
+// GetDefaultPlaylist はデフォルトプレイリスト（後で聴く）を取得する
 func (s *playlistService) GetDefaultPlaylist(ctx context.Context, userID string) (*response.PlaylistDetailDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {

@@ -228,7 +228,7 @@ GET /me/likes
 
 # Playlists（プレイリスト）
 
-YouTube 式のプレイリスト機能。各ユーザーには「再生リスト」デフォルトプレイリストが自動作成される。
+YouTube 式のプレイリスト機能。各ユーザーにはデフォルトプレイリスト（後で聴く）が自動作成される。
 
 ## プレイリスト一覧取得
 
@@ -249,7 +249,7 @@ GET /me/playlists
   "data": [
     {
       "id": "uuid",
-      "name": "再生リスト",
+      "name": "後で聴く",
       "description": "",
       "isDefault": true,
       "itemCount": 5,
@@ -512,9 +512,9 @@ POST /me/playlists/:playlistId/items/reorder
 
 ---
 
-## 再生リスト一覧取得
+## デフォルトプレイリスト（後で聴く）一覧取得
 
-デフォルトプレイリスト（再生リスト）の内容を取得するショートカット。
+デフォルトプレイリスト（後で聴く）の内容を取得するショートカット。
 
 ```
 GET /me/default-playlist
@@ -525,7 +525,7 @@ GET /me/default-playlist
 
 ---
 
-## 再生リストに追加
+## デフォルトプレイリスト（後で聴く）に追加
 
 ```
 POST /episodes/:episodeId/default-playlist
@@ -546,7 +546,7 @@ POST /episodes/:episodeId/default-playlist
 
 ---
 
-## 再生リストから削除
+## デフォルトプレイリスト（後で聴く）から削除
 
 ```
 DELETE /episodes/:episodeId/default-playlist

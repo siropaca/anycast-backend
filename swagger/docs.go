@@ -2304,7 +2304,7 @@ const docTemplate = `{
                 "tags": [
                     "episodes"
                 ],
-                "summary": "後で聴くに追加",
+                "summary": "デフォルトプレイリスト（後で聴く）に追加",
                 "parameters": [
                     {
                         "type": "string",
@@ -2369,7 +2369,7 @@ const docTemplate = `{
                 "tags": [
                     "episodes"
                 ],
-                "summary": "後で聴くから削除",
+                "summary": "デフォルトプレイリスト（後で聴く）から削除",
                 "parameters": [
                     {
                         "type": "string",
@@ -4000,7 +4000,7 @@ const docTemplate = `{
                 "tags": [
                     "me"
                 ],
-                "summary": "後で聴く一覧取得",
+                "summary": "デフォルトプレイリスト（後で聴く）一覧取得",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -4912,7 +4912,7 @@ const docTemplate = `{
         },
         "/recommendations/episodes": {
             "get": {
-                "description": "おすすめエピソード一覧を取得します。未ログイン時は人気順・新着順、ログイン時は途中再生・後で聴く・パーソナライズに基づく結果を返します。",
+                "description": "おすすめエピソード一覧を取得します。未ログイン時は人気順・新着順、ログイン時は途中再生・デフォルトプレイリスト（後で聴く）・パーソナライズに基づく結果を返します。",
                 "consumes": [
                     "application/json"
                 ],

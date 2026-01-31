@@ -174,7 +174,7 @@ func (r *recommendationRepository) FindUserPlayedChannelIDs(ctx context.Context,
 	return channelIDs, nil
 }
 
-// FindUserDefaultPlaylistCategoryPreferences はデフォルトプレイリスト（再生リスト）からカテゴリ傾向を取得する
+// FindUserDefaultPlaylistCategoryPreferences はデフォルトプレイリスト（後で聴く）からカテゴリ傾向を取得する
 func (r *recommendationRepository) FindUserDefaultPlaylistCategoryPreferences(ctx context.Context, userID uuid.UUID) ([]CategoryPreference, error) {
 	var preferences []CategoryPreference
 
@@ -264,7 +264,7 @@ func (r *recommendationRepository) FindUserPlaybackHistories(ctx context.Context
 	return histories, nil
 }
 
-// FindUserDefaultPlaylistEpisodeIDs はユーザーのデフォルトプレイリスト（再生リスト）のエピソード ID を取得する
+// FindUserDefaultPlaylistEpisodeIDs はユーザーのデフォルトプレイリスト（後で聴く）のエピソード ID を取得する
 func (r *recommendationRepository) FindUserDefaultPlaylistEpisodeIDs(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error) {
 	var episodeIDs []uuid.UUID
 

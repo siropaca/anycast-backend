@@ -59,7 +59,7 @@ func (h *RecommendationHandler) GetRecommendedChannels(c *gin.Context) {
 
 // GetRecommendedEpisodes godoc
 // @Summary おすすめエピソード一覧取得
-// @Description おすすめエピソード一覧を取得します。未ログイン時は人気順・新着順、ログイン時は途中再生・再生リスト・パーソナライズに基づく結果を返します。
+// @Description おすすめエピソード一覧を取得します。未ログイン時は人気順・新着順、ログイン時は途中再生・デフォルトプレイリスト（後で聴く）・パーソナライズに基づく結果を返します。
 // @Tags recommendations
 // @Accept json
 // @Produce json

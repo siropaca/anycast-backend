@@ -342,8 +342,8 @@ func (h *PlaylistHandler) ReorderItems(c *gin.Context) {
 }
 
 // AddToDefaultPlaylist godoc
-// @Summary 再生リストに追加
-// @Description 指定したエピソードをデフォルトプレイリスト（再生リスト）に追加します
+// @Summary デフォルトプレイリスト（後で聴く）に追加
+// @Description 指定したエピソードをデフォルトプレイリスト（後で聴く）に追加します
 // @Tags episodes
 // @Accept json
 // @Produce json
@@ -379,8 +379,8 @@ func (h *PlaylistHandler) AddToDefaultPlaylist(c *gin.Context) {
 }
 
 // RemoveFromDefaultPlaylist godoc
-// @Summary 再生リストから削除
-// @Description 指定したエピソードをデフォルトプレイリスト（再生リスト）から削除します
+// @Summary デフォルトプレイリスト（後で聴く）から削除
+// @Description 指定したエピソードをデフォルトプレイリスト（後で聴く）から削除します
 // @Tags episodes
 // @Accept json
 // @Produce json
@@ -414,8 +414,8 @@ func (h *PlaylistHandler) RemoveFromDefaultPlaylist(c *gin.Context) {
 }
 
 // GetDefaultPlaylist godoc
-// @Summary 再生リスト一覧取得
-// @Description デフォルトプレイリスト（再生リスト）の内容を取得します
+// @Summary デフォルトプレイリスト（後で聴く）一覧取得
+// @Description デフォルトプレイリスト（後で聴く）の内容を取得します
 // @Tags me
 // @Accept json
 // @Produce json
