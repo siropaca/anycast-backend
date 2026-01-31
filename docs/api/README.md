@@ -24,7 +24,7 @@
 | POST | `/api/v1/auth/logout` | ログアウト | Owner | ✅ | [詳細](./auth.md#ログアウト) |
 | PUT | `/api/v1/auth/password` | パスワード更新 | Owner | | [詳細](./auth.md#パスワード更新) |
 | **Users（ユーザー）** | - | - | - | - | [users.md](./users.md) |
-| GET | `/api/v1/users/:userId` | ユーザー取得 | Public | | [詳細](./users.md#ユーザー取得) |
+| GET | `/api/v1/users/:userId` | ユーザー取得 | Public | ✅ | [詳細](./users.md#ユーザー取得) |
 | GET | `/api/v1/me` | 現在のユーザー取得 | Owner | ✅ | [詳細](./users.md#現在のユーザー取得) |
 | PATCH | `/api/v1/me` | ユーザー情報更新 | Owner | | [詳細](./users.md#ユーザー情報更新) |
 | PATCH | `/api/v1/me/prompt` | ユーザープロンプト更新 | Owner | ✅ | [詳細](./users.md#ユーザープロンプト更新) |

@@ -14,12 +14,26 @@ GET /users/:userId
     "username": "user_name",
     "displayName": "ユーザー名",
     "avatar": { "id": "uuid", "url": "..." },
+    "channels": [
+      {
+        "id": "uuid",
+        "name": "チャンネル名",
+        "description": "説明",
+        "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
+        "artwork": { "id": "uuid", "url": "..." },
+        "publishedAt": "2025-01-01T00:00:00Z",
+        "createdAt": "2025-01-01T00:00:00Z",
+        "updatedAt": "2025-01-01T00:00:00Z"
+      }
+    ],
     "createdAt": "2025-01-01T00:00:00Z"
   }
 }
 ```
 
-※ 他ユーザーの情報は公開プロフィールのみ（email は非公開）
+> **Note:**
+> - 他ユーザーの情報は公開プロフィールのみ（email は非公開）
+> - `channels` には公開中のチャンネルのみ含まれます
 
 ---
 

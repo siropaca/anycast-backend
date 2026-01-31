@@ -1,0 +1,8 @@
+@baseUrl = http://localhost:8081/api/v1
+
+# トークン生成: make token
+@token = YOUR_TOKEN_HERE
+
+### ユーザー取得
+GET {{baseUrl}}/users/YOUR_USER_ID_HERE
+Authorization: Bearer {{token}}

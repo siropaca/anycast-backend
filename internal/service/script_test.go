@@ -46,6 +46,14 @@ func (m *mockUserRepository) FindByEmail(ctx context.Context, email string) (*mo
 	return args.Get(0).(*model.User), args.Error(1)
 }
 
+func (m *mockUserRepository) FindByIDWithAvatar(ctx context.Context, id uuid.UUID) (*model.User, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.User), args.Error(1)
+}
+
 func (m *mockUserRepository) ExistsByEmail(ctx context.Context, email string) (bool, error) {
 	args := m.Called(ctx, email)
 	return args.Bool(0), args.Error(1)
@@ -71,6 +79,11 @@ func (m *mockChannelRepository) FindByID(ctx context.Context, id uuid.UUID) (*mo
 func (m *mockChannelRepository) FindByUserID(ctx context.Context, userID uuid.UUID, filter repository.ChannelFilter) ([]model.Channel, int64, error) {
 	args := m.Called(ctx, userID, filter)
 	return args.Get(0).([]model.Channel), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *mockChannelRepository) FindPublishedByUserID(ctx context.Context, userID uuid.UUID) ([]model.Channel, error) {
+	args := m.Called(ctx, userID)
+	return args.Get(0).([]model.Channel), args.Error(1)
 }
 
 func (m *mockChannelRepository) Create(ctx context.Context, channel *model.Channel) error {

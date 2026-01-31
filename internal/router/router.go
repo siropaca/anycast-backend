@@ -111,6 +111,9 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.POST("/users/:userId/follow", container.FollowHandler.CreateFollow)
 	authenticated.DELETE("/users/:userId/follow", container.FollowHandler.DeleteFollow)
 
+	// Users
+	authenticated.GET("/users/:userId", container.UserHandler.GetUser)
+
 	// Likes
 	authenticated.GET("/me/likes", container.ReactionHandler.ListLikes)
 

@@ -17,6 +17,7 @@ import (
 type ChannelRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*model.Channel, error)
 	FindByUserID(ctx context.Context, userID uuid.UUID, filter ChannelFilter) ([]model.Channel, int64, error)
+	FindPublishedByUserID(ctx context.Context, userID uuid.UUID) ([]model.Channel, error)
 	Create(ctx context.Context, channel *model.Channel) error
 	Update(ctx context.Context, channel *model.Channel) error
 	Delete(ctx context.Context, id uuid.UUID) error
@@ -82,6 +83,23 @@ func (r *channelRepository) FindByUserID(ctx context.Context, userID uuid.UUID, 
 	}
 
 	return channels, total, nil
+}
+
+// FindPublishedByUserID は指定されたユーザーの公開済みチャンネル一覧を取得する
+func (r *channelRepository) FindPublishedByUserID(ctx context.Context, userID uuid.UUID) ([]model.Channel, error) {
+	var channels []model.Channel
+
+	if err := r.db.WithContext(ctx).
+		Where("user_id = ? AND published_at IS NOT NULL AND published_at <= ?", userID, time.Now()).
+		Preload("Category").
+		Preload("Artwork").
+		Order("created_at DESC").
+		Find(&channels).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to fetch published channels", "error", err, "user_id", userID)
+		return nil, apperror.ErrInternal.WithMessage("公開チャンネル一覧の取得に失敗しました").WithError(err)
+	}
+
+	return channels, nil
 }
 
 // FindByID は指定された ID のチャンネルを取得する

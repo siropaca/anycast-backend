@@ -45,6 +45,7 @@ type Container struct {
 	FollowHandler          *handler.FollowHandler
 	ReactionHandler        *handler.ReactionHandler
 	RecommendationHandler  *handler.RecommendationHandler
+	UserHandler            *handler.UserHandler
 	TokenManager           jwt.TokenManager
 	UserRepository         repository.UserRepository
 	WebSocketHub           *websocket.Hub
@@ -176,6 +177,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	followService := service.NewFollowService(followRepo, storageClient)
 	reactionService := service.NewReactionService(reactionRepo, storageClient)
 	recommendationService := service.NewRecommendationService(recommendationRepo, storageClient)
+	userService := service.NewUserService(userRepo, channelRepo, storageClient)
 
 	// Handler 層
 	voiceHandler := handler.NewVoiceHandler(voiceService)
@@ -200,6 +202,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	followHandler := handler.NewFollowHandler(followService)
 	reactionHandler := handler.NewReactionHandler(reactionService)
 	recommendationHandler := handler.NewRecommendationHandler(recommendationService)
+	userHandler := handler.NewUserHandler(userService)
 
 	return &Container{
 		VoiceHandler:           voiceHandler,
@@ -224,6 +227,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		FollowHandler:          followHandler,
 		ReactionHandler:        reactionHandler,
 		RecommendationHandler:  recommendationHandler,
+		UserHandler:            userHandler,
 		TokenManager:           tokenManager,
 		UserRepository:         userRepo,
 		WebSocketHub:           wsHub,
