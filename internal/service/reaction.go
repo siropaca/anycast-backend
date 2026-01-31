@@ -13,6 +13,8 @@ import (
 // ReactionService はリアクション関連のビジネスロジックインターフェースを表す
 type ReactionService interface {
 	ListLikes(ctx context.Context, userID string, limit, offset int) (*response.LikeListWithPaginationResponse, error)
+	CreateOrUpdateReaction(ctx context.Context, userID, episodeID, reactionType string) (*response.ReactionDataResponse, bool, error)
+	DeleteReaction(ctx context.Context, userID, episodeID string) error
 }
 
 type reactionService struct {
@@ -99,4 +101,52 @@ func (s *reactionService) toLikeItemResponse(ctx context.Context, reaction *mode
 		},
 		LikedAt: reaction.CreatedAt,
 	}
+}
+
+// CreateOrUpdateReaction はリアクションを登録または更新する
+func (s *reactionService) CreateOrUpdateReaction(ctx context.Context, userID, episodeID, reactionType string) (*response.ReactionDataResponse, bool, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, false, err
+	}
+
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return nil, false, err
+	}
+
+	reaction := &model.Reaction{
+		UserID:       uid,
+		EpisodeID:    eid,
+		ReactionType: model.ReactionType(reactionType),
+	}
+
+	created, err := s.reactionRepo.Upsert(ctx, reaction)
+	if err != nil {
+		return nil, false, err
+	}
+
+	return &response.ReactionDataResponse{
+		Data: response.ReactionResponse{
+			ID:           reaction.ID,
+			EpisodeID:    reaction.EpisodeID,
+			ReactionType: string(reaction.ReactionType),
+			CreatedAt:    reaction.CreatedAt,
+		},
+	}, created, nil
+}
+
+// DeleteReaction はリアクションを削除する
+func (s *reactionService) DeleteReaction(ctx context.Context, userID, episodeID string) error {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return err
+	}
+
+	return s.reactionRepo.DeleteByUserIDAndEpisodeID(ctx, uid, eid)
 }

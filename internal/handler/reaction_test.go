@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -31,6 +32,19 @@ func (m *mockReactionService) ListLikes(ctx context.Context, userID string, limi
 	return args.Get(0).(*response.LikeListWithPaginationResponse), args.Error(1)
 }
 
+func (m *mockReactionService) CreateOrUpdateReaction(ctx context.Context, userID, episodeID, reactionType string) (*response.ReactionDataResponse, bool, error) {
+	args := m.Called(ctx, userID, episodeID, reactionType)
+	if args.Get(0) == nil {
+		return nil, false, args.Error(2)
+	}
+	return args.Get(0).(*response.ReactionDataResponse), args.Bool(1), args.Error(2)
+}
+
+func (m *mockReactionService) DeleteReaction(ctx context.Context, userID, episodeID string) error {
+	args := m.Called(ctx, userID, episodeID)
+	return args.Error(0)
+}
+
 // テスト用のルーターをセットアップする
 func setupReactionRouter(h *ReactionHandler, userID string) *gin.Engine {
 	gin.SetMode(gin.TestMode)
@@ -40,6 +54,8 @@ func setupReactionRouter(h *ReactionHandler, userID string) *gin.Engine {
 		c.Next()
 	})
 	r.GET("/me/likes", h.ListLikes)
+	r.POST("/episodes/:episodeId/reactions", h.CreateOrUpdateReaction)
+	r.DELETE("/episodes/:episodeId/reactions", h.DeleteReaction)
 	return r
 }
 
@@ -48,6 +64,8 @@ func setupReactionRouterWithoutAuth(h *ReactionHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	r.GET("/me/likes", h.ListLikes)
+	r.POST("/episodes/:episodeId/reactions", h.CreateOrUpdateReaction)
+	r.DELETE("/episodes/:episodeId/reactions", h.DeleteReaction)
 	return r
 }
 
@@ -153,6 +171,202 @@ func TestReactionHandler_ListLikes(t *testing.T) {
 
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", "/me/likes", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+}
+
+func TestReactionHandler_CreateOrUpdateReaction(t *testing.T) {
+	userID := uuid.New().String()
+	episodeID := uuid.New().String()
+
+	t.Run("新規リアクション作成時に 201 を返す", func(t *testing.T) {
+		mockSvc := new(mockReactionService)
+		now := time.Now()
+		result := &response.ReactionDataResponse{
+			Data: response.ReactionResponse{
+				ID:           uuid.New(),
+				EpisodeID:    uuid.MustParse(episodeID),
+				ReactionType: "like",
+				CreatedAt:    now,
+			},
+		}
+		mockSvc.On("CreateOrUpdateReaction", mock.Anything, userID, episodeID, "like").Return(result, true, nil)
+
+		handler := NewReactionHandler(mockSvc)
+		router := setupReactionRouter(handler, userID)
+
+		body := bytes.NewBufferString(`{"reactionType":"like"}`)
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/episodes/"+episodeID+"/reactions", body)
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusCreated, w.Code)
+
+		var resp response.ReactionDataResponse
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+		assert.Equal(t, "like", resp.Data.ReactionType)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("既存リアクション更新時に 200 を返す", func(t *testing.T) {
+		mockSvc := new(mockReactionService)
+		now := time.Now()
+		result := &response.ReactionDataResponse{
+			Data: response.ReactionResponse{
+				ID:           uuid.New(),
+				EpisodeID:    uuid.MustParse(episodeID),
+				ReactionType: "bad",
+				CreatedAt:    now,
+			},
+		}
+		mockSvc.On("CreateOrUpdateReaction", mock.Anything, userID, episodeID, "bad").Return(result, false, nil)
+
+		handler := NewReactionHandler(mockSvc)
+		router := setupReactionRouter(handler, userID)
+
+		body := bytes.NewBufferString(`{"reactionType":"bad"}`)
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/episodes/"+episodeID+"/reactions", body)
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var resp response.ReactionDataResponse
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+		assert.Equal(t, "bad", resp.Data.ReactionType)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("バリデーションエラーの場合は 400 を返す", func(t *testing.T) {
+		mockSvc := new(mockReactionService)
+
+		handler := NewReactionHandler(mockSvc)
+		router := setupReactionRouter(handler, userID)
+
+		body := bytes.NewBufferString(`{"reactionType":"invalid"}`)
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/episodes/"+episodeID+"/reactions", body)
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		mockSvc.AssertNotCalled(t, "CreateOrUpdateReaction")
+	})
+
+	t.Run("リクエストボディが空の場合は 400 を返す", func(t *testing.T) {
+		mockSvc := new(mockReactionService)
+
+		handler := NewReactionHandler(mockSvc)
+		router := setupReactionRouter(handler, userID)
+
+		body := bytes.NewBufferString(`{}`)
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/episodes/"+episodeID+"/reactions", body)
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		mockSvc.AssertNotCalled(t, "CreateOrUpdateReaction")
+	})
+
+	t.Run("認証されていない場合は 401 を返す", func(t *testing.T) {
+		mockSvc := new(mockReactionService)
+
+		handler := NewReactionHandler(mockSvc)
+		router := setupReactionRouterWithoutAuth(handler)
+
+		body := bytes.NewBufferString(`{"reactionType":"like"}`)
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/episodes/"+episodeID+"/reactions", body)
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		mockSvc.AssertNotCalled(t, "CreateOrUpdateReaction")
+	})
+
+	t.Run("サービスがエラーを返すとエラーレスポンスを返す", func(t *testing.T) {
+		mockSvc := new(mockReactionService)
+		mockSvc.On("CreateOrUpdateReaction", mock.Anything, userID, episodeID, "like").Return(nil, false, apperror.ErrInternal)
+
+		handler := NewReactionHandler(mockSvc)
+		router := setupReactionRouter(handler, userID)
+
+		body := bytes.NewBufferString(`{"reactionType":"like"}`)
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/episodes/"+episodeID+"/reactions", body)
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+}
+
+func TestReactionHandler_DeleteReaction(t *testing.T) {
+	userID := uuid.New().String()
+	episodeID := uuid.New().String()
+
+	t.Run("リアクション削除時に 204 を返す", func(t *testing.T) {
+		mockSvc := new(mockReactionService)
+		mockSvc.On("DeleteReaction", mock.Anything, userID, episodeID).Return(nil)
+
+		handler := NewReactionHandler(mockSvc)
+		router := setupReactionRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("DELETE", "/episodes/"+episodeID+"/reactions", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNoContent, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("認証されていない場合は 401 を返す", func(t *testing.T) {
+		mockSvc := new(mockReactionService)
+
+		handler := NewReactionHandler(mockSvc)
+		router := setupReactionRouterWithoutAuth(handler)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("DELETE", "/episodes/"+episodeID+"/reactions", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		mockSvc.AssertNotCalled(t, "DeleteReaction")
+	})
+
+	t.Run("存在しないリアクション削除時に 404 を返す", func(t *testing.T) {
+		mockSvc := new(mockReactionService)
+		mockSvc.On("DeleteReaction", mock.Anything, userID, episodeID).Return(apperror.ErrNotFound.WithMessage("リアクションが見つかりません"))
+
+		handler := NewReactionHandler(mockSvc)
+		router := setupReactionRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("DELETE", "/episodes/"+episodeID+"/reactions", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("サービスがエラーを返すとエラーレスポンスを返す", func(t *testing.T) {
+		mockSvc := new(mockReactionService)
+		mockSvc.On("DeleteReaction", mock.Anything, userID, episodeID).Return(apperror.ErrInternal)
+
+		handler := NewReactionHandler(mockSvc)
+		router := setupReactionRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("DELETE", "/episodes/"+episodeID+"/reactions", http.NoBody)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)

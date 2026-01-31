@@ -1,6 +1,6 @@
 package model
 
-// OAuthProvider は OAuth プロバイダの種別を表す
+// OAuthProvider は OAuth プロバイダのタイプを表す
 type OAuthProvider string
 
 const (
@@ -29,7 +29,7 @@ func (r Role) IsAdmin() bool {
 	return r == RoleAdmin
 }
 
-// ReactionType はリアクションの種別を表す
+// ReactionType はリアクションのタイプを表す
 type ReactionType string
 
 const (

@@ -55,3 +55,84 @@ func (h *ReactionHandler) ListLikes(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+
+// CreateOrUpdateReaction godoc
+// @Summary リアクション登録・更新
+// @Description エピソードにリアクションを登録します（既存の場合は更新）
+// @Tags episodes
+// @Accept json
+// @Produce json
+// @Param episodeId path string true "エピソード ID"
+// @Param request body request.CreateOrUpdateReactionRequest true "リアクション登録リクエスト"
+// @Success 201 {object} response.ReactionDataResponse
+// @Success 200 {object} response.ReactionDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /episodes/{episodeId}/reactions [post]
+func (h *ReactionHandler) CreateOrUpdateReaction(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	episodeID := c.Param("episodeId")
+	if episodeID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
+		return
+	}
+
+	var req request.CreateOrUpdateReactionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
+		return
+	}
+
+	result, created, err := h.reactionService.CreateOrUpdateReaction(c.Request.Context(), userID, episodeID, req.ReactionType)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	status := http.StatusOK
+	if created {
+		status = http.StatusCreated
+	}
+	c.JSON(status, result)
+}
+
+// DeleteReaction godoc
+// @Summary リアクション解除
+// @Description エピソードへのリアクションを解除します
+// @Tags episodes
+// @Accept json
+// @Produce json
+// @Param episodeId path string true "エピソード ID"
+// @Success 204 "No Content"
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /episodes/{episodeId}/reactions [delete]
+func (h *ReactionHandler) DeleteReaction(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	episodeID := c.Param("episodeId")
+	if episodeID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
+		return
+	}
+
+	if err := h.reactionService.DeleteReaction(c.Request.Context(), userID, episodeID); err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}

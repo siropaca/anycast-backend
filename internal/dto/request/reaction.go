@@ -4,3 +4,8 @@ package request
 type ListLikesRequest struct {
 	PaginationRequest
 }
+
+// リアクション登録・更新リクエスト
+type CreateOrUpdateReactionRequest struct {
+	ReactionType string `json:"reactionType" binding:"required,oneof=like bad"`
+}

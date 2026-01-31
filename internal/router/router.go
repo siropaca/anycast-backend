@@ -136,6 +136,8 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.DELETE("/episodes/:episodeId/default-playlist", container.PlaylistHandler.RemoveFromDefaultPlaylist)
 	authenticated.PUT("/episodes/:episodeId/playback", container.PlaybackHistoryHandler.UpdatePlayback)
 	authenticated.DELETE("/episodes/:episodeId/playback", container.PlaybackHistoryHandler.DeletePlayback)
+	authenticated.POST("/episodes/:episodeId/reactions", container.ReactionHandler.CreateOrUpdateReaction)
+	authenticated.DELETE("/episodes/:episodeId/reactions", container.ReactionHandler.DeleteReaction)
 
 	// Audio Jobs
 	authenticated.GET("/audio-jobs/:jobId", container.AudioJobHandler.GetAudioJob)

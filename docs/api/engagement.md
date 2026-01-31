@@ -142,7 +142,7 @@ POST /episodes/:episodeId/reactions
 
 | フィールド | 型 | 必須 | 説明 |
 |------------|-----|:----:|------|
-| reactionType | string | ◯ | リアクション種別（`like` / `bad`） |
+| reactionType | string | ◯ | リアクションタイプ（`like` / `bad`） |
 
 **レスポンス（201 Created / 200 OK）:**
 

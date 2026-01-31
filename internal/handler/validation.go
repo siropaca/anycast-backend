@@ -55,6 +55,9 @@ var fieldNameMap = map[string]string{
 	"LineIDs":         "行 ID リスト",
 	"WithEmotion":     "感情付与",
 
+	// リアクション
+	"ReactionType": "リアクションタイプ",
+
 	// その他
 	"Status": "ステータス",
 }

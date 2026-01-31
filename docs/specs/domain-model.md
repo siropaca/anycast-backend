@@ -85,7 +85,7 @@ AIポッドキャスト作成・配信プラットフォーム。
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                       ユーザーインタラクション                                │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│  Reaction        : User ─── Episode + リアクション種別（like/bad）          │
+│  Reaction        : User ─── Episode + リアクションタイプ（like/bad）          │
 │  PlaybackHistory : User ─── Episode + 再生状態                              │
 │  Follow          : User ─── User（自分以外のユーザーのみ）                  │
 │  Comment         : User ─── Episode + コメント内容                          │
@@ -117,7 +117,7 @@ AIポッドキャスト作成・配信プラットフォーム。
 
 ### エンティティと値オブジェクト
 
-| 種別 | 名前 | 説明 |
+| タイプ | 名前 | 説明 |
 |------|------|------|
 | エンティティ | User, Channel, Character, Episode, ScriptLine | 一意の識別子を持ち、ライフサイクルを通じて追跡される |
 | エンティティ | Playlist, PlaylistItem | ユーザー所有のプレイリストとアイテム |
@@ -525,7 +525,7 @@ emotion は TTS 生成時に text の先頭にカッコで付けて表現する�
 | id | UUID | ◯ | 識別子 |
 | userId | UUID | ◯ | ユーザー |
 | episodeId | UUID | ◯ | エピソード |
-| reactionType | ReactionType | ◯ | リアクション種別（like / bad） |
+| reactionType | ReactionType | ◯ | リアクションタイプ（like / bad） |
 | createdAt | DateTime | ◯ | リアクション登録日時 |
 
 #### 制約

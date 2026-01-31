@@ -2582,6 +2582,126 @@
                 }
             }
         },
+        "/episodes/{episodeId}/reactions": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "エピソードにリアクションを登録します（既存の場合は更新）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "episodes"
+                ],
+                "summary": "リアクション登録・更新",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "エピソード ID",
+                        "name": "episodeId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "リアクション登録リクエスト",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreateOrUpdateReactionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ReactionDataResponse"
+                        }
+                    },
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.ReactionDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "エピソードへのリアクションを解除します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "episodes"
+                ],
+                "summary": "リアクション解除",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "エピソード ID",
+                        "name": "episodeId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/feedbacks": {
             "post": {
                 "security": [
@@ -5285,6 +5405,21 @@
                 }
             }
         },
+        "request.CreateOrUpdateReactionRequest": {
+            "type": "object",
+            "required": [
+                "reactionType"
+            ],
+            "properties": {
+                "reactionType": {
+                    "type": "string",
+                    "enum": [
+                        "like",
+                        "bad"
+                    ]
+                }
+            }
+        },
         "request.CreatePlaylistRequest": {
             "type": "object",
             "required": [
@@ -7293,6 +7428,40 @@
                     "type": "string"
                 },
                 "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.ReactionDataResponse": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.ReactionResponse"
+                }
+            }
+        },
+        "response.ReactionResponse": {
+            "type": "object",
+            "required": [
+                "createdAt",
+                "episodeId",
+                "id",
+                "reactionType"
+            ],
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "episodeId": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "reactionType": {
                     "type": "string"
                 }
             }

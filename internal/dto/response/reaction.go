@@ -33,3 +33,16 @@ type LikeListWithPaginationResponse struct {
 	Data       []LikeItemResponse `json:"data" validate:"required"`
 	Pagination PaginationResponse `json:"pagination" validate:"required"`
 }
+
+// リアクションのレスポンス
+type ReactionResponse struct {
+	ID           uuid.UUID `json:"id" validate:"required"`
+	EpisodeID    uuid.UUID `json:"episodeId" validate:"required"`
+	ReactionType string    `json:"reactionType" validate:"required"`
+	CreatedAt    time.Time `json:"createdAt" validate:"required"`
+}
+
+// リアクション登録・更新のラッパーレスポンス
+type ReactionDataResponse struct {
+	Data ReactionResponse `json:"data" validate:"required"`
+}

@@ -26,6 +26,24 @@ func (m *mockReactionRepository) FindLikesByUserID(ctx context.Context, userID u
 	return args.Get(0).([]model.Reaction), args.Get(1).(int64), args.Error(2)
 }
 
+func (m *mockReactionRepository) FindByUserIDAndEpisodeID(ctx context.Context, userID, episodeID uuid.UUID) (*model.Reaction, error) {
+	args := m.Called(ctx, userID, episodeID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.Reaction), args.Error(1)
+}
+
+func (m *mockReactionRepository) Upsert(ctx context.Context, reaction *model.Reaction) (bool, error) {
+	args := m.Called(ctx, reaction)
+	return args.Bool(0), args.Error(1)
+}
+
+func (m *mockReactionRepository) DeleteByUserIDAndEpisodeID(ctx context.Context, userID, episodeID uuid.UUID) error {
+	args := m.Called(ctx, userID, episodeID)
+	return args.Error(0)
+}
+
 func TestNewReactionService(t *testing.T) {
 	t.Run("ReactionService を作成できる", func(t *testing.T) {
 		mockRepo := new(mockReactionRepository)
@@ -208,5 +226,137 @@ func TestReactionService_ListLikes(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, result)
 		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestReactionService_CreateOrUpdateReaction(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+	episodeID := uuid.New()
+
+	t.Run("新規リアクションを作成できる", func(t *testing.T) {
+		mockRepo := new(mockReactionRepository)
+		mockStorage := new(mockStorageClient)
+
+		mockRepo.On("Upsert", mock.Anything, mock.MatchedBy(func(r *model.Reaction) bool {
+			return r.UserID == userID && r.EpisodeID == episodeID && r.ReactionType == model.ReactionTypeLike
+		})).Return(true, nil)
+
+		svc := NewReactionService(mockRepo, mockStorage)
+		result, created, err := svc.CreateOrUpdateReaction(ctx, userID.String(), episodeID.String(), "like")
+
+		assert.NoError(t, err)
+		assert.True(t, created)
+		assert.NotNil(t, result)
+		assert.Equal(t, episodeID, result.Data.EpisodeID)
+		assert.Equal(t, "like", result.Data.ReactionType)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("既存リアクションを更新できる", func(t *testing.T) {
+		mockRepo := new(mockReactionRepository)
+		mockStorage := new(mockStorageClient)
+
+		mockRepo.On("Upsert", mock.Anything, mock.MatchedBy(func(r *model.Reaction) bool {
+			return r.UserID == userID && r.EpisodeID == episodeID && r.ReactionType == model.ReactionTypeBad
+		})).Return(false, nil)
+
+		svc := NewReactionService(mockRepo, mockStorage)
+		result, created, err := svc.CreateOrUpdateReaction(ctx, userID.String(), episodeID.String(), "bad")
+
+		assert.NoError(t, err)
+		assert.False(t, created)
+		assert.NotNil(t, result)
+		assert.Equal(t, "bad", result.Data.ReactionType)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("無効な userID の場合はエラーを返す", func(t *testing.T) {
+		mockRepo := new(mockReactionRepository)
+		mockStorage := new(mockStorageClient)
+
+		svc := NewReactionService(mockRepo, mockStorage)
+		result, _, err := svc.CreateOrUpdateReaction(ctx, "invalid-uuid", episodeID.String(), "like")
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+	})
+
+	t.Run("無効な episodeID の場合はエラーを返す", func(t *testing.T) {
+		mockRepo := new(mockReactionRepository)
+		mockStorage := new(mockStorageClient)
+
+		svc := NewReactionService(mockRepo, mockStorage)
+		result, _, err := svc.CreateOrUpdateReaction(ctx, userID.String(), "invalid-uuid", "like")
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+	})
+
+	t.Run("リポジトリがエラーを返すとエラーを返す", func(t *testing.T) {
+		mockRepo := new(mockReactionRepository)
+		mockStorage := new(mockStorageClient)
+
+		mockRepo.On("Upsert", mock.Anything, mock.Anything).Return(false, apperror.ErrInternal.WithMessage("Database error"))
+
+		svc := NewReactionService(mockRepo, mockStorage)
+		result, _, err := svc.CreateOrUpdateReaction(ctx, userID.String(), episodeID.String(), "like")
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestReactionService_DeleteReaction(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+	episodeID := uuid.New()
+
+	t.Run("リアクションを削除できる", func(t *testing.T) {
+		mockRepo := new(mockReactionRepository)
+		mockStorage := new(mockStorageClient)
+
+		mockRepo.On("DeleteByUserIDAndEpisodeID", mock.Anything, userID, episodeID).Return(nil)
+
+		svc := NewReactionService(mockRepo, mockStorage)
+		err := svc.DeleteReaction(ctx, userID.String(), episodeID.String())
+
+		assert.NoError(t, err)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("存在しないリアクションの削除は 404 を返す", func(t *testing.T) {
+		mockRepo := new(mockReactionRepository)
+		mockStorage := new(mockStorageClient)
+
+		mockRepo.On("DeleteByUserIDAndEpisodeID", mock.Anything, userID, episodeID).Return(apperror.ErrNotFound.WithMessage("リアクションが見つかりません"))
+
+		svc := NewReactionService(mockRepo, mockStorage)
+		err := svc.DeleteReaction(ctx, userID.String(), episodeID.String())
+
+		assert.Error(t, err)
+		assert.True(t, apperror.IsCode(err, apperror.CodeNotFound))
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("無効な userID の場合はエラーを返す", func(t *testing.T) {
+		mockRepo := new(mockReactionRepository)
+		mockStorage := new(mockStorageClient)
+
+		svc := NewReactionService(mockRepo, mockStorage)
+		err := svc.DeleteReaction(ctx, "invalid-uuid", episodeID.String())
+
+		assert.Error(t, err)
+	})
+
+	t.Run("無効な episodeID の場合はエラーを返す", func(t *testing.T) {
+		mockRepo := new(mockReactionRepository)
+		mockStorage := new(mockStorageClient)
+
+		svc := NewReactionService(mockRepo, mockStorage)
+		err := svc.DeleteReaction(ctx, userID.String(), "invalid-uuid")
+
+		assert.Error(t, err)
 	})
 }

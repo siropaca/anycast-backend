@@ -569,7 +569,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | id | UUID | | gen_random_uuid() | 主キー |
 | user_id | UUID | | - | ユーザー（users 参照） |
 | episode_id | UUID | | - | エピソード（episodes 参照） |
-| reaction_type | reaction_type | | - | リアクション種別（like / bad） |
+| reaction_type | reaction_type | | - | リアクションタイプ（like / bad） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | リアクション登録日時 |
 
 **インデックス:**
@@ -949,7 +949,7 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 | user_role | `user`, `admin` | ユーザーのロール |
 | audio_job_status | `pending`, `processing`, `canceling`, `completed`, `failed`, `canceled` | 音声生成ジョブのステータス |
 | script_job_status | `pending`, `processing`, `canceling`, `completed`, `failed`, `canceled` | 台本生成ジョブのステータス |
-| reaction_type | `like`, `bad` | エピソードへのリアクション種別 |
+| reaction_type | `like`, `bad` | エピソードへのリアクションタイプ |
 
 ### UUID について
 
