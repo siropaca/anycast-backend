@@ -28,3 +28,11 @@ const (
 func (r Role) IsAdmin() bool {
 	return r == RoleAdmin
 }
+
+// ReactionType はリアクションの種別を表す
+type ReactionType string
+
+const (
+	ReactionTypeLike ReactionType = "like"
+	ReactionTypeBad  ReactionType = "bad"
+)

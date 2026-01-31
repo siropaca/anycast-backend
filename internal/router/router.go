@@ -109,6 +109,9 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	// Follows
 	authenticated.GET("/me/follows", container.FollowHandler.ListFollows)
 
+	// Likes
+	authenticated.GET("/me/likes", container.ReactionHandler.ListLikes)
+
 	// Channels
 	authenticated.GET("/channels/:channelId", container.ChannelHandler.GetChannel)
 	authenticated.POST("/channels", container.ChannelHandler.CreateChannel)

@@ -102,7 +102,7 @@
 | **Reactions（リアクション）** | - | - | - | - | [engagement.md](./engagement.md#reactionsリアクション) |
 | POST | `/api/v1/episodes/:episodeId/reactions` | リアクション登録（like/bad） | Owner | | [詳細](./engagement.md#リアクション登録) |
 | DELETE | `/api/v1/episodes/:episodeId/reactions` | リアクション解除 | Owner | | [詳細](./engagement.md#リアクション解除) |
-| GET | `/api/v1/me/likes` | 高評価したエピソード一覧 | Owner | | [詳細](./engagement.md#高評価したエピソード一覧) |
+| GET | `/api/v1/me/likes` | 高評価したエピソード一覧 | Owner | ✅ | [詳細](./engagement.md#高評価したエピソード一覧) |
 | **Playlists（プレイリスト）** | - | - | - | - | [engagement.md](./engagement.md#playlistsプレイリスト) |
 | GET | `/api/v1/me/playlists` | プレイリスト一覧取得 | Owner | ✅ | [詳細](./engagement.md#プレイリスト一覧取得) |
 | GET | `/api/v1/me/playlists/:playlistId` | プレイリスト詳細取得 | Owner | ✅ | [詳細](./engagement.md#プレイリスト詳細取得) |
