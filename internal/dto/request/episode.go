@@ -6,6 +6,11 @@ type ListMyChannelEpisodesRequest struct {
 	Status *string `form:"status" binding:"omitempty,oneof=published draft"`
 }
 
+// チャンネルのエピソード一覧取得リクエスト
+type ListChannelEpisodesRequest struct {
+	PaginationRequest
+}
+
 // エピソード作成リクエスト
 type CreateEpisodeRequest struct {
 	Title          string  `json:"title" binding:"required,max=255"`

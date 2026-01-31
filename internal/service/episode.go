@@ -19,6 +19,7 @@ import (
 type EpisodeService interface {
 	GetEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error)
 	GetMyChannelEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error)
+	ListChannelEpisodes(ctx context.Context, userID, channelID string, filter repository.EpisodeFilter) (*response.EpisodeListWithPaginationResponse, error)
 	ListMyChannelEpisodes(ctx context.Context, userID, channelID string, filter repository.EpisodeFilter) (*response.EpisodeListWithPaginationResponse, error)
 	CreateEpisode(ctx context.Context, userID, channelID, title, description string, artworkImageID *string) (*response.EpisodeResponse, error)
 	UpdateEpisode(ctx context.Context, userID, channelID, episodeID string, req request.UpdateEpisodeRequest) (*response.EpisodeDataResponse, error)
@@ -193,6 +194,55 @@ func (s *episodeService) ListMyChannelEpisodes(ctx context.Context, userID, chan
 
 	if channel.UserID != uid {
 		return nil, apperror.ErrForbidden.WithMessage("このチャンネルへのアクセス権限がありません")
+	}
+
+	// エピソード一覧を取得
+	episodes, total, err := s.episodeRepo.FindByChannelID(ctx, cid, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	responses, err := s.toEpisodeResponses(ctx, episodes)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.EpisodeListWithPaginationResponse{
+		Data:       responses,
+		Pagination: response.PaginationResponse{Total: total, Limit: filter.Limit, Offset: filter.Offset},
+	}, nil
+}
+
+// ListChannelEpisodes は指定されたチャンネルのエピソード一覧を取得する
+func (s *episodeService) ListChannelEpisodes(ctx context.Context, userID, channelID string, filter repository.EpisodeFilter) (*response.EpisodeListWithPaginationResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	// チャンネルの存在確認
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	isOwner := channel.UserID == uid
+	isChannelPublished := channel.PublishedAt != nil && !channel.PublishedAt.After(time.Now())
+
+	// オーナーでなく、かつチャンネルが公開されていない場合は 404
+	if !isOwner && !isChannelPublished {
+		return nil, apperror.ErrNotFound.WithMessage("チャンネルが見つかりません")
+	}
+
+	// 非オーナーの場合は公開済みエピソードのみ返す
+	if !isOwner {
+		published := "published"
+		filter.Status = &published
 	}
 
 	// エピソード一覧を取得

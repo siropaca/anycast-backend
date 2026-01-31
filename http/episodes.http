@@ -3,6 +3,14 @@
 # トークン生成: make token
 @token = YOUR_TOKEN_HERE
 
+### チャンネルのエピソード一覧取得
+GET {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes
+Authorization: Bearer {{token}}
+
+### チャンネルのエピソード一覧取得（ページネーション）
+GET {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes?limit=10&offset=0
+Authorization: Bearer {{token}}
+
 ### 自分のチャンネルのエピソード一覧取得
 GET {{baseUrl}}/me/channels/YOUR_CHANNEL_ID_HERE/episodes
 Authorization: Bearer {{token}}

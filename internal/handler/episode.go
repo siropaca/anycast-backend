@@ -117,6 +117,55 @@ func (h *EpisodeHandler) ListMyChannelEpisodes(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// ListChannelEpisodes godoc
+// @Summary チャンネルのエピソード一覧取得
+// @Description 指定したチャンネルのエピソード一覧を取得します。オーナーの場合は全エピソード、それ以外は公開済みエピソードのみ返します。
+// @Tags episodes
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param limit query int false "取得件数（デフォルト: 20、最大: 100）"
+// @Param offset query int false "オフセット（デフォルト: 0）"
+// @Success 200 {object} response.EpisodeListWithPaginationResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/episodes [get]
+func (h *EpisodeHandler) ListChannelEpisodes(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
+		return
+	}
+
+	var req request.ListChannelEpisodesRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
+		return
+	}
+
+	filter := repository.EpisodeFilter{
+		Limit:  req.Limit,
+		Offset: req.Offset,
+	}
+
+	result, err := h.episodeService.ListChannelEpisodes(c.Request.Context(), userID, channelID, filter)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
 // GetMyChannelEpisode godoc
 // @Summary 自分のチャンネルのエピソード取得
 // @Description 自分のチャンネルに紐付くエピソードを取得します（非公開含む）
