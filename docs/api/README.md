@@ -59,7 +59,7 @@
 | PATCH | `/api/v1/system-bgms/:bgmId` | システム BGM 更新 | Admin | | [詳細](./bgms.md#デフォルト-bgm-更新) |
 | DELETE | `/api/v1/system-bgms/:bgmId` | システム BGM 削除 | Admin | | [詳細](./bgms.md#デフォルト-bgm-削除) |
 | **Episodes** | - | - | - | - | [episodes.md](./episodes.md) |
-| GET | `/api/v1/channels/:channelId/episodes` | エピソード一覧取得 | Public | | [詳細](./episodes.md#エピソード一覧取得公開用) |
+| GET | `/api/v1/channels/:channelId/episodes` | エピソード一覧取得 | Public | ✅ | [詳細](./episodes.md#エピソード一覧取得公開用) |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード取得 | Public | ✅ | [詳細](./episodes.md#エピソード取得) |
 | POST | `/api/v1/channels/:channelId/episodes` | エピソード作成 | Owner | ✅ | [詳細](./episodes.md#エピソード作成) |
 | PATCH | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード更新 | Owner | ✅ | [詳細](./episodes.md#エピソード更新) |
