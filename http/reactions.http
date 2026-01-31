@@ -1,0 +1,34 @@
+@baseUrl = http://localhost:8081/api/v1
+
+# トークン生成: make token
+@token = YOUR_TOKEN_HERE
+
+### 高評価したエピソード一覧取得
+GET {{baseUrl}}/me/likes
+Authorization: Bearer {{token}}
+
+### 高評価したエピソード一覧取得（ページネーション）
+GET {{baseUrl}}/me/likes?limit=10&offset=0
+Authorization: Bearer {{token}}
+
+### リアクション登録（高評価）
+POST {{baseUrl}}/episodes/YOUR_EPISODE_ID_HERE/reactions
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "reactionType": "like"
+}
+
+### リアクション登録（低評価）
+POST {{baseUrl}}/episodes/YOUR_EPISODE_ID_HERE/reactions
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "reactionType": "bad"
+}
+
+### リアクション解除
+DELETE {{baseUrl}}/episodes/YOUR_EPISODE_ID_HERE/reactions
+Authorization: Bearer {{token}}

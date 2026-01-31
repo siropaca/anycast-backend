@@ -1,0 +1,20 @@
+@baseUrl = http://localhost:8081/api/v1
+
+# トークン生成: make token
+@token = YOUR_TOKEN_HERE
+
+### フォロー中のユーザー一覧取得
+GET {{baseUrl}}/me/follows
+Authorization: Bearer {{token}}
+
+### フォロー中のユーザー一覧取得（ページネーション）
+GET {{baseUrl}}/me/follows?limit=10&offset=0
+Authorization: Bearer {{token}}
+
+### フォロー登録
+POST {{baseUrl}}/users/YOUR_USER_ID_HERE/follow
+Authorization: Bearer {{token}}
+
+### フォロー解除
+DELETE {{baseUrl}}/users/YOUR_USER_ID_HERE/follow
+Authorization: Bearer {{token}}

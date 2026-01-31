@@ -1,0 +1,39 @@
+@baseUrl = http://localhost:8081/api/v1
+
+# トークン生成: make token
+@token = YOUR_TOKEN_HERE
+
+### フィードバック送信（テキストのみ）
+POST {{baseUrl}}/feedbacks
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="content"
+
+アプリの使い勝手がとても良いです。
+--boundary--
+
+### フィードバック送信（スクリーンショット付き）
+POST {{baseUrl}}/feedbacks
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="content"
+
+画面が崩れています。
+--boundary
+Content-Disposition: form-data; name="pageUrl"
+
+https://example.com/episodes/123
+--boundary
+Content-Disposition: form-data; name="userAgent"
+
+Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)
+--boundary
+Content-Disposition: form-data; name="screenshot"; filename="screenshot.png"
+Content-Type: image/png
+
+< ./screenshot.png
+--boundary--

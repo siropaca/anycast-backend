@@ -1,0 +1,16 @@
+@baseUrl = http://localhost:8081/api/v1
+
+# トークン生成: make token
+@token = YOUR_TOKEN_HERE
+
+### 音声アップロード
+POST {{baseUrl}}/audios
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="test.mp3"
+Content-Type: audio/mpeg
+
+< ./test.mp3
+--boundary--

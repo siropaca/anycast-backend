@@ -1,0 +1,34 @@
+@baseUrl = http://localhost:8081/api/v1
+
+# トークン生成: make token
+@token = YOUR_TOKEN_HERE
+
+### おすすめチャンネル一覧取得（未ログイン）
+GET {{baseUrl}}/recommendations/channels
+
+### おすすめチャンネル一覧取得（ログイン済み）
+GET {{baseUrl}}/recommendations/channels
+Authorization: Bearer {{token}}
+
+### おすすめチャンネル一覧取得（カテゴリ指定）
+GET {{baseUrl}}/recommendations/channels?categoryId=YOUR_CATEGORY_ID_HERE
+Authorization: Bearer {{token}}
+
+### おすすめチャンネル一覧取得（ページネーション）
+GET {{baseUrl}}/recommendations/channels?limit=10&offset=0
+Authorization: Bearer {{token}}
+
+### おすすめエピソード一覧取得（未ログイン）
+GET {{baseUrl}}/recommendations/episodes
+
+### おすすめエピソード一覧取得（ログイン済み）
+GET {{baseUrl}}/recommendations/episodes
+Authorization: Bearer {{token}}
+
+### おすすめエピソード一覧取得（カテゴリ指定）
+GET {{baseUrl}}/recommendations/episodes?categoryId=YOUR_CATEGORY_ID_HERE
+Authorization: Bearer {{token}}
+
+### おすすめエピソード一覧取得（ページネーション）
+GET {{baseUrl}}/recommendations/episodes?limit=10&offset=0
+Authorization: Bearer {{token}}
