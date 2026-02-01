@@ -81,9 +81,13 @@ func NewChannelService(
 // GetChannel は指定されたチャンネルを取得する
 // オーナーまたは公開中のチャンネルのみ取得可能
 func (s *channelService) GetChannel(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error) {
-	uid, err := uuid.Parse(userID)
-	if err != nil {
-		return nil, err
+	var uid uuid.UUID
+	if userID != "" {
+		var err error
+		uid, err = uuid.Parse(userID)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	cid, err := uuid.Parse(channelID)
@@ -96,7 +100,7 @@ func (s *channelService) GetChannel(ctx context.Context, userID, channelID strin
 		return nil, err
 	}
 
-	isOwner := channel.UserID == uid
+	isOwner := userID != "" && channel.UserID == uid
 	isPublished := channel.PublishedAt != nil && !channel.PublishedAt.After(time.Now())
 
 	// オーナーでなく、かつ公開されていない場合は 404

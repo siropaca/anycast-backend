@@ -258,8 +258,15 @@ func TestEpisodeHandler_ListChannelEpisodes(t *testing.T) {
 		mockSvc.AssertExpectations(t)
 	})
 
-	t.Run("未認証の場合は 401 を返す", func(t *testing.T) {
+	t.Run("未認証でも公開エピソード一覧を取得できる", func(t *testing.T) {
 		mockSvc := new(mockEpisodeService)
+		episodes := []response.EpisodeResponse{createTestEpisodeResponse()}
+		result := &response.EpisodeListWithPaginationResponse{
+			Data:       episodes,
+			Pagination: response.PaginationResponse{Total: 1, Limit: 20, Offset: 0},
+		}
+		mockSvc.On("ListChannelEpisodes", mock.Anything, "", channelID, mock.AnythingOfType("repository.EpisodeFilter")).Return(result, nil)
+
 		handler := NewEpisodeHandler(mockSvc)
 		router := setupEpisodeRouter(handler)
 
@@ -267,7 +274,8 @@ func TestEpisodeHandler_ListChannelEpisodes(t *testing.T) {
 		req := httptest.NewRequest("GET", "/channels/"+channelID+"/episodes", http.NoBody)
 		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockSvc.AssertExpectations(t)
 	})
 }
 

@@ -505,8 +505,12 @@ func TestChannelHandler_GetChannel(t *testing.T) {
 		mockSvc.AssertExpectations(t)
 	})
 
-	t.Run("未認証の場合は 401 を返す", func(t *testing.T) {
+	t.Run("未認証でも公開チャンネルを取得できる", func(t *testing.T) {
 		mockSvc := new(mockChannelService)
+		channelResp := createTestChannelResponse()
+		result := &response.ChannelDataResponse{Data: channelResp}
+		mockSvc.On("GetChannel", mock.Anything, "", channelID).Return(result, nil)
+
 		handler := NewChannelHandler(mockSvc)
 		router := setupChannelRouter(handler)
 
@@ -514,7 +518,8 @@ func TestChannelHandler_GetChannel(t *testing.T) {
 		req := httptest.NewRequest("GET", "/channels/"+channelID, http.NoBody)
 		router.ServeHTTP(w, req)
 
-		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		assert.Equal(t, http.StatusOK, w.Code)
+		mockSvc.AssertExpectations(t)
 	})
 }
 

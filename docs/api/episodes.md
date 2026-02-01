@@ -6,7 +6,7 @@
 GET /channels/:channelId/episodes
 ```
 
-公開中のエピソードのみ取得可能。自分のチャンネルのエピソード（非公開含む）は `GET /me/channels/:channelId/episodes` を使用。
+認証不要。公開中のエピソードは誰でも取得可能。認証済みの場合、自分のチャンネルのエピソードは非公開でも取得可能。非公開含む全エピソードの管理は `GET /me/channels/:channelId/episodes` を使用。
 
 **クエリパラメータ:**
 
@@ -46,7 +46,7 @@ GET /channels/:channelId/episodes
 GET /channels/:channelId/episodes/:episodeId
 ```
 
-公開中のエピソード、または自分のエピソードのみ取得可能。
+認証不要。公開中のエピソードは誰でも取得可能。認証済みの場合、自分のチャンネルのエピソードは非公開でも取得可能。
 
 **レスポンス:**
 ```json

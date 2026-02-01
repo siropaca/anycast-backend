@@ -140,24 +140,18 @@ func (h *ChannelHandler) CreateChannel(c *gin.Context) {
 
 // GetChannel godoc
 // @Summary チャンネル取得
-// @Description チャンネルを取得します（公開中、または自分のチャンネルのみ）
+// @Description チャンネルを取得します。認証なしでは公開中のチャンネルのみ、認証ありでは自分のチャンネルも取得可能です。
 // @Tags channels
 // @Accept json
 // @Produce json
 // @Param channelId path string true "チャンネル ID"
 // @Success 200 {object} response.ChannelDataResponse
 // @Failure 400 {object} response.ErrorResponse
-// @Failure 401 {object} response.ErrorResponse
 // @Failure 404 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
-// @Security BearerAuth
 // @Router /channels/{channelId} [get]
 func (h *ChannelHandler) GetChannel(c *gin.Context) {
-	userID, ok := middleware.GetUserID(c)
-	if !ok {
-		Error(c, apperror.ErrUnauthorized)
-		return
-	}
+	userID, _ := middleware.GetUserID(c)
 
 	channelID := c.Param("channelId")
 	if channelID == "" {

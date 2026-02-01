@@ -24,7 +24,7 @@ func NewEpisodeHandler(es service.EpisodeService) *EpisodeHandler {
 
 // GetEpisode godoc
 // @Summary エピソード取得
-// @Description エピソードを取得します（公開中、または自分のチャンネルのエピソードのみ）
+// @Description エピソードを取得します。認証なしでは公開済みエピソードのみ、認証ありでは自分のチャンネルの非公開エピソードも取得可能です。
 // @Tags episodes
 // @Accept json
 // @Produce json
@@ -32,17 +32,11 @@ func NewEpisodeHandler(es service.EpisodeService) *EpisodeHandler {
 // @Param episodeId path string true "エピソード ID"
 // @Success 200 {object} response.EpisodeDataResponse
 // @Failure 400 {object} response.ErrorResponse
-// @Failure 401 {object} response.ErrorResponse
 // @Failure 404 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
-// @Security BearerAuth
 // @Router /channels/{channelId}/episodes/{episodeId} [get]
 func (h *EpisodeHandler) GetEpisode(c *gin.Context) {
-	userID, ok := middleware.GetUserID(c)
-	if !ok {
-		Error(c, apperror.ErrUnauthorized)
-		return
-	}
+	userID, _ := middleware.GetUserID(c)
 
 	channelID := c.Param("channelId")
 	if channelID == "" {
@@ -119,7 +113,7 @@ func (h *EpisodeHandler) ListMyChannelEpisodes(c *gin.Context) {
 
 // ListChannelEpisodes godoc
 // @Summary チャンネルのエピソード一覧取得
-// @Description 指定したチャンネルのエピソード一覧を取得します。オーナーの場合は全エピソード、それ以外は公開済みエピソードのみ返します。
+// @Description 指定したチャンネルのエピソード一覧を取得します。認証なしでは公開済みエピソードのみ、認証ありでオーナーの場合は全エピソードを返します。
 // @Tags episodes
 // @Accept json
 // @Produce json
@@ -128,17 +122,11 @@ func (h *EpisodeHandler) ListMyChannelEpisodes(c *gin.Context) {
 // @Param offset query int false "オフセット（デフォルト: 0）"
 // @Success 200 {object} response.EpisodeListWithPaginationResponse
 // @Failure 400 {object} response.ErrorResponse
-// @Failure 401 {object} response.ErrorResponse
 // @Failure 404 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
-// @Security BearerAuth
 // @Router /channels/{channelId}/episodes [get]
 func (h *EpisodeHandler) ListChannelEpisodes(c *gin.Context) {
-	userID, ok := middleware.GetUserID(c)
-	if !ok {
-		Error(c, apperror.ErrUnauthorized)
-		return
-	}
+	userID, _ := middleware.GetUserID(c)
 
 	channelID := c.Param("channelId")
 	if channelID == "" {

@@ -118,7 +118,6 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.GET("/me/likes", container.ReactionHandler.ListLikes)
 
 	// Channels
-	authenticated.GET("/channels/:channelId", container.ChannelHandler.GetChannel)
 	authenticated.POST("/channels", container.ChannelHandler.CreateChannel)
 	authenticated.PATCH("/channels/:channelId", container.ChannelHandler.UpdateChannel)
 	authenticated.DELETE("/channels/:channelId", container.ChannelHandler.DeleteChannel)
@@ -127,8 +126,6 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.DELETE("/channels/:channelId/default-bgm", container.ChannelHandler.DeleteDefaultBgm)
 
 	// Episodes
-	authenticated.GET("/channels/:channelId/episodes", container.EpisodeHandler.ListChannelEpisodes)
-	authenticated.GET("/channels/:channelId/episodes/:episodeId", container.EpisodeHandler.GetEpisode)
 	authenticated.POST("/channels/:channelId/episodes", container.EpisodeHandler.CreateEpisode)
 	authenticated.PATCH("/channels/:channelId/episodes/:episodeId", container.EpisodeHandler.UpdateEpisode)
 	authenticated.DELETE("/channels/:channelId/episodes/:episodeId", container.EpisodeHandler.DeleteEpisode)
@@ -181,9 +178,12 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	// Feedbacks
 	authenticated.POST("/feedbacks", container.FeedbackHandler.CreateFeedback)
 
-	// Recommendations（任意認証）
+	// 任意認証（ログイン時はオーナー判定、未ログインは公開コンテンツのみ）
 	optionalAuth := api.Group("")
 	optionalAuth.Use(middleware.OptionalAuth(container.TokenManager))
+	optionalAuth.GET("/channels/:channelId", container.ChannelHandler.GetChannel)
+	optionalAuth.GET("/channels/:channelId/episodes", container.EpisodeHandler.ListChannelEpisodes)
+	optionalAuth.GET("/channels/:channelId/episodes/:episodeId", container.EpisodeHandler.GetEpisode)
 	optionalAuth.GET("/recommendations/channels", container.RecommendationHandler.GetRecommendedChannels)
 	optionalAuth.GET("/recommendations/episodes", container.RecommendationHandler.GetRecommendedEpisodes)
 

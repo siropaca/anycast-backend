@@ -609,12 +609,7 @@ const docTemplate = `{
         },
         "/channels/{channelId}": {
             "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "チャンネルを取得します（公開中、または自分のチャンネルのみ）",
+                "description": "チャンネルを取得します。認証なしでは公開中のチャンネルのみ、認証ありでは自分のチャンネルも取得可能です。",
                 "consumes": [
                     "application/json"
                 ],
@@ -643,12 +638,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
                         }
@@ -855,12 +844,7 @@ const docTemplate = `{
         },
         "/channels/{channelId}/episodes": {
             "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "指定したチャンネルのエピソード一覧を取得します。オーナーの場合は全エピソード、それ以外は公開済みエピソードのみ返します。",
+                "description": "指定したチャンネルのエピソード一覧を取得します。認証なしでは公開済みエピソードのみ、認証ありでオーナーの場合は全エピソードを返します。",
                 "consumes": [
                     "application/json"
                 ],
@@ -901,12 +885,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
                         }
@@ -1002,12 +980,7 @@ const docTemplate = `{
         },
         "/channels/{channelId}/episodes/{episodeId}": {
             "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "エピソードを取得します（公開中、または自分のチャンネルのエピソードのみ）",
+                "description": "エピソードを取得します。認証なしでは公開済みエピソードのみ、認証ありでは自分のチャンネルの非公開エピソードも取得可能です。",
                 "consumes": [
                     "application/json"
                 ],
@@ -1043,12 +1016,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
                         }

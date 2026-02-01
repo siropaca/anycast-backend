@@ -59,11 +59,11 @@
 | Auth（ログアウト） | - | - | - | Owner |
 | Auth（パスワード更新） | - | - | Owner | - |
 | Users | Owner | - | Owner | Owner |
-| Channels | Public | Owner | Owner | Owner |
+| Channels | Optional | Owner | Owner | Owner |
 | Characters | Owner | Owner | Owner | Owner |
 | BGMs | Owner | Owner | Owner | Owner |
 | System BGMs | Public | Admin | Admin | Admin |
-| Episodes | Public | Owner | Owner | Owner |
+| Episodes | Optional | Owner | Owner | Owner |
 | Script / ScriptLines | Owner | Owner | Owner | Owner |
 | Likes | Owner | Owner | - | Owner |
 | Playlists | Owner | Owner | Owner | Owner |
@@ -82,16 +82,16 @@
 
 チャンネルとエピソードには公開状態（`publishedAt`）があり、参照時のアクセス制御に影響する。
 
-| エンドポイント | オーナー | 他ユーザー |
-|---------------|----------|------------|
-| `GET /channels` | - | 公開中のみ |
-| `GET /channels/:channelId` | 全て | 公開中のみ |
-| `GET /channels/:channelId/episodes` | - | 公開中のみ |
-| `GET /channels/:channelId/episodes/:episodeId` | 全て | 公開中のみ |
-| `GET /search/channels` | - | 公開中のみ |
-| `GET /search/episodes` | - | 公開中のみ |
-| `GET /me/channels` | 全て | - |
-| `GET /me/channels/:channelId/episodes` | 全て | - |
+| エンドポイント | オーナー | 他ユーザー | 未認証 |
+|---------------|----------|------------|--------|
+| `GET /channels` | - | 公開中のみ | 公開中のみ |
+| `GET /channels/:channelId` | 全て | 公開中のみ | 公開中のみ |
+| `GET /channels/:channelId/episodes` | 全て | 公開中のみ | 公開中のみ |
+| `GET /channels/:channelId/episodes/:episodeId` | 全て | 公開中のみ | 公開中のみ |
+| `GET /search/channels` | - | 公開中のみ | 公開中のみ |
+| `GET /search/episodes` | - | 公開中のみ | 公開中のみ |
+| `GET /me/channels` | 全て | - | - |
+| `GET /me/channels/:channelId/episodes` | 全て | - | - |
 
 - **公開中**: `publishedAt IS NOT NULL AND publishedAt <= NOW()`
 - **非公開（下書き）**: `publishedAt IS NULL`

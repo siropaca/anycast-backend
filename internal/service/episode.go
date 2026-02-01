@@ -70,9 +70,13 @@ func NewEpisodeService(
 
 // GetEpisode は指定されたエピソードを取得する
 func (s *episodeService) GetEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error) {
-	uid, err := uuid.Parse(userID)
-	if err != nil {
-		return nil, err
+	var uid uuid.UUID
+	if userID != "" {
+		var err error
+		uid, err = uuid.Parse(userID)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	cid, err := uuid.Parse(channelID)
@@ -91,7 +95,7 @@ func (s *episodeService) GetEpisode(ctx context.Context, userID, channelID, epis
 		return nil, err
 	}
 
-	isOwner := channel.UserID == uid
+	isOwner := userID != "" && channel.UserID == uid
 	isChannelPublished := channel.PublishedAt != nil && !channel.PublishedAt.After(time.Now())
 
 	// オーナーでなく、かつチャンネルが公開されていない場合は 404
@@ -215,9 +219,13 @@ func (s *episodeService) ListMyChannelEpisodes(ctx context.Context, userID, chan
 
 // ListChannelEpisodes は指定されたチャンネルのエピソード一覧を取得する
 func (s *episodeService) ListChannelEpisodes(ctx context.Context, userID, channelID string, filter repository.EpisodeFilter) (*response.EpisodeListWithPaginationResponse, error) {
-	uid, err := uuid.Parse(userID)
-	if err != nil {
-		return nil, err
+	var uid uuid.UUID
+	if userID != "" {
+		var err error
+		uid, err = uuid.Parse(userID)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	cid, err := uuid.Parse(channelID)
@@ -231,7 +239,7 @@ func (s *episodeService) ListChannelEpisodes(ctx context.Context, userID, channe
 		return nil, err
 	}
 
-	isOwner := channel.UserID == uid
+	isOwner := userID != "" && channel.UserID == uid
 	isChannelPublished := channel.PublishedAt != nil && !channel.PublishedAt.After(time.Now())
 
 	// オーナーでなく、かつチャンネルが公開されていない場合は 404
