@@ -19,7 +19,7 @@ jobs:
       - name: Checkout frontend
         uses: actions/checkout@v4
         with:
-          repository: siropaca/anycast-forntend
+          repository: siropaca/anycast-frontend
           token: ${{ secrets.FRONTEND_REPO_TOKEN }}
           path: frontend
 
