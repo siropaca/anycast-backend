@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
+	"github.com/siropaca/anycast-backend/internal/middleware"
 	"github.com/siropaca/anycast-backend/internal/service"
 )
 
@@ -36,7 +37,11 @@ func NewFeedbackHandler(fs service.FeedbackService) *FeedbackHandler {
 // @Security BearerAuth
 // @Router /feedbacks [post]
 func (h *FeedbackHandler) CreateFeedback(c *gin.Context) {
-	userID := c.GetString("userID")
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
 
 	// フィードバック内容を取得
 	content := c.PostForm("content")

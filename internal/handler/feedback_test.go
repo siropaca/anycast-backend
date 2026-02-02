@@ -17,6 +17,7 @@ import (
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
+	"github.com/siropaca/anycast-backend/internal/middleware"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 	"github.com/siropaca/anycast-backend/internal/service"
 )
@@ -39,7 +40,7 @@ func setupFeedbackRouter(h *FeedbackHandler, userID string) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	r.Use(func(c *gin.Context) {
-		c.Set("userID", userID)
+		c.Set(string(middleware.UserIDKey), userID)
 		c.Next()
 	})
 	r.POST("/feedbacks", h.CreateFeedback)

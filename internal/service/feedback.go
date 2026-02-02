@@ -58,7 +58,7 @@ func (s *feedbackService) CreateFeedback(ctx context.Context, userID string, inp
 		return nil, err
 	}
 
-	// ユーザー情報を取得（Slack 通知用）
+	// ユーザーの存在確認（外部キー制約があるため必須）
 	user, err := s.userRepo.FindByID(ctx, uid)
 	if err != nil {
 		return nil, err
