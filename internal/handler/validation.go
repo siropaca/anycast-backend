@@ -28,6 +28,7 @@ var fieldNameMap = map[string]string{
 	"Description":        "説明",
 	"UserPrompt":         "ユーザープロンプト",
 	"CategoryID":         "カテゴリ ID",
+	"CategorySlug":       "カテゴリスラッグ",
 	"ArtworkImageID":     "アートワーク画像 ID",
 	"DefaultBgmID":       "デフォルト BGM ID",
 	"DefaultSystemBgmID": "デフォルトシステム BGM ID",

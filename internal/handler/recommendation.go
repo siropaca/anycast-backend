@@ -27,7 +27,7 @@ func NewRecommendationHandler(rs service.RecommendationService) *RecommendationH
 // @Tags recommendations
 // @Accept json
 // @Produce json
-// @Param categoryId query string false "カテゴリ ID でフィルタ"
+// @Param categorySlug query string false "カテゴリスラッグでフィルタ"
 // @Param limit query int false "取得件数（デフォルト: 20、最大: 50）"
 // @Param offset query int false "オフセット（デフォルト: 0）"
 // @Success 200 {object} response.RecommendedChannelListResponse
@@ -63,7 +63,7 @@ func (h *RecommendationHandler) GetRecommendedChannels(c *gin.Context) {
 // @Tags recommendations
 // @Accept json
 // @Produce json
-// @Param categoryId query string false "カテゴリ ID でフィルタ（チャンネルのカテゴリ）"
+// @Param categorySlug query string false "カテゴリスラッグでフィルタ（チャンネルのカテゴリ）"
 // @Param limit query int false "取得件数（デフォルト: 20、最大: 50）"
 // @Param offset query int false "オフセット（デフォルト: 0）"
 // @Success 200 {object} response.RecommendedEpisodeListResponse

@@ -34,6 +34,14 @@ func (m *mockCategoryRepository) FindByID(ctx context.Context, id uuid.UUID) (*m
 	return args.Get(0).(*model.Category), args.Error(1)
 }
 
+func (m *mockCategoryRepository) FindBySlug(ctx context.Context, slug string) (*model.Category, error) {
+	args := m.Called(ctx, slug)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.Category), args.Error(1)
+}
+
 func TestNewCategoryService(t *testing.T) {
 	t.Run("CategoryService を作成できる", func(t *testing.T) {
 		mockRepo := new(mockCategoryRepository)

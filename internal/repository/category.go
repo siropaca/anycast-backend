@@ -16,6 +16,7 @@ import (
 type CategoryRepository interface {
 	FindAllActive(ctx context.Context) ([]model.Category, error)
 	FindByID(ctx context.Context, id uuid.UUID) (*model.Category, error)
+	FindBySlug(ctx context.Context, slug string) (*model.Category, error)
 }
 
 type categoryRepository struct {
@@ -48,6 +49,21 @@ func (r *categoryRepository) FindByID(ctx context.Context, id uuid.UUID) (*model
 			return nil, apperror.ErrNotFound.WithMessage("カテゴリが見つかりません")
 		}
 		logger.FromContext(ctx).Error("failed to fetch category", "error", err, "category_id", id)
+		return nil, apperror.ErrInternal.WithMessage("カテゴリの取得に失敗しました").WithError(err)
+	}
+
+	return &category, nil
+}
+
+// FindBySlug は指定されたスラッグのカテゴリを取得する
+func (r *categoryRepository) FindBySlug(ctx context.Context, slug string) (*model.Category, error) {
+	var category model.Category
+
+	if err := r.db.WithContext(ctx).Preload("Image").First(&category, "slug = ?", slug).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, apperror.ErrNotFound.WithMessage("カテゴリが見つかりません")
+		}
+		logger.FromContext(ctx).Error("failed to fetch category by slug", "error", err, "slug", slug)
 		return nil, apperror.ErrInternal.WithMessage("カテゴリの取得に失敗しました").WithError(err)
 	}
 

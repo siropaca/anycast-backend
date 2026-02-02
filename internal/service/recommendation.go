@@ -22,16 +22,19 @@ type RecommendationService interface {
 
 type recommendationService struct {
 	recommendationRepo repository.RecommendationRepository
+	categoryRepo       repository.CategoryRepository
 	storageClient      storage.Client
 }
 
 // NewRecommendationService は recommendationService を生成して RecommendationService として返す
 func NewRecommendationService(
 	recommendationRepo repository.RecommendationRepository,
+	categoryRepo repository.CategoryRepository,
 	storageClient storage.Client,
 ) RecommendationService {
 	return &recommendationService{
 		recommendationRepo: recommendationRepo,
+		categoryRepo:       categoryRepo,
 		storageClient:      storageClient,
 	}
 }
@@ -77,12 +80,12 @@ func (s *recommendationService) GetRecommendedChannels(ctx context.Context, user
 	}
 
 	var categoryID *uuid.UUID
-	if req.CategoryID != nil {
-		parsed, err := uuid.Parse(*req.CategoryID)
+	if req.CategorySlug != nil {
+		category, err := s.categoryRepo.FindBySlug(ctx, *req.CategorySlug)
 		if err != nil {
 			return nil, err
 		}
-		categoryID = &parsed
+		categoryID = &category.ID
 	}
 
 	// 全件取得してスコア計算後にページネーション
@@ -304,12 +307,12 @@ func (s *recommendationService) GetRecommendedEpisodes(ctx context.Context, user
 	}
 
 	var categoryID *uuid.UUID
-	if req.CategoryID != nil {
-		parsed, err := uuid.Parse(*req.CategoryID)
+	if req.CategorySlug != nil {
+		category, err := s.categoryRepo.FindBySlug(ctx, *req.CategorySlug)
 		if err != nil {
 			return nil, err
 		}
-		categoryID = &parsed
+		categoryID = &category.ID
 	}
 
 	// スコア計算用に多めに取得

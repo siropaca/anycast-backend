@@ -110,6 +110,7 @@ func TestRecommendationService_GetRecommendedChannels(t *testing.T) {
 	t.Run("未ログインでおすすめチャンネル一覧を取得できる", func(t *testing.T) {
 		mockRepo := new(mockRecommendationRepository)
 		mockStorage := new(mockStorageClient)
+		mockCatRepo := new(mockCategoryRepository)
 
 		channels := []repository.RecommendedChannel{
 			createTestChannel(uuid.New(), categoryID, 100, &now),
@@ -117,7 +118,7 @@ func TestRecommendationService_GetRecommendedChannels(t *testing.T) {
 		}
 		mockRepo.On("FindRecommendedChannels", mock.Anything, mock.AnythingOfType("repository.RecommendChannelParams")).Return(channels, int64(2), nil)
 
-		svc := NewRecommendationService(mockRepo, mockStorage)
+		svc := NewRecommendationService(mockRepo, mockCatRepo, mockStorage)
 
 		req := request.RecommendChannelsRequest{
 			PaginationRequest: request.PaginationRequest{Limit: 20, Offset: 0},
@@ -136,6 +137,7 @@ func TestRecommendationService_GetRecommendedChannels(t *testing.T) {
 	t.Run("ログイン時はパーソナライズされた結果を返す", func(t *testing.T) {
 		mockRepo := new(mockRecommendationRepository)
 		mockStorage := new(mockStorageClient)
+		mockCatRepo := new(mockCategoryRepository)
 
 		userID := uuid.New()
 		userIDStr := userID.String()
@@ -156,7 +158,7 @@ func TestRecommendationService_GetRecommendedChannels(t *testing.T) {
 		mockRepo.On("FindUserPlayedChannelIDs", mock.Anything, userID).Return([]uuid.UUID{}, nil)
 		mockRepo.On("FindUserChannelIDs", mock.Anything, userID).Return([]uuid.UUID{ownChannelID}, nil)
 
-		svc := NewRecommendationService(mockRepo, mockStorage)
+		svc := NewRecommendationService(mockRepo, mockCatRepo, mockStorage)
 
 		req := request.RecommendChannelsRequest{
 			PaginationRequest: request.PaginationRequest{Limit: 20, Offset: 0},
@@ -176,10 +178,11 @@ func TestRecommendationService_GetRecommendedChannels(t *testing.T) {
 	t.Run("limit が 50 を超える場合は 50 に制限される", func(t *testing.T) {
 		mockRepo := new(mockRecommendationRepository)
 		mockStorage := new(mockStorageClient)
+		mockCatRepo := new(mockCategoryRepository)
 
 		mockRepo.On("FindRecommendedChannels", mock.Anything, mock.AnythingOfType("repository.RecommendChannelParams")).Return([]repository.RecommendedChannel{}, int64(0), nil)
 
-		svc := NewRecommendationService(mockRepo, mockStorage)
+		svc := NewRecommendationService(mockRepo, mockCatRepo, mockStorage)
 
 		req := request.RecommendChannelsRequest{
 			PaginationRequest: request.PaginationRequest{Limit: 100, Offset: 0},
@@ -194,10 +197,11 @@ func TestRecommendationService_GetRecommendedChannels(t *testing.T) {
 	t.Run("空のチャンネル一覧でもエラーにならない", func(t *testing.T) {
 		mockRepo := new(mockRecommendationRepository)
 		mockStorage := new(mockStorageClient)
+		mockCatRepo := new(mockCategoryRepository)
 
 		mockRepo.On("FindRecommendedChannels", mock.Anything, mock.AnythingOfType("repository.RecommendChannelParams")).Return([]repository.RecommendedChannel{}, int64(0), nil)
 
-		svc := NewRecommendationService(mockRepo, mockStorage)
+		svc := NewRecommendationService(mockRepo, mockCatRepo, mockStorage)
 
 		req := request.RecommendChannelsRequest{
 			PaginationRequest: request.PaginationRequest{Limit: 20, Offset: 0},
@@ -211,11 +215,18 @@ func TestRecommendationService_GetRecommendedChannels(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 
-	t.Run("カテゴリ ID でフィルタできる", func(t *testing.T) {
+	t.Run("カテゴリスラッグでフィルタできる", func(t *testing.T) {
 		mockRepo := new(mockRecommendationRepository)
 		mockStorage := new(mockStorageClient)
+		mockCatRepo := new(mockCategoryRepository)
 
-		catIDStr := categoryID.String()
+		slug := "technology"
+		mockCatRepo.On("FindBySlug", mock.Anything, slug).Return(&model.Category{
+			ID:   categoryID,
+			Slug: slug,
+			Name: "テクノロジー",
+		}, nil)
+
 		channels := []repository.RecommendedChannel{
 			createTestChannel(uuid.New(), categoryID, 100, &now),
 		}
@@ -223,26 +234,28 @@ func TestRecommendationService_GetRecommendedChannels(t *testing.T) {
 			return params.CategoryID != nil && *params.CategoryID == categoryID
 		})).Return(channels, int64(1), nil)
 
-		svc := NewRecommendationService(mockRepo, mockStorage)
+		svc := NewRecommendationService(mockRepo, mockCatRepo, mockStorage)
 
 		req := request.RecommendChannelsRequest{
 			PaginationRequest: request.PaginationRequest{Limit: 20, Offset: 0},
-			CategoryID:        &catIDStr,
+			CategorySlug:      &slug,
 		}
 		result, err := svc.GetRecommendedChannels(ctx, nil, req)
 
 		assert.NoError(t, err)
 		assert.Len(t, result.Data, 1)
 		mockRepo.AssertExpectations(t)
+		mockCatRepo.AssertExpectations(t)
 	})
 
 	t.Run("リポジトリエラー時はエラーを返す", func(t *testing.T) {
 		mockRepo := new(mockRecommendationRepository)
 		mockStorage := new(mockStorageClient)
+		mockCatRepo := new(mockCategoryRepository)
 
 		mockRepo.On("FindRecommendedChannels", mock.Anything, mock.AnythingOfType("repository.RecommendChannelParams")).Return(nil, int64(0), assert.AnError)
 
-		svc := NewRecommendationService(mockRepo, mockStorage)
+		svc := NewRecommendationService(mockRepo, mockCatRepo, mockStorage)
 
 		req := request.RecommendChannelsRequest{
 			PaginationRequest: request.PaginationRequest{Limit: 20, Offset: 0},
@@ -520,6 +533,7 @@ func TestRecommendationService_GetRecommendedEpisodes(t *testing.T) {
 	t.Run("未ログインでおすすめエピソード一覧を取得できる", func(t *testing.T) {
 		mockRepo := new(mockRecommendationRepository)
 		mockStorage := new(mockStorageClient)
+		mockCatRepo := new(mockCategoryRepository)
 
 		episodes := []model.Episode{
 			createTestEpisode(uuid.New(), channelID, categoryID, 100, &now),
@@ -527,7 +541,7 @@ func TestRecommendationService_GetRecommendedEpisodes(t *testing.T) {
 		}
 		mockRepo.On("FindPublishedEpisodes", mock.Anything, mock.AnythingOfType("repository.RecommendEpisodeParams")).Return(episodes, int64(2), nil)
 
-		svc := NewRecommendationService(mockRepo, mockStorage)
+		svc := NewRecommendationService(mockRepo, mockCatRepo, mockStorage)
 
 		req := request.RecommendEpisodesRequest{
 			PaginationRequest: request.PaginationRequest{Limit: 20, Offset: 0},
@@ -549,6 +563,7 @@ func TestRecommendationService_GetRecommendedEpisodes(t *testing.T) {
 	t.Run("ログイン時は途中再生→デフォルトプレイリスト（後で聴く）→パーソナライズの順で返す", func(t *testing.T) {
 		mockRepo := new(mockRecommendationRepository)
 		mockStorage := new(mockStorageClient)
+		mockCatRepo := new(mockCategoryRepository)
 
 		userID := uuid.New()
 		userIDStr := userID.String()
@@ -575,7 +590,7 @@ func TestRecommendationService_GetRecommendedEpisodes(t *testing.T) {
 		mockRepo.On("FindUserChannelIDs", mock.Anything, userID).Return([]uuid.UUID{}, nil)
 		mockRepo.On("FindUserCategoryPreferences", mock.Anything, userID).Return([]repository.CategoryPreference{}, nil)
 
-		svc := NewRecommendationService(mockRepo, mockStorage)
+		svc := NewRecommendationService(mockRepo, mockCatRepo, mockStorage)
 
 		req := request.RecommendEpisodesRequest{
 			PaginationRequest: request.PaginationRequest{Limit: 20, Offset: 0},
@@ -599,6 +614,7 @@ func TestRecommendationService_GetRecommendedEpisodes(t *testing.T) {
 	t.Run("完了済みエピソードはパーソナライズから除外される", func(t *testing.T) {
 		mockRepo := new(mockRecommendationRepository)
 		mockStorage := new(mockStorageClient)
+		mockCatRepo := new(mockCategoryRepository)
 
 		userID := uuid.New()
 		userIDStr := userID.String()
@@ -618,7 +634,7 @@ func TestRecommendationService_GetRecommendedEpisodes(t *testing.T) {
 		mockRepo.On("FindUserChannelIDs", mock.Anything, userID).Return([]uuid.UUID{}, nil)
 		mockRepo.On("FindUserCategoryPreferences", mock.Anything, userID).Return([]repository.CategoryPreference{}, nil)
 
-		svc := NewRecommendationService(mockRepo, mockStorage)
+		svc := NewRecommendationService(mockRepo, mockCatRepo, mockStorage)
 
 		req := request.RecommendEpisodesRequest{
 			PaginationRequest: request.PaginationRequest{Limit: 20, Offset: 0},
@@ -634,10 +650,11 @@ func TestRecommendationService_GetRecommendedEpisodes(t *testing.T) {
 	t.Run("リポジトリエラー時はエラーを返す", func(t *testing.T) {
 		mockRepo := new(mockRecommendationRepository)
 		mockStorage := new(mockStorageClient)
+		mockCatRepo := new(mockCategoryRepository)
 
 		mockRepo.On("FindPublishedEpisodes", mock.Anything, mock.AnythingOfType("repository.RecommendEpisodeParams")).Return(nil, int64(0), assert.AnError)
 
-		svc := NewRecommendationService(mockRepo, mockStorage)
+		svc := NewRecommendationService(mockRepo, mockCatRepo, mockStorage)
 
 		req := request.RecommendEpisodesRequest{
 			PaginationRequest: request.PaginationRequest{Limit: 20, Offset: 0},

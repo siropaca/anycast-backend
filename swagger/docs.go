@@ -4955,8 +4955,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "カテゴリ ID でフィルタ",
-                        "name": "categoryId",
+                        "description": "カテゴリスラッグでフィルタ",
+                        "name": "categorySlug",
                         "in": "query"
                     },
                     {
@@ -5010,8 +5010,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "カテゴリ ID でフィルタ（チャンネルのカテゴリ）",
-                        "name": "categoryId",
+                        "description": "カテゴリスラッグでフィルタ（チャンネルのカテゴリ）",
+                        "name": "categorySlug",
                         "in": "query"
                     },
                     {

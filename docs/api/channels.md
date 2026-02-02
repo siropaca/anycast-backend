@@ -12,7 +12,7 @@ GET /channels
 
 | パラメータ | 型 | デフォルト | 説明 |
 |------------|-----|------------|------|
-| categoryId | uuid | - | カテゴリ ID でフィルタ |
+| categorySlug | string | - | カテゴリスラッグでフィルタ |
 | limit | int | 20 | 取得件数（最大 100） |
 | offset | int | 0 | オフセット |
 

@@ -152,7 +152,7 @@ func TestRecommendationHandler_GetRecommendedChannels(t *testing.T) {
 		mockSvc.AssertExpectations(t)
 	})
 
-	t.Run("カテゴリ ID でフィルタできる", func(t *testing.T) {
+	t.Run("カテゴリスラッグでフィルタできる", func(t *testing.T) {
 		mockSvc := new(mockRecommendationService)
 		mockSvc.On("GetRecommendedChannels", mock.Anything, (*string)(nil), mock.AnythingOfType("request.RecommendChannelsRequest")).Return(baseResult, nil)
 
@@ -160,25 +160,11 @@ func TestRecommendationHandler_GetRecommendedChannels(t *testing.T) {
 		router := setupRecommendationRouter(handler)
 
 		w := httptest.NewRecorder()
-		req := httptest.NewRequest("GET", "/recommendations/channels?categoryId="+categoryID.String(), http.NoBody)
+		req := httptest.NewRequest("GET", "/recommendations/channels?categorySlug=technology", http.NoBody)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusOK, w.Code)
 		mockSvc.AssertExpectations(t)
-	})
-
-	t.Run("無効なカテゴリ ID の場合は 400 を返す", func(t *testing.T) {
-		mockSvc := new(mockRecommendationService)
-
-		handler := NewRecommendationHandler(mockSvc)
-		router := setupRecommendationRouter(handler)
-
-		w := httptest.NewRecorder()
-		req := httptest.NewRequest("GET", "/recommendations/channels?categoryId=invalid-uuid", http.NoBody)
-		router.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-		mockSvc.AssertNotCalled(t, "GetRecommendedChannels")
 	})
 
 	t.Run("サービスがエラーを返すとエラーレスポンスを返す", func(t *testing.T) {
@@ -300,14 +286,19 @@ func TestRecommendationHandler_GetRecommendedEpisodes(t *testing.T) {
 		mockSvc.AssertExpectations(t)
 	})
 
-	t.Run("無効なカテゴリ ID の場合は 400 を返す", func(t *testing.T) {
+	t.Run("カテゴリスラッグが長すぎる場合は 400 を返す", func(t *testing.T) {
 		mockSvc := new(mockRecommendationService)
 
 		handler := NewRecommendationHandler(mockSvc)
 		router := setupRecommendationRouter(handler)
 
+		longSlug := "a"
+		for i := 0; i < 51; i++ {
+			longSlug += "a"
+		}
+
 		w := httptest.NewRecorder()
-		req := httptest.NewRequest("GET", "/recommendations/episodes?categoryId=invalid-uuid", http.NoBody)
+		req := httptest.NewRequest("GET", "/recommendations/episodes?categorySlug="+longSlug, http.NoBody)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusBadRequest, w.Code)

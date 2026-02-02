@@ -25,7 +25,7 @@ GET /recommendations/channels
 |------------|-----|------------|------|
 | limit | int | 20 | 取得件数（1〜50） |
 | offset | int | 0 | オフセット |
-| categoryId | uuid | - | カテゴリ ID でフィルタ |
+| categorySlug | string | - | カテゴリスラッグでフィルタ |
 
 ### おすすめロジック
 
@@ -97,7 +97,7 @@ GET /recommendations/episodes
 |------------|-----|------------|------|
 | limit | int | 20 | 取得件数（1〜50） |
 | offset | int | 0 | オフセット |
-| categoryId | uuid | - | カテゴリ ID でフィルタ（チャンネルのカテゴリ） |
+| categorySlug | string | - | カテゴリスラッグでフィルタ（チャンネルのカテゴリ） |
 
 ### おすすめロジック
 
