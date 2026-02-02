@@ -166,9 +166,6 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.GET("/voices", container.VoiceHandler.ListVoices)
 	authenticated.GET("/voices/:voiceId", container.VoiceHandler.GetVoice)
 
-	// Categories
-	authenticated.GET("/categories", container.CategoryHandler.ListCategories)
-
 	// Images
 	authenticated.POST("/images", container.ImageHandler.UploadImage)
 
@@ -186,6 +183,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	optionalAuth.GET("/channels/:channelId/episodes/:episodeId", container.EpisodeHandler.GetEpisode)
 	optionalAuth.GET("/recommendations/channels", container.RecommendationHandler.GetRecommendedChannels)
 	optionalAuth.GET("/recommendations/episodes", container.RecommendationHandler.GetRecommendedEpisodes)
+	optionalAuth.GET("/categories", container.CategoryHandler.ListCategories)
 	optionalAuth.POST("/contacts", container.ContactHandler.CreateContact)
 
 	// Admin（認証必須 + 管理者権限必須）
