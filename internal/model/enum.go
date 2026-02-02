@@ -36,3 +36,29 @@ const (
 	ReactionTypeLike ReactionType = "like"
 	ReactionTypeBad  ReactionType = "bad"
 )
+
+// ContactCategory はお問い合わせカテゴリを表す
+type ContactCategory string
+
+const (
+	ContactCategoryGeneral        ContactCategory = "general"
+	ContactCategoryBugReport      ContactCategory = "bug_report"
+	ContactCategoryFeatureRequest ContactCategory = "feature_request"
+	ContactCategoryOther          ContactCategory = "other"
+)
+
+// Label はカテゴリの日本語ラベルを返す
+func (c ContactCategory) Label() string {
+	switch c {
+	case ContactCategoryGeneral:
+		return "一般的なお問い合わせ"
+	case ContactCategoryBugReport:
+		return "不具合の報告"
+	case ContactCategoryFeatureRequest:
+		return "機能リクエスト"
+	case ContactCategoryOther:
+		return "その他"
+	default:
+		return string(c)
+	}
+}

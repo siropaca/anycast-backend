@@ -136,6 +136,8 @@
 | GET | `/api/v1/categories` | カテゴリ一覧取得 | Public | ✅ | [詳細](./master.md#カテゴリ一覧取得) |
 | **Feedbacks（フィードバック）** | - | - | - | - | [feedbacks.md](./feedbacks.md) |
 | POST | `/api/v1/feedbacks` | フィードバック送信 | Owner | ✅ | [詳細](./feedbacks.md#フィードバック送信) |
+| **Contacts（お問い合わせ）** | - | - | - | - | [contacts.md](./contacts.md) |
+| POST | `/api/v1/contacts` | お問い合わせ送信 | Optional | ✅ | [詳細](./contacts.md#お問い合わせ送信) |
 | **Admin（管理者）** | - | - | - | - | [admin.md](./admin.md) |
 | POST | `/admin/cleanup/orphaned-media` | 孤児メディアファイル削除 | Admin | ✅ | [詳細](./admin.md#孤児メディアファイル削除) |
 

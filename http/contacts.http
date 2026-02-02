@@ -1,0 +1,61 @@
+@baseUrl = http://localhost:8081/api/v1
+
+# トークン生成: make token
+@token = YOUR_TOKEN_HERE
+
+### お問い合わせ送信（一般）
+POST {{baseUrl}}/contacts
+Content-Type: application/json
+
+{
+  "category": "general",
+  "email": "user@example.com",
+  "name": "山田太郎",
+  "content": "サービスについて質問があります。"
+}
+
+### お問い合わせ送信（不具合報告）
+POST {{baseUrl}}/contacts
+Content-Type: application/json
+
+{
+  "category": "bug_report",
+  "email": "user@example.com",
+  "name": "山田太郎",
+  "content": "ログイン画面でエラーが発生します。",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+}
+
+### お問い合わせ送信（機能リクエスト）
+POST {{baseUrl}}/contacts
+Content-Type: application/json
+
+{
+  "category": "feature_request",
+  "email": "user@example.com",
+  "name": "山田太郎",
+  "content": "ダークモードに対応してほしいです。"
+}
+
+### お問い合わせ送信（その他）
+POST {{baseUrl}}/contacts
+Content-Type: application/json
+
+{
+  "category": "other",
+  "email": "user@example.com",
+  "name": "山田太郎",
+  "content": "その他のお問い合わせです。"
+}
+
+### お問い合わせ送信（認証あり）
+POST {{baseUrl}}/contacts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "category": "bug_report",
+  "email": "user@example.com",
+  "name": "山田太郎",
+  "content": "ログイン済みユーザーからのお問い合わせです。"
+}

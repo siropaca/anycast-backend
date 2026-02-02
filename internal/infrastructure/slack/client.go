@@ -14,6 +14,7 @@ import (
 // Client は Slack への通知を行うインターフェース
 type Client interface {
 	SendFeedback(ctx context.Context, feedback FeedbackNotification) error
+	SendContact(ctx context.Context, contact ContactNotification) error
 	IsEnabled() bool
 }
 
@@ -25,6 +26,18 @@ type FeedbackNotification struct {
 	ScreenshotURL *string
 	PageURL       *string
 	UserAgent     *string
+	CreatedAt     time.Time
+}
+
+// ContactNotification はお問い合わせ通知の内容を表す
+type ContactNotification struct {
+	Category      string
+	CategoryLabel string
+	Email         string
+	Name          string
+	Content       string
+	UserAgent     *string
+	UserID        *string
 	CreatedAt     time.Time
 }
 
@@ -109,6 +122,97 @@ func (c *slackClient) SendFeedback(ctx context.Context, feedback FeedbackNotific
 			"type":      "image",
 			"image_url": *feedback.ScreenshotURL,
 			"alt_text":  "Screenshot",
+		})
+	}
+
+	payload := map[string]any{
+		"blocks": blocks,
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal slack payload: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.webhookURL, bytes.NewBuffer(body))
+	if err != nil {
+		return fmt.Errorf("failed to create slack request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to send slack notification: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		logger.FromContext(ctx).Warn("slack notification failed", "status", resp.StatusCode)
+		return fmt.Errorf("slack returned status %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
+// SendContact はお問い合わせ通知を Slack に送信する
+func (c *slackClient) SendContact(ctx context.Context, contact ContactNotification) error {
+	if !c.IsEnabled() {
+		return nil
+	}
+
+	blocks := []map[string]any{
+		{
+			"type": "header",
+			"text": map[string]string{
+				"type": "plain_text",
+				"text": "New Contact Received",
+			},
+		},
+		{
+			"type": "section",
+			"fields": []map[string]string{
+				{"type": "mrkdwn", "text": fmt.Sprintf("*Category:*\n%s", contact.CategoryLabel)},
+				{"type": "mrkdwn", "text": fmt.Sprintf("*Date:*\n%s", contact.CreatedAt.Format(time.RFC3339))},
+			},
+		},
+		{
+			"type": "section",
+			"fields": []map[string]string{
+				{"type": "mrkdwn", "text": fmt.Sprintf("*Name:*\n%s", contact.Name)},
+				{"type": "mrkdwn", "text": fmt.Sprintf("*Email:*\n%s", contact.Email)},
+			},
+		},
+		{
+			"type": "section",
+			"text": map[string]string{
+				"type": "mrkdwn",
+				"text": fmt.Sprintf("*Content:*\n%s", contact.Content),
+			},
+		},
+	}
+
+	// メタ情報を追加
+	var metaFields []map[string]string
+	if contact.UserID != nil && *contact.UserID != "" {
+		metaFields = append(metaFields, map[string]string{
+			"type": "mrkdwn",
+			"text": fmt.Sprintf("*User ID:*\n%s", *contact.UserID),
+		})
+	}
+	if contact.UserAgent != nil && *contact.UserAgent != "" {
+		ua := *contact.UserAgent
+		if len(ua) > 100 {
+			ua = ua[:100] + "..."
+		}
+		metaFields = append(metaFields, map[string]string{
+			"type": "mrkdwn",
+			"text": fmt.Sprintf("*User-Agent:*\n%s", ua),
+		})
+	}
+	if len(metaFields) > 0 {
+		blocks = append(blocks, map[string]any{
+			"type":   "section",
+			"fields": metaFields,
 		})
 	}
 

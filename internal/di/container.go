@@ -40,6 +40,7 @@ type Container struct {
 	WorkerHandler          *handler.WorkerHandler
 	WebSocketHandler       *handler.WebSocketHandler
 	FeedbackHandler        *handler.FeedbackHandler
+	ContactHandler         *handler.ContactHandler
 	PlaylistHandler        *handler.PlaylistHandler
 	PlaybackHistoryHandler *handler.PlaybackHistoryHandler
 	FollowHandler          *handler.FollowHandler
@@ -126,6 +127,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	audioJobRepo := repository.NewAudioJobRepository(db)
 	scriptJobRepo := repository.NewScriptJobRepository(db)
 	feedbackRepo := repository.NewFeedbackRepository(db)
+	contactRepo := repository.NewContactRepository(db)
 	playlistRepo := repository.NewPlaylistRepository(db)
 	playbackHistoryRepo := repository.NewPlaybackHistoryRepository(db)
 	followRepo := repository.NewFollowRepository(db)
@@ -172,6 +174,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		wsHub,
 	)
 	feedbackService := service.NewFeedbackService(feedbackRepo, imageRepo, userRepo, storageClient, slackClient)
+	contactService := service.NewContactService(contactRepo, slackClient)
 	playlistService := service.NewPlaylistService(playlistRepo, episodeRepo, storageClient)
 	playbackHistoryService := service.NewPlaybackHistoryService(playbackHistoryRepo, episodeRepo, storageClient)
 	followService := service.NewFollowService(followRepo, storageClient)
@@ -197,6 +200,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	workerHandler := handler.NewWorkerHandler(audioJobService, scriptJobService)
 	webSocketHandler := handler.NewWebSocketHandler(wsHub, tokenManager)
 	feedbackHandler := handler.NewFeedbackHandler(feedbackService)
+	contactHandler := handler.NewContactHandler(contactService)
 	playlistHandler := handler.NewPlaylistHandler(playlistService)
 	playbackHistoryHandler := handler.NewPlaybackHistoryHandler(playbackHistoryService)
 	followHandler := handler.NewFollowHandler(followService)
@@ -222,6 +226,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		WorkerHandler:          workerHandler,
 		WebSocketHandler:       webSocketHandler,
 		FeedbackHandler:        feedbackHandler,
+		ContactHandler:         contactHandler,
 		PlaylistHandler:        playlistHandler,
 		PlaybackHistoryHandler: playbackHistoryHandler,
 		FollowHandler:          followHandler,

@@ -11,6 +11,7 @@ CREATE TYPE user_role AS ENUM ('user', 'admin');
 CREATE TYPE audio_job_status AS ENUM ('pending', 'processing', 'canceling', 'completed', 'failed', 'canceled');
 CREATE TYPE script_job_status AS ENUM ('pending', 'processing', 'canceling', 'completed', 'failed', 'canceled');
 CREATE TYPE reaction_type AS ENUM ('like', 'bad');
+CREATE TYPE contact_category AS ENUM ('general', 'bug_report', 'feature_request', 'other');
 
 -- ===========================================
 -- メディア関連テーブル
@@ -415,3 +416,20 @@ CREATE TABLE feedbacks (
 
 CREATE INDEX idx_feedbacks_user_id ON feedbacks (user_id);
 CREATE INDEX idx_feedbacks_created_at ON feedbacks (created_at DESC);
+
+-- お問い合わせ
+CREATE TABLE contacts (
+	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+	user_id UUID REFERENCES users (id) ON DELETE SET NULL,
+	category contact_category NOT NULL,
+	email VARCHAR(255) NOT NULL,
+	name VARCHAR(100) NOT NULL,
+	content TEXT NOT NULL,
+	user_agent VARCHAR(1024),
+	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	CONSTRAINT chk_contacts_content_length CHECK (char_length(content) >= 1 AND char_length(content) <= 5000)
+);
+
+CREATE INDEX idx_contacts_user_id ON contacts (user_id);
+CREATE INDEX idx_contacts_category ON contacts (category);
+CREATE INDEX idx_contacts_created_at ON contacts (created_at DESC);

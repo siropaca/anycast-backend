@@ -18,6 +18,7 @@ erDiagram
     users ||--o{ comments : has
     users ||--o{ audio_jobs : has
     users ||--o{ feedbacks : has
+    users ||--o{ contacts : has
     users ||--o| images : avatar
     categories ||--o{ channels : has
     channels ||--o{ channel_characters : has
@@ -123,6 +124,17 @@ erDiagram
         text content
         uuid screenshot_id FK
         varchar page_url
+        varchar user_agent
+        timestamp created_at
+    }
+
+    contacts {
+        uuid id PK
+        uuid user_id FK
+        contact_category category
+        varchar email
+        varchar name
+        text content
         varchar user_agent
         timestamp created_at
     }
@@ -792,6 +804,35 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 
 ---
 
+#### contacts
+
+お問い合わせを管理する。認証任意で、未ログインユーザーからも受け付け可能。
+
+| カラム名 | 型 | NULLABLE | デフォルト | 説明 |
+|----------|-----|:--------:|------------|------|
+| id | UUID | | gen_random_uuid() | 主キー |
+| user_id | UUID | ◯ | - | 送信ユーザー（users 参照、未ログイン時は NULL） |
+| category | contact_category | | - | カテゴリ |
+| email | VARCHAR(255) | | - | メールアドレス |
+| name | VARCHAR(100) | | - | 名前 |
+| content | TEXT | | - | お問い合わせ内容（1〜5000文字） |
+| user_agent | VARCHAR(1024) | ◯ | - | ブラウザの User-Agent |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
+
+**インデックス:**
+- PRIMARY KEY (id)
+- INDEX (user_id)
+- INDEX (category)
+- INDEX (created_at DESC)
+
+**外部キー:**
+- user_id → users(id) ON DELETE SET NULL
+
+**制約:**
+- content は 1〜5000 文字（CHECK 制約）
+
+---
+
 #### script_lines
 
 台本の各行（セリフ）を管理する。
@@ -950,6 +991,7 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 | audio_job_status | `pending`, `processing`, `canceling`, `completed`, `failed`, `canceled` | 音声生成ジョブのステータス |
 | script_job_status | `pending`, `processing`, `canceling`, `completed`, `failed`, `canceled` | 台本生成ジョブのステータス |
 | reaction_type | `like`, `bad` | エピソードへのリアクションタイプ |
+| contact_category | `general`, `bug_report`, `feature_request`, `other` | お問い合わせカテゴリ |
 
 ### UUID について
 
