@@ -5,8 +5,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/siropaca/anycast-backend/internal/dto/response"
-	"github.com/siropaca/anycast-backend/internal/model"
 	"github.com/siropaca/anycast-backend/internal/service"
 )
 
@@ -36,27 +34,5 @@ func (h *CategoryHandler) ListCategories(c *gin.Context) {
 		return
 	}
 
-	Success(c, http.StatusOK, toCategoryResponses(categories))
-}
-
-// Category モデルのスライスをレスポンス DTO のスライスに変換する
-func toCategoryResponses(categories []model.Category) []response.CategoryResponse {
-	result := make([]response.CategoryResponse, len(categories))
-
-	for i, c := range categories {
-		result[i] = toCategoryResponse(&c)
-	}
-
-	return result
-}
-
-// Category モデルをレスポンス DTO に変換する
-func toCategoryResponse(c *model.Category) response.CategoryResponse {
-	return response.CategoryResponse{
-		ID:        c.ID,
-		Slug:      c.Slug,
-		Name:      c.Name,
-		SortOrder: c.SortOrder,
-		IsActive:  c.IsActive,
-	}
+	Success(c, http.StatusOK, categories)
 }

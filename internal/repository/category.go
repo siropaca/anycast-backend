@@ -31,7 +31,7 @@ func NewCategoryRepository(db *gorm.DB) CategoryRepository {
 func (r *categoryRepository) FindAllActive(ctx context.Context) ([]model.Category, error) {
 	var categories []model.Category
 
-	if err := r.db.WithContext(ctx).Where("is_active = ?", true).Order("sort_order ASC").Find(&categories).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("Image").Where("is_active = ?", true).Order("sort_order ASC").Find(&categories).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to fetch categories", "error", err)
 		return nil, apperror.ErrInternal.WithMessage("カテゴリ一覧の取得に失敗しました").WithError(err)
 	}
@@ -43,7 +43,7 @@ func (r *categoryRepository) FindAllActive(ctx context.Context) ([]model.Categor
 func (r *categoryRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Category, error) {
 	var category model.Category
 
-	if err := r.db.WithContext(ctx).First(&category, "id = ?", id).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("Image").First(&category, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperror.ErrNotFound.WithMessage("カテゴリが見つかりません")
 		}

@@ -21,6 +21,7 @@ erDiagram
     users ||--o{ contacts : has
     users ||--o| images : avatar
     categories ||--o{ channels : has
+    categories ||--o| images : image
     channels ||--o{ channel_characters : has
     channels ||--o{ episodes : has
     channels ||--o| images : artwork
@@ -183,6 +184,7 @@ erDiagram
         uuid id PK
         varchar slug
         varchar name
+        uuid image_id FK
         integer sort_order
         boolean is_active
         timestamp created_at
@@ -914,6 +916,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | id | UUID | | gen_random_uuid() | 主キー |
 | slug | VARCHAR(50) | | - | 一意識別子（例: technology） |
 | name | VARCHAR(100) | | - | 表示名（例: テクノロジー） |
+| image_id | UUID | ◯ | - | カテゴリ画像（images 参照） |
 | sort_order | INTEGER | | 0 | 表示順 |
 | is_active | BOOLEAN | | true | 有効フラグ（false で新規選択不可） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
@@ -924,6 +927,10 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 - UNIQUE (slug)
 - INDEX (sort_order)
 - INDEX (is_active)
+- INDEX (image_id)
+
+**外部キー:**
+- image_id → images(id) ON DELETE SET NULL
 
 ---
 

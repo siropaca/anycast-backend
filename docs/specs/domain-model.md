@@ -649,6 +649,7 @@ TTS ボイスの設定情報。
 | id | UUID | ◯ | 識別子 |
 | slug | String | ◯ | URL フレンドリーな識別子（例: technology） |
 | name | String | ◯ | 表示名（例: テクノロジー） |
+| image | Image | | カテゴリ画像 |
 | sortOrder | Int | ◯ | 表示順 |
 | isActive | Boolean | ◯ | 有効フラグ |
 

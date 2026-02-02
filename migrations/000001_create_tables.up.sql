@@ -66,6 +66,7 @@ CREATE TABLE categories (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 	slug VARCHAR(50) NOT NULL UNIQUE,
 	name VARCHAR(100) NOT NULL,
+	image_id UUID REFERENCES images (id) ON DELETE SET NULL,
 	sort_order INTEGER NOT NULL DEFAULT 0,
 	is_active BOOLEAN NOT NULL DEFAULT true,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -74,6 +75,7 @@ CREATE TABLE categories (
 
 CREATE INDEX idx_categories_sort_order ON categories (sort_order);
 CREATE INDEX idx_categories_is_active ON categories (is_active);
+CREATE INDEX idx_categories_image_id ON categories (image_id);
 
 -- システム BGM（マスタ）
 CREATE TABLE system_bgms (
