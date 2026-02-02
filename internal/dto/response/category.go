@@ -12,6 +12,11 @@ type CategoryResponse struct {
 	IsActive  bool             `json:"isActive" validate:"required"`
 }
 
+// カテゴリ単体のレスポンス
+type CategoryDataResponse struct {
+	Data CategoryResponse `json:"data" validate:"required"`
+}
+
 // カテゴリ一覧のレスポンス
 type CategoryListResponse struct {
 	Data []CategoryResponse `json:"data" validate:"required"`

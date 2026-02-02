@@ -162,3 +162,69 @@ func TestCategoryService_ListCategories(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 }
+
+func TestCategoryService_GetCategoryBySlug(t *testing.T) {
+	t.Run("スラッグ指定でカテゴリを取得できる", func(t *testing.T) {
+		mockRepo := new(mockCategoryRepository)
+		mockStorage := new(mockStorageClient)
+		category := &model.Category{
+			ID:        uuid.New(),
+			Slug:      "technology",
+			Name:      "テクノロジー",
+			SortOrder: 0,
+			IsActive:  true,
+		}
+		mockRepo.On("FindBySlug", mock.Anything, "technology").Return(category, nil)
+
+		svc := NewCategoryService(mockRepo, mockStorage)
+		result, err := svc.GetCategoryBySlug(context.Background(), "technology")
+
+		assert.NoError(t, err)
+		assert.Equal(t, "technology", result.Slug)
+		assert.Equal(t, "テクノロジー", result.Name)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("画像付きカテゴリを取得できる", func(t *testing.T) {
+		mockRepo := new(mockCategoryRepository)
+		mockStorage := new(mockStorageClient)
+		imageID := uuid.New()
+		category := &model.Category{
+			ID:      uuid.New(),
+			Slug:    "technology",
+			Name:    "テクノロジー",
+			ImageID: &imageID,
+			Image: &model.Image{
+				ID:   imageID,
+				Path: "images/tech.png",
+			},
+			SortOrder: 0,
+			IsActive:  true,
+		}
+		mockRepo.On("FindBySlug", mock.Anything, "technology").Return(category, nil)
+		mockStorage.On("GenerateSignedURL", mock.Anything, "images/tech.png", storage.SignedURLExpirationImage).Return("https://storage.example.com/signed/tech.png", nil)
+
+		svc := NewCategoryService(mockRepo, mockStorage)
+		result, err := svc.GetCategoryBySlug(context.Background(), "technology")
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result.Image)
+		assert.Equal(t, imageID, result.Image.ID)
+		assert.Equal(t, "https://storage.example.com/signed/tech.png", result.Image.URL)
+		mockRepo.AssertExpectations(t)
+		mockStorage.AssertExpectations(t)
+	})
+
+	t.Run("リポジトリがエラーを返すとエラーを返す", func(t *testing.T) {
+		mockRepo := new(mockCategoryRepository)
+		mockStorage := new(mockStorageClient)
+		mockRepo.On("FindBySlug", mock.Anything, "nonexistent").Return(nil, apperror.ErrNotFound.WithMessage("カテゴリが見つかりません"))
+
+		svc := NewCategoryService(mockRepo, mockStorage)
+		result, err := svc.GetCategoryBySlug(context.Background(), "nonexistent")
+
+		assert.Error(t, err)
+		assert.Empty(t, result.Slug)
+		mockRepo.AssertExpectations(t)
+	})
+}

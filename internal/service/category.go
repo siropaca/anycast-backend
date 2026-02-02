@@ -12,6 +12,7 @@ import (
 // CategoryService はカテゴリ関連のビジネスロジックインターフェースを表す
 type CategoryService interface {
 	ListCategories(ctx context.Context) ([]response.CategoryResponse, error)
+	GetCategoryBySlug(ctx context.Context, slug string) (response.CategoryResponse, error)
 }
 
 type categoryService struct {
@@ -44,6 +45,16 @@ func (s *categoryService) ListCategories(ctx context.Context) ([]response.Catego
 	}
 
 	return result, nil
+}
+
+// GetCategoryBySlug は指定されたスラッグのカテゴリを取得する
+func (s *categoryService) GetCategoryBySlug(ctx context.Context, slug string) (response.CategoryResponse, error) {
+	category, err := s.categoryRepo.FindBySlug(ctx, slug)
+	if err != nil {
+		return response.CategoryResponse{}, err
+	}
+
+	return s.toCategoryResponse(ctx, category)
 }
 
 // toCategoryResponse は Category モデルをレスポンス DTO に変換する

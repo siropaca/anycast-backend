@@ -29,10 +29,16 @@ func (m *mockCategoryService) ListCategories(ctx context.Context) ([]response.Ca
 	return args.Get(0).([]response.CategoryResponse), args.Error(1)
 }
 
+func (m *mockCategoryService) GetCategoryBySlug(ctx context.Context, slug string) (response.CategoryResponse, error) {
+	args := m.Called(ctx, slug)
+	return args.Get(0).(response.CategoryResponse), args.Error(1)
+}
+
 func setupCategoryRouter(h *CategoryHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	r.GET("/categories", h.ListCategories)
+	r.GET("/categories/:slug", h.GetCategoryBySlug)
 	return r
 }
 
@@ -128,6 +134,65 @@ func TestCategoryHandler_ListCategories(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Len(t, resp["data"], 1)
 		assert.NotNil(t, resp["data"][0]["image"])
+		mockSvc.AssertExpectations(t)
+	})
+}
+
+func TestCategoryHandler_GetCategoryBySlug(t *testing.T) {
+	t.Run("スラッグ指定でカテゴリを取得できる", func(t *testing.T) {
+		mockSvc := new(mockCategoryService)
+		category := response.CategoryResponse{
+			ID:        uuid.New(),
+			Slug:      "technology",
+			Name:      "テクノロジー",
+			SortOrder: 0,
+			IsActive:  true,
+		}
+		mockSvc.On("GetCategoryBySlug", mock.Anything, "technology").Return(category, nil)
+
+		handler := NewCategoryHandler(mockSvc)
+		router := setupCategoryRouter(handler)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/categories/technology", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var resp map[string]map[string]any
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+		assert.Equal(t, "technology", resp["data"]["slug"])
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("存在しないスラッグの場合 404 を返す", func(t *testing.T) {
+		mockSvc := new(mockCategoryService)
+		mockSvc.On("GetCategoryBySlug", mock.Anything, "nonexistent").Return(response.CategoryResponse{}, apperror.ErrNotFound.WithMessage("カテゴリが見つかりません"))
+
+		handler := NewCategoryHandler(mockSvc)
+		router := setupCategoryRouter(handler)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/categories/nonexistent", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("サービスがエラーを返すとエラーレスポンスを返す", func(t *testing.T) {
+		mockSvc := new(mockCategoryService)
+		mockSvc.On("GetCategoryBySlug", mock.Anything, "technology").Return(response.CategoryResponse{}, apperror.ErrInternal)
+
+		handler := NewCategoryHandler(mockSvc)
+		router := setupCategoryRouter(handler)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/categories/technology", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
 		mockSvc.AssertExpectations(t)
 	})
 }
