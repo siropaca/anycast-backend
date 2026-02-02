@@ -2325,6 +2325,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/contacts": {
+            "post": {
+                "description": "お問い合わせを送信します（認証任意）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "contacts"
+                ],
+                "summary": "お問い合わせ送信",
+                "parameters": [
+                    {
+                        "description": "お問い合わせ内容",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CreateContactRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.ContactDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/episodes/{episodeId}/default-playlist": {
             "post": {
                 "security": [
@@ -5602,6 +5648,42 @@ const docTemplate = `{
                 }
             }
         },
+        "request.CreateContactRequest": {
+            "type": "object",
+            "required": [
+                "category",
+                "content",
+                "email",
+                "name"
+            ],
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "enum": [
+                        "general",
+                        "bug_report",
+                        "feature_request",
+                        "other"
+                    ]
+                },
+                "content": {
+                    "type": "string",
+                    "maxLength": 5000,
+                    "minLength": 1
+                },
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "userAgent": {
+                    "type": "string"
+                }
+            }
+        },
         "request.CreateEpisodeRequest": {
             "type": "object",
             "required": [
@@ -6445,6 +6527,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "image": {
+                    "$ref": "#/definitions/response.ArtworkResponse"
+                },
                 "isActive": {
                     "type": "boolean"
                 },
@@ -6763,6 +6848,52 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/response.OrphanedImageResponse"
                     }
+                }
+            }
+        },
+        "response.ContactDataResponse": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.ContactResponse"
+                }
+            }
+        },
+        "response.ContactResponse": {
+            "type": "object",
+            "required": [
+                "category",
+                "content",
+                "createdAt",
+                "email",
+                "id",
+                "name"
+            ],
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "userAgent": {
+                    "type": "string",
+                    "x-nullable": true
                 }
             }
         },
