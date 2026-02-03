@@ -125,6 +125,36 @@ GET /search/users
 
 エピソードへのリアクション機能（like / bad）。同じエピソードには 1 つのリアクションのみ設定可能（排他的）。
 
+## リアクション状態取得
+
+```
+GET /episodes/:episodeId/reactions
+```
+
+指定エピソードに対する自分のリアクション状態を返す。未リアクションの場合は `reactionType` が `null` になる。
+
+**レスポンス（200 OK）:**
+
+リアクション済みの場合:
+```json
+{
+  "data": {
+    "reactionType": "like"
+  }
+}
+```
+
+未リアクションの場合:
+```json
+{
+  "data": {
+    "reactionType": null
+  }
+}
+```
+
+---
+
 ## リアクション登録・更新
 
 ```

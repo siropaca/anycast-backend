@@ -100,6 +100,7 @@
 | GET | `/api/v1/search/episodes` | エピソード検索 | Public | | [詳細](./engagement.md#エピソード検索) |
 | GET | `/api/v1/search/users` | ユーザー検索 | Public | | [詳細](./engagement.md#ユーザー検索) |
 | **Reactions（リアクション）** | - | - | - | - | [engagement.md](./engagement.md#reactionsリアクション) |
+| GET | `/api/v1/episodes/:episodeId/reactions` | リアクション状態取得 | Owner | ✅ | [詳細](./engagement.md#リアクション状態取得) |
 | POST | `/api/v1/episodes/:episodeId/reactions` | リアクション登録（like/bad） | Owner | ✅ | [詳細](./engagement.md#リアクション登録) |
 | DELETE | `/api/v1/episodes/:episodeId/reactions` | リアクション解除 | Owner | ✅ | [詳細](./engagement.md#リアクション解除) |
 | GET | `/api/v1/me/likes` | 高評価したエピソード一覧 | Owner | ✅ | [詳細](./engagement.md#高評価したエピソード一覧) |

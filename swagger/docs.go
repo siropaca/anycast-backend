@@ -2717,6 +2717,53 @@ const docTemplate = `{
             }
         },
         "/episodes/{episodeId}/reactions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定エピソードに対する自分のリアクション状態を返します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "episodes"
+                ],
+                "summary": "リアクション状態取得",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "エピソード ID",
+                        "name": "episodeId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ReactionStatusDataResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -8062,6 +8109,26 @@ const docTemplate = `{
                 },
                 "reactionType": {
                     "type": "string"
+                }
+            }
+        },
+        "response.ReactionStatusDataResponse": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.ReactionStatusResponse"
+                }
+            }
+        },
+        "response.ReactionStatusResponse": {
+            "type": "object",
+            "properties": {
+                "reactionType": {
+                    "type": "string",
+                    "x-nullable": true
                 }
             }
         },

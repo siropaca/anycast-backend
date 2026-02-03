@@ -46,3 +46,13 @@ type ReactionResponse struct {
 type ReactionDataResponse struct {
 	Data ReactionResponse `json:"data" validate:"required"`
 }
+
+// リアクション状態のレスポンス
+type ReactionStatusResponse struct {
+	ReactionType *string `json:"reactionType" extensions:"x-nullable"`
+}
+
+// リアクション状態のラッパーレスポンス
+type ReactionStatusDataResponse struct {
+	Data ReactionStatusResponse `json:"data" validate:"required"`
+}
