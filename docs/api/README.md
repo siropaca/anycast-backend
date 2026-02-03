@@ -24,7 +24,7 @@
 | POST | `/api/v1/auth/logout` | ログアウト | Owner | ✅ | [詳細](./auth.md#ログアウト) |
 | PUT | `/api/v1/auth/password` | パスワード更新 | Owner | | [詳細](./auth.md#パスワード更新) |
 | **Users（ユーザー）** | - | - | - | - | [users.md](./users.md) |
-| GET | `/api/v1/users/:userId` | ユーザー取得 | Public | ✅ | [詳細](./users.md#ユーザー取得) |
+| GET | `/api/v1/users/:username` | ユーザー取得 | Public | ✅ | [詳細](./users.md#ユーザー取得) |
 | GET | `/api/v1/me` | 現在のユーザー取得 | Owner | ✅ | [詳細](./users.md#現在のユーザー取得) |
 | PATCH | `/api/v1/me` | ユーザー情報更新 | Owner | | [詳細](./users.md#ユーザー情報更新) |
 | PATCH | `/api/v1/me/prompt` | ユーザープロンプト更新 | Owner | ✅ | [詳細](./users.md#ユーザープロンプト更新) |
@@ -120,8 +120,8 @@
 | DELETE | `/api/v1/episodes/:episodeId/playback` | 再生履歴を削除 | Owner | ✅ | [詳細](./engagement.md#再生履歴を削除) |
 | GET | `/api/v1/me/playback-history` | 再生履歴一覧を取得 | Owner | ✅ | [詳細](./engagement.md#再生履歴一覧を取得) |
 | **Follows（フォロー）** | - | - | - | - | [engagement.md](./engagement.md#followsフォロー) |
-| POST | `/api/v1/users/:userId/follow` | フォロー登録 | Owner | ✅ | [詳細](./engagement.md#フォロー登録) |
-| DELETE | `/api/v1/users/:userId/follow` | フォロー解除 | Owner | ✅ | [詳細](./engagement.md#フォロー解除) |
+| POST | `/api/v1/users/:username/follow` | フォロー登録 | Owner | ✅ | [詳細](./engagement.md#フォロー登録) |
+| DELETE | `/api/v1/users/:username/follow` | フォロー解除 | Owner | ✅ | [詳細](./engagement.md#フォロー解除) |
 | GET | `/api/v1/me/follows` | フォロー中のユーザー一覧 | Owner | ✅ | [詳細](./engagement.md#フォロー中のユーザー一覧) |
 | **Comments（コメント）** | - | - | - | - | [engagement.md](./engagement.md#commentsコメント) |
 | POST | `/api/v1/episodes/:episodeId/comments` | コメント投稿 | Owner | | [詳細](./engagement.md#コメント投稿) |

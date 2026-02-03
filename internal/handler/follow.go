@@ -62,14 +62,14 @@ func (h *FollowHandler) ListFollows(c *gin.Context) {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param userId path string true "ユーザー ID"
+// @Param username path string true "ユーザー名"
 // @Success 201 {object} response.FollowDataResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 409 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
 // @Security BearerAuth
-// @Router /users/{userId}/follow [post]
+// @Router /users/{username}/follow [post]
 func (h *FollowHandler) CreateFollow(c *gin.Context) {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
@@ -77,13 +77,13 @@ func (h *FollowHandler) CreateFollow(c *gin.Context) {
 		return
 	}
 
-	targetUserID := c.Param("userId")
-	if targetUserID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("userId は必須です"))
+	targetUsername := c.Param("username")
+	if targetUsername == "" {
+		Error(c, apperror.ErrValidation.WithMessage("username は必須です"))
 		return
 	}
 
-	result, err := h.followService.CreateFollow(c.Request.Context(), userID, targetUserID)
+	result, err := h.followService.CreateFollow(c.Request.Context(), userID, targetUsername)
 	if err != nil {
 		Error(c, err)
 		return
@@ -98,13 +98,13 @@ func (h *FollowHandler) CreateFollow(c *gin.Context) {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param userId path string true "ユーザー ID"
+// @Param username path string true "ユーザー名"
 // @Success 204 "No Content"
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 404 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
 // @Security BearerAuth
-// @Router /users/{userId}/follow [delete]
+// @Router /users/{username}/follow [delete]
 func (h *FollowHandler) DeleteFollow(c *gin.Context) {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
@@ -112,13 +112,13 @@ func (h *FollowHandler) DeleteFollow(c *gin.Context) {
 		return
 	}
 
-	targetUserID := c.Param("userId")
-	if targetUserID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("userId は必須です"))
+	targetUsername := c.Param("username")
+	if targetUsername == "" {
+		Error(c, apperror.ErrValidation.WithMessage("username は必須です"))
 		return
 	}
 
-	if err := h.followService.DeleteFollow(c.Request.Context(), userID, targetUserID); err != nil {
+	if err := h.followService.DeleteFollow(c.Request.Context(), userID, targetUsername); err != nil {
 		Error(c, err)
 		return
 	}

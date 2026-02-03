@@ -5221,7 +5221,7 @@
                 }
             }
         },
-        "/users/{userId}": {
+        "/users/{username}": {
             "get": {
                 "security": [
                     {
@@ -5242,8 +5242,8 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "ユーザー ID",
-                        "name": "userId",
+                        "description": "ユーザー名",
+                        "name": "username",
                         "in": "path",
                         "required": true
                     }
@@ -5282,7 +5282,7 @@
                 }
             }
         },
-        "/users/{userId}/follow": {
+        "/users/{username}/follow": {
             "post": {
                 "security": [
                     {
@@ -5303,8 +5303,8 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "ユーザー ID",
-                        "name": "userId",
+                        "description": "ユーザー名",
+                        "name": "username",
                         "in": "path",
                         "required": true
                     }
@@ -5362,8 +5362,8 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "ユーザー ID",
-                        "name": "userId",
+                        "description": "ユーザー名",
+                        "name": "username",
                         "in": "path",
                         "required": true
                     }

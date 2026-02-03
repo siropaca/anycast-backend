@@ -672,7 +672,7 @@ GET /me/playback-history
 ## フォロー登録
 
 ```
-POST /users/:userId/follow
+POST /users/:username/follow
 ```
 
 **レスポンス（201 Created）:**
@@ -711,7 +711,7 @@ POST /users/:userId/follow
 ## フォロー解除
 
 ```
-DELETE /users/:userId/follow
+DELETE /users/:username/follow
 ```
 
 **レスポンス（204 No Content）:**

@@ -5227,7 +5227,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/{userId}": {
+        "/users/{username}": {
             "get": {
                 "security": [
                     {
@@ -5248,8 +5248,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "ユーザー ID",
-                        "name": "userId",
+                        "description": "ユーザー名",
+                        "name": "username",
                         "in": "path",
                         "required": true
                     }
@@ -5288,7 +5288,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/{userId}/follow": {
+        "/users/{username}/follow": {
             "post": {
                 "security": [
                     {
@@ -5309,8 +5309,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "ユーザー ID",
-                        "name": "userId",
+                        "description": "ユーザー名",
+                        "name": "username",
                         "in": "path",
                         "required": true
                     }
@@ -5368,8 +5368,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "ユーザー ID",
-                        "name": "userId",
+                        "description": "ユーザー名",
+                        "name": "username",
                         "in": "path",
                         "required": true
                     }

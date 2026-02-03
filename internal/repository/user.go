@@ -18,6 +18,7 @@ type UserRepository interface {
 	Update(ctx context.Context, user *model.User) error
 	FindByID(ctx context.Context, id uuid.UUID) (*model.User, error)
 	FindByIDWithAvatar(ctx context.Context, id uuid.UUID) (*model.User, error)
+	FindByUsernameWithAvatar(ctx context.Context, username string) (*model.User, error)
 	FindByEmail(ctx context.Context, email string) (*model.User, error)
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
 	ExistsByUsername(ctx context.Context, username string) (bool, error)
@@ -78,6 +79,23 @@ func (r *userRepository) FindByIDWithAvatar(ctx context.Context, id uuid.UUID) (
 			return nil, apperror.ErrNotFound.WithMessage("ユーザーが見つかりません")
 		}
 		logger.FromContext(ctx).Error("failed to fetch user by id with avatar", "error", err, "user_id", id)
+		return nil, apperror.ErrInternal.WithMessage("ユーザーの取得に失敗しました").WithError(err)
+	}
+
+	return &user, nil
+}
+
+// FindByUsernameWithAvatar は指定されたユーザー名のユーザーを Avatar リレーション付きで取得する
+func (r *userRepository) FindByUsernameWithAvatar(ctx context.Context, username string) (*model.User, error) {
+	var user model.User
+
+	if err := r.db.WithContext(ctx).
+		Preload("Avatar").
+		First(&user, "username = ?", username).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, apperror.ErrNotFound.WithMessage("ユーザーが見つかりません")
+		}
+		logger.FromContext(ctx).Error("failed to fetch user by username with avatar", "error", err, "username", username)
 		return nil, apperror.ErrInternal.WithMessage("ユーザーの取得に失敗しました").WithError(err)
 	}
 
