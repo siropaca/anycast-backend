@@ -669,6 +669,35 @@ GET /me/playback-history
 
 他のユーザーをフォローする機能。自分自身はフォロー不可。
 
+## フォロー状態取得
+
+```
+GET /users/:username/follow
+```
+
+指定ユーザーをフォローしているかどうかを返す。
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "following": true
+  }
+}
+```
+
+**エラー（404 Not Found）:**
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "ユーザーが見つかりません"
+  }
+}
+```
+
+---
+
 ## フォロー登録
 
 ```

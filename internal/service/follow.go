@@ -14,6 +14,7 @@ import (
 // FollowService はフォロー関連のビジネスロジックインターフェースを表す
 type FollowService interface {
 	ListFollows(ctx context.Context, userID string, limit, offset int) (*response.FollowListWithPaginationResponse, error)
+	GetFollowStatus(ctx context.Context, userID, targetUsername string) (*response.FollowStatusDataResponse, error)
 	CreateFollow(ctx context.Context, userID, targetUsername string) (*response.FollowDataResponse, error)
 	DeleteFollow(ctx context.Context, userID, targetUsername string) error
 }
@@ -35,6 +36,30 @@ func NewFollowService(
 		userRepo:      userRepo,
 		storageClient: storageClient,
 	}
+}
+
+// GetFollowStatus は指定ユーザーをフォローしているかどうかを返す
+func (s *followService) GetFollowStatus(ctx context.Context, userID, targetUsername string) (*response.FollowStatusDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	targetUser, err := s.userRepo.FindByUsernameWithAvatar(ctx, targetUsername)
+	if err != nil {
+		return nil, err
+	}
+
+	exists, err := s.followRepo.ExistsByUserIDAndTargetUserID(ctx, uid, targetUser.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.FollowStatusDataResponse{
+		Data: response.FollowStatusResponse{
+			Following: exists,
+		},
+	}, nil
 }
 
 // ListFollows はフォロー中のユーザー一覧を取得する

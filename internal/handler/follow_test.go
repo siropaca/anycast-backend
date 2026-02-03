@@ -31,6 +31,14 @@ func (m *mockFollowService) ListFollows(ctx context.Context, userID string, limi
 	return args.Get(0).(*response.FollowListWithPaginationResponse), args.Error(1)
 }
 
+func (m *mockFollowService) GetFollowStatus(ctx context.Context, userID, targetUsername string) (*response.FollowStatusDataResponse, error) {
+	args := m.Called(ctx, userID, targetUsername)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.FollowStatusDataResponse), args.Error(1)
+}
+
 func (m *mockFollowService) CreateFollow(ctx context.Context, userID, targetUsername string) (*response.FollowDataResponse, error) {
 	args := m.Called(ctx, userID, targetUsername)
 	if args.Get(0) == nil {
@@ -53,6 +61,7 @@ func setupFollowRouter(h *FollowHandler, userID string) *gin.Engine {
 		c.Next()
 	})
 	r.GET("/me/follows", h.ListFollows)
+	r.GET("/users/:username/follow", h.GetFollowStatus)
 	r.POST("/users/:username/follow", h.CreateFollow)
 	r.DELETE("/users/:username/follow", h.DeleteFollow)
 	return r
@@ -63,6 +72,7 @@ func setupFollowRouterWithoutAuth(h *FollowHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	r.GET("/me/follows", h.ListFollows)
+	r.GET("/users/:username/follow", h.GetFollowStatus)
 	r.POST("/users/:username/follow", h.CreateFollow)
 	r.DELETE("/users/:username/follow", h.DeleteFollow)
 	return r
@@ -165,6 +175,90 @@ func TestFollowHandler_ListFollows(t *testing.T) {
 
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", "/me/follows", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+}
+
+func TestFollowHandler_GetFollowStatus(t *testing.T) {
+	userID := uuid.New().String()
+	targetUsername := "testuser"
+
+	t.Run("フォロー中の場合 following: true で 200 を返す", func(t *testing.T) {
+		mockSvc := new(mockFollowService)
+		result := &response.FollowStatusDataResponse{
+			Data: response.FollowStatusResponse{
+				Following: true,
+			},
+		}
+		mockSvc.On("GetFollowStatus", mock.Anything, userID, targetUsername).Return(result, nil)
+
+		handler := NewFollowHandler(mockSvc)
+		router := setupFollowRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/users/"+targetUsername+"/follow", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var resp response.FollowStatusDataResponse
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+		assert.True(t, resp.Data.Following)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("未フォローの場合 following: false で 200 を返す", func(t *testing.T) {
+		mockSvc := new(mockFollowService)
+		result := &response.FollowStatusDataResponse{
+			Data: response.FollowStatusResponse{
+				Following: false,
+			},
+		}
+		mockSvc.On("GetFollowStatus", mock.Anything, userID, targetUsername).Return(result, nil)
+
+		handler := NewFollowHandler(mockSvc)
+		router := setupFollowRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/users/"+targetUsername+"/follow", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var resp response.FollowStatusDataResponse
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+		assert.False(t, resp.Data.Following)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("認証されていない場合は 401 を返す", func(t *testing.T) {
+		mockSvc := new(mockFollowService)
+
+		handler := NewFollowHandler(mockSvc)
+		router := setupFollowRouterWithoutAuth(handler)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/users/"+targetUsername+"/follow", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		mockSvc.AssertNotCalled(t, "GetFollowStatus")
+	})
+
+	t.Run("サービスがエラーを返すとエラーレスポンスを返す", func(t *testing.T) {
+		mockSvc := new(mockFollowService)
+		mockSvc.On("GetFollowStatus", mock.Anything, userID, targetUsername).Return(nil, apperror.ErrInternal)
+
+		handler := NewFollowHandler(mockSvc)
+		router := setupFollowRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/users/"+targetUsername+"/follow", http.NoBody)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)

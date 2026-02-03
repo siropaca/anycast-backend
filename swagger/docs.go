@@ -5289,6 +5289,59 @@ const docTemplate = `{
             }
         },
         "/users/{username}/follow": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定ユーザーをフォローしているかどうかを返します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "フォロー状態取得",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ユーザー名",
+                        "name": "username",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.FollowStatusDataResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -7210,6 +7263,28 @@ const docTemplate = `{
                 },
                 "targetUserId": {
                     "type": "string"
+                }
+            }
+        },
+        "response.FollowStatusDataResponse": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.FollowStatusResponse"
+                }
+            }
+        },
+        "response.FollowStatusResponse": {
+            "type": "object",
+            "required": [
+                "following"
+            ],
+            "properties": {
+                "following": {
+                    "type": "boolean"
                 }
             }
         },

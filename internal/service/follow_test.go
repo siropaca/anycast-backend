@@ -215,6 +215,97 @@ func TestFollowService_ListFollows(t *testing.T) {
 	})
 }
 
+func TestFollowService_GetFollowStatus(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+	targetUserID := uuid.New()
+	targetUsername := "target_user"
+
+	t.Run("フォロー中の場合 following: true を返す", func(t *testing.T) {
+		mockRepo := new(mockFollowRepository)
+		mockUserRepo := new(mockUserRepository)
+		mockStorage := new(mockStorageClient)
+
+		targetUser := &model.User{ID: targetUserID, Username: targetUsername}
+		mockUserRepo.On("FindByUsernameWithAvatar", mock.Anything, targetUsername).Return(targetUser, nil)
+		mockRepo.On("ExistsByUserIDAndTargetUserID", mock.Anything, userID, targetUserID).Return(true, nil)
+
+		svc := NewFollowService(mockRepo, mockUserRepo, mockStorage)
+		result, err := svc.GetFollowStatus(ctx, userID.String(), targetUsername)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.True(t, result.Data.Following)
+		mockRepo.AssertExpectations(t)
+		mockUserRepo.AssertExpectations(t)
+	})
+
+	t.Run("未フォローの場合 following: false を返す", func(t *testing.T) {
+		mockRepo := new(mockFollowRepository)
+		mockUserRepo := new(mockUserRepository)
+		mockStorage := new(mockStorageClient)
+
+		targetUser := &model.User{ID: targetUserID, Username: targetUsername}
+		mockUserRepo.On("FindByUsernameWithAvatar", mock.Anything, targetUsername).Return(targetUser, nil)
+		mockRepo.On("ExistsByUserIDAndTargetUserID", mock.Anything, userID, targetUserID).Return(false, nil)
+
+		svc := NewFollowService(mockRepo, mockUserRepo, mockStorage)
+		result, err := svc.GetFollowStatus(ctx, userID.String(), targetUsername)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.False(t, result.Data.Following)
+		mockRepo.AssertExpectations(t)
+		mockUserRepo.AssertExpectations(t)
+	})
+
+	t.Run("無効な UUID の場合はエラーを返す", func(t *testing.T) {
+		mockRepo := new(mockFollowRepository)
+		mockUserRepo := new(mockUserRepository)
+		mockStorage := new(mockStorageClient)
+
+		svc := NewFollowService(mockRepo, mockUserRepo, mockStorage)
+		result, err := svc.GetFollowStatus(ctx, "invalid-uuid", targetUsername)
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+	})
+
+	t.Run("存在しないユーザー名の場合はエラーを返す", func(t *testing.T) {
+		mockRepo := new(mockFollowRepository)
+		mockUserRepo := new(mockUserRepository)
+		mockStorage := new(mockStorageClient)
+
+		mockUserRepo.On("FindByUsernameWithAvatar", mock.Anything, "nonexistent").Return(nil, apperror.ErrNotFound.WithMessage("ユーザーが見つかりません"))
+
+		svc := NewFollowService(mockRepo, mockUserRepo, mockStorage)
+		result, err := svc.GetFollowStatus(ctx, userID.String(), "nonexistent")
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		assert.True(t, apperror.IsCode(err, apperror.CodeNotFound))
+		mockUserRepo.AssertExpectations(t)
+	})
+
+	t.Run("リポジトリがエラーを返すとエラーを返す", func(t *testing.T) {
+		mockRepo := new(mockFollowRepository)
+		mockUserRepo := new(mockUserRepository)
+		mockStorage := new(mockStorageClient)
+
+		targetUser := &model.User{ID: targetUserID, Username: targetUsername}
+		mockUserRepo.On("FindByUsernameWithAvatar", mock.Anything, targetUsername).Return(targetUser, nil)
+		mockRepo.On("ExistsByUserIDAndTargetUserID", mock.Anything, userID, targetUserID).Return(false, apperror.ErrInternal.WithMessage("Database error"))
+
+		svc := NewFollowService(mockRepo, mockUserRepo, mockStorage)
+		result, err := svc.GetFollowStatus(ctx, userID.String(), targetUsername)
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		mockRepo.AssertExpectations(t)
+		mockUserRepo.AssertExpectations(t)
+	})
+}
+
 func TestFollowService_CreateFollow(t *testing.T) {
 	ctx := context.Background()
 	userID := uuid.New()

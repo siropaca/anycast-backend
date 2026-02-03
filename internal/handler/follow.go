@@ -56,6 +56,41 @@ func (h *FollowHandler) ListFollows(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// GetFollowStatus godoc
+// @Summary フォロー状態取得
+// @Description 指定ユーザーをフォローしているかどうかを返します
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param username path string true "ユーザー名"
+// @Success 200 {object} response.FollowStatusDataResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /users/{username}/follow [get]
+func (h *FollowHandler) GetFollowStatus(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	targetUsername := c.Param("username")
+	if targetUsername == "" {
+		Error(c, apperror.ErrValidation.WithMessage("username は必須です"))
+		return
+	}
+
+	result, err := h.followService.GetFollowStatus(c.Request.Context(), userID, targetUsername)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
 // CreateFollow godoc
 // @Summary フォロー登録
 // @Description ユーザーをフォローします
