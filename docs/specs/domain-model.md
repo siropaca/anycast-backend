@@ -623,7 +623,7 @@ TTS ボイスの設定情報。
 | providerVoiceId | String | ◯ | プロバイダ側の音声 ID（例: ja-JP-Wavenet-C） |
 | name | String | ◯ | 表示名 |
 | gender | Gender | ◯ | 性別（male / female / neutral） |
-| sampleAudio | Audio | ◯ | サンプルボイス音声 |
+| sampleAudioUrl | String | ◯ | サンプルボイス音声の URL |
 | isActive | Boolean | ◯ | 有効フラグ |
 
 #### 制約

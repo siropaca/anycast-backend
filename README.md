@@ -95,10 +95,11 @@ cp .env.example .env        # 環境変数ファイルの作成
 | `GOOGLE_CLOUD_CREDENTIALS_JSON` | サービスアカウントの JSON キー | - |
 | `GOOGLE_CLOUD_STORAGE_BUCKET_NAME` | GCS バケット名 | - |
 | `GOOGLE_CLOUD_TASKS_LOCATION` | Cloud Tasks ロケーション | asia-northeast1 |
-| `GOOGLE_CLOUD_TASKS_QUEUE_NAME` | Cloud Tasks キュー名 | async-jobs |
+| `GOOGLE_CLOUD_TASKS_QUEUE_NAME` | Cloud Tasks キュー名 | audio-generation-queue |
 | `GOOGLE_CLOUD_TASKS_SERVICE_ACCOUNT_EMAIL` | Cloud Tasks サービスアカウントメール | - |
 | `GOOGLE_CLOUD_TASKS_WORKER_URL` | ワーカーエンドポイントのベース URL（末尾に `/audio` や `/script` が付与される） | - |
 | `GOOGLE_CLOUD_TTS_LOCATION` | Gemini TTS のロケーション | global |
+| `TRACE_MODE` | トレースモード（none / log / file） | none |
 | `SLACK_WEBHOOK_URL` | Slack Webhook URL（フィードバック通知用、空の場合は通知無効） | - |
 
 > **Note:** `GOOGLE_CLOUD_PROJECT_ID` と `GOOGLE_CLOUD_TASKS_WORKER_URL` が未設定の場合、Cloud Tasks を使わずに goroutine で直接ジョブを実行します（ローカル開発用）。
@@ -226,6 +227,8 @@ make swagger
 │   │   ├── logger/      # 構造化ログ
 │   │   ├── prompt/      # プロンプト圧縮
 │   │   ├── script/      # 台本パーサー
+│   │   ├── token/       # トークン生成
+│   │   ├── tracer/      # 台本生成トレーサー
 │   │   └── uuid/        # UUID パース
 │   ├── repository/      # データアクセス層
 │   ├── router/          # ルーティング

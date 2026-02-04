@@ -654,4 +654,5 @@ Phase 別に Temperature を変えるため `ChatWithOptions` メソッドを使
 | `internal/pkg/script/json_extractor.go` | LLM 出力からの JSON 抽出ユーティリティ |
 | `internal/infrastructure/llm/client.go` | `ChatWithOptions` インターフェース定義 |
 | `internal/infrastructure/llm/registry.go` | LLM プロバイダ Registry |
+| `internal/pkg/tracer/` | 台本生成トレーサー（各 Phase のプロンプト・レスポンス出力） |
 

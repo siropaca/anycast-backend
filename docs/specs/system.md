@@ -40,13 +40,41 @@ Phase 別設定（`internal/service/script_prompts.go`）:
 
 - 設定箇所: `internal/infrastructure/llm/`、`internal/service/script_prompts.go`
 
-### Google Cloud Text-to-Speech
+### Google Cloud Text-to-Speech（Gemini TTS）
 
-（未実装）
+Gemini 2.5 Pro TTS（Vertex AI バックエンド）を使用した音声合成。マルチスピーカー合成に対応し、32k token の長い台本をサポート。
 
-### Google Cloud Storage
+| 設定 | 値 | 説明 |
+|------|------|------|
+| モデル | gemini-2.5-pro-tts | Gemini TTS モデル |
+| 言語コード | ja-JP | 日本語固定 |
+| ロケーション | 環境変数 `GOOGLE_CLOUD_TTS_LOCATION`（デフォルト: global） | Vertex AI エンドポイントのリージョン |
 
-（未実装）
+- 設定箇所: `internal/infrastructure/tts/`
+
+### Google Cloud Storage（GCS）
+
+メディアファイル（音声・画像）の保存先。署名付き URL による安全なアクセスを提供。
+
+| 設定 | 値 | 説明 |
+|------|------|------|
+| 署名付き URL 有効期限 | 1 時間 | V4 署名スキームを使用 |
+| 音声パス形式 | `audios/{audioID}.mp3` | MP3 固定 |
+| 画像パス形式 | `images/{imageID}{ext}` | 拡張子は元ファイルに準拠 |
+
+- 設定箇所: `internal/infrastructure/storage/`
+
+### トレーサー
+
+台本生成の各 Phase のデータ（プロンプト、レスポンス、中間成果物）を出力するユーティリティ。環境変数 `TRACE_MODE` で動作を制御する。
+
+| モード | 説明 |
+|--------|------|
+| `none`（デフォルト） | 何も出力しない |
+| `log` | slog の Debug レベルでトレース出力 |
+| `file` | `tmp/traces/{エピソードタイトル}/` 配下に Phase ごとの Markdown ファイルを出力 |
+
+- 設定箇所: `internal/pkg/tracer/`、`internal/service/script_job.go`
 
 ## タイムアウトの関係性
 

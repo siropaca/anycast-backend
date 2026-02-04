@@ -209,6 +209,16 @@ curl -s "http://localhost:8081/api/v1/me/script-jobs?status=completed" \
 ### pkg ユーティリティ
 
 - `internal/pkg/` 配下のユーティリティを積極的に使用する
+  - `audio/` - 音声ファイル処理
+  - `crypto/` - パスワードハッシュ
+  - `db/` - DB 接続
+  - `jwt/` - JWT トークン管理
+  - `logger/` - 構造化ログ
+  - `prompt/` - プロンプト圧縮
+  - `script/` - 台本パーサー
+  - `token/` - トークン生成
+  - `tracer/` - 台本生成トレーサー
+  - `uuid/` - UUID パース
 - `github.com/google/uuid` の代わりに `internal/pkg/uuid` を使用する（統一されたエラーハンドリングのため）
 - 汎用的な処理は `internal/pkg/` にまとめ、テストを必ず実装する
 
