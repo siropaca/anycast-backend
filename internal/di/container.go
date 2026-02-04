@@ -17,6 +17,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/crypto"
 	"github.com/siropaca/anycast-backend/internal/pkg/jwt"
 	"github.com/siropaca/anycast-backend/internal/pkg/logger"
+	"github.com/siropaca/anycast-backend/internal/pkg/tracer"
 	"github.com/siropaca/anycast-backend/internal/repository"
 	"github.com/siropaca/anycast-backend/internal/service"
 )
@@ -224,6 +225,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		llmRegistry,
 		tasksClient,
 		wsHub,
+		tracer.Mode(cfg.TraceMode),
 	)
 	feedbackService := service.NewFeedbackService(feedbackRepo, imageRepo, userRepo, storageClient, slackClient)
 	contactService := service.NewContactService(contactRepo, slackClient)

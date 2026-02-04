@@ -19,6 +19,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/model"
 	"github.com/siropaca/anycast-backend/internal/pkg/logger"
 	"github.com/siropaca/anycast-backend/internal/pkg/script"
+	"github.com/siropaca/anycast-backend/internal/pkg/tracer"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
@@ -42,6 +43,7 @@ type scriptJobService struct {
 	llmRegistry    *llm.Registry
 	tasksClient    cloudtasks.Client
 	wsHub          *websocket.Hub
+	traceMode      tracer.Mode
 }
 
 // NewScriptJobService は scriptJobService を生成して ScriptJobService として返す
@@ -55,6 +57,7 @@ func NewScriptJobService(
 	llmRegistry *llm.Registry,
 	tasksClient cloudtasks.Client,
 	wsHub *websocket.Hub,
+	traceMode tracer.Mode,
 ) ScriptJobService {
 	return &scriptJobService{
 		db:             db,
@@ -66,6 +69,7 @@ func NewScriptJobService(
 		llmRegistry:    llmRegistry,
 		tasksClient:    tasksClient,
 		wsHub:          wsHub,
+		traceMode:      traceMode,
 	}
 }
 
@@ -360,8 +364,12 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 		return 0, fmt.Errorf("ブリーフの JSON 変換に失敗: %w", err)
 	}
 
+	// トレーサーを生成
+	t := tracer.New(s.traceMode, episode.Title)
+
 	log.Info("brief normalized", "talk_mode", brief.Constraints.TalkMode, "characters", len(brief.Characters))
-	log.Debug("Phase 1: brief JSON", "brief", briefJSON)
+	t.Trace("phase1", "brief", briefJSON)
+	t.Flush("phase1")
 
 	// ===== Phase 2: 素材+アウトライン生成 =====
 	s.updateProgress(ctx, job, 15, "素材とアウトラインを生成中...")
@@ -371,7 +379,7 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 		return 0, err
 	}
 
-	phase2Output, err := s.executePhase2(ctx, briefJSON)
+	phase2Output, err := s.executePhase2(ctx, briefJSON, t)
 	if err != nil {
 		return 0, err
 	}
@@ -386,7 +394,7 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 		return 0, err
 	}
 
-	generatedText, err := s.executePhase3(ctx, brief, phase2Output)
+	generatedText, err := s.executePhase3(ctx, brief, phase2Output, t)
 	if err != nil {
 		return 0, err
 	}
@@ -407,7 +415,7 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 	// ===== Phase 4: QA 検証+パッチ修正 =====
 	s.updateProgress(ctx, job, 80, "品質チェック中...")
 
-	parsedLines := s.executePhase4(ctx, job, parseResult.Lines, brief, allowedSpeakers, generatedText)
+	parsedLines := s.executePhase4(ctx, job, parseResult.Lines, brief, allowedSpeakers, generatedText, t)
 
 	// 進捗: 90% - DB 保存
 	s.updateProgress(ctx, job, 90, "台本を保存中...")
@@ -479,7 +487,7 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 // executePhase2 は Phase 2（素材+アウトライン生成）を実行する
 //
 // 最大2回リトライし、全失敗時はエラーを返す
-func (s *scriptJobService) executePhase2(ctx context.Context, briefJSON string) (*script.Phase2Output, error) {
+func (s *scriptJobService) executePhase2(ctx context.Context, briefJSON string, t tracer.Tracer) (*script.Phase2Output, error) {
 	log := logger.FromContext(ctx)
 
 	client, err := s.llmRegistry.Get(phase2Config.Provider)
@@ -490,12 +498,12 @@ func (s *scriptJobService) executePhase2(ctx context.Context, briefJSON string) 
 	temp := phase2Config.Temperature
 	opts := llm.ChatOptions{Temperature: &temp}
 
+	t.Trace("phase2", "system_prompt", phase2SystemPrompt)
+	t.Trace("phase2", "user_prompt", briefJSON)
+
 	var lastErr error
 	for attempt := 1; attempt <= 2; attempt++ {
 		log.Debug("executing Phase 2", "attempt", attempt, "provider", phase2Config.Provider)
-
-		log.Debug("Phase 2: system prompt", "prompt", phase2SystemPrompt)
-		log.Debug("Phase 2: user prompt", "prompt", briefJSON)
 
 		result, err := client.ChatWithOptions(ctx, phase2SystemPrompt, briefJSON, opts)
 		if err != nil {
@@ -504,7 +512,7 @@ func (s *scriptJobService) executePhase2(ctx context.Context, briefJSON string) 
 			continue
 		}
 
-		log.Debug("Phase 2: LLM response", "response", result)
+		t.Trace("phase2", "response", result)
 
 		output, err := script.ParsePhase2Output(result)
 		if err != nil {
@@ -513,16 +521,21 @@ func (s *scriptJobService) executePhase2(ctx context.Context, briefJSON string) 
 			continue
 		}
 
+		parsedJSON, _ := json.Marshal(output) //nolint:errcheck // trace data
+		t.Trace("phase2", "parsed_output", string(parsedJSON))
+		t.Flush("phase2")
+
 		log.Info("Phase 2 completed", "attempt", attempt)
 		return output, nil
 	}
 
+	t.Flush("phase2")
 	log.Error("Phase 2 failed after retries", "error", lastErr)
 	return nil, apperror.ErrGenerationFailed.WithMessage("素材とアウトラインの生成に失敗しました").WithError(lastErr)
 }
 
 // executePhase3 は Phase 3（台本ドラフト生成）を実行する
-func (s *scriptJobService) executePhase3(ctx context.Context, brief script.Brief, phase2 *script.Phase2Output) (string, error) {
+func (s *scriptJobService) executePhase3(ctx context.Context, brief script.Brief, phase2 *script.Phase2Output, t tracer.Tracer) (string, error) {
 	log := logger.FromContext(ctx)
 
 	client, err := s.llmRegistry.Get(phase3Config.Provider)
@@ -533,18 +546,22 @@ func (s *scriptJobService) executePhase3(ctx context.Context, brief script.Brief
 	sysPrompt := getPhase3SystemPrompt(brief.Constraints.TalkMode, brief.Constraints.WithEmotion)
 	userPrompt := buildPhase3UserPrompt(brief, phase2)
 
-	log.Debug("Phase 3: system prompt", "prompt", sysPrompt)
-	log.Debug("Phase 3: user prompt", "prompt", userPrompt)
+	t.Trace("phase3", "system_prompt", sysPrompt)
+	t.Trace("phase3", "user_prompt", userPrompt)
 
 	temp := phase3Config.Temperature
 	opts := llm.ChatOptions{Temperature: &temp}
 
 	result, err := client.ChatWithOptions(ctx, sysPrompt, userPrompt, opts)
 	if err != nil {
+		t.Flush("phase3")
 		return "", err
 	}
 
-	log.Debug("Phase 3: LLM response", "response", result)
+	t.Trace("phase3", "response", result)
+	t.Flush("phase3")
+
+	log.Info("Phase 3 completed")
 
 	return result, nil
 }
@@ -552,7 +569,7 @@ func (s *scriptJobService) executePhase3(ctx context.Context, brief script.Brief
 // executePhase4 は Phase 4（QA 検証+パッチ修正）を実行する
 //
 // コード定量チェック → 不合格時のみ LLM パッチ修正（最大1回）
-func (s *scriptJobService) executePhase4(ctx context.Context, job *model.ScriptJob, lines []script.ParsedLine, brief script.Brief, allowedSpeakers []string, originalText string) []script.ParsedLine {
+func (s *scriptJobService) executePhase4(ctx context.Context, job *model.ScriptJob, lines []script.ParsedLine, brief script.Brief, allowedSpeakers []string, originalText string, t tracer.Tracer) []script.ParsedLine {
 	log := logger.FromContext(ctx)
 
 	config := script.ValidatorConfig{
@@ -564,14 +581,20 @@ func (s *scriptJobService) executePhase4(ctx context.Context, job *model.ScriptJ
 	result := script.Validate(lines, config)
 	if result.Passed {
 		log.Info("Phase 4: QA check passed")
+		t.Trace("phase4", "qa_result", "passed")
+		t.Flush("phase4")
 		return lines
 	}
 
 	log.Info("Phase 4: QA check failed", "issues", len(result.Issues))
 
+	issuesJSON, _ := json.Marshal(result.Issues) //nolint:errcheck // trace data
+	t.Trace("phase4", "qa_result", string(issuesJSON))
+
 	// キャンセルチェック（パッチ修正前）
 	if err := s.checkCanceled(ctx, job); err != nil {
 		log.Info("Phase 4: canceled before patch")
+		t.Flush("phase4")
 		return lines
 	}
 
@@ -582,6 +605,7 @@ func (s *scriptJobService) executePhase4(ctx context.Context, job *model.ScriptJ
 	client, err := s.llmRegistry.Get(phase4Config.Provider)
 	if err != nil {
 		log.Warn("Phase 4: LLM client not available", "error", err)
+		t.Flush("phase4")
 		return lines
 	}
 
@@ -589,21 +613,23 @@ func (s *scriptJobService) executePhase4(ctx context.Context, job *model.ScriptJ
 	temp := phase4Config.Temperature
 	opts := llm.ChatOptions{Temperature: &temp}
 
-	log.Debug("Phase 4: system prompt", "prompt", phase4SystemPrompt)
-	log.Debug("Phase 4: user prompt", "prompt", patchPrompt)
+	t.Trace("phase4", "system_prompt", phase4SystemPrompt)
+	t.Trace("phase4", "user_prompt", patchPrompt)
 
 	patchedText, err := client.ChatWithOptions(ctx, phase4SystemPrompt, patchPrompt, opts)
 	if err != nil {
 		log.Warn("Phase 4: patch LLM call failed", "error", err)
+		t.Flush("phase4")
 		return lines
 	}
 
-	log.Debug("Phase 4: LLM response", "response", patchedText)
+	t.Trace("phase4", "response", patchedText)
 
 	// パッチ結果をパース
 	patchedResult := script.Parse(patchedText, allowedSpeakers)
 	if len(patchedResult.Lines) == 0 {
 		log.Warn("Phase 4: patched script parse failed")
+		t.Flush("phase4")
 		return lines
 	}
 
@@ -614,6 +640,8 @@ func (s *scriptJobService) executePhase4(ctx context.Context, job *model.ScriptJ
 	} else {
 		log.Info("Phase 4: patched script passed QA")
 	}
+
+	t.Flush("phase4")
 
 	// パッチ後の結果をそのまま採用（合格/不合格に関わらず）
 	return patchedResult.Lines

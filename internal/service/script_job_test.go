@@ -13,6 +13,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/infrastructure/llm"
 	"github.com/siropaca/anycast-backend/internal/model"
 	"github.com/siropaca/anycast-backend/internal/pkg/script"
+	"github.com/siropaca/anycast-backend/internal/pkg/tracer"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
@@ -327,6 +328,8 @@ var validPhase2JSON = `{
 }`
 
 func TestScriptJobService_executePhase2(t *testing.T) {
+	noopTracer := tracer.New(tracer.ModeNone, "")
+
 	t.Run("正常系: 1回目で成功", func(t *testing.T) {
 		mockLLM := new(mockLLMClient)
 		mockLLM.On("ChatWithOptions", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
@@ -335,7 +338,7 @@ func TestScriptJobService_executePhase2(t *testing.T) {
 		registry := llm.NewRegistry()
 		registry.Register(llm.ProviderOpenAI, mockLLM)
 		svc := &scriptJobService{llmRegistry: registry}
-		output, err := svc.executePhase2(context.Background(), `{"theme":"test"}`)
+		output, err := svc.executePhase2(context.Background(), `{"theme":"test"}`, noopTracer)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, output)
@@ -353,7 +356,7 @@ func TestScriptJobService_executePhase2(t *testing.T) {
 		registry := llm.NewRegistry()
 		registry.Register(llm.ProviderOpenAI, mockLLM)
 		svc := &scriptJobService{llmRegistry: registry}
-		output, err := svc.executePhase2(context.Background(), `{"theme":"test"}`)
+		output, err := svc.executePhase2(context.Background(), `{"theme":"test"}`, noopTracer)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, output)
@@ -368,7 +371,7 @@ func TestScriptJobService_executePhase2(t *testing.T) {
 		registry := llm.NewRegistry()
 		registry.Register(llm.ProviderOpenAI, mockLLM)
 		svc := &scriptJobService{llmRegistry: registry}
-		output, err := svc.executePhase2(context.Background(), `{"theme":"test"}`)
+		output, err := svc.executePhase2(context.Background(), `{"theme":"test"}`, noopTracer)
 
 		assert.Error(t, err)
 		assert.Nil(t, output)
@@ -383,6 +386,7 @@ func TestScriptJobService_executePhase4(t *testing.T) {
 	jobID := uuid.New()
 	userID := uuid.New()
 	episodeID := uuid.New()
+	noopTracer := tracer.New(tracer.ModeNone, "")
 
 	t.Run("QA 合格でパッチなし", func(t *testing.T) {
 		mockRepo := new(mockScriptJobRepository)
@@ -423,7 +427,7 @@ func TestScriptJobService_executePhase4(t *testing.T) {
 			Status:    model.ScriptJobStatusProcessing,
 		}
 
-		result := svc.executePhase4(context.Background(), job, lines, brief, speakers, "original text")
+		result := svc.executePhase4(context.Background(), job, lines, brief, speakers, "original text", noopTracer)
 		assert.Equal(t, len(lines), len(result))
 	})
 
@@ -489,7 +493,7 @@ func TestScriptJobService_executePhase4(t *testing.T) {
 			Status:    model.ScriptJobStatusProcessing,
 		}
 
-		result := svc.executePhase4(context.Background(), job, lines, brief, []string{"太郎", "花子"}, "太郎: これはセリフです。")
+		result := svc.executePhase4(context.Background(), job, lines, brief, []string{"太郎", "花子"}, "太郎: これはセリフです。", noopTracer)
 		// パッチ結果が返ることを確認
 		assert.Greater(t, len(result), len(lines))
 		mockLLM.AssertExpectations(t)
@@ -532,7 +536,7 @@ func TestScriptJobService_executePhase4(t *testing.T) {
 			Status:    model.ScriptJobStatusProcessing,
 		}
 
-		result := svc.executePhase4(context.Background(), job, lines, brief, []string{"太郎"}, "太郎: 元のセリフです。")
+		result := svc.executePhase4(context.Background(), job, lines, brief, []string{"太郎"}, "太郎: 元のセリフです。", noopTracer)
 		// パッチ結果が返ることを確認（不合格でも採用）
 		assert.NotEmpty(t, result)
 		mockLLM.AssertExpectations(t)
