@@ -41,6 +41,63 @@ func (m *mockFollowRepository) ExistsByUserIDAndTargetUserID(ctx context.Context
 	return args.Bool(0), args.Error(1)
 }
 
+// UserRepository のモック
+type mockUserRepository struct {
+	mock.Mock
+}
+
+func (m *mockUserRepository) Create(ctx context.Context, user *model.User) error {
+	args := m.Called(ctx, user)
+	return args.Error(0)
+}
+
+func (m *mockUserRepository) Update(ctx context.Context, user *model.User) error {
+	args := m.Called(ctx, user)
+	return args.Error(0)
+}
+
+func (m *mockUserRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.User), args.Error(1)
+}
+
+func (m *mockUserRepository) FindByIDWithAvatar(ctx context.Context, id uuid.UUID) (*model.User, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.User), args.Error(1)
+}
+
+func (m *mockUserRepository) FindByUsernameWithAvatar(ctx context.Context, username string) (*model.User, error) {
+	args := m.Called(ctx, username)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.User), args.Error(1)
+}
+
+func (m *mockUserRepository) FindByEmail(ctx context.Context, email string) (*model.User, error) {
+	args := m.Called(ctx, email)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.User), args.Error(1)
+}
+
+func (m *mockUserRepository) ExistsByEmail(ctx context.Context, email string) (bool, error) {
+	args := m.Called(ctx, email)
+	return args.Bool(0), args.Error(1)
+}
+
+func (m *mockUserRepository) ExistsByUsername(ctx context.Context, username string) (bool, error) {
+	args := m.Called(ctx, username)
+	return args.Bool(0), args.Error(1)
+}
+
 func TestNewFollowService(t *testing.T) {
 	t.Run("FollowService を作成できる", func(t *testing.T) {
 		mockRepo := new(mockFollowRepository)
