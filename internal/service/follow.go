@@ -14,24 +14,52 @@ import (
 // FollowService はフォロー関連のビジネスロジックインターフェースを表す
 type FollowService interface {
 	ListFollows(ctx context.Context, userID string, limit, offset int) (*response.FollowListWithPaginationResponse, error)
-	CreateFollow(ctx context.Context, userID, targetUserID string) (*response.FollowDataResponse, error)
-	DeleteFollow(ctx context.Context, userID, targetUserID string) error
+	GetFollowStatus(ctx context.Context, userID, targetUsername string) (*response.FollowStatusDataResponse, error)
+	CreateFollow(ctx context.Context, userID, targetUsername string) (*response.FollowDataResponse, error)
+	DeleteFollow(ctx context.Context, userID, targetUsername string) error
 }
 
 type followService struct {
 	followRepo    repository.FollowRepository
+	userRepo      repository.UserRepository
 	storageClient storage.Client
 }
 
 // NewFollowService は followService を生成して FollowService として返す
 func NewFollowService(
 	followRepo repository.FollowRepository,
+	userRepo repository.UserRepository,
 	storageClient storage.Client,
 ) FollowService {
 	return &followService{
 		followRepo:    followRepo,
+		userRepo:      userRepo,
 		storageClient: storageClient,
 	}
+}
+
+// GetFollowStatus は指定ユーザーをフォローしているかどうかを返す
+func (s *followService) GetFollowStatus(ctx context.Context, userID, targetUsername string) (*response.FollowStatusDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	targetUser, err := s.userRepo.FindByUsernameWithAvatar(ctx, targetUsername)
+	if err != nil {
+		return nil, err
+	}
+
+	exists, err := s.followRepo.ExistsByUserIDAndTargetUserID(ctx, uid, targetUser.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.FollowStatusDataResponse{
+		Data: response.FollowStatusResponse{
+			Following: exists,
+		},
+	}, nil
 }
 
 // ListFollows はフォロー中のユーザー一覧を取得する
@@ -63,22 +91,22 @@ func (s *followService) ListFollows(ctx context.Context, userID string, limit, o
 }
 
 // CreateFollow はフォローを登録する
-func (s *followService) CreateFollow(ctx context.Context, userID, targetUserID string) (*response.FollowDataResponse, error) {
+func (s *followService) CreateFollow(ctx context.Context, userID, targetUsername string) (*response.FollowDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
 		return nil, err
 	}
 
-	tid, err := uuid.Parse(targetUserID)
+	targetUser, err := s.userRepo.FindByUsernameWithAvatar(ctx, targetUsername)
 	if err != nil {
 		return nil, err
 	}
 
-	if uid == tid {
+	if uid == targetUser.ID {
 		return nil, apperror.ErrSelfFollowNotAllowed
 	}
 
-	exists, err := s.followRepo.ExistsByUserIDAndTargetUserID(ctx, uid, tid)
+	exists, err := s.followRepo.ExistsByUserIDAndTargetUserID(ctx, uid, targetUser.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +116,7 @@ func (s *followService) CreateFollow(ctx context.Context, userID, targetUserID s
 
 	follow := &model.Follow{
 		UserID:       uid,
-		TargetUserID: tid,
+		TargetUserID: targetUser.ID,
 	}
 
 	if err := s.followRepo.Create(ctx, follow); err != nil {
@@ -105,18 +133,18 @@ func (s *followService) CreateFollow(ctx context.Context, userID, targetUserID s
 }
 
 // DeleteFollow はフォローを解除する
-func (s *followService) DeleteFollow(ctx context.Context, userID, targetUserID string) error {
+func (s *followService) DeleteFollow(ctx context.Context, userID, targetUsername string) error {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
 		return err
 	}
 
-	tid, err := uuid.Parse(targetUserID)
+	targetUser, err := s.userRepo.FindByUsernameWithAvatar(ctx, targetUsername)
 	if err != nil {
 		return err
 	}
 
-	return s.followRepo.DeleteByUserIDAndTargetUserID(ctx, uid, tid)
+	return s.followRepo.DeleteByUserIDAndTargetUserID(ctx, uid, targetUser.ID)
 }
 
 // toFollowItemResponse は Follow を FollowItemResponse に変換する

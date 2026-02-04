@@ -3,7 +3,7 @@
 ## ユーザー取得
 
 ```
-GET /users/:userId
+GET /users/:username
 ```
 
 **レスポンス:**

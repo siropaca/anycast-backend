@@ -11,10 +11,14 @@ Authorization: Bearer {{token}}
 GET {{baseUrl}}/me/follows?limit=10&offset=0
 Authorization: Bearer {{token}}
 
+### フォロー状態取得
+GET {{baseUrl}}/users/YOUR_USERNAME_HERE/follow
+Authorization: Bearer {{token}}
+
 ### フォロー登録
-POST {{baseUrl}}/users/YOUR_USER_ID_HERE/follow
+POST {{baseUrl}}/users/YOUR_USERNAME_HERE/follow
 Authorization: Bearer {{token}}
 
 ### フォロー解除
-DELETE {{baseUrl}}/users/YOUR_USER_ID_HERE/follow
+DELETE {{baseUrl}}/users/YOUR_USERNAME_HERE/follow
 Authorization: Bearer {{token}}

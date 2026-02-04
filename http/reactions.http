@@ -11,6 +11,10 @@ Authorization: Bearer {{token}}
 GET {{baseUrl}}/me/likes?limit=10&offset=0
 Authorization: Bearer {{token}}
 
+### リアクション状態取得
+GET {{baseUrl}}/episodes/YOUR_EPISODE_ID_HERE/reactions
+Authorization: Bearer {{token}}
+
 ### リアクション登録（高評価）
 POST {{baseUrl}}/episodes/YOUR_EPISODE_ID_HERE/reactions
 Content-Type: application/json

@@ -229,6 +229,109 @@ func TestReactionService_ListLikes(t *testing.T) {
 	})
 }
 
+func TestReactionService_GetReactionStatus(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+	episodeID := uuid.New()
+
+	t.Run("リアクション済みの場合 reactionType を返す", func(t *testing.T) {
+		mockRepo := new(mockReactionRepository)
+		mockStorage := new(mockStorageClient)
+
+		reaction := &model.Reaction{
+			ID:           uuid.New(),
+			UserID:       userID,
+			EpisodeID:    episodeID,
+			ReactionType: model.ReactionTypeLike,
+			CreatedAt:    time.Now(),
+		}
+		mockRepo.On("FindByUserIDAndEpisodeID", mock.Anything, userID, episodeID).Return(reaction, nil)
+
+		svc := NewReactionService(mockRepo, mockStorage)
+		result, err := svc.GetReactionStatus(ctx, userID.String(), episodeID.String())
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.NotNil(t, result.Data.ReactionType)
+		assert.Equal(t, "like", *result.Data.ReactionType)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("bad リアクションの場合 bad を返す", func(t *testing.T) {
+		mockRepo := new(mockReactionRepository)
+		mockStorage := new(mockStorageClient)
+
+		reaction := &model.Reaction{
+			ID:           uuid.New(),
+			UserID:       userID,
+			EpisodeID:    episodeID,
+			ReactionType: model.ReactionTypeBad,
+			CreatedAt:    time.Now(),
+		}
+		mockRepo.On("FindByUserIDAndEpisodeID", mock.Anything, userID, episodeID).Return(reaction, nil)
+
+		svc := NewReactionService(mockRepo, mockStorage)
+		result, err := svc.GetReactionStatus(ctx, userID.String(), episodeID.String())
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.NotNil(t, result.Data.ReactionType)
+		assert.Equal(t, "bad", *result.Data.ReactionType)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("未リアクションの場合 reactionType が nil を返す", func(t *testing.T) {
+		mockRepo := new(mockReactionRepository)
+		mockStorage := new(mockStorageClient)
+
+		mockRepo.On("FindByUserIDAndEpisodeID", mock.Anything, userID, episodeID).Return(nil, apperror.ErrNotFound.WithMessage("リアクションが見つかりません"))
+
+		svc := NewReactionService(mockRepo, mockStorage)
+		result, err := svc.GetReactionStatus(ctx, userID.String(), episodeID.String())
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Nil(t, result.Data.ReactionType)
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("無効な userID の場合はエラーを返す", func(t *testing.T) {
+		mockRepo := new(mockReactionRepository)
+		mockStorage := new(mockStorageClient)
+
+		svc := NewReactionService(mockRepo, mockStorage)
+		result, err := svc.GetReactionStatus(ctx, "invalid-uuid", episodeID.String())
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+	})
+
+	t.Run("無効な episodeID の場合はエラーを返す", func(t *testing.T) {
+		mockRepo := new(mockReactionRepository)
+		mockStorage := new(mockStorageClient)
+
+		svc := NewReactionService(mockRepo, mockStorage)
+		result, err := svc.GetReactionStatus(ctx, userID.String(), "invalid-uuid")
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+	})
+
+	t.Run("リポジトリがエラーを返すとエラーを返す", func(t *testing.T) {
+		mockRepo := new(mockReactionRepository)
+		mockStorage := new(mockStorageClient)
+
+		mockRepo.On("FindByUserIDAndEpisodeID", mock.Anything, userID, episodeID).Return(nil, apperror.ErrInternal.WithMessage("Database error"))
+
+		svc := NewReactionService(mockRepo, mockStorage)
+		result, err := svc.GetReactionStatus(ctx, userID.String(), episodeID.String())
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		mockRepo.AssertExpectations(t)
+	})
+}
+
 func TestReactionService_CreateOrUpdateReaction(t *testing.T) {
 	ctx := context.Background()
 	userID := uuid.New()

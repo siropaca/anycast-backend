@@ -56,6 +56,40 @@ func (h *ReactionHandler) ListLikes(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// GetReactionStatus godoc
+// @Summary リアクション状態取得
+// @Description 指定エピソードに対する自分のリアクション状態を返します
+// @Tags episodes
+// @Accept json
+// @Produce json
+// @Param episodeId path string true "エピソード ID"
+// @Success 200 {object} response.ReactionStatusDataResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /episodes/{episodeId}/reactions [get]
+func (h *ReactionHandler) GetReactionStatus(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	episodeID := c.Param("episodeId")
+	if episodeID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
+		return
+	}
+
+	result, err := h.reactionService.GetReactionStatus(c.Request.Context(), userID, episodeID)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
 // CreateOrUpdateReaction godoc
 // @Summary リアクション登録・更新
 // @Description エピソードにリアクションを登録します（既存の場合は更新）

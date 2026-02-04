@@ -37,3 +37,13 @@ type FollowResponse struct {
 type FollowDataResponse struct {
 	Data FollowResponse `json:"data" validate:"required"`
 }
+
+// フォロー状態のレスポンス
+type FollowStatusResponse struct {
+	Following bool `json:"following" validate:"required"`
+}
+
+// フォロー状態のラッパーレスポンス
+type FollowStatusDataResponse struct {
+	Data FollowStatusResponse `json:"data" validate:"required"`
+}

@@ -191,7 +191,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	contactService := service.NewContactService(contactRepo, slackClient)
 	playlistService := service.NewPlaylistService(playlistRepo, episodeRepo, storageClient)
 	playbackHistoryService := service.NewPlaybackHistoryService(playbackHistoryRepo, episodeRepo, storageClient)
-	followService := service.NewFollowService(followRepo, storageClient)
+	followService := service.NewFollowService(followRepo, userRepo, storageClient)
 	reactionService := service.NewReactionService(reactionRepo, storageClient)
 	recommendationService := service.NewRecommendationService(recommendationRepo, categoryRepo, storageClient)
 	userService := service.NewUserService(userRepo, channelRepo, storageClient)

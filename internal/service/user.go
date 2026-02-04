@@ -6,13 +6,12 @@ import (
 	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/model"
-	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
 // UserService はユーザー関連のビジネスロジックインターフェースを表す
 type UserService interface {
-	GetUser(ctx context.Context, userID string) (*response.PublicUserDataResponse, error)
+	GetUser(ctx context.Context, username string) (*response.PublicUserDataResponse, error)
 }
 
 type userService struct {
@@ -34,19 +33,14 @@ func NewUserService(
 	}
 }
 
-// GetUser は指定されたユーザーの公開プロフィールを取得する
-func (s *userService) GetUser(ctx context.Context, userID string) (*response.PublicUserDataResponse, error) {
-	uid, err := uuid.Parse(userID)
+// GetUser は指定されたユーザー名のユーザーの公開プロフィールを取得する
+func (s *userService) GetUser(ctx context.Context, username string) (*response.PublicUserDataResponse, error) {
+	user, err := s.userRepo.FindByUsernameWithAvatar(ctx, username)
 	if err != nil {
 		return nil, err
 	}
 
-	user, err := s.userRepo.FindByIDWithAvatar(ctx, uid)
-	if err != nil {
-		return nil, err
-	}
-
-	channels, err := s.channelRepo.FindPublishedByUserID(ctx, uid)
+	channels, err := s.channelRepo.FindPublishedByUserID(ctx, user.ID)
 	if err != nil {
 		return nil, err
 	}

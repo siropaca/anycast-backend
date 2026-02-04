@@ -125,6 +125,36 @@ GET /search/users
 
 エピソードへのリアクション機能（like / bad）。同じエピソードには 1 つのリアクションのみ設定可能（排他的）。
 
+## リアクション状態取得
+
+```
+GET /episodes/:episodeId/reactions
+```
+
+指定エピソードに対する自分のリアクション状態を返す。未リアクションの場合は `reactionType` が `null` になる。
+
+**レスポンス（200 OK）:**
+
+リアクション済みの場合:
+```json
+{
+  "data": {
+    "reactionType": "like"
+  }
+}
+```
+
+未リアクションの場合:
+```json
+{
+  "data": {
+    "reactionType": null
+  }
+}
+```
+
+---
+
 ## リアクション登録・更新
 
 ```
@@ -669,10 +699,39 @@ GET /me/playback-history
 
 他のユーザーをフォローする機能。自分自身はフォロー不可。
 
+## フォロー状態取得
+
+```
+GET /users/:username/follow
+```
+
+指定ユーザーをフォローしているかどうかを返す。
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "following": true
+  }
+}
+```
+
+**エラー（404 Not Found）:**
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "ユーザーが見つかりません"
+  }
+}
+```
+
+---
+
 ## フォロー登録
 
 ```
-POST /users/:userId/follow
+POST /users/:username/follow
 ```
 
 **レスポンス（201 Created）:**
@@ -711,7 +770,7 @@ POST /users/:userId/follow
 ## フォロー解除
 
 ```
-DELETE /users/:userId/follow
+DELETE /users/:username/follow
 ```
 
 **レスポンス（204 No Content）:**

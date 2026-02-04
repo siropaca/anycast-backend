@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/model"
@@ -13,6 +14,7 @@ import (
 // ReactionService はリアクション関連のビジネスロジックインターフェースを表す
 type ReactionService interface {
 	ListLikes(ctx context.Context, userID string, limit, offset int) (*response.LikeListWithPaginationResponse, error)
+	GetReactionStatus(ctx context.Context, userID, episodeID string) (*response.ReactionStatusDataResponse, error)
 	CreateOrUpdateReaction(ctx context.Context, userID, episodeID, reactionType string) (*response.ReactionDataResponse, bool, error)
 	DeleteReaction(ctx context.Context, userID, episodeID string) error
 }
@@ -31,6 +33,38 @@ func NewReactionService(
 		reactionRepo:  reactionRepo,
 		storageClient: storageClient,
 	}
+}
+
+// GetReactionStatus は指定エピソードへのリアクション状態を返す
+func (s *reactionService) GetReactionStatus(ctx context.Context, userID, episodeID string) (*response.ReactionStatusDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	reaction, err := s.reactionRepo.FindByUserIDAndEpisodeID(ctx, uid, eid)
+	if err != nil {
+		if apperror.IsCode(err, apperror.CodeNotFound) {
+			return &response.ReactionStatusDataResponse{
+				Data: response.ReactionStatusResponse{
+					ReactionType: nil,
+				},
+			}, nil
+		}
+		return nil, err
+	}
+
+	reactionType := string(reaction.ReactionType)
+	return &response.ReactionStatusDataResponse{
+		Data: response.ReactionStatusResponse{
+			ReactionType: &reactionType,
+		},
+	}, nil
 }
 
 // ListLikes は高評価したエピソード一覧を取得する

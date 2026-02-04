@@ -108,11 +108,12 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 
 	// Follows
 	authenticated.GET("/me/follows", container.FollowHandler.ListFollows)
-	authenticated.POST("/users/:userId/follow", container.FollowHandler.CreateFollow)
-	authenticated.DELETE("/users/:userId/follow", container.FollowHandler.DeleteFollow)
+	authenticated.GET("/users/:username/follow", container.FollowHandler.GetFollowStatus)
+	authenticated.POST("/users/:username/follow", container.FollowHandler.CreateFollow)
+	authenticated.DELETE("/users/:username/follow", container.FollowHandler.DeleteFollow)
 
 	// Users
-	authenticated.GET("/users/:userId", container.UserHandler.GetUser)
+	authenticated.GET("/users/:username", container.UserHandler.GetUser)
 
 	// Likes
 	authenticated.GET("/me/likes", container.ReactionHandler.ListLikes)
@@ -139,6 +140,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.DELETE("/episodes/:episodeId/default-playlist", container.PlaylistHandler.RemoveFromDefaultPlaylist)
 	authenticated.PUT("/episodes/:episodeId/playback", container.PlaybackHistoryHandler.UpdatePlayback)
 	authenticated.DELETE("/episodes/:episodeId/playback", container.PlaybackHistoryHandler.DeletePlayback)
+	authenticated.GET("/episodes/:episodeId/reactions", container.ReactionHandler.GetReactionStatus)
 	authenticated.POST("/episodes/:episodeId/reactions", container.ReactionHandler.CreateOrUpdateReaction)
 	authenticated.DELETE("/episodes/:episodeId/reactions", container.ReactionHandler.DeleteReaction)
 

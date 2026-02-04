@@ -2717,6 +2717,53 @@ const docTemplate = `{
             }
         },
         "/episodes/{episodeId}/reactions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定エピソードに対する自分のリアクション状態を返します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "episodes"
+                ],
+                "summary": "リアクション状態取得",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "エピソード ID",
+                        "name": "episodeId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ReactionStatusDataResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -5227,7 +5274,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/{userId}": {
+        "/users/{username}": {
             "get": {
                 "security": [
                     {
@@ -5248,8 +5295,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "ユーザー ID",
-                        "name": "userId",
+                        "description": "ユーザー名",
+                        "name": "username",
                         "in": "path",
                         "required": true
                     }
@@ -5288,7 +5335,60 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/{userId}/follow": {
+        "/users/{username}/follow": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定ユーザーをフォローしているかどうかを返します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "フォロー状態取得",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ユーザー名",
+                        "name": "username",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.FollowStatusDataResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -5309,8 +5409,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "ユーザー ID",
-                        "name": "userId",
+                        "description": "ユーザー名",
+                        "name": "username",
                         "in": "path",
                         "required": true
                     }
@@ -5368,8 +5468,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "ユーザー ID",
-                        "name": "userId",
+                        "description": "ユーザー名",
+                        "name": "username",
                         "in": "path",
                         "required": true
                     }
@@ -7213,6 +7313,28 @@ const docTemplate = `{
                 }
             }
         },
+        "response.FollowStatusDataResponse": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.FollowStatusResponse"
+                }
+            }
+        },
+        "response.FollowStatusResponse": {
+            "type": "object",
+            "required": [
+                "following"
+            ],
+            "properties": {
+                "following": {
+                    "type": "boolean"
+                }
+            }
+        },
         "response.FollowUserResponse": {
             "type": "object",
             "required": [
@@ -7987,6 +8109,26 @@ const docTemplate = `{
                 },
                 "reactionType": {
                     "type": "string"
+                }
+            }
+        },
+        "response.ReactionStatusDataResponse": {
+            "type": "object",
+            "required": [
+                "data"
+            ],
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/response.ReactionStatusResponse"
+                }
+            }
+        },
+        "response.ReactionStatusResponse": {
+            "type": "object",
+            "properties": {
+                "reactionType": {
+                    "type": "string",
+                    "x-nullable": true
                 }
             }
         },
