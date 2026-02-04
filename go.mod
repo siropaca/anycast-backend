@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go/auth v0.18.1
 	cloud.google.com/go/cloudtasks v1.13.7
 	cloud.google.com/go/storage v1.58.0
+	github.com/anthropics/anthropic-sdk-go v1.20.0
 	github.com/gin-contrib/cors v1.7.6
 	github.com/gin-gonic/gin v1.11.0
 	github.com/go-playground/validator/v10 v10.30.1

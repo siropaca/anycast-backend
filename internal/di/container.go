@@ -59,9 +59,23 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	tokenManager := jwt.NewTokenManager(cfg.AuthSecret)
 
 	// Infrastructure
-	llmClient := llm.NewOpenAIClient(cfg.OpenAIAPIKey)
-
 	log := logger.Default()
+
+	llmClient, err := llm.NewClient(llm.ClientConfig{
+		Provider:          llm.Provider(cfg.LLMProvider),
+		OpenAIAPIKey:      cfg.OpenAIAPIKey,
+		OpenAIModel:       cfg.LLMModel,
+		ClaudeAPIKey:      cfg.ClaudeAPIKey,
+		ClaudeModel:       cfg.LLMModel,
+		GeminiProjectID:   cfg.GoogleCloudProjectID,
+		GeminiLocation:    cfg.GeminiLLMLocation,
+		GeminiModel:       cfg.LLMModel,
+		GeminiCredentials: cfg.GoogleCloudCredentialsJSON,
+	})
+	if err != nil {
+		log.Error("failed to create LLM client", "error", err)
+		os.Exit(1)
+	}
 
 	// Storage クライアント（GCS）
 	storageClient, err := storage.NewGCSClient(ctx, cfg.GoogleCloudStorageBucketName, cfg.GoogleCloudCredentialsJSON)
@@ -143,7 +157,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	categoryService := service.NewCategoryService(categoryRepo, storageClient)
 	episodeService := service.NewEpisodeService(episodeRepo, channelRepo, scriptLineRepo, audioRepo, imageRepo, bgmRepo, systemBgmRepo, storageClient, ttsClient)
 	scriptLineService := service.NewScriptLineService(db, scriptLineRepo, episodeRepo, channelRepo)
-	scriptService := service.NewScriptService(db, userRepo, channelRepo, episodeRepo, scriptLineRepo, llmClient, storageClient)
+	scriptService := service.NewScriptService(db, channelRepo, episodeRepo, scriptLineRepo, storageClient)
 	cleanupService := service.NewCleanupService(audioRepo, imageRepo, storageClient)
 	imageService := service.NewImageService(imageRepo, storageClient)
 	audioService := service.NewAudioService(audioRepo, storageClient)

@@ -338,7 +338,7 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 	}
 
 	// LLM で台本生成
-	generatedText, err := s.llmClient.GenerateScript(ctx, sysPrompt, userPrompt)
+	generatedText, err := s.llmClient.Chat(ctx, sysPrompt, userPrompt)
 	if err != nil {
 		return 0, err
 	}
