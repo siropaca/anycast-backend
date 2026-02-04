@@ -27,9 +27,15 @@ type ClientConfig struct {
 	GeminiCredentials string
 }
 
+// ChatOptions は LLM 呼び出しのオプション
+type ChatOptions struct {
+	Temperature *float64
+}
+
 // Client は LLM クライアントのインターフェース
 type Client interface {
 	Chat(ctx context.Context, systemPrompt, userPrompt string) (string, error)
+	ChatWithOptions(ctx context.Context, systemPrompt, userPrompt string, opts ChatOptions) (string, error)
 }
 
 // NewClient は設定に応じた LLM クライアントを生成する

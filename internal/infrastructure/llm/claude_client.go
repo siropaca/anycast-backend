@@ -40,6 +40,16 @@ func newClaudeClient(apiKey, model string) Client {
 
 // Chat はシステムプロンプトとユーザープロンプトを使って LLM と対話する
 func (c *claudeClient) Chat(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
+	return c.ChatWithOptions(ctx, systemPrompt, userPrompt, ChatOptions{})
+}
+
+// ChatWithOptions はオプション付きで LLM と対話する
+func (c *claudeClient) ChatWithOptions(ctx context.Context, systemPrompt, userPrompt string, opts ChatOptions) (string, error) {
+	temp := defaultTemperature
+	if opts.Temperature != nil {
+		temp = *opts.Temperature
+	}
+
 	return retryWithBackoff(ctx, "Claude", func() (string, error) {
 		message, err := c.client.Messages.New(ctx, anthropic.MessageNewParams{
 			MaxTokens: claudeMaxTokens,
@@ -52,7 +62,7 @@ func (c *claudeClient) Chat(ctx context.Context, systemPrompt, userPrompt string
 					anthropic.NewTextBlock(prompt.Compress(userPrompt)),
 				),
 			},
-			Temperature: anthropic.Float(defaultTemperature),
+			Temperature: anthropic.Float(temp),
 		})
 		if err != nil {
 			return "", err

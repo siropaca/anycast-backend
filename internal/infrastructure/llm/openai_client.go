@@ -45,6 +45,16 @@ func newOpenAIClient(apiKey, model string) Client {
 
 // Chat はシステムプロンプトとユーザープロンプトを使って LLM と対話する
 func (c *openAIClient) Chat(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
+	return c.ChatWithOptions(ctx, systemPrompt, userPrompt, ChatOptions{})
+}
+
+// ChatWithOptions はオプション付きで LLM と対話する
+func (c *openAIClient) ChatWithOptions(ctx context.Context, systemPrompt, userPrompt string, opts ChatOptions) (string, error) {
+	temp := defaultTemperature
+	if opts.Temperature != nil {
+		temp = *opts.Temperature
+	}
+
 	return retryWithBackoff(ctx, "OpenAI", func() (string, error) {
 		resp, err := c.client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
 			Model: c.model,
@@ -52,7 +62,7 @@ func (c *openAIClient) Chat(ctx context.Context, systemPrompt, userPrompt string
 				openai.SystemMessage(prompt.Compress(systemPrompt)),
 				openai.UserMessage(prompt.Compress(userPrompt)),
 			},
-			Temperature: openai.Float(defaultTemperature),
+			Temperature: openai.Float(temp),
 		})
 		if err != nil {
 			return "", err

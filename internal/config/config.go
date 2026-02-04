@@ -41,13 +41,9 @@ type Config struct {
 	GoogleCloudTasksWorkerURL           string
 	// Gemini TTS の location（デフォルト: us-central1）
 	GoogleCloudTTSLocation string
-	// LLM プロバイダ（openai / claude / gemini）
-	LLMProvider string
-	// LLM モデル名（空 = プロバイダデフォルト）
-	LLMModel string
 	// Claude API キー
 	ClaudeAPIKey string
-	// Gemini LLM のロケーション（デフォルト: us-central1）
+	// Gemini LLM のロケーション（デフォルト: asia-northeast1）
 	GeminiLLMLocation string
 	// Slack Webhook URL（空の場合は通知無効）
 	SlackWebhookURL string
@@ -71,10 +67,8 @@ func Load() *Config {
 		GoogleCloudTasksServiceAccountEmail: getEnv("GOOGLE_CLOUD_TASKS_SERVICE_ACCOUNT_EMAIL", ""),
 		GoogleCloudTasksWorkerURL:           getEnv("GOOGLE_CLOUD_TASKS_WORKER_URL", ""),
 		GoogleCloudTTSLocation:              getEnv("GOOGLE_CLOUD_TTS_LOCATION", "us-central1"),
-		LLMProvider:                         getEnv("LLM_PROVIDER", "openai"),
-		LLMModel:                            getEnv("LLM_MODEL", ""),
 		ClaudeAPIKey:                        getEnv("CLAUDE_API_KEY", ""),
-		GeminiLLMLocation:                   getEnv("GEMINI_LLM_LOCATION", "us-central1"),
+		GeminiLLMLocation:                   getEnv("GEMINI_LLM_LOCATION", "asia-northeast1"),
 		SlackWebhookURL:                     getEnv("SLACK_WEBHOOK_URL", ""),
 	}
 }

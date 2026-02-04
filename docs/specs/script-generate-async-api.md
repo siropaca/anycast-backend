@@ -277,29 +277,37 @@ canceled      canceling ───▶ canceled
 
 ### 進捗の目安
 
-| 進捗 | 処理内容 |
-|------|---------|
-| 0% | ジョブ作成 |
-| 10% | チャンネル・エピソード・ユーザー情報の読み込み |
-| 20% | LLM 用プロンプトの構築 |
-| 30% | AI による台本生成開始 |
-| 70% | 生成テキストのパース |
-| 85% | 台本行のデータベース保存 |
-| 95% | 完了処理 |
-| 100% | 完了 |
+多段階ワークフローで処理する。詳細は [台本生成プロンプトワークフロー仕様](./script-prompt-workflow.md) を参照。
+
+| 進捗 | Phase | 処理内容 |
+|------|-------|---------|
+| 0% | - | ジョブ作成 |
+| 5% | - | チャンネル・エピソード・ユーザー情報の読み込み |
+| 10% | Phase 1 | ブリーフ正規化 |
+| 15% | Phase 2 | 素材+アウトライン生成（LLM 1回目）開始 |
+| 35% | Phase 2 | 素材+アウトライン生成 完了 |
+| 40% | Phase 3 | 台本ドラフト生成（LLM 2回目）開始 |
+| 75% | Phase 3 | 台本ドラフト生成 完了 |
+| 80% | Phase 4 | QA 定量チェック |
+| 85% | Phase 4 | パッチ修正（LLM 3回目、条件付き） |
+| 90% | - | 台本パース・DB 保存 |
+| 95% | - | 完了処理 |
+| 100% | - | 完了 |
 
 ### 処理詳細
 
 1. **データ読み込み**: チャンネル、エピソード、ユーザー情報を取得
-2. **プロンプト構築**: ユーザー設定、チャンネル設定、キャラクター情報、エピソード情報を組み合わせてプロンプトを生成
-3. **LLM 生成**: OpenAI GPT で台本テキストを生成
-4. **テキストパース**: 生成されたテキストを `話者名: セリフ` 形式でパース
-5. **データ保存**: 既存の台本行を削除し、新しい台本行をバッチ作成
-6. **エピソード更新**: `userPrompt` を更新
+2. **ブリーフ正規化** (Phase 1): User/Channel/Episode/Character 情報を構造化スロットに正規化
+3. **素材+アウトライン生成** (Phase 2): LLM で具体例・落とし穴・疑問を生成し、3ブロック構成のアウトラインを設計
+4. **台本ドラフト生成** (Phase 3): アウトラインと素材を元に台本を生成
+5. **QA 検証+パッチ修正** (Phase 4): コードで定量チェック → 不合格時のみ LLM で局所修正
+6. **データ保存**: 既存の台本行を削除し、新しい台本行をバッチ作成
+7. **エピソード更新**: `userPrompt` を更新
 
 ### システムプロンプト
 
-感情タグの有無で 2 種類のシステムプロンプトを使い分ける。
+`talk_mode`（dialogue/monologue）と感情タグの有無で Phase 別のプロンプトを使い分ける。
+詳細は [台本生成プロンプトワークフロー仕様](./script-prompt-workflow.md) を参照。
 
 **出力形式（感情なし）**:
 ```
@@ -314,22 +322,31 @@ canceled      canceling ───▶ canceled
 ### 台本生成ガイドライン
 
 - 1 分あたり約 300 文字程度のセリフ量
-- 1 つのセリフは 20〜80 文字程度
-- セリフは必ず句点（。）で終わる
+- 1 つのセリフは 20〜80 文字程度（許容範囲: 10〜120 文字）
+- セリフの末尾に句点（。）は付けない
+- セリフ中に句点を含めない（1行に1文）
 - 自然なフィラー（「えーと」「まあ」等）を適度に含める
-- 設定箇所: `internal/service/script_job.go`
+- 設定箇所: `internal/service/script_prompts.go`
 
 ## 外部サービス
 
-### OpenAI API
+### LLM API
 
-| 設定 | 値 | 説明 |
-|------|------|------|
-| モデル | gpt-4o | GPT-4o モデル |
-| Temperature | 0.8 | 創造性パラメータ |
-| Max Tokens | 16384 | 最大出力トークン数 |
+マルチプロバイダ対応（OpenAI / Claude / Gemini）。`llm.Registry` で複数プロバイダのクライアントを管理し、Phase ごとに使用するプロバイダを切り替え可能。
 
-- 設定箇所: `internal/infrastructure/llm/openai_client.go`
+- API キーが設定されたプロバイダが起動時に自動登録される
+- Phase ごとの設定（プロバイダ・Temperature）は `internal/service/script_prompts.go` の `PhaseConfig` で定義
+- 起動時に Phase 設定で必要なプロバイダが未登録の場合はエラーで起動失敗する
+
+Phase 別設定:
+| Phase | Provider | Temperature | 理由 |
+|-------|----------|-------------|------|
+| Phase 2 | OpenAI | 0.9 | 創造的な素材生成 |
+| Phase 3 | OpenAI | 0.7 | 内容の忠実性と自然さのバランス |
+| Phase 4 | OpenAI | 0.5 | 局所修正のため低め |
+
+- プロバイダ設定箇所: `internal/service/script_prompts.go`（`PhaseConfig`）
+- クライアント実装: `internal/infrastructure/llm/`
 
 ### Google Cloud Tasks
 
@@ -414,10 +431,16 @@ CREATE TABLE script_lines (
 | `internal/handler/script_job.go` | REST API ハンドラー |
 | `internal/handler/worker.go` | ワーカーエンドポイント |
 | `internal/handler/websocket.go` | WebSocket ハンドラー |
-| `internal/service/script_job.go` | ビジネスロジック |
+| `internal/service/script_job.go` | 多段階ワークフロー実行ロジック |
+| `internal/service/script_prompts.go` | Phase 2/3/4 のシステムプロンプト定義 |
 | `internal/repository/script_job.go` | データベースアクセス |
 | `internal/model/script_job.go` | データモデル |
-| `internal/infrastructure/llm/openai_client.go` | OpenAI クライアント |
+| `internal/infrastructure/llm/client.go` | LLM クライアントインターフェース |
+| `internal/infrastructure/llm/registry.go` | LLM プロバイダ Registry |
 | `internal/infrastructure/cloudtasks/client.go` | Cloud Tasks クライアント |
 | `internal/infrastructure/websocket/hub.go` | WebSocket ハブ |
 | `internal/pkg/script/parser.go` | 台本テキストパーサー |
+| `internal/pkg/script/brief.go` | ブリーフ正規化（Phase 1） |
+| `internal/pkg/script/grounding.go` | Phase 2 出力構造体とパーサー |
+| `internal/pkg/script/validator.go` | QA 定量チェック（Phase 4） |
+| `internal/pkg/script/json_extractor.go` | LLM 出力からの JSON 抽出 |

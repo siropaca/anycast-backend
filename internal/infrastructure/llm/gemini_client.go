@@ -58,6 +58,16 @@ func newGeminiClient(projectID, location, model, credentialsJSON string) (Client
 
 // Chat はシステムプロンプトとユーザープロンプトを使って LLM と対話する
 func (c *geminiClient) Chat(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
+	return c.ChatWithOptions(ctx, systemPrompt, userPrompt, ChatOptions{})
+}
+
+// ChatWithOptions はオプション付きで LLM と対話する
+func (c *geminiClient) ChatWithOptions(ctx context.Context, systemPrompt, userPrompt string, opts ChatOptions) (string, error) {
+	temp := defaultTemperature
+	if opts.Temperature != nil {
+		temp = *opts.Temperature
+	}
+
 	return retryWithBackoff(ctx, "Gemini", func() (string, error) {
 		resp, err := c.client.Models.GenerateContent(ctx,
 			c.model,
@@ -66,7 +76,7 @@ func (c *geminiClient) Chat(ctx context.Context, systemPrompt, userPrompt string
 				SystemInstruction: &genai.Content{
 					Parts: []*genai.Part{{Text: prompt.Compress(systemPrompt)}},
 				},
-				Temperature: genai.Ptr(float32(defaultTemperature)),
+				Temperature: genai.Ptr(float32(temp)),
 			},
 		)
 		if err != nil {

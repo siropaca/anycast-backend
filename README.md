@@ -17,7 +17,7 @@ AIポッドキャスト作成・配信プラットフォーム「Anycast」の�
 - **DB**: PostgreSQL
 - **ストレージ**: GCS（Google Cloud Storage）
 - **TTS**: Gemini TTS (Vertex AI)
-- **LLM**: OpenAI / Claude / Gemini（環境変数で切替可能）
+- **LLM**: OpenAI / Claude / Gemini（Phase ごとにプロバイダ切替可能）
 - **ジョブキュー**: Google Cloud Tasks
 - **WebSocket**: gorilla/websocket
 - **音声処理**: FFmpeg
@@ -88,11 +88,9 @@ cp .env.example .env        # 環境変数ファイルの作成
 | `APP_ENV` | 環境（development / production） | development |
 | `AUTH_SECRET` | JWT 検証用シークレットキー（フロントエンドの AUTH_SECRET と同じ値） | - |
 | `CORS_ALLOWED_ORIGINS` | CORS 許可オリジン（カンマ区切りで複数指定可能） | http://localhost:3210 |
-| `LLM_PROVIDER` | LLM プロバイダ（`openai` / `claude` / `gemini`） | openai |
-| `LLM_MODEL` | LLM モデル名（空の場合はプロバイダのデフォルトモデルを使用） | - |
-| `OPENAI_API_KEY` | OpenAI API キー（`LLM_PROVIDER=openai` の場合に必要） | - |
-| `CLAUDE_API_KEY` | Claude API キー（`LLM_PROVIDER=claude` の場合に必要） | - |
-| `GEMINI_LLM_LOCATION` | Gemini LLM のロケーション（`LLM_PROVIDER=gemini` の場合に使用） | us-central1 |
+| `OPENAI_API_KEY` | OpenAI API キー（設定すると OpenAI プロバイダが有効化される） | - |
+| `CLAUDE_API_KEY` | Claude API キー（設定すると Claude プロバイダが有効化される） | - |
+| `GEMINI_LLM_LOCATION` | Gemini LLM のロケーション | asia-northeast1 |
 | `GOOGLE_CLOUD_PROJECT_ID` | GCP プロジェクト ID | - |
 | `GOOGLE_CLOUD_CREDENTIALS_JSON` | サービスアカウントの JSON キー | - |
 | `GOOGLE_CLOUD_STORAGE_BUCKET_NAME` | GCS バケット名 | - |

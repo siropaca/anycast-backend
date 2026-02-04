@@ -61,20 +61,58 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	// Infrastructure
 	log := logger.Default()
 
-	llmClient, err := llm.NewClient(llm.ClientConfig{
-		Provider:          llm.Provider(cfg.LLMProvider),
-		OpenAIAPIKey:      cfg.OpenAIAPIKey,
-		OpenAIModel:       cfg.LLMModel,
-		ClaudeAPIKey:      cfg.ClaudeAPIKey,
-		ClaudeModel:       cfg.LLMModel,
-		GeminiProjectID:   cfg.GoogleCloudProjectID,
-		GeminiLocation:    cfg.GeminiLLMLocation,
-		GeminiModel:       cfg.LLMModel,
-		GeminiCredentials: cfg.GoogleCloudCredentialsJSON,
-	})
-	if err != nil {
-		log.Error("failed to create LLM client", "error", err)
-		os.Exit(1)
+	llmRegistry := llm.NewRegistry()
+
+	// OpenAI（API キーがあれば登録）
+	if cfg.OpenAIAPIKey != "" {
+		openaiClient, err := llm.NewClient(llm.ClientConfig{
+			Provider:     llm.ProviderOpenAI,
+			OpenAIAPIKey: cfg.OpenAIAPIKey,
+		})
+		if err != nil {
+			log.Error("failed to create OpenAI client", "error", err)
+			os.Exit(1)
+		}
+		llmRegistry.Register(llm.ProviderOpenAI, openaiClient)
+		log.Info("LLM provider registered", "provider", "openai")
+	}
+
+	// Claude（API キーがあれば登録）
+	if cfg.ClaudeAPIKey != "" {
+		claudeClient, err := llm.NewClient(llm.ClientConfig{
+			Provider:     llm.ProviderClaude,
+			ClaudeAPIKey: cfg.ClaudeAPIKey,
+		})
+		if err != nil {
+			log.Error("failed to create Claude client", "error", err)
+			os.Exit(1)
+		}
+		llmRegistry.Register(llm.ProviderClaude, claudeClient)
+		log.Info("LLM provider registered", "provider", "claude")
+	}
+
+	// Gemini（プロジェクト ID があれば登録）
+	if cfg.GoogleCloudProjectID != "" {
+		geminiClient, err := llm.NewClient(llm.ClientConfig{
+			Provider:          llm.ProviderGemini,
+			GeminiProjectID:   cfg.GoogleCloudProjectID,
+			GeminiLocation:    cfg.GeminiLLMLocation,
+			GeminiCredentials: cfg.GoogleCloudCredentialsJSON,
+		})
+		if err != nil {
+			log.Error("failed to create Gemini client", "error", err)
+			os.Exit(1)
+		}
+		llmRegistry.Register(llm.ProviderGemini, geminiClient)
+		log.Info("LLM provider registered", "provider", "gemini")
+	}
+
+	// Phase 設定で使用するプロバイダが登録されているかバリデーション
+	for _, pc := range service.PhaseConfigs() {
+		if !llmRegistry.Has(pc.Provider) {
+			log.Error("required LLM provider is not configured", "provider", pc.Provider)
+			os.Exit(1)
+		}
 	}
 
 	// Storage クライアント（GCS）
@@ -183,7 +221,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		channelRepo,
 		episodeRepo,
 		scriptLineRepo,
-		llmClient,
+		llmRegistry,
 		tasksClient,
 		wsHub,
 	)

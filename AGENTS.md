@@ -7,7 +7,8 @@
 | [docs/specs/domain-model.md](docs/specs/domain-model.md) | 仕様書（DDD ベースのドメインモデル定義） |
 | [docs/specs/database.md](docs/specs/database.md) | データベース設計 |
 | [docs/specs/system.md](docs/specs/system.md) | システム設定（タイムアウト、外部サービス連携など） |
-| [docs/specs/script-generate-api.md](docs/specs/script-generate-api.md) | 台本生成 API 詳細設計 |
+| [docs/specs/script-generate-async-api.md](docs/specs/script-generate-async-api.md) | 台本生成 API（非同期）詳細設計 |
+| [docs/specs/script-prompt-workflow.md](docs/specs/script-prompt-workflow.md) | 台本生成プロンプトワークフロー仕様（多段階生成・品質検証） |
 | [docs/api/README.md](docs/api/README.md) | API 設計 |
 | [docs/adr/](docs/adr/) | Architecture Decision Records |
 
@@ -80,6 +81,58 @@
 - コミット前に `make fmt` でフォーマットを実行する
 - コミット前に `make lint` で静的解析を実行する
 - PR 作成時は `.github/PULL_REQUEST_TEMPLATE.md` をテンプレートとして使用する
+
+## API の手動テスト
+
+### 前提条件
+
+- Docker で DB が起動していること（`docker compose up -d`）
+- シードデータが投入済みであること（`make seed`）
+
+### 手順
+
+1. **サーバー起動**: `make dev`（ホットリロード）または `make run`
+2. **JWT トークン取得**: `make token` を実行し、出力されたトークンを使用する
+3. **API 呼び出し**: `curl` で実行する
+
+### シードデータのテスト用 ID
+
+| リソース | ID | 説明 |
+|----------|------|------|
+| test_user | `8def69af-dae9-4641-a0e5-100107626933` | `make token` で生成されるユーザー |
+| channel (テックトーク) | `ea9a266e-f532-417c-8916-709d0233941c` | test_user 所有、キャラクター2名 |
+| episode (AI の未来を語る) | `eb960304-f86e-4364-be5d-d3d5126c9601` | テックトーク内のエピソード |
+
+### curl の例
+
+```bash
+# トークン取得
+TOKEN=$(make token 2>&1)
+
+# 台本生成（非同期）
+curl -s -X POST "http://localhost:8081/api/v1/channels/ea9a266e-f532-417c-8916-709d0233941c/episodes/eb960304-f86e-4364-be5d-d3d5126c9601/script/generate-async" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"prompt":"AIの未来について","durationMinutes":3,"withEmotion":true}' | jq .
+
+# ジョブ状態確認
+curl -s "http://localhost:8081/api/v1/script-jobs/{JOB_ID}" \
+  -H "Authorization: Bearer $TOKEN" | jq .
+
+# 自分のジョブ一覧
+curl -s "http://localhost:8081/api/v1/me/script-jobs" \
+  -H "Authorization: Bearer $TOKEN" | jq .
+
+# 自分のジョブ一覧（ステータスフィルタ）
+curl -s "http://localhost:8081/api/v1/me/script-jobs?status=completed" \
+  -H "Authorization: Bearer $TOKEN" | jq .
+```
+
+### 注意事項
+
+- `make token` の出力には stderr の情報が混ざる場合があるため、`TOKEN=$(make token 2>&1)` で取得する
+- 台本生成は非同期処理のため、レスポンスで返る `jobId` を使ってジョブ状態をポーリングする
+- ローカル環境では Cloud Tasks がないため goroutine で直接実行される
 
 ## 用語
 

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -38,7 +39,7 @@ type scriptJobService struct {
 	channelRepo    repository.ChannelRepository
 	episodeRepo    repository.EpisodeRepository
 	scriptLineRepo repository.ScriptLineRepository
-	llmClient      llm.Client
+	llmRegistry    *llm.Registry
 	tasksClient    cloudtasks.Client
 	wsHub          *websocket.Hub
 }
@@ -51,7 +52,7 @@ func NewScriptJobService(
 	channelRepo repository.ChannelRepository,
 	episodeRepo repository.EpisodeRepository,
 	scriptLineRepo repository.ScriptLineRepository,
-	llmClient llm.Client,
+	llmRegistry *llm.Registry,
 	tasksClient cloudtasks.Client,
 	wsHub *websocket.Hub,
 ) ScriptJobService {
@@ -62,7 +63,7 @@ func NewScriptJobService(
 		channelRepo:    channelRepo,
 		episodeRepo:    episodeRepo,
 		scriptLineRepo: scriptLineRepo,
-		llmClient:      llmClient,
+		llmRegistry:    llmRegistry,
 		tasksClient:    tasksClient,
 		wsHub:          wsHub,
 	}
@@ -292,12 +293,14 @@ func (s *scriptJobService) ExecuteJob(ctx context.Context, jobID string) error {
 	return nil
 }
 
-// executeJobInternal は台本生成処理を実行する
+// executeJobInternal は台本生成処理を多段階ワークフローで実行する
+//
+// Phase 1: ブリーフ正規化 → Phase 2: 素材+アウトライン → Phase 3: 台本ドラフト → Phase 4: QA+パッチ
 func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.ScriptJob) (int, error) {
 	log := logger.FromContext(ctx)
 
-	// 進捗: 10%
-	s.updateProgress(ctx, job, 10, "データを準備中...")
+	// 進捗: 5% - データ取得
+	s.updateProgress(ctx, job, 5, "データを準備中...")
 
 	// チャンネルを取得（キャラクター情報含む）
 	channel, err := s.channelRepo.FindByID(ctx, job.Episode.ChannelID)
@@ -311,40 +314,11 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 		return 0, err
 	}
 
-	// ユーザー情報を取得（userPrompt 用）
+	// ユーザー情報を取得
 	user, err := s.userRepo.FindByID(ctx, job.UserID)
 	if err != nil {
 		return 0, err
 	}
-
-	// 進捗: 20%
-	s.updateProgress(ctx, job, 20, "プロンプトを構築中...")
-
-	// withEmotion に応じてシステムプロンプトを選択
-	sysPrompt := systemPromptWithoutEmotion
-	if job.WithEmotion {
-		sysPrompt = systemPromptWithEmotion
-	}
-
-	// LLM 用ユーザープロンプトを構築
-	userPrompt := s.buildUserPrompt(user, channel, episode, job.Prompt, job.DurationMinutes)
-
-	// 進捗: 30%
-	s.updateProgress(ctx, job, 30, "AI で台本を生成中...")
-
-	// キャンセルチェック（LLM 開始前）
-	if err := s.checkCanceled(ctx, job); err != nil {
-		return 0, err
-	}
-
-	// LLM で台本生成
-	generatedText, err := s.llmClient.Chat(ctx, sysPrompt, userPrompt)
-	if err != nil {
-		return 0, err
-	}
-
-	// 進捗: 70%
-	s.updateProgress(ctx, job, 70, "台本をパース中...")
 
 	// 許可された話者名のリストを作成
 	allowedSpeakers := make([]string, len(channel.ChannelCharacters))
@@ -353,6 +327,72 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 		allowedSpeakers[i] = cc.Character.Name
 		speakerMap[cc.Character.Name] = &channel.ChannelCharacters[i].Character
 	}
+
+	// ===== Phase 1: ブリーフ正規化 =====
+	s.updateProgress(ctx, job, 10, "ブリーフを正規化中...")
+
+	briefInput := script.BriefInput{
+		EpisodeTitle:       episode.Title,
+		EpisodeDescription: episode.Description,
+		EpisodeGoal:        episode.UserPrompt,
+		DurationMinutes:    job.DurationMinutes,
+		ChannelName:        channel.Name,
+		ChannelDescription: channel.Description,
+		ChannelCategory:    channel.Category.Name,
+		ChannelStyleGuide:  channel.UserPrompt,
+		MasterGuide:        user.UserPrompt,
+		Theme:              job.Prompt,
+		WithEmotion:        job.WithEmotion,
+	}
+
+	for _, cc := range channel.ChannelCharacters {
+		briefInput.Characters = append(briefInput.Characters, script.BriefInputCharacter{
+			Name:    cc.Character.Name,
+			Gender:  string(cc.Character.Voice.Gender),
+			Persona: cc.Character.Persona,
+		})
+	}
+
+	brief := script.NormalizeBrief(briefInput)
+
+	briefJSON, err := brief.ToJSON()
+	if err != nil {
+		return 0, fmt.Errorf("ブリーフの JSON 変換に失敗: %w", err)
+	}
+
+	log.Info("brief normalized", "talk_mode", brief.Constraints.TalkMode, "characters", len(brief.Characters))
+	log.Debug("Phase 1: brief JSON", "brief", briefJSON)
+
+	// ===== Phase 2: 素材+アウトライン生成 =====
+	s.updateProgress(ctx, job, 15, "素材とアウトラインを生成中...")
+
+	// キャンセルチェック（Phase 2 開始前）
+	if err := s.checkCanceled(ctx, job); err != nil {
+		return 0, err
+	}
+
+	phase2Output, err := s.executePhase2(ctx, briefJSON)
+	if err != nil {
+		return 0, err
+	}
+
+	s.updateProgress(ctx, job, 35, "素材とアウトライン生成完了...")
+
+	// ===== Phase 3: 台本ドラフト生成 =====
+	s.updateProgress(ctx, job, 40, "台本ドラフトを生成中...")
+
+	// キャンセルチェック（Phase 3 開始前）
+	if err := s.checkCanceled(ctx, job); err != nil {
+		return 0, err
+	}
+
+	generatedText, err := s.executePhase3(ctx, brief, phase2Output)
+	if err != nil {
+		return 0, err
+	}
+
+	// 進捗: 75% - Phase 3 完了 + パース
+	s.updateProgress(ctx, job, 75, "台本をパース中...")
 
 	// 生成されたテキストをパース
 	parseResult := script.Parse(generatedText, allowedSpeakers)
@@ -364,8 +404,13 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 
 	log.Info("script parsed", "lines", len(parseResult.Lines), "errors", len(parseResult.Errors))
 
-	// 進捗: 85%
-	s.updateProgress(ctx, job, 85, "台本を保存中...")
+	// ===== Phase 4: QA 検証+パッチ修正 =====
+	s.updateProgress(ctx, job, 80, "品質チェック中...")
+
+	parsedLines := s.executePhase4(ctx, job, parseResult.Lines, brief, allowedSpeakers, generatedText)
+
+	// 進捗: 90% - DB 保存
+	s.updateProgress(ctx, job, 90, "台本を保存中...")
 
 	// キャンセルチェック（保存前）
 	if err := s.checkCanceled(ctx, job); err != nil {
@@ -373,8 +418,8 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 	}
 
 	// ScriptLine モデルに変換
-	scriptLines := make([]model.ScriptLine, len(parseResult.Lines))
-	for i, line := range parseResult.Lines {
+	scriptLines := make([]model.ScriptLine, len(parsedLines))
+	for i, line := range parsedLines {
 		speaker := speakerMap[line.SpeakerName]
 		scriptLines[i] = model.ScriptLine{
 			EpisodeID: job.EpisodeID,
@@ -387,21 +432,17 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 
 	// トランザクションで既存行削除・新規作成・エピソード更新を実行
 	err = s.db.Transaction(func(tx *gorm.DB) error {
-		// トランザクション内で使うリポジトリを作成
 		txScriptLineRepo := repository.NewScriptLineRepository(tx)
 		txEpisodeRepo := repository.NewEpisodeRepository(tx)
 
-		// 既存の台本行を削除
 		if err := txScriptLineRepo.DeleteByEpisodeID(ctx, job.EpisodeID); err != nil {
 			return err
 		}
 
-		// 新しい台本行を一括作成
 		if _, err := txScriptLineRepo.CreateBatch(ctx, scriptLines); err != nil {
 			return err
 		}
 
-		// episode.userPrompt を更新
 		episode.UserPrompt = job.Prompt
 		if err := txEpisodeRepo.Update(ctx, episode); err != nil {
 			return err
@@ -414,7 +455,7 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 		return 0, err
 	}
 
-	// 進捗: 95%
+	// 進捗: 95% - 完了処理
 	s.updateProgress(ctx, job, 95, "完了処理中...")
 
 	// キャンセルチェック（完了遷移前）
@@ -435,59 +476,183 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 	return len(scriptLines), nil
 }
 
-// buildUserPrompt は LLM 用のユーザープロンプトを構築する
-// プロンプトは User → Channel → Episode の順で結合（追記）される
-func (s *scriptJobService) buildUserPrompt(user *model.User, channel *model.Channel, episode *model.Episode, prompt string, durationMinutes int) string {
+// executePhase2 は Phase 2（素材+アウトライン生成）を実行する
+//
+// 最大2回リトライし、全失敗時はエラーを返す
+func (s *scriptJobService) executePhase2(ctx context.Context, briefJSON string) (*script.Phase2Output, error) {
+	log := logger.FromContext(ctx)
+
+	client, err := s.llmRegistry.Get(phase2Config.Provider)
+	if err != nil {
+		return nil, fmt.Errorf("Phase 2 LLM client: %w", err)
+	}
+
+	temp := phase2Config.Temperature
+	opts := llm.ChatOptions{Temperature: &temp}
+
+	var lastErr error
+	for attempt := 1; attempt <= 2; attempt++ {
+		log.Debug("executing Phase 2", "attempt", attempt, "provider", phase2Config.Provider)
+
+		log.Debug("Phase 2: system prompt", "prompt", phase2SystemPrompt)
+		log.Debug("Phase 2: user prompt", "prompt", briefJSON)
+
+		result, err := client.ChatWithOptions(ctx, phase2SystemPrompt, briefJSON, opts)
+		if err != nil {
+			log.Warn("Phase 2 LLM call failed", "attempt", attempt, "error", err)
+			lastErr = err
+			continue
+		}
+
+		log.Debug("Phase 2: LLM response", "response", result)
+
+		output, err := script.ParsePhase2Output(result)
+		if err != nil {
+			log.Warn("Phase 2 output parse failed", "attempt", attempt, "error", err, "response_length", len(result))
+			lastErr = err
+			continue
+		}
+
+		log.Info("Phase 2 completed", "attempt", attempt)
+		return output, nil
+	}
+
+	log.Error("Phase 2 failed after retries", "error", lastErr)
+	return nil, apperror.ErrGenerationFailed.WithMessage("素材とアウトラインの生成に失敗しました").WithError(lastErr)
+}
+
+// executePhase3 は Phase 3（台本ドラフト生成）を実行する
+func (s *scriptJobService) executePhase3(ctx context.Context, brief script.Brief, phase2 *script.Phase2Output) (string, error) {
+	log := logger.FromContext(ctx)
+
+	client, err := s.llmRegistry.Get(phase3Config.Provider)
+	if err != nil {
+		return "", fmt.Errorf("Phase 3 LLM client: %w", err)
+	}
+
+	sysPrompt := getPhase3SystemPrompt(brief.Constraints.TalkMode, brief.Constraints.WithEmotion)
+	userPrompt := buildPhase3UserPrompt(brief, phase2)
+
+	log.Debug("Phase 3: system prompt", "prompt", sysPrompt)
+	log.Debug("Phase 3: user prompt", "prompt", userPrompt)
+
+	temp := phase3Config.Temperature
+	opts := llm.ChatOptions{Temperature: &temp}
+
+	result, err := client.ChatWithOptions(ctx, sysPrompt, userPrompt, opts)
+	if err != nil {
+		return "", err
+	}
+
+	log.Debug("Phase 3: LLM response", "response", result)
+
+	return result, nil
+}
+
+// executePhase4 は Phase 4（QA 検証+パッチ修正）を実行する
+//
+// コード定量チェック → 不合格時のみ LLM パッチ修正（最大1回）
+func (s *scriptJobService) executePhase4(ctx context.Context, job *model.ScriptJob, lines []script.ParsedLine, brief script.Brief, allowedSpeakers []string, originalText string) []script.ParsedLine {
+	log := logger.FromContext(ctx)
+
+	config := script.ValidatorConfig{
+		TalkMode:        brief.Constraints.TalkMode,
+		DurationMinutes: brief.Episode.DurationMinutes,
+	}
+
+	// 1回目のチェック
+	result := script.Validate(lines, config)
+	if result.Passed {
+		log.Info("Phase 4: QA check passed")
+		return lines
+	}
+
+	log.Info("Phase 4: QA check failed", "issues", len(result.Issues))
+
+	// キャンセルチェック（パッチ修正前）
+	if err := s.checkCanceled(ctx, job); err != nil {
+		log.Info("Phase 4: canceled before patch")
+		return lines
+	}
+
+	// 進捗: 85% - パッチ修正
+	s.updateProgress(ctx, job, 85, "品質パッチを適用中...")
+
+	// LLM パッチ修正
+	client, err := s.llmRegistry.Get(phase4Config.Provider)
+	if err != nil {
+		log.Warn("Phase 4: LLM client not available", "error", err)
+		return lines
+	}
+
+	patchPrompt := buildPhase4UserPrompt(originalText, result.Issues)
+	temp := phase4Config.Temperature
+	opts := llm.ChatOptions{Temperature: &temp}
+
+	log.Debug("Phase 4: system prompt", "prompt", phase4SystemPrompt)
+	log.Debug("Phase 4: user prompt", "prompt", patchPrompt)
+
+	patchedText, err := client.ChatWithOptions(ctx, phase4SystemPrompt, patchPrompt, opts)
+	if err != nil {
+		log.Warn("Phase 4: patch LLM call failed", "error", err)
+		return lines
+	}
+
+	log.Debug("Phase 4: LLM response", "response", patchedText)
+
+	// パッチ結果をパース
+	patchedResult := script.Parse(patchedText, allowedSpeakers)
+	if len(patchedResult.Lines) == 0 {
+		log.Warn("Phase 4: patched script parse failed")
+		return lines
+	}
+
+	// 2回目のチェック
+	result2 := script.Validate(patchedResult.Lines, config)
+	if !result2.Passed {
+		log.Warn("Phase 4: patched script still has issues", "issues", len(result2.Issues))
+	} else {
+		log.Info("Phase 4: patched script passed QA")
+	}
+
+	// パッチ後の結果をそのまま採用（合格/不合格に関わらず）
+	return patchedResult.Lines
+}
+
+// buildPhase3UserPrompt は Phase 3 用のユーザープロンプトを構築する
+func buildPhase3UserPrompt(brief script.Brief, phase2 *script.Phase2Output) string {
 	var sb strings.Builder
 
-	// ユーザー設定（ユーザーレベルのプロンプト）
-	if user.UserPrompt != "" {
-		sb.WriteString("## ユーザー設定\n")
-		sb.WriteString(user.UserPrompt)
-		sb.WriteString("\n\n")
-	}
+	// ブリーフ情報
+	briefJSON, _ := brief.ToJSON()
+	sb.WriteString("## ブリーフ\n")
+	sb.WriteString(briefJSON)
+	sb.WriteString("\n\n")
 
-	// チャンネル情報
-	sb.WriteString("## チャンネル情報\n")
-	sb.WriteString(fmt.Sprintf("チャンネル名: %s\n", channel.Name))
-	if channel.Description != "" {
-		sb.WriteString(fmt.Sprintf("説明: %s\n", channel.Description))
-	}
-	sb.WriteString(fmt.Sprintf("カテゴリー: %s\n", channel.Category.Name))
-	sb.WriteString("\n")
+	// Phase 2 の出力を埋め込む
+	phase2JSON, _ := json.Marshal(phase2)
+	sb.WriteString("## 素材とアウトライン\n")
+	sb.WriteString(string(phase2JSON))
 
-	// チャンネル設定
-	if channel.UserPrompt != "" {
-		sb.WriteString("## チャンネル設定\n")
-		sb.WriteString(channel.UserPrompt)
-		sb.WriteString("\n\n")
-	}
+	return sb.String()
+}
 
-	// 登場人物
-	sb.WriteString("## 登場人物\n")
-	for _, cc := range channel.ChannelCharacters {
-		if cc.Character.Persona != "" {
-			sb.WriteString(fmt.Sprintf("- %s（%s）: %s\n", cc.Character.Name, cc.Character.Voice.Gender, cc.Character.Persona))
+// buildPhase4UserPrompt は Phase 4 用のユーザープロンプトを構築する
+func buildPhase4UserPrompt(scriptText string, issues []script.ValidationIssue) string {
+	var sb strings.Builder
+
+	sb.WriteString("## 台本\n")
+	sb.WriteString(scriptText)
+	sb.WriteString("\n\n")
+
+	sb.WriteString("## 問題箇所\n")
+	for _, issue := range issues {
+		if issue.Line > 0 {
+			sb.WriteString(fmt.Sprintf("- [行%d] %s: %s\n", issue.Line, issue.Check, issue.Message))
 		} else {
-			sb.WriteString(fmt.Sprintf("- %s（%s）\n", cc.Character.Name, cc.Character.Voice.Gender))
+			sb.WriteString(fmt.Sprintf("- [全体] %s: %s\n", issue.Check, issue.Message))
 		}
 	}
-	sb.WriteString("\n")
-
-	// エピソード情報
-	sb.WriteString("## エピソード情報\n")
-	sb.WriteString(fmt.Sprintf("タイトル: %s\n", episode.Title))
-	if episode.Description != "" {
-		sb.WriteString(fmt.Sprintf("説明: %s\n", episode.Description))
-	}
-	sb.WriteString("\n")
-
-	// エピソードの長さ
-	sb.WriteString(fmt.Sprintf("## エピソードの長さ\n%d分\n\n", durationMinutes))
-
-	// 今回のテーマ
-	sb.WriteString("## 今回のテーマ\n")
-	sb.WriteString(prompt)
 
 	return sb.String()
 }
