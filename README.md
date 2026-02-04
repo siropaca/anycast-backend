@@ -98,7 +98,7 @@ cp .env.example .env        # 環境変数ファイルの作成
 | `GOOGLE_CLOUD_TASKS_QUEUE_NAME` | Cloud Tasks キュー名 | async-jobs |
 | `GOOGLE_CLOUD_TASKS_SERVICE_ACCOUNT_EMAIL` | Cloud Tasks サービスアカウントメール | - |
 | `GOOGLE_CLOUD_TASKS_WORKER_URL` | ワーカーエンドポイントのベース URL（末尾に `/audio` や `/script` が付与される） | - |
-| `GOOGLE_CLOUD_TTS_LOCATION` | Gemini TTS のロケーション | us-central1 |
+| `GOOGLE_CLOUD_TTS_LOCATION` | Gemini TTS のロケーション | global |
 | `SLACK_WEBHOOK_URL` | Slack Webhook URL（フィードバック通知用、空の場合は通知無効） | - |
 
 > **Note:** `GOOGLE_CLOUD_PROJECT_ID` と `GOOGLE_CLOUD_TASKS_WORKER_URL` が未設定の場合、Cloud Tasks を使わずに goroutine で直接ジョブを実行します（ローカル開発用）。
