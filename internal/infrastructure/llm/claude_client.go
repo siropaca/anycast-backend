@@ -50,20 +50,35 @@ func (c *claudeClient) ChatWithOptions(ctx context.Context, systemPrompt, userPr
 		temp = *opts.Temperature
 	}
 
-	return retryWithBackoff(ctx, "Claude", func() (string, error) {
-		message, err := c.client.Messages.New(ctx, anthropic.MessageNewParams{
-			MaxTokens: claudeMaxTokens,
-			Model:     c.model,
-			System: []anthropic.TextBlockParam{
-				{Text: prompt.Compress(systemPrompt)},
+	params := anthropic.MessageNewParams{
+		MaxTokens: claudeMaxTokens,
+		Model:     c.model,
+		System: []anthropic.TextBlockParam{
+			{Text: prompt.Compress(systemPrompt)},
+		},
+		Messages: []anthropic.MessageParam{
+			anthropic.NewUserMessage(
+				anthropic.NewTextBlock(prompt.Compress(userPrompt)),
+			),
+		},
+		Temperature: anthropic.Float(temp),
+	}
+
+	if opts.EnableWebSearch {
+		params.Tools = []anthropic.ToolUnionParam{
+			{
+				OfWebSearchTool20250305: &anthropic.WebSearchTool20250305Param{},
 			},
-			Messages: []anthropic.MessageParam{
-				anthropic.NewUserMessage(
-					anthropic.NewTextBlock(prompt.Compress(userPrompt)),
-				),
-			},
-			Temperature: anthropic.Float(temp),
-		})
+		}
+	}
+
+	retryName := "Claude"
+	if opts.EnableWebSearch {
+		retryName = "Claude(WebSearch)"
+	}
+
+	return retryWithBackoff(ctx, retryName, func() (string, error) {
+		message, err := c.client.Messages.New(ctx, params)
 		if err != nil {
 			return "", err
 		}
