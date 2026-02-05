@@ -66,7 +66,6 @@ User / Channel / Episode / Character の情報を、誤解しにくい構造化�
   "episode": {
     "title": "エピソードタイトル",
     "description": "エピソード説明",
-    "goal": "エピソード固有の指示（episode.userPrompt）",
     "duration_minutes": 10
   },
   "channel": {
@@ -111,11 +110,10 @@ Phase 2〜4 のプロンプトと合格条件は `talk_mode` に応じて切り�
 プロンプト内での参照順序（上が最優先）:
 
 1. `theme` — 今回のテーマ（最も具体的な指示）
-2. `episode.goal` — エピソード固有の設定
-3. `channel.style_guide` — チャンネルのスタイル方針
-4. `master_guide` — ユーザーの基本方針（最も汎用的）
-5. `characters` — キャラクター情報
-6. `constraints` — 制約条件
+2. `channel.style_guide` — チャンネルのスタイル方針
+3. `master_guide` — ユーザーの基本方針（最も汎用的）
+4. `characters` — キャラクター情報
+5. `constraints` — 制約条件
 
 ### 備考
 
@@ -153,8 +151,7 @@ Phase 2〜4 のプロンプトと合格条件は `talk_mode` に応じて切り�
 
 ```
 あなたはポッドキャスト台本の構成作家です。
-与えられたテーマとチャンネル情報をもとに、内容の濃い台本を作るための
-「素材」と「アウトライン」を JSON 形式で出力してください。
+与えられたテーマとチャンネル情報をもとに、内容の濃い台本を作るための「素材」と「アウトライン」を JSON 形式で出力してください。
 
 ## 出力要件
 
@@ -518,7 +515,6 @@ dialogue 用との差分を **太字** で示す。
 | `channel.userPrompt` | `channel.style_guide` |
 | `character.name` / `persona` / `voice.gender` | `characters` 配列 |
 | `episode.title` / `description` | `episode` |
-| `episode.userPrompt` | `episode.goal` |
 | `request.prompt` | `theme` |
 | `request.durationMinutes` | `episode.duration_minutes` |
 | `request.withEmotion` | `constraints.with_emotion` |
@@ -655,4 +651,3 @@ Phase 別に Temperature を変えるため `ChatWithOptions` メソッドを使
 | `internal/infrastructure/llm/client.go` | `ChatWithOptions` インターフェース定義 |
 | `internal/infrastructure/llm/registry.go` | LLM プロバイダ Registry |
 | `internal/pkg/tracer/` | 台本生成トレーサー（各 Phase のプロンプト・レスポンス出力） |
-

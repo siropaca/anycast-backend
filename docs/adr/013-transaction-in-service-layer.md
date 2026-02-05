@@ -10,7 +10,6 @@ Accepted
 
 1. 既存の台本行を削除
 2. 新しい台本行を一括作成
-3. エピソードの `userPrompt` を更新
 
 これらの操作は全て成功するか、全て失敗するかのどちらかでなければならない（ACID 特性）。
 
@@ -26,7 +25,6 @@ Service 層で `*gorm.DB` の `Transaction` メソッドを直接呼び出し、
 // Service 層での実装例
 err = s.db.Transaction(func(tx *gorm.DB) error {
     txScriptLineRepo := repository.NewScriptLineRepository(tx)
-    txEpisodeRepo := repository.NewEpisodeRepository(tx)
 
     if err := txScriptLineRepo.DeleteByEpisodeID(ctx, eid); err != nil {
         return err

@@ -206,7 +206,6 @@ Channel と Episode は公開状態（`publishedAt`）を持つ。
 
 1. **User.userPrompt** - ユーザーの基本方針
 2. **Channel.userPrompt** - チャンネル固有の方針
-3. **Episode.userPrompt** - エピソード固有の設定
 
 #### username の自動生成
 
@@ -330,7 +329,6 @@ OAuth プロバイダとの連携情報。
 | channelId | UUID | ◯ | 所属する Channel |
 | title | String | ◯ | エピソードタイトル |
 | description | String | | エピソードの説明（公開情報） |
-| userPrompt | String | | エピソード固有の台本生成設定（台本生成時に自動保存、内部管理用） |
 | voiceStyle | String | | 音声生成のスタイル指示（音声生成時に自動保存、例: "Read aloud in a warm, welcoming tone"） |
 | script | ScriptLine[] | | 台本（順序付きの ScriptLine 配列） |
 | bgm | Audio | | BGM 音声ファイル |

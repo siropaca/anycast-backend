@@ -55,7 +55,6 @@ GET /channels/:channelId/episodes/:episodeId
     "id": "uuid",
     "title": "エピソードタイトル",
     "description": "エピソードの説明",
-    "userPrompt": "今回のテーマについて詳しく解説する",
     "voiceStyle": "Read aloud in a warm, welcoming tone",
     "bgm": { "id": "uuid", "url": "..." },
     "fullAudio": { "id": "uuid", "url": "..." },
@@ -83,7 +82,7 @@ GET /channels/:channelId/episodes/:episodeId
 }
 ```
 
-> **Note:** `userPrompt`, `voiceStyle` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
+> **Note:** `voiceStyle` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
 
 ---
 
@@ -131,7 +130,7 @@ PATCH /channels/:channelId/episodes/:episodeId
 | title | 255文字以内 |
 | description | 2000文字以内 |
 
-> **Note:** `userPrompt` は台本生成時に、`voiceStyle` は音声生成時に自動で保存されます。エピソード更新 API からは編集できません。
+> **Note:** `voiceStyle` は音声生成時に自動で保存されます。エピソード更新 API からは編集できません。
 >
 > **Note:** 公開状態の変更は専用エンドポイント（[エピソード公開](#エピソード公開) / [エピソード非公開](#エピソード非公開)）を使用してください。
 >
@@ -333,7 +332,6 @@ GET /me/channels/:channelId/episodes
       "id": "uuid",
       "title": "エピソードタイトル",
       "description": "エピソードの説明",
-      "userPrompt": "今回のテーマについて詳しく解説する",
       "fullAudio": { "id": "uuid", "url": "...", "durationMs": 180000 },
       "playCount": 123,
       "publishedAt": "2025-01-01T00:00:00Z",
@@ -393,7 +391,6 @@ GET /me/channels/:channelId/episodes/:episodeId
     "id": "uuid",
     "title": "エピソードタイトル",
     "description": "エピソードの説明",
-    "userPrompt": "今回のテーマについて詳しく解説する",
     "artwork": { "id": "uuid", "url": "..." },
     "fullAudio": { "id": "uuid", "url": "...", "durationMs": 180000 },
     "playCount": 123,

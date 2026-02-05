@@ -241,7 +241,6 @@ erDiagram
         uuid channel_id FK
         varchar title
         text description
-        text user_prompt
         text voice_style
         uuid artwork_id FK
         uuid bgm_id FK
@@ -545,7 +544,6 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | channel_id | UUID | | - | 所属チャンネル |
 | title | VARCHAR(255) | | - | エピソードタイトル |
 | description | TEXT | | - | エピソードの説明（公開情報） |
-| user_prompt | TEXT | | '' | エピソード固有の台本生成設定（台本生成時に自動保存、内部管理用） |
 | voice_style | TEXT | | '' | 音声生成のスタイル指示（音声生成時に自動保存、例: "Read aloud in a warm, welcoming tone"） |
 | artwork_id | UUID | ◯ | - | カバー画像（images 参照） |
 | bgm_id | UUID | ◯ | - | ユーザー BGM（bgms 参照） |

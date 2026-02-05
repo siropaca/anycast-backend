@@ -90,7 +90,6 @@ GET /channels/:channelId
         "id": "uuid",
         "title": "第1回 AIについて語る",
         "description": "AIの未来について...",
-        "userPrompt": "AIの最新動向について...",
         "voiceStyle": "normal",
         "artwork": { "id": "uuid", "url": "..." },
         "fullAudio": {
@@ -125,7 +124,7 @@ GET /channels/:channelId
 ```
 
 > **Note:**
-> - `userPrompt` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
+> - チャンネルの `userPrompt` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
 > - `defaultBgm.isSystem` が `true` の場合はシステム BGM、`false` の場合はユーザー所有の BGM です。
 > - `episodes` はチャンネルに紐づくエピソード一覧です。
 
@@ -426,7 +425,6 @@ GET /me/channels/:channelId
         "id": "uuid",
         "title": "第1回 AIについて語る",
         "description": "AIの未来について...",
-        "userPrompt": "AIの最新動向について...",
         "voiceStyle": "normal",
         "artwork": { "id": "uuid", "url": "..." },
         "fullAudio": {

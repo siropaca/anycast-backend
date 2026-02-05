@@ -117,4 +117,3 @@ PATCH /me/prompt
 
 1. **User.userPrompt** - ユーザーの基本方針
 2. **Channel.userPrompt** - チャンネル固有の方針
-3. **Episode.userPrompt** - エピソード固有の設定

@@ -24,8 +24,6 @@ POST /channels/:channelId/episodes/:episodeId/script/generate-async
 | durationMinutes | int | | エピソードの長さ（分）。3〜30の範囲で指定。デフォルト: 10 |
 | withEmotion | bool | | 感情を付与するかどうか。デフォルト: false |
 
-> **Note:** `prompt` はエピソードの `userPrompt` として自動保存されます。
-
 **レスポンス（202 Accepted）:**
 ```json
 {
