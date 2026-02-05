@@ -18,6 +18,7 @@ type ScriptJobRepository interface {
 	FindByUserID(ctx context.Context, userID uuid.UUID, filter ScriptJobFilter) ([]model.ScriptJob, error)
 	FindByEpisodeID(ctx context.Context, episodeID uuid.UUID) ([]model.ScriptJob, error)
 	FindPendingByEpisodeID(ctx context.Context, episodeID uuid.UUID) (*model.ScriptJob, error)
+	FindLatestCompletedByEpisodeID(ctx context.Context, episodeID uuid.UUID) (*model.ScriptJob, error)
 	Create(ctx context.Context, job *model.ScriptJob) error
 	Update(ctx context.Context, job *model.ScriptJob) error
 	UpdateProgress(ctx context.Context, id uuid.UUID, progress int) error
@@ -112,6 +113,30 @@ func (r *scriptJobRepository) FindPendingByEpisodeID(ctx context.Context, episod
 		}
 		logger.FromContext(ctx).Error("failed to find pending script job", "error", err, "episode_id", episodeID)
 		return nil, apperror.ErrInternal.WithMessage("処理待ちジョブの確認に失敗しました").WithError(err)
+	}
+
+	return &job, nil
+}
+
+// FindLatestCompletedByEpisodeID はエピソードの最新の完了済みジョブを取得する
+// 見つからない場合は nil, nil を返す（エラーではない）
+func (r *scriptJobRepository) FindLatestCompletedByEpisodeID(ctx context.Context, episodeID uuid.UUID) (*model.ScriptJob, error) {
+	var job model.ScriptJob
+
+	err := r.db.WithContext(ctx).
+		Where("episode_id = ?", episodeID).
+		Where("status = ?", model.ScriptJobStatusCompleted).
+		Preload("Episode").
+		Preload("Episode.Channel").
+		Order("created_at DESC").
+		First(&job).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil //nolint:nilnil // not found is not an error
+		}
+		logger.FromContext(ctx).Error("failed to find latest completed script job", "error", err, "episode_id", episodeID)
+		return nil, apperror.ErrInternal.WithMessage("完了済みジョブの取得に失敗しました").WithError(err)
 	}
 
 	return &job, nil

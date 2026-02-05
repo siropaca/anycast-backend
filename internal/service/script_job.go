@@ -28,6 +28,7 @@ import (
 type ScriptJobService interface {
 	CreateJob(ctx context.Context, userID, channelID, episodeID string, req request.GenerateScriptAsyncRequest) (*response.ScriptJobResponse, error)
 	GetJob(ctx context.Context, userID, jobID string) (*response.ScriptJobResponse, error)
+	GetLatestJobByEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.ScriptJobResponse, error)
 	ListMyJobs(ctx context.Context, userID string, filter repository.ScriptJobFilter) (*response.ScriptJobListResponse, error)
 	ExecuteJob(ctx context.Context, jobID string) error
 	CancelJob(ctx context.Context, userID, jobID string) error
@@ -203,6 +204,56 @@ func (s *scriptJobService) GetJob(ctx context.Context, userID, jobID string) (*r
 	return s.toScriptJobResponse(ctx, job)
 }
 
+// GetLatestJobByEpisode はエピソードの最新の完了済みジョブを取得する
+func (s *scriptJobService) GetLatestJobByEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.ScriptJobResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("このチャンネルへのアクセス権限がありません")
+	}
+
+	// エピソードの存在確認とチャンネルの一致チェック
+	episode, err := s.episodeRepo.FindByID(ctx, eid)
+	if err != nil {
+		return nil, err
+	}
+
+	if episode.ChannelID != cid {
+		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
+	}
+
+	// 最新の完了済みジョブを取得
+	job, err := s.scriptJobRepo.FindLatestCompletedByEpisodeID(ctx, eid)
+	if err != nil {
+		return nil, err
+	}
+
+	if job == nil {
+		return nil, apperror.ErrNotFound.WithMessage("完了済みの台本生成ジョブが見つかりません")
+	}
+
+	return s.toScriptJobResponse(ctx, job)
+}
+
 // ListMyJobs は指定されたユーザーのジョブ一覧を取得する
 func (s *scriptJobService) ListMyJobs(ctx context.Context, userID string, filter repository.ScriptJobFilter) (*response.ScriptJobListResponse, error) {
 	uid, err := uuid.Parse(userID)
@@ -338,7 +389,6 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 	briefInput := script.BriefInput{
 		EpisodeTitle:       episode.Title,
 		EpisodeDescription: episode.Description,
-		EpisodeGoal:        episode.UserPrompt,
 		DurationMinutes:    job.DurationMinutes,
 		ChannelName:        channel.Name,
 		ChannelDescription: channel.Description,
@@ -438,21 +488,15 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 		}
 	}
 
-	// トランザクションで既存行削除・新規作成・エピソード更新を実行
+	// トランザクションで既存行削除・新規作成を実行
 	err = s.db.Transaction(func(tx *gorm.DB) error {
 		txScriptLineRepo := repository.NewScriptLineRepository(tx)
-		txEpisodeRepo := repository.NewEpisodeRepository(tx)
 
 		if err := txScriptLineRepo.DeleteByEpisodeID(ctx, job.EpisodeID); err != nil {
 			return err
 		}
 
 		if _, err := txScriptLineRepo.CreateBatch(ctx, scriptLines); err != nil {
-			return err
-		}
-
-		episode.UserPrompt = job.Prompt
-		if err := txEpisodeRepo.Update(ctx, episode); err != nil {
 			return err
 		}
 

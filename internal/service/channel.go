@@ -879,7 +879,6 @@ func (s *channelService) toEpisodeResponse(ctx context.Context, e *model.Episode
 		ID:            e.ID,
 		Title:         e.Title,
 		Description:   e.Description,
-		UserPrompt:    e.UserPrompt,
 		VoiceStyle:    e.VoiceStyle,
 		AudioOutdated: e.AudioOutdated,
 		PlayCount:     e.PlayCount,

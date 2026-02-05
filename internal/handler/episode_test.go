@@ -164,7 +164,6 @@ func createTestEpisodeResponse() response.EpisodeResponse {
 		ID:          uuid.New(),
 		Title:       "Test Episode",
 		Description: "Test Description",
-		UserPrompt:  "Test User Prompt",
 		FullAudio: &response.AudioResponse{
 			ID:         uuid.New(),
 			URL:        "https://example.com/audio.mp3",
@@ -621,7 +620,6 @@ func TestEpisodeHandler_UpdateEpisode(t *testing.T) {
 				ID:          uuid.MustParse(episodeID),
 				Title:       title,
 				Description: "Updated Description",
-				UserPrompt:  "Test User Prompt",
 				CreatedAt:   time.Now(),
 				UpdatedAt:   time.Now(),
 			},

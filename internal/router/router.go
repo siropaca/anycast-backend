@@ -160,6 +160,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/script/reorder", container.ScriptLineHandler.ReorderScriptLines)
 
 	// Script（台本）
+	authenticated.GET("/channels/:channelId/episodes/:episodeId/script-jobs/latest", container.ScriptJobHandler.GetLatestScriptJob)
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/script/generate-async", container.ScriptJobHandler.GenerateScriptAsync)
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/script/import", container.ScriptHandler.ImportScript)
 	authenticated.GET("/channels/:channelId/episodes/:episodeId/script/export", container.ScriptHandler.ExportScript)

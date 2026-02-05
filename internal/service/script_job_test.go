@@ -70,6 +70,14 @@ func (m *mockScriptJobRepository) FindPendingByEpisodeID(ctx context.Context, ep
 	return args.Get(0).(*model.ScriptJob), args.Error(1)
 }
 
+func (m *mockScriptJobRepository) FindLatestCompletedByEpisodeID(ctx context.Context, episodeID uuid.UUID) (*model.ScriptJob, error) {
+	args := m.Called(ctx, episodeID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.ScriptJob), args.Error(1)
+}
+
 func (m *mockScriptJobRepository) Create(ctx context.Context, job *model.ScriptJob) error {
 	args := m.Called(ctx, job)
 	return args.Error(0)

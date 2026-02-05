@@ -53,6 +53,14 @@ func (m *mockScriptJobService) ExecuteJob(ctx context.Context, jobID string) err
 	return args.Error(0)
 }
 
+func (m *mockScriptJobService) GetLatestJobByEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.ScriptJobResponse, error) {
+	args := m.Called(ctx, userID, channelID, episodeID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.ScriptJobResponse), args.Error(1)
+}
+
 func (m *mockScriptJobService) CancelJob(ctx context.Context, userID, jobID string) error {
 	args := m.Called(ctx, userID, jobID)
 	return args.Error(0)

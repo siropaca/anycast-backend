@@ -26,7 +26,6 @@ type Brief struct {
 type BriefEpisode struct {
 	Title           string `json:"title"`
 	Description     string `json:"description,omitempty"`
-	Goal            string `json:"goal,omitempty"`
 	DurationMinutes int    `json:"duration_minutes"`
 }
 
@@ -60,7 +59,6 @@ type BriefInput struct {
 	// Episode 情報
 	EpisodeTitle       string
 	EpisodeDescription string
-	EpisodeGoal        string
 	DurationMinutes    int
 
 	// Channel 情報
@@ -108,7 +106,6 @@ func NormalizeBrief(input BriefInput) Brief {
 		Episode: BriefEpisode{
 			Title:           input.EpisodeTitle,
 			Description:     input.EpisodeDescription,
-			Goal:            input.EpisodeGoal,
 			DurationMinutes: input.DurationMinutes,
 		},
 		Channel: BriefChannel{

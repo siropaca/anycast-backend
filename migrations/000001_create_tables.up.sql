@@ -229,7 +229,6 @@ CREATE TABLE episodes (
 	audio_outdated BOOLEAN NOT NULL DEFAULT false,
 	play_count INTEGER NOT NULL DEFAULT 0,
 	published_at TIMESTAMP,
-	user_prompt TEXT NOT NULL DEFAULT '',
 	voice_style TEXT NOT NULL DEFAULT '',
 	artwork_id UUID REFERENCES images (id) ON DELETE SET NULL,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -31,7 +31,6 @@ func TestNormalizeBrief(t *testing.T) {
 		input := BriefInput{
 			EpisodeTitle:       "テストエピソード",
 			EpisodeDescription: "テスト説明",
-			EpisodeGoal:        "テスト目標",
 			DurationMinutes:    10,
 			ChannelName:        "テストチャンネル",
 			ChannelDescription: "チャンネル説明",
@@ -50,7 +49,6 @@ func TestNormalizeBrief(t *testing.T) {
 
 		assert.Equal(t, "テストエピソード", brief.Episode.Title)
 		assert.Equal(t, "テスト説明", brief.Episode.Description)
-		assert.Equal(t, "テスト目標", brief.Episode.Goal)
 		assert.Equal(t, 10, brief.Episode.DurationMinutes)
 		assert.Equal(t, "テストチャンネル", brief.Channel.Name)
 		assert.Equal(t, "チャンネル説明", brief.Channel.Description)
@@ -104,7 +102,6 @@ func TestNormalizeBrief(t *testing.T) {
 		brief := NormalizeBrief(input)
 
 		assert.Empty(t, brief.Episode.Description)
-		assert.Empty(t, brief.Episode.Goal)
 		assert.Empty(t, brief.Channel.Description)
 		assert.Empty(t, brief.Channel.StyleGuide)
 		assert.Empty(t, brief.MasterGuide)

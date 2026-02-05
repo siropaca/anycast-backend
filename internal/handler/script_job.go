@@ -154,6 +154,50 @@ func (h *ScriptJobHandler) ListMyScriptJobs(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// GetLatestScriptJob godoc
+// @Summary 最新の完了済み台本生成ジョブ取得
+// @Description エピソードの最新の完了済み台本生成ジョブを取得します
+// @Tags script-jobs
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param episodeId path string true "エピソード ID"
+// @Success 200 {object} response.ScriptJobDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/episodes/{episodeId}/script-jobs/latest [get]
+func (h *ScriptJobHandler) GetLatestScriptJob(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
+		return
+	}
+
+	episodeID := c.Param("episodeId")
+	if episodeID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
+		return
+	}
+
+	result, err := h.scriptJobService.GetLatestJobByEpisode(c.Request.Context(), userID, channelID, episodeID)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": result})
+}
+
 // CancelScriptJob godoc
 // @Summary 台本生成ジョブキャンセル
 // @Description 台本生成ジョブをキャンセルします。pending 状態のジョブは即座に canceled に、processing 状態のジョブは canceling に遷移します。
