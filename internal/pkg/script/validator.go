@@ -101,9 +101,7 @@ func checkNoPeriodInText(lines []ParsedLine) []ValidationIssue {
 	for i, line := range lines {
 		// 末尾の句点は trailing_period で別途チェックするため、末尾以外を検査
 		text := line.Text
-		if strings.HasSuffix(text, "。") {
-			text = text[:len(text)-len("。")]
-		}
+		text = strings.TrimSuffix(text, "。")
 		if strings.Contains(text, "。") {
 			issues = append(issues, ValidationIssue{
 				Check:   "period_in_text",

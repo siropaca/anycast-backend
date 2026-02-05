@@ -93,13 +93,7 @@ type BriefInputCharacter struct {
 func NormalizeBrief(input BriefInput) Brief {
 	characters := make([]BriefCharacter, len(input.Characters))
 	for i, c := range input.Characters {
-		characters[i] = BriefCharacter{
-			Name:               c.Name,
-			Gender:             c.Gender,
-			Persona:            c.Persona,
-			RoleInConversation: c.RoleInConversation,
-			InteractionStyle:   c.InteractionStyle,
-		}
+		characters[i] = BriefCharacter(c)
 	}
 
 	return Brief{

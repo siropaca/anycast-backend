@@ -107,12 +107,12 @@ func ParsePhase2Output(text string) (*Phase2Output, error) {
 	// ExtractJSON で JSON 部分を抽出し、Unmarshal + 基本バリデーション
 	jsonStr, err := ExtractJSON(text)
 	if err != nil {
-		return nil, fmt.Errorf("Phase 2 出力から JSON を抽出できません: %w", err)
+		return nil, fmt.Errorf("phase 2 出力から JSON を抽出できません: %w", err)
 	}
 
 	var output Phase2Output
 	if err := json.Unmarshal([]byte(jsonStr), &output); err != nil {
-		return nil, fmt.Errorf("Phase 2 出力の JSON パースに失敗: %w", err)
+		return nil, fmt.Errorf("phase 2 出力の JSON パースに失敗: %w", err)
 	}
 
 	// 基本バリデーション

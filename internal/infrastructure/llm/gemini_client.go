@@ -42,7 +42,7 @@ func newGeminiClient(projectID, location, model, credentialsJSON string) (Client
 
 	client, err := genai.NewClient(context.Background(), config)
 	if err != nil {
-		return nil, fmt.Errorf("Gemini LLM クライアントの作成に失敗しました: %w", err)
+		return nil, fmt.Errorf("gemini LLM クライアントの作成に失敗しました: %w", err)
 	}
 
 	m := geminiDefaultModel

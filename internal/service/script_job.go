@@ -536,7 +536,7 @@ func (s *scriptJobService) executePhase2(ctx context.Context, briefJSON string, 
 
 	client, err := s.llmRegistry.Get(phase2Config.Provider)
 	if err != nil {
-		return nil, fmt.Errorf("Phase 2 LLM client: %w", err)
+		return nil, fmt.Errorf("phase 2 LLM client: %w", err)
 	}
 
 	temp := phase2Config.Temperature
@@ -584,7 +584,7 @@ func (s *scriptJobService) executePhase3(ctx context.Context, brief script.Brief
 
 	client, err := s.llmRegistry.Get(phase3Config.Provider)
 	if err != nil {
-		return "", fmt.Errorf("Phase 3 LLM client: %w", err)
+		return "", fmt.Errorf("phase 3 LLM client: %w", err)
 	}
 
 	sysPrompt := getPhase3SystemPrompt(brief.Constraints.TalkMode, brief.Constraints.WithEmotion)
@@ -696,13 +696,19 @@ func buildPhase3UserPrompt(brief script.Brief, phase2 *script.Phase2Output) stri
 	var sb strings.Builder
 
 	// ブリーフ情報
-	briefJSON, _ := brief.ToJSON()
+	briefJSON, err := brief.ToJSON()
+	if err != nil {
+		return ""
+	}
 	sb.WriteString("## ブリーフ\n")
 	sb.WriteString(briefJSON)
 	sb.WriteString("\n\n")
 
 	// Phase 2 の出力を埋め込む
-	phase2JSON, _ := json.Marshal(phase2)
+	phase2JSON, err := json.Marshal(phase2)
+	if err != nil {
+		return ""
+	}
 	sb.WriteString("## 素材とアウトライン\n")
 	sb.WriteString(string(phase2JSON))
 
