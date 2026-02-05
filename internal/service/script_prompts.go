@@ -15,13 +15,14 @@ type PhaseConfig struct {
 
 var (
 	phase2Config = PhaseConfig{Provider: llm.ProviderOpenAI, Temperature: 0.9}
-	phase3Config = PhaseConfig{Provider: llm.ProviderOpenAI, Temperature: 0.7}
-	phase4Config = PhaseConfig{Provider: llm.ProviderOpenAI, Temperature: 0.5}
+	phase3Config = PhaseConfig{Provider: llm.ProviderClaude, Temperature: 0.7}
+	phase4Config = PhaseConfig{Provider: llm.ProviderClaude, Temperature: 0.7}
+	phase5Config = PhaseConfig{Provider: llm.ProviderOpenAI, Temperature: 0.5}
 )
 
 // PhaseConfigs は全 Phase の設定を返す（起動時バリデーション用）
 func PhaseConfigs() []PhaseConfig {
-	return []PhaseConfig{phase2Config, phase3Config, phase4Config}
+	return []PhaseConfig{phase2Config, phase3Config, phase4Config, phase5Config}
 }
 
 // Phase 2: 素材+アウトライン生成のシステムプロンプト
@@ -45,6 +46,13 @@ const phase2SystemPrompt = `あなたはポッドキャスト台本の構成作�
 - 使用する落とし穴（grounding.pitfalls から選択）
 - 使用するアクションステップ（grounding.action_steps から選択）
 - 投げかける疑問（grounding.questions から選択）
+
+### ブロックの並び順
+リスナーの関心を引きつける流れを意識して並べる:
+- ブロック1: リスナーが身近に感じる話題から入る（日常の体験、みんなが使っているサービスなど）
+- ブロック2: 意外性のある切り口や深掘り（裏側の仕組み、知られていない事実など）
+- ブロック3: 未来の展望や行動につながる話題
+- 専門的・抽象的な話題（インフラ、規制など）はリスナーの関心が温まった中盤以降に配置する
 
 ## JSON スキーマ（厳守）
 以下のフィールド名を正確に使用すること。スキーマにないフィールドは追加しない。
@@ -96,8 +104,48 @@ const phase2SystemPrompt = `あなたはポッドキャスト台本の構成作�
 - JSON 以外のテキストは出力しない
 - 上記スキーマのフィールド名を正確に使用する（独自フィールドを追加しない）`
 
-// Phase 4: QA パッチ修正のシステムプロンプト
-const phase4SystemPrompt = `あなたはポッドキャスト台本の品質管理担当です。
+// Phase 4: リライト（会話の流れ・自然さ・面白さの改善）のシステムプロンプト
+const phase4SystemPrompt = `あなたはポッドキャスト台本のリライト担当です。
+ドラフト台本を受け取り、会話の流れ・自然さ・面白さを改善してください。
+
+## リライトの方針
+- 話題の転換が唐突な箇所にブリッジ（つなぎ）のセリフを追加する
+- 説明が一方通行になっている箇所に相槌・リアクション・質問を挟む
+- 聞き手が「次はどうなるの？」と思える引きや伏線を意識する
+- 情報を詰め込みすぎている箇所は、間を取るセリフで緩急をつける
+- オープニングでリスナーの興味を引く工夫を加える
+- クロージングで「聞いてよかった」と思える締めにする
+- 3ブロックの展開パターンが同じ順序（話題→例→落とし穴→まとめ等）になっていたら、ブロックごとに入り口や展開を変える
+- 聞き手（掛け合いの場合）が質問ばかりしている箇所は、自分の感想・体験・軽い反論に置き換える
+- 感情のトーンが一本調子な箇所に変化をつける（驚き→納得→ちょっと不安→前向き等）
+
+## 保持すべき要素
+- 具体例・落とし穴・実務の一歩（素材情報）は削除しない
+- 話者名は変更しない
+- 全体の構成（オープニング→本題3ブロック→クロージング）は維持する
+- 元の台本の情報量を大幅に減らさない
+- 元の台本に感情タグがある場合は必ず保持する。リライトでセリフを変更・追加する際も適切な感情タグを付ける
+- 感情タグは以下の10種類のみ使用可能: 考えながら / ため息 / 笑いながら / 大声で / ささやいて / 早口で / 嬉しそうに / 悲しそうに / 驚いて / 真剣に
+
+## 台詞ルール
+- 1つのセリフは20〜80文字程度
+- セリフは文として完結させる（体言止めや中途半端な切れ方にしない）
+- セリフの末尾には句点（。）を付ける
+- 1行に1文とする（セリフ中に句点を入れない）
+- TTS 前提: 記号連打 / 過度なスラング / 笑い声表記は避ける
+- 短すぎるセリフ（単語だけ・相槌だけ）は避け、必ず文章として成立させる
+
+## 出力形式
+話者名: セリフ
+話者名: [感情] セリフ
+
+- 1行につき1つのセリフ
+- 元の台本に感情タグがある場合は「話者名: [感情] セリフ」の形式を維持する
+- 空行は入れない
+- 台本テキスト以外の説明文・コメント・見出し・メタ発言は出力しない`
+
+// Phase 5: QA パッチ修正のシステムプロンプト
+const phase5SystemPrompt = `あなたはポッドキャスト台本の品質管理担当です。
 以下の台本に対して、指摘された問題箇所のみを最小限に修正してください。
 
 ## 修正ルール
@@ -127,10 +175,9 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool) string {
 	// 構造ルール
 	sb.WriteString("\n## 構造ルール（必須）\n")
 	sb.WriteString("- 冒頭（オープニング） → 本題3ブロック → 締め（クロージング）の構成に従う\n")
-	sb.WriteString("- 各ブロックで以下を台詞として必ず含める:\n")
-	sb.WriteString("  - 具体例（状況 + 数字 or 具体物）\n")
-	sb.WriteString("  - 落とし穴・よくある誤解\n")
-	sb.WriteString("  - 実務の一歩（リスナーが実践できること）\n")
+	sb.WriteString("- 3ブロック全体で、素材の具体例・落とし穴・実務の一歩を漏れなく使い切ること\n")
+	sb.WriteString("- ただし各ブロックの展開パターンは変えること（例: ブロック1は具体例から入る、ブロック2は誤解の指摘から入る、ブロック3はリスナーの疑問から入る）\n")
+	sb.WriteString("- 同じ「話題→例→落とし穴→まとめ」の繰り返しにならないよう意識する\n")
 
 	if talkMode == script.TalkModeDialogue {
 		sb.WriteString("- 各ブロックで最低1回、以下のいずれかの相互作用を含める:\n")
@@ -142,6 +189,20 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool) string {
 		sb.WriteString("  - リスナーへの問いかけ（「〜って思いませんか」「〜なんですよね」等）\n")
 		sb.WriteString("  - 自問自答（「じゃあ〜はどうなのか」→ 自分で回答）\n")
 		sb.WriteString("  - 前言の補足・言い換え（「つまり〜ということなんです」）\n")
+	}
+
+	// 掛け合い / 語りの作り方
+	if talkMode == script.TalkModeDialogue {
+		sb.WriteString("\n## 掛け合いの作り方\n")
+		sb.WriteString("- 聞き手は単なる質問役ではない。自分の体験・感想・軽い反論を交えて会話に参加する\n")
+		sb.WriteString("- 「へえ、それ私も経験あるんですけど」「いや、それはちょっと言いすぎじゃないですか」のように主体的に発言する\n")
+		sb.WriteString("- 相手の説明を完璧にまとめない。理解が追いつかない場面や、少しズレた解釈をして訂正される展開も自然\n")
+		sb.WriteString("- 3ブロックのうち最低1回は、聞き手が話題を広げたり自分のエピソードを話す場面を作る\n")
+	} else {
+		sb.WriteString("\n## 語りの作り方\n")
+		sb.WriteString("- 情報を並べるだけでなく、自分の失敗談や発見の瞬間を織り交ぜる\n")
+		sb.WriteString("- 「実は僕も最初は〜だと思ってたんですけど」のような体験ベースの語りを各ブロックに入れる\n")
+		sb.WriteString("- 説明→問いかけ→エピソード→気づき のように、展開にバリエーションを持たせる\n")
 	}
 
 	// 台詞ルール
@@ -170,6 +231,10 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool) string {
 		sb.WriteString("  - 語り口に緩急をつける（説明→問いかけ→エピソード→まとめ等のリズム変化）\n")
 	}
 
+	sb.WriteString("- 台本全体で感情のアーク（流れ）を意識する:\n")
+	sb.WriteString("  - 序盤: 軽い好奇心や疑問\n")
+	sb.WriteString("  - 中盤: 驚きや「それ分かる」の共感\n")
+	sb.WriteString("  - 終盤: 納得感や「やってみよう」の前向きさ\n")
 	sb.WriteString("- 短すぎるセリフ（単語だけ・相槌だけ）は避け、必ず文章として成立させる\n")
 
 	if talkMode == script.TalkModeDialogue {
@@ -217,6 +282,9 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool) string {
 		sb.WriteString("\n## 出力形式（感情あり版）\n")
 		sb.WriteString("話者名: [感情] セリフ\n\n")
 		sb.WriteString("- 感情は省略可能。指定する場合は [感情] の形式でセリフの前に記載\n")
+		sb.WriteString("- 使用できる感情タグは以下の10種類のみ:\n")
+		sb.WriteString("  考えながら / ため息 / 笑いながら / 大声で / ささやいて / 早口で / 嬉しそうに / 悲しそうに / 驚いて / 真剣に\n")
+		sb.WriteString("- 上記以外の感情タグは使用しない\n")
 
 		if talkMode == script.TalkModeDialogue {
 			sb.WriteString("\n例：\n")
@@ -225,7 +293,7 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool) string {
 		} else {
 			sb.WriteString("\n例：\n")
 			sb.WriteString("太郎: こんにちは、今日もよろしくお願いします。\n")
-			sb.WriteString("太郎: [ワクワクした様子で] 今日はちょっと面白いテーマを持ってきました。\n")
+			sb.WriteString("太郎: [驚いて] 今日はちょっと面白いテーマを持ってきました。\n")
 		}
 	}
 

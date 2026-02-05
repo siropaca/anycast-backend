@@ -390,7 +390,7 @@ func TestScriptJobService_executePhase2(t *testing.T) {
 	})
 }
 
-func TestScriptJobService_executePhase4(t *testing.T) {
+func TestScriptJobService_executePhase5(t *testing.T) {
 	jobID := uuid.New()
 	userID := uuid.New()
 	episodeID := uuid.New()
@@ -435,7 +435,7 @@ func TestScriptJobService_executePhase4(t *testing.T) {
 			Status:    model.ScriptJobStatusProcessing,
 		}
 
-		result := svc.executePhase4(context.Background(), job, lines, brief, speakers, "original text", noopTracer)
+		result := svc.executePhase5(context.Background(), job, lines, brief, speakers, "original text", noopTracer)
 		assert.Equal(t, len(lines), len(result))
 	})
 
@@ -501,7 +501,7 @@ func TestScriptJobService_executePhase4(t *testing.T) {
 			Status:    model.ScriptJobStatusProcessing,
 		}
 
-		result := svc.executePhase4(context.Background(), job, lines, brief, []string{"太郎", "花子"}, "太郎: これはセリフです。", noopTracer)
+		result := svc.executePhase5(context.Background(), job, lines, brief, []string{"太郎", "花子"}, "太郎: これはセリフです。", noopTracer)
 		// パッチ結果が返ることを確認
 		assert.Greater(t, len(result), len(lines))
 		mockLLM.AssertExpectations(t)
@@ -544,7 +544,7 @@ func TestScriptJobService_executePhase4(t *testing.T) {
 			Status:    model.ScriptJobStatusProcessing,
 		}
 
-		result := svc.executePhase4(context.Background(), job, lines, brief, []string{"太郎"}, "太郎: 元のセリフです。", noopTracer)
+		result := svc.executePhase5(context.Background(), job, lines, brief, []string{"太郎"}, "太郎: 元のセリフです。", noopTracer)
 		// パッチ結果が返ることを確認（不合格でも採用）
 		assert.NotEmpty(t, result)
 		mockLLM.AssertExpectations(t)
@@ -585,14 +585,14 @@ func TestBuildPhase3UserPrompt(t *testing.T) {
 	})
 }
 
-func TestBuildPhase4UserPrompt(t *testing.T) {
+func TestBuildPhase5UserPrompt(t *testing.T) {
 	t.Run("台本と問題箇所からプロンプトを構築できる", func(t *testing.T) {
 		issues := []script.ValidationIssue{
 			{Check: "trailing_period", Line: 3, Message: "セリフの末尾に句点があります"},
 			{Check: "minimum_lines", Line: 0, Message: "行数不足"},
 		}
 
-		result := buildPhase4UserPrompt("太郎: テスト", issues)
+		result := buildPhase5UserPrompt("太郎: テスト", issues)
 
 		assert.Contains(t, result, "台本")
 		assert.Contains(t, result, "太郎: テスト")

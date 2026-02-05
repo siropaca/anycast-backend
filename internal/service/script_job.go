@@ -350,7 +350,7 @@ func (s *scriptJobService) ExecuteJob(ctx context.Context, jobID string) error {
 
 // executeJobInternal は台本生成処理を多段階ワークフローで実行する
 //
-// Phase 1: ブリーフ正規化 → Phase 2: 素材+アウトライン → Phase 3: 台本ドラフト → Phase 4: QA+パッチ
+// Phase 1: ブリーフ正規化 → Phase 2: 素材+アウトライン → Phase 3: 台本ドラフト → Phase 4: リライト → Phase 5: QA+パッチ
 func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.ScriptJob) (int, error) {
 	log := logger.FromContext(ctx)
 
@@ -449,8 +449,8 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 		return 0, err
 	}
 
-	// 進捗: 75% - Phase 3 完了 + パース
-	s.updateProgress(ctx, job, 75, "台本をパース中...")
+	// 進捗: 65% - Phase 3 完了 + パース
+	s.updateProgress(ctx, job, 65, "台本をパース中...")
 
 	// 生成されたテキストをパース
 	parseResult := script.Parse(generatedText, allowedSpeakers)
@@ -462,10 +462,36 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 
 	log.Info("script parsed", "lines", len(parseResult.Lines), "errors", len(parseResult.Errors))
 
-	// ===== Phase 4: QA 検証+パッチ修正 =====
+	// ===== Phase 4: リライト =====
+	s.updateProgress(ctx, job, 68, "台本をリライト中...")
+
+	// キャンセルチェック（Phase 4 開始前）
+	if err := s.checkCanceled(ctx, job); err != nil {
+		return 0, err
+	}
+
+	rewrittenText, err := s.executePhase4(ctx, generatedText, brief, t)
+	if err != nil {
+		log.Warn("Phase 4 rewrite failed, using original draft", "error", err)
+		rewrittenText = generatedText
+	} else {
+		// リライト後のテキストを再パース
+		rewriteResult := script.Parse(rewrittenText, allowedSpeakers)
+		if len(rewriteResult.Lines) > 0 {
+			parseResult = rewriteResult
+			log.Info("Phase 4 rewrite applied", "lines", len(parseResult.Lines))
+		} else {
+			log.Warn("Phase 4 rewrite parse failed, using original draft")
+			rewrittenText = generatedText
+		}
+	}
+
+	s.updateProgress(ctx, job, 78, "リライト完了...")
+
+	// ===== Phase 5: QA 検証+パッチ修正 =====
 	s.updateProgress(ctx, job, 80, "品質チェック中...")
 
-	parsedLines := s.executePhase4(ctx, job, parseResult.Lines, brief, allowedSpeakers, generatedText, t)
+	parsedLines := s.executePhase5(ctx, job, parseResult.Lines, brief, allowedSpeakers, rewrittenText, t)
 
 	// 進捗: 90% - DB 保存
 	s.updateProgress(ctx, job, 90, "台本を保存中...")
@@ -610,10 +636,48 @@ func (s *scriptJobService) executePhase3(ctx context.Context, brief script.Brief
 	return result, nil
 }
 
-// executePhase4 は Phase 4（QA 検証+パッチ修正）を実行する
+// executePhase4 は Phase 4（リライト）を実行する
+//
+// 台本ドラフトの会話の流れ・自然さ・面白さを改善する
+func (s *scriptJobService) executePhase4(ctx context.Context, draftText string, brief script.Brief, t tracer.Tracer) (string, error) {
+	log := logger.FromContext(ctx)
+
+	client, err := s.llmRegistry.Get(phase4Config.Provider)
+	if err != nil {
+		return "", fmt.Errorf("phase 4 LLM client: %w", err)
+	}
+
+	briefJSON, err := brief.ToJSON()
+	if err != nil {
+		return "", fmt.Errorf("ブリーフの JSON 変換に失敗: %w", err)
+	}
+
+	userPrompt := "## ブリーフ\n" + briefJSON + "\n\n## ドラフト台本\n" + draftText
+
+	t.Trace("phase4", "system_prompt", phase4SystemPrompt)
+	t.Trace("phase4", "user_prompt", userPrompt)
+
+	temp := phase4Config.Temperature
+	opts := llm.ChatOptions{Temperature: &temp}
+
+	result, err := client.ChatWithOptions(ctx, phase4SystemPrompt, userPrompt, opts)
+	if err != nil {
+		t.Flush("phase4")
+		return "", err
+	}
+
+	t.Trace("phase4", "response", result)
+	t.Flush("phase4")
+
+	log.Info("Phase 4 completed")
+
+	return result, nil
+}
+
+// executePhase5 は Phase 5（QA 検証+パッチ修正）を実行する
 //
 // コード定量チェック → 不合格時のみ LLM パッチ修正（最大1回）
-func (s *scriptJobService) executePhase4(ctx context.Context, job *model.ScriptJob, lines []script.ParsedLine, brief script.Brief, allowedSpeakers []string, originalText string, t tracer.Tracer) []script.ParsedLine {
+func (s *scriptJobService) executePhase5(ctx context.Context, job *model.ScriptJob, lines []script.ParsedLine, brief script.Brief, allowedSpeakers []string, originalText string, t tracer.Tracer) []script.ParsedLine {
 	log := logger.FromContext(ctx)
 
 	config := script.ValidatorConfig{
@@ -624,21 +688,21 @@ func (s *scriptJobService) executePhase4(ctx context.Context, job *model.ScriptJ
 	// 1回目のチェック
 	result := script.Validate(lines, config)
 	if result.Passed {
-		log.Info("Phase 4: QA check passed")
-		t.Trace("phase4", "qa_result", "passed")
-		t.Flush("phase4")
+		log.Info("Phase 5: QA check passed")
+		t.Trace("phase5", "qa_result", "passed")
+		t.Flush("phase5")
 		return lines
 	}
 
-	log.Info("Phase 4: QA check failed", "issues", len(result.Issues))
+	log.Info("Phase 5: QA check failed", "issues", len(result.Issues))
 
 	issuesJSON, _ := json.Marshal(result.Issues) //nolint:errcheck // trace data
-	t.Trace("phase4", "qa_result", string(issuesJSON))
+	t.Trace("phase5", "qa_result", string(issuesJSON))
 
 	// キャンセルチェック（パッチ修正前）
 	if err := s.checkCanceled(ctx, job); err != nil {
-		log.Info("Phase 4: canceled before patch")
-		t.Flush("phase4")
+		log.Info("Phase 5: canceled before patch")
+		t.Flush("phase5")
 		return lines
 	}
 
@@ -646,46 +710,46 @@ func (s *scriptJobService) executePhase4(ctx context.Context, job *model.ScriptJ
 	s.updateProgress(ctx, job, 85, "品質パッチを適用中...")
 
 	// LLM パッチ修正
-	client, err := s.llmRegistry.Get(phase4Config.Provider)
+	client, err := s.llmRegistry.Get(phase5Config.Provider)
 	if err != nil {
-		log.Warn("Phase 4: LLM client not available", "error", err)
-		t.Flush("phase4")
+		log.Warn("Phase 5: LLM client not available", "error", err)
+		t.Flush("phase5")
 		return lines
 	}
 
-	patchPrompt := buildPhase4UserPrompt(originalText, result.Issues)
-	temp := phase4Config.Temperature
+	patchPrompt := buildPhase5UserPrompt(originalText, result.Issues)
+	temp := phase5Config.Temperature
 	opts := llm.ChatOptions{Temperature: &temp}
 
-	t.Trace("phase4", "system_prompt", phase4SystemPrompt)
-	t.Trace("phase4", "user_prompt", patchPrompt)
+	t.Trace("phase5", "system_prompt", phase5SystemPrompt)
+	t.Trace("phase5", "user_prompt", patchPrompt)
 
-	patchedText, err := client.ChatWithOptions(ctx, phase4SystemPrompt, patchPrompt, opts)
+	patchedText, err := client.ChatWithOptions(ctx, phase5SystemPrompt, patchPrompt, opts)
 	if err != nil {
-		log.Warn("Phase 4: patch LLM call failed", "error", err)
-		t.Flush("phase4")
+		log.Warn("Phase 5: patch LLM call failed", "error", err)
+		t.Flush("phase5")
 		return lines
 	}
 
-	t.Trace("phase4", "response", patchedText)
+	t.Trace("phase5", "response", patchedText)
 
 	// パッチ結果をパース
 	patchedResult := script.Parse(patchedText, allowedSpeakers)
 	if len(patchedResult.Lines) == 0 {
-		log.Warn("Phase 4: patched script parse failed")
-		t.Flush("phase4")
+		log.Warn("Phase 5: patched script parse failed")
+		t.Flush("phase5")
 		return lines
 	}
 
 	// 2回目のチェック
 	result2 := script.Validate(patchedResult.Lines, config)
 	if !result2.Passed {
-		log.Warn("Phase 4: patched script still has issues", "issues", len(result2.Issues))
+		log.Warn("Phase 5: patched script still has issues", "issues", len(result2.Issues))
 	} else {
-		log.Info("Phase 4: patched script passed QA")
+		log.Info("Phase 5: patched script passed QA")
 	}
 
-	t.Flush("phase4")
+	t.Flush("phase5")
 
 	// パッチ後の結果をそのまま採用（合格/不合格に関わらず）
 	return patchedResult.Lines
@@ -715,8 +779,8 @@ func buildPhase3UserPrompt(brief script.Brief, phase2 *script.Phase2Output) stri
 	return sb.String()
 }
 
-// buildPhase4UserPrompt は Phase 4 用のユーザープロンプトを構築する
-func buildPhase4UserPrompt(scriptText string, issues []script.ValidationIssue) string {
+// buildPhase5UserPrompt は Phase 5 用のユーザープロンプトを構築する
+func buildPhase5UserPrompt(scriptText string, issues []script.ValidationIssue) string {
 	var sb strings.Builder
 
 	sb.WriteString("## 台本\n")

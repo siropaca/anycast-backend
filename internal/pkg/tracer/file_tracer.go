@@ -61,7 +61,8 @@ var phaseLabels = map[string]string{
 	"phase1": "Phase 1: ブリーフ正規化",
 	"phase2": "Phase 2: 素材+アウトライン生成",
 	"phase3": "Phase 3: 台本ドラフト生成",
-	"phase4": "Phase 4: QA 検証+パッチ修正",
+	"phase4": "Phase 4: リライト",
+	"phase5": "Phase 5: QA 検証+パッチ修正",
 }
 
 // buildMarkdown はトレースデータから Markdown 形式のコンテンツを構築する
