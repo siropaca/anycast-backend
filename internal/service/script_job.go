@@ -540,7 +540,7 @@ func (s *scriptJobService) executePhase2(ctx context.Context, briefJSON string, 
 	}
 
 	temp := phase2Config.Temperature
-	opts := llm.ChatOptions{Temperature: &temp}
+	opts := llm.ChatOptions{Temperature: &temp, EnableWebSearch: true}
 
 	t.Trace("phase2", "system_prompt", phase2SystemPrompt)
 	t.Trace("phase2", "user_prompt", briefJSON)

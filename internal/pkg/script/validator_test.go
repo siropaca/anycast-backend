@@ -59,40 +59,6 @@ func TestValidate_LineLengths(t *testing.T) {
 	})
 }
 
-func TestValidate_TrailingPeriod(t *testing.T) {
-	t.Run("句点なしは合格", func(t *testing.T) {
-		lines := []ParsedLine{
-			{SpeakerName: "太郎", Text: "これは句点なしのセリフです"},
-		}
-		config := ValidatorConfig{TalkMode: TalkModeMonologue, DurationMinutes: 1}
-		result := Validate(lines, config)
-
-		hasTrailingPeriod := false
-		for _, issue := range result.Issues {
-			if issue.Check == "trailing_period" {
-				hasTrailingPeriod = true
-			}
-		}
-		assert.False(t, hasTrailingPeriod)
-	})
-
-	t.Run("句点ありは不合格", func(t *testing.T) {
-		lines := []ParsedLine{
-			{SpeakerName: "太郎", Text: "これは句点ありのセリフです。"},
-		}
-		config := ValidatorConfig{TalkMode: TalkModeMonologue, DurationMinutes: 1}
-		result := Validate(lines, config)
-
-		hasTrailingPeriod := false
-		for _, issue := range result.Issues {
-			if issue.Check == "trailing_period" {
-				hasTrailingPeriod = true
-			}
-		}
-		assert.True(t, hasTrailingPeriod)
-	})
-}
-
 func TestValidate_PeriodInText(t *testing.T) {
 	t.Run("セリフ中に句点なしは合格", func(t *testing.T) {
 		lines := []ParsedLine{

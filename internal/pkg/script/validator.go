@@ -29,7 +29,7 @@ type ValidatorConfig struct {
 // Validate は台本の品質を定量チェックする
 //
 // チェック項目:
-//   - 共通: セリフ長、句点なし終了、セリフ中句点なし、最低行数、文長のゆらぎ
+//   - 共通: セリフ長、セリフ中句点なし、最低行数、文長のゆらぎ
 //   - dialogue: 同一話者連続、話者バランス
 //   - monologue: 話者一貫性
 func Validate(lines []ParsedLine, config ValidatorConfig) ValidationResult {
@@ -37,7 +37,6 @@ func Validate(lines []ParsedLine, config ValidatorConfig) ValidationResult {
 
 	// 共通チェック
 	issues = append(issues, checkLineLengths(lines)...)
-	issues = append(issues, checkNoTrailingPeriod(lines)...)
 	issues = append(issues, checkNoPeriodInText(lines)...)
 	issues = append(issues, checkMinimumLines(lines, config.DurationMinutes)...)
 	issues = append(issues, checkLengthVariance(lines)...)
@@ -80,26 +79,11 @@ func checkLineLengths(lines []ParsedLine) []ValidationIssue {
 	return issues
 }
 
-// checkNoTrailingPeriod はセリフの末尾が句点で終わっていないかチェックする
-func checkNoTrailingPeriod(lines []ParsedLine) []ValidationIssue {
-	var issues []ValidationIssue
-	for i, line := range lines {
-		if strings.HasSuffix(line.Text, "。") {
-			issues = append(issues, ValidationIssue{
-				Check:   "trailing_period",
-				Line:    i + 1,
-				Message: "セリフの末尾に句点（。）があります",
-			})
-		}
-	}
-	return issues
-}
-
 // checkNoPeriodInText はセリフ中に句点が含まれていないかチェックする
 func checkNoPeriodInText(lines []ParsedLine) []ValidationIssue {
 	var issues []ValidationIssue
 	for i, line := range lines {
-		// 末尾の句点は trailing_period で別途チェックするため、末尾以外を検査
+		// 末尾の句点は許容するため、末尾以外を検査
 		text := line.Text
 		text = strings.TrimSuffix(text, "。")
 		if strings.Contains(text, "。") {

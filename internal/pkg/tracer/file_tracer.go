@@ -1,6 +1,7 @@
 package tracer
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -75,15 +76,48 @@ func buildMarkdown(phase string, entries []entry) string {
 
 	for _, e := range entries {
 		sb.WriteString(fmt.Sprintf("## %s\n\n", e.section))
-		sb.WriteString("```\n")
-		sb.WriteString(e.data)
-		if !strings.HasSuffix(e.data, "\n") {
+		formatted := formatData(e.data)
+		if isJSON(formatted) {
+			sb.WriteString("```json\n")
+		} else {
+			sb.WriteString("```\n")
+		}
+		sb.WriteString(formatted)
+		if !strings.HasSuffix(formatted, "\n") {
 			sb.WriteString("\n")
 		}
 		sb.WriteString("```\n\n")
 	}
 
 	return sb.String()
+}
+
+// isJSON は文字列が JSON 形式かどうかを判定する
+func isJSON(s string) bool {
+	s = strings.TrimSpace(s)
+	return (strings.HasPrefix(s, "{") && strings.HasSuffix(s, "}")) ||
+		(strings.HasPrefix(s, "[") && strings.HasSuffix(s, "]"))
+}
+
+// formatData はデータを見やすい形式に整形する
+//
+// JSON データの場合はインデント付きに変換し、それ以外はそのまま返す
+func formatData(data string) string {
+	if !isJSON(data) {
+		return data
+	}
+
+	var raw json.RawMessage
+	if err := json.Unmarshal([]byte(data), &raw); err != nil {
+		return data
+	}
+
+	formatted, err := json.MarshalIndent(raw, "", "  ")
+	if err != nil {
+		return data
+	}
+
+	return string(formatted)
 }
 
 // unsafeCharsRegexp はファイル名に使用できない文字にマッチする正規表現

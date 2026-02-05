@@ -29,7 +29,8 @@ type ClientConfig struct {
 
 // ChatOptions は LLM 呼び出しのオプション
 type ChatOptions struct {
-	Temperature *float64
+	Temperature     *float64
+	EnableWebSearch bool
 }
 
 // Client は LLM クライアントのインターフェース

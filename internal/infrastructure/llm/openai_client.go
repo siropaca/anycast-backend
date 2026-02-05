@@ -7,6 +7,7 @@ import (
 
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/option"
+	"github.com/openai/openai-go/v3/responses"
 
 	"github.com/siropaca/anycast-backend/internal/pkg/prompt"
 )
@@ -50,6 +51,10 @@ func (c *openAIClient) Chat(ctx context.Context, systemPrompt, userPrompt string
 
 // ChatWithOptions はオプション付きで LLM と対話する
 func (c *openAIClient) ChatWithOptions(ctx context.Context, systemPrompt, userPrompt string, opts ChatOptions) (string, error) {
+	if opts.EnableWebSearch {
+		return c.chatWithResponsesAPI(ctx, systemPrompt, userPrompt, opts)
+	}
+
 	temp := defaultTemperature
 	if opts.Temperature != nil {
 		temp = *opts.Temperature
@@ -73,5 +78,37 @@ func (c *openAIClient) ChatWithOptions(ctx context.Context, systemPrompt, userPr
 		}
 
 		return resp.Choices[0].Message.Content, nil
+	})
+}
+
+// chatWithResponsesAPI は Responses API を使って web_search 付きで LLM と対話する
+func (c *openAIClient) chatWithResponsesAPI(ctx context.Context, systemPrompt, userPrompt string, opts ChatOptions) (string, error) {
+	temp := defaultTemperature
+	if opts.Temperature != nil {
+		temp = *opts.Temperature
+	}
+
+	return retryWithBackoff(ctx, "OpenAI(Responses)", func() (string, error) {
+		resp, err := c.client.Responses.New(ctx, responses.ResponseNewParams{
+			Model:        string(c.model),
+			Instructions: openai.String(prompt.Compress(systemPrompt)),
+			Input: responses.ResponseNewParamsInputUnion{
+				OfString: openai.String(prompt.Compress(userPrompt)),
+			},
+			Temperature: openai.Float(temp),
+			Tools: []responses.ToolUnionParam{
+				{
+					OfWebSearch: &responses.WebSearchToolParam{
+						Type:              responses.WebSearchToolTypeWebSearch,
+						SearchContextSize: responses.WebSearchToolSearchContextSizeHigh,
+					},
+				},
+			},
+		})
+		if err != nil {
+			return "", err
+		}
+
+		return resp.OutputText(), nil
 	})
 }

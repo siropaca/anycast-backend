@@ -117,6 +117,45 @@ func TestFileTracer(t *testing.T) {
 	})
 }
 
+func TestIsJSON(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected bool
+	}{
+		{"JSON オブジェクト", `{"key":"value"}`, true},
+		{"JSON 配列", `[1,2,3]`, true},
+		{"前後に空白がある JSON", `  {"key":"value"}  `, true},
+		{"プレーンテキスト", "hello world", false},
+		{"空文字列", "", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.expected, isJSON(tt.input))
+		})
+	}
+}
+
+func TestFormatData(t *testing.T) {
+	t.Run("JSON を整形する", func(t *testing.T) {
+		input := `{"episode":{"title":"test"}}`
+		result := formatData(input)
+		assert.Contains(t, result, "  \"episode\"")
+		assert.Contains(t, result, "    \"title\": \"test\"")
+	})
+
+	t.Run("非 JSON はそのまま返す", func(t *testing.T) {
+		input := "plain text"
+		assert.Equal(t, input, formatData(input))
+	})
+
+	t.Run("不正な JSON はそのまま返す", func(t *testing.T) {
+		input := `{invalid json}`
+		assert.Equal(t, input, formatData(input))
+	})
+}
+
 func TestSanitizeTitle(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -175,11 +214,20 @@ func TestBuildMarkdown(t *testing.T) {
 		assert.Contains(t, result, "# unknown_phase")
 	})
 
-	t.Run("データがコードブロックで囲まれる", func(t *testing.T) {
+	t.Run("JSON データが整形されて json コードブロックで囲まれる", func(t *testing.T) {
 		entries := []entry{
 			{section: "response", data: `{"key":"value"}`},
 		}
 		result := buildMarkdown("phase1", entries)
-		assert.Contains(t, result, "```\n{\"key\":\"value\"}\n```")
+		assert.Contains(t, result, "```json\n")
+		assert.Contains(t, result, "\"key\": \"value\"")
+	})
+
+	t.Run("非 JSON データはそのままコードブロックで囲まれる", func(t *testing.T) {
+		entries := []entry{
+			{section: "system_prompt", data: "plain text prompt"},
+		}
+		result := buildMarkdown("phase1", entries)
+		assert.Contains(t, result, "```\nplain text prompt\n```")
 	})
 }

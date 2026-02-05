@@ -46,11 +46,55 @@ const phase2SystemPrompt = `あなたはポッドキャスト台本の構成作�
 - 使用するアクションステップ（grounding.action_steps から選択）
 - 投げかける疑問（grounding.questions から選択）
 
+## JSON スキーマ（厳守）
+以下のフィールド名を正確に使用すること。スキーマにないフィールドは追加しない。
+
+{
+  "grounding": {
+    "definitions": [
+      {"term": "用語名", "definition": "短い定義文"}
+    ],
+    "examples": [
+      {"id": "ex1", "situation": "状況の説明", "detail": "数字や具体物を含む詳細"}
+    ],
+    "pitfalls": [
+      {"id": "pf1", "misconception": "よくある誤解", "reality": "実際はどうなのか"}
+    ],
+    "questions": [
+      {"id": "q1", "question": "リスナーが抱きそうな疑問"}
+    ],
+    "action_steps": [
+      {"id": "a1", "step": "聞いた後に実践できる具体的なアクション"}
+    ]
+  },
+  "outline": {
+    "opening": {"hook": "冒頭の掴みとなる一文"},
+    "blocks": [
+      {
+        "block_number": 1,
+        "topic": "ブロックの主題（1文で要約）",
+        "example_ids": ["ex1"],
+        "pitfall_ids": ["pf1"],
+        "action_step_ids": ["a1"],
+        "question_ids": ["q1"]
+      }
+    ],
+    "closing": {"summary": "全体のまとめ", "takeaway": "リスナーへの持ち帰りメッセージ"}
+  }
+}
+
+## ウェブ検索の活用
+- テーマに関する最新の統計データ、具体的な事例、実践的なアドバイスを収集するためにウェブ検索を積極的に活用する
+- 信頼性の高い情報源を優先する
+- 具体的な数字やデータを含む情報を重視する
+- 収集した情報は上記スキーマの該当フィールドに収める（スキーマ外のフィールドを追加しない）
+
 ## 制約
 - 素材は各カテゴリ最低3個ずつ用意する
-- アウトラインは必ず3ブロック構成とする
+- アウトラインは必ず3ブロック構成とする（block_number は 1, 2, 3）
 - 各ブロックに example / pitfall / action_step / question を最低1つずつ含める
-- JSON 以外のテキストは出力しない`
+- JSON 以外のテキストは出力しない
+- 上記スキーマのフィールド名を正確に使用する（独自フィールドを追加しない）`
 
 // Phase 4: QA パッチ修正のシステムプロンプト
 const phase4SystemPrompt = `あなたはポッドキャスト台本の品質管理担当です。
@@ -104,12 +148,12 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool) string {
 	sb.WriteString("\n## 台詞ルール\n")
 	sb.WriteString("- 1つのセリフは20〜80文字程度\n")
 	sb.WriteString("- セリフは文として完結させる（体言止めや中途半端な切れ方にしない）\n")
-	sb.WriteString("- セリフの末尾に句点（。）は付けない\n")
+	sb.WriteString("- セリフの末尾には句点（。）を付ける\n")
 
 	if talkMode == script.TalkModeDialogue {
-		sb.WriteString("- セリフ中に句点を入れない（1行に1文。同一話者の連続発言は複数行に分ける）\n")
+		sb.WriteString("- 1行に1文とする（同一話者の連続発言は複数行に分ける。セリフ中に句点を入れない）\n")
 	} else {
-		sb.WriteString("- セリフ中に句点を入れない（1行に1文。続けて話す場合は複数行に分ける）\n")
+		sb.WriteString("- 1行に1文とする（続けて話す場合は複数行に分ける。セリフ中に句点を入れない）\n")
 	}
 
 	sb.WriteString("- TTS 前提: 記号連打（！！！、…… 等）/ 過度なスラング / 笑い声表記は避ける\n")
@@ -159,13 +203,13 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool) string {
 
 	if talkMode == script.TalkModeDialogue {
 		sb.WriteString("\n例：\n")
-		sb.WriteString("太郎: こんにちは、今日もよろしくお願いします\n")
-		sb.WriteString("太郎: 今日はいい天気だから気分がいいね\n")
-		sb.WriteString("花子: やあ、元気そうで何よりだね\n")
+		sb.WriteString("太郎: こんにちは、今日もよろしくお願いします。\n")
+		sb.WriteString("太郎: 今日はいい天気だから気分がいいね。\n")
+		sb.WriteString("花子: やあ、元気そうで何よりだね。\n")
 	} else {
 		sb.WriteString("\n例：\n")
-		sb.WriteString("太郎: こんにちは、今日もよろしくお願いします\n")
-		sb.WriteString("太郎: 今日はちょっと面白いテーマを持ってきました\n")
+		sb.WriteString("太郎: こんにちは、今日もよろしくお願いします。\n")
+		sb.WriteString("太郎: 今日はちょっと面白いテーマを持ってきました。\n")
 	}
 
 	// 感情あり版
@@ -176,12 +220,12 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool) string {
 
 		if talkMode == script.TalkModeDialogue {
 			sb.WriteString("\n例：\n")
-			sb.WriteString("太郎: こんにちは、今日もよろしくお願いします\n")
-			sb.WriteString("花子: [嬉しそうに] やあ、元気そうで何よりだね\n")
+			sb.WriteString("太郎: こんにちは、今日もよろしくお願いします。\n")
+			sb.WriteString("花子: [嬉しそうに] やあ、元気そうで何よりだね。\n")
 		} else {
 			sb.WriteString("\n例：\n")
-			sb.WriteString("太郎: こんにちは、今日もよろしくお願いします\n")
-			sb.WriteString("太郎: [ワクワクした様子で] 今日はちょっと面白いテーマを持ってきました\n")
+			sb.WriteString("太郎: こんにちは、今日もよろしくお願いします。\n")
+			sb.WriteString("太郎: [ワクワクした様子で] 今日はちょっと面白いテーマを持ってきました。\n")
 		}
 	}
 
