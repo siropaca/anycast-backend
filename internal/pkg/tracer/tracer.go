@@ -25,10 +25,6 @@ type entry struct {
 }
 
 // New は指定されたモードに応じた Tracer を生成する
-//
-// @param mode - トレースモード（none, log, file）
-// @param episodeTitle - エピソードタイトル（file モード時のディレクトリ名に使用）
-// @returns 対応する Tracer 実装
 func New(mode Mode, episodeTitle string) Tracer {
 	switch mode {
 	case ModeLog:
