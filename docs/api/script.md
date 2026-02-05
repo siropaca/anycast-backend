@@ -43,6 +43,51 @@ POST /channels/:channelId/episodes/:episodeId/script/generate-async
 
 ---
 
+## 最新完了済み台本生成ジョブ取得
+
+```
+GET /channels/:channelId/episodes/:episodeId/script-jobs/latest
+```
+
+エピソードの最新の完了済み台本生成ジョブを取得します。
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "episodeId": "uuid",
+    "status": "completed",
+    "progress": 100,
+    "prompt": "今日の天気について楽しく話す",
+    "durationMinutes": 10,
+    "withEmotion": true,
+    "episode": {
+      "id": "uuid",
+      "title": "エピソードタイトル",
+      "channel": {
+        "id": "uuid",
+        "name": "チャンネル名"
+      }
+    },
+    "scriptLinesCount": 42,
+    "startedAt": "2025-01-01T00:00:00Z",
+    "completedAt": "2025-01-01T00:00:15Z",
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:15Z"
+  }
+}
+```
+
+**エラー:**
+
+| コード | 説明 |
+|--------|------|
+| FORBIDDEN | チャンネルへのアクセス権限なし |
+| NOT_FOUND | チャンネル・エピソードが存在しない、または完了済みジョブがない |
+
+---
+
 ## 台本生成ジョブ取得
 
 ```

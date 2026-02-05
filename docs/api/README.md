@@ -72,6 +72,7 @@
 | GET | `/api/v1/me/channels/:channelId/episodes/:episodeId` | 自分のチャンネルのエピソード取得 | Owner | ✅ | [詳細](./episodes.md#自分のチャンネルのエピソード取得) |
 | **Script（台本）** | - | - | - | - | [script.md](./script.md) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/generate-async` | 台本を AI で生成（非同期） | Owner | ✅ | [詳細](./script.md#台本を-ai-で生成非同期) |
+| GET | `/api/v1/channels/:channelId/episodes/:episodeId/script-jobs/latest` | 最新完了済み台本生成ジョブ取得 | Owner | ✅ | [詳細](./script.md#最新完了済み台本生成ジョブ取得) |
 | GET | `/api/v1/script-jobs/:jobId` | 台本生成ジョブ取得 | Owner | ✅ | [詳細](./script.md#台本生成ジョブ取得) |
 | POST | `/api/v1/script-jobs/:jobId/cancel` | 台本生成ジョブキャンセル | Owner | ✅ | [詳細](./script.md#台本生成ジョブキャンセル) |
 | GET | `/api/v1/me/script-jobs` | 自分の台本生成ジョブ一覧 | Owner | ✅ | [詳細](./script.md#自分の台本生成ジョブ一覧) |
