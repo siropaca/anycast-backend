@@ -18,6 +18,10 @@ const (
 	geminiAPITTSModelName = "gemini-2.5-pro-tts"
 	// デフォルト言語コード
 	geminiDefaultLanguageCode = "ja-JP"
+
+	// デフォルトの音声スタイルプロンプト
+	// ポッドキャストとして聞き取りやすいベーススタイルを定義する
+	defaultVoiceStyle = "ポッドキャスト番組の収録です。落ち着いたテンポでゆっくり話しつつも、自然な抑揚と感情を込めて、友達と雑談するように楽しく語ってください。"
 )
 
 // SpeakerTurn は multi-speaker 合成用の話者とテキストのペア
@@ -134,11 +138,16 @@ func (c *geminiTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 	// 台本を構築（マルチスピーカー形式）
 	var promptBuilder strings.Builder
 
-	// voiceStyle が指定されている場合は先頭に追加
+	// デフォルトの音声スタイルを先頭に追加
+	promptBuilder.WriteString(defaultVoiceStyle)
+
+	// ユーザー指定の voiceStyle がある場合は追記
 	if voiceStyle != nil && *voiceStyle != "" {
+		promptBuilder.WriteString("\n")
 		promptBuilder.WriteString(*voiceStyle)
-		promptBuilder.WriteString("\n\n")
 	}
+
+	promptBuilder.WriteString("\n\n")
 
 	for _, turn := range turns {
 		text := turn.Text
