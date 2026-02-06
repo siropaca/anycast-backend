@@ -17,12 +17,12 @@ type UpdatePlaylistRequest struct {
 	Description *string `json:"description" binding:"omitempty,max=500"`
 }
 
-// プレイリストアイテム追加リクエスト
-type AddPlaylistItemRequest struct {
-	EpisodeID string `json:"episodeId" binding:"required,uuid"`
-}
-
 // プレイリストアイテム並び替えリクエスト
 type ReorderPlaylistItemsRequest struct {
 	ItemIDs []string `json:"itemIds" binding:"required,min=1,dive,uuid"`
+}
+
+// エピソードのプレイリスト所属一括更新リクエスト
+type UpdateEpisodePlaylistsRequest struct {
+	PlaylistIDs []string `json:"playlistIds" binding:"dive,uuid"`
 }

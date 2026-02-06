@@ -24,6 +24,9 @@ type PlaylistRepository interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 	CountItemsByPlaylistID(ctx context.Context, playlistID uuid.UUID) (int64, error)
 
+	// エピソードのプレイリスト所属
+	FindPlaylistIDsByUserIDAndEpisodeID(ctx context.Context, userID, episodeID uuid.UUID) ([]uuid.UUID, error)
+
 	// PlaylistItem 関連
 	FindItemByID(ctx context.Context, id uuid.UUID) (*model.PlaylistItem, error)
 	FindItemsByPlaylistID(ctx context.Context, playlistID uuid.UUID) ([]model.PlaylistItem, error)
@@ -331,4 +334,21 @@ func (r *playlistRepository) DecrementPositionsAfter(ctx context.Context, playli
 	}
 
 	return nil
+}
+
+// FindPlaylistIDsByUserIDAndEpisodeID は指定されたユーザーのプレイリストのうち、エピソードが含まれるプレイリスト ID 一覧を返す
+func (r *playlistRepository) FindPlaylistIDsByUserIDAndEpisodeID(ctx context.Context, userID, episodeID uuid.UUID) ([]uuid.UUID, error) {
+	var playlistIDs []uuid.UUID
+
+	if err := r.db.WithContext(ctx).
+		Model(&model.PlaylistItem{}).
+		Select("playlist_items.playlist_id").
+		Joins("JOIN playlists ON playlists.id = playlist_items.playlist_id").
+		Where("playlists.user_id = ? AND playlist_items.episode_id = ?", userID, episodeID).
+		Scan(&playlistIDs).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to fetch playlist IDs by user and episode", "error", err, "user_id", userID, "episode_id", episodeID)
+		return nil, apperror.ErrInternal.WithMessage("プレイリスト所属情報の取得に失敗しました").WithError(err)
+	}
+
+	return playlistIDs, nil
 }

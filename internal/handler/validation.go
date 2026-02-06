@@ -59,6 +59,9 @@ var fieldNameMap = map[string]string{
 	// リアクション
 	"ReactionType": "リアクションタイプ",
 
+	// プレイリスト
+	"PlaylistIDs": "プレイリスト ID リスト",
+
 	// その他
 	"Status": "ステータス",
 }

@@ -40,6 +40,7 @@ type episodeService struct {
 	bgmRepo             repository.BgmRepository
 	systemBgmRepo       repository.SystemBgmRepository
 	playbackHistoryRepo repository.PlaybackHistoryRepository
+	playlistRepo        repository.PlaylistRepository
 	storageClient       storage.Client
 	ttsClient           tts.Client
 }
@@ -54,6 +55,7 @@ func NewEpisodeService(
 	bgmRepo repository.BgmRepository,
 	systemBgmRepo repository.SystemBgmRepository,
 	playbackHistoryRepo repository.PlaybackHistoryRepository,
+	playlistRepo repository.PlaylistRepository,
 	storageClient storage.Client,
 	ttsClient tts.Client,
 ) EpisodeService {
@@ -66,6 +68,7 @@ func NewEpisodeService(
 		bgmRepo:             bgmRepo,
 		systemBgmRepo:       systemBgmRepo,
 		playbackHistoryRepo: playbackHistoryRepo,
+		playlistRepo:        playlistRepo,
 		storageClient:       storageClient,
 		ttsClient:           ttsClient,
 	}
@@ -138,6 +141,17 @@ func (s *episodeService) GetEpisode(ctx context.Context, userID, channelID, epis
 		return nil, err
 	}
 
+	// 認証済みの場合はプレイリスト所属情報を取得
+	if userID != "" {
+		playlistIDs, err := s.playlistRepo.FindPlaylistIDsByUserIDAndEpisodeID(ctx, uid, eid)
+		if err == nil {
+			if playlistIDs == nil {
+				playlistIDs = []uuid.UUID{}
+			}
+			resp.PlaylistIDs = playlistIDs
+		}
+	}
+
 	return &response.EpisodeDataResponse{
 		Data: resp,
 	}, nil
@@ -190,6 +204,15 @@ func (s *episodeService) GetMyChannelEpisode(ctx context.Context, userID, channe
 	resp, err := s.toEpisodeResponse(ctx, episode, &channel.User, playback)
 	if err != nil {
 		return nil, err
+	}
+
+	// プレイリスト所属情報を取得
+	playlistIDs, err := s.playlistRepo.FindPlaylistIDsByUserIDAndEpisodeID(ctx, uid, eid)
+	if err == nil {
+		if playlistIDs == nil {
+			playlistIDs = []uuid.UUID{}
+		}
+		resp.PlaylistIDs = playlistIDs
 	}
 
 	return &response.EpisodeDataResponse{

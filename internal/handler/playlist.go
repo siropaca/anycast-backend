@@ -210,93 +210,6 @@ func (h *PlaylistHandler) DeletePlaylist(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-// AddItem godoc
-// @Summary プレイリストにアイテム追加
-// @Description 指定したプレイリストにエピソードを追加します
-// @Tags me
-// @Accept json
-// @Produce json
-// @Param playlistId path string true "プレイリスト ID"
-// @Param request body request.AddPlaylistItemRequest true "アイテム追加リクエスト"
-// @Success 201 {object} response.PlaylistItemDataResponse
-// @Failure 400 {object} response.ErrorResponse
-// @Failure 401 {object} response.ErrorResponse
-// @Failure 403 {object} response.ErrorResponse
-// @Failure 404 {object} response.ErrorResponse
-// @Failure 409 {object} response.ErrorResponse
-// @Failure 500 {object} response.ErrorResponse
-// @Security BearerAuth
-// @Router /me/playlists/{playlistId}/items [post]
-func (h *PlaylistHandler) AddItem(c *gin.Context) {
-	userID, ok := middleware.GetUserID(c)
-	if !ok {
-		Error(c, apperror.ErrUnauthorized)
-		return
-	}
-
-	playlistID := c.Param("playlistId")
-	if playlistID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("playlistId は必須です"))
-		return
-	}
-
-	var req request.AddPlaylistItemRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
-		return
-	}
-
-	result, err := h.playlistService.AddItem(c.Request.Context(), userID, playlistID, req)
-	if err != nil {
-		Error(c, err)
-		return
-	}
-
-	c.JSON(http.StatusCreated, result)
-}
-
-// RemoveItem godoc
-// @Summary プレイリストからアイテム削除
-// @Description 指定したプレイリストからアイテムを削除します
-// @Tags me
-// @Accept json
-// @Produce json
-// @Param playlistId path string true "プレイリスト ID"
-// @Param itemId path string true "アイテム ID"
-// @Success 204 "No Content"
-// @Failure 401 {object} response.ErrorResponse
-// @Failure 403 {object} response.ErrorResponse
-// @Failure 404 {object} response.ErrorResponse
-// @Failure 500 {object} response.ErrorResponse
-// @Security BearerAuth
-// @Router /me/playlists/{playlistId}/items/{itemId} [delete]
-func (h *PlaylistHandler) RemoveItem(c *gin.Context) {
-	userID, ok := middleware.GetUserID(c)
-	if !ok {
-		Error(c, apperror.ErrUnauthorized)
-		return
-	}
-
-	playlistID := c.Param("playlistId")
-	if playlistID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("playlistId は必須です"))
-		return
-	}
-
-	itemID := c.Param("itemId")
-	if itemID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("itemId は必須です"))
-		return
-	}
-
-	if err := h.playlistService.RemoveItem(c.Request.Context(), userID, playlistID, itemID); err != nil {
-		Error(c, err)
-		return
-	}
-
-	c.Status(http.StatusNoContent)
-}
-
 // ReorderItems godoc
 // @Summary プレイリストアイテム並び替え
 // @Description プレイリスト内のアイテムの順序を変更します
@@ -341,22 +254,23 @@ func (h *PlaylistHandler) ReorderItems(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-// AddToDefaultPlaylist godoc
-// @Summary デフォルトプレイリスト（後で聴く）に追加
-// @Description 指定したエピソードをデフォルトプレイリスト（後で聴く）に追加します
+// UpdateEpisodePlaylists godoc
+// @Summary エピソードのプレイリスト所属一括更新
+// @Description エピソードが所属するプレイリストを一括更新します
 // @Tags episodes
 // @Accept json
 // @Produce json
 // @Param episodeId path string true "エピソード ID"
-// @Success 201 {object} response.PlaylistItemDataResponse
+// @Param request body request.UpdateEpisodePlaylistsRequest true "プレイリスト所属更新リクエスト"
+// @Success 200 {object} response.EpisodePlaylistIDsDataResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
 // @Failure 404 {object} response.ErrorResponse
-// @Failure 409 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
 // @Security BearerAuth
-// @Router /episodes/{episodeId}/default-playlist [post]
-func (h *PlaylistHandler) AddToDefaultPlaylist(c *gin.Context) {
+// @Router /episodes/{episodeId}/playlists [put]
+func (h *PlaylistHandler) UpdateEpisodePlaylists(c *gin.Context) {
 	userID, ok := middleware.GetUserID(c)
 	if !ok {
 		Error(c, apperror.ErrUnauthorized)
@@ -369,48 +283,19 @@ func (h *PlaylistHandler) AddToDefaultPlaylist(c *gin.Context) {
 		return
 	}
 
-	result, err := h.playlistService.AddToDefaultPlaylist(c.Request.Context(), userID, episodeID)
+	var req request.UpdateEpisodePlaylistsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
+		return
+	}
+
+	result, err := h.playlistService.UpdateEpisodePlaylists(c.Request.Context(), userID, episodeID, req)
 	if err != nil {
 		Error(c, err)
 		return
 	}
 
-	c.JSON(http.StatusCreated, result)
-}
-
-// RemoveFromDefaultPlaylist godoc
-// @Summary デフォルトプレイリスト（後で聴く）から削除
-// @Description 指定したエピソードをデフォルトプレイリスト（後で聴く）から削除します
-// @Tags episodes
-// @Accept json
-// @Produce json
-// @Param episodeId path string true "エピソード ID"
-// @Success 204 "No Content"
-// @Failure 400 {object} response.ErrorResponse
-// @Failure 401 {object} response.ErrorResponse
-// @Failure 404 {object} response.ErrorResponse
-// @Failure 500 {object} response.ErrorResponse
-// @Security BearerAuth
-// @Router /episodes/{episodeId}/default-playlist [delete]
-func (h *PlaylistHandler) RemoveFromDefaultPlaylist(c *gin.Context) {
-	userID, ok := middleware.GetUserID(c)
-	if !ok {
-		Error(c, apperror.ErrUnauthorized)
-		return
-	}
-
-	episodeID := c.Param("episodeId")
-	if episodeID == "" {
-		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
-		return
-	}
-
-	if err := h.playlistService.RemoveFromDefaultPlaylist(c.Request.Context(), userID, episodeID); err != nil {
-		Error(c, err)
-		return
-	}
-
-	c.Status(http.StatusNoContent)
+	c.JSON(http.StatusOK, result)
 }
 
 // GetDefaultPlaylist godoc

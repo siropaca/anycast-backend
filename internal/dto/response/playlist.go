@@ -71,7 +71,12 @@ type PlaylistDetailDataResponse struct {
 	Data PlaylistDetailResponse `json:"data" validate:"required"`
 }
 
-// プレイリストアイテムのラッパーレスポンス
-type PlaylistItemDataResponse struct {
-	Data PlaylistItemResponse `json:"data" validate:"required"`
+// エピソードのプレイリスト所属 ID 一覧のレスポンス
+type EpisodePlaylistIDsResponse struct {
+	PlaylistIDs []uuid.UUID `json:"playlistIds" validate:"required"`
+}
+
+// エピソードのプレイリスト所属 ID 一覧のラッパーレスポンス
+type EpisodePlaylistIDsDataResponse struct {
+	Data EpisodePlaylistIDsResponse `json:"data" validate:"required"`
 }

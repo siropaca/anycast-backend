@@ -65,19 +65,6 @@ Authorization: Bearer {{token}}
 ### プレイリストアイテム管理
 ### ===========================
 
-### プレイリストにエピソード追加
-POST {{baseUrl}}/me/playlists/YOUR_PLAYLIST_ID_HERE/items
-Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
-  "episodeId": "YOUR_EPISODE_ID_HERE"
-}
-
-### プレイリストからアイテム削除
-DELETE {{baseUrl}}/me/playlists/YOUR_PLAYLIST_ID_HERE/items/YOUR_ITEM_ID_HERE
-Authorization: Bearer {{token}}
-
 ### プレイリストアイテム並び替え
 POST {{baseUrl}}/me/playlists/YOUR_PLAYLIST_ID_HERE/items/reorder
 Content-Type: application/json
@@ -92,17 +79,34 @@ Authorization: Bearer {{token}}
 }
 
 ### =======================================
-### デフォルトプレイリスト（後で聴く）ショートカット
+### エピソードのプレイリスト所属管理
+### =======================================
+
+### エピソードのプレイリスト所属一括更新
+PUT {{baseUrl}}/episodes/YOUR_EPISODE_ID_HERE/playlists
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "playlistIds": [
+    "PLAYLIST_ID_1",
+    "PLAYLIST_ID_2"
+  ]
+}
+
+### エピソードを全プレイリストから外す
+PUT {{baseUrl}}/episodes/YOUR_EPISODE_ID_HERE/playlists
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "playlistIds": []
+}
+
+### =======================================
+### デフォルトプレイリスト（後で聴く）
 ### =======================================
 
 ### デフォルトプレイリスト（後で聴く）一覧取得
 GET {{baseUrl}}/me/default-playlist
-Authorization: Bearer {{token}}
-
-### デフォルトプレイリスト（後で聴く）に追加
-POST {{baseUrl}}/episodes/YOUR_EPISODE_ID_HERE/default-playlist
-Authorization: Bearer {{token}}
-
-### デフォルトプレイリスト（後で聴く）から削除
-DELETE {{baseUrl}}/episodes/YOUR_EPISODE_ID_HERE/default-playlist
 Authorization: Bearer {{token}}

@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"gorm.io/gorm"
+
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/request"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
@@ -26,20 +28,20 @@ type PlaylistService interface {
 	DeletePlaylist(ctx context.Context, userID, playlistID string) error
 
 	// プレイリストアイテム管理
-	AddItem(ctx context.Context, userID, playlistID string, req request.AddPlaylistItemRequest) (*response.PlaylistItemDataResponse, error)
-	RemoveItem(ctx context.Context, userID, playlistID, itemID string) error
 	ReorderItems(ctx context.Context, userID, playlistID string, req request.ReorderPlaylistItemsRequest) (*response.PlaylistDetailDataResponse, error)
 
-	// デフォルトプレイリスト（後で聴く）ショートカット
-	AddToDefaultPlaylist(ctx context.Context, userID, episodeID string) (*response.PlaylistItemDataResponse, error)
-	RemoveFromDefaultPlaylist(ctx context.Context, userID, episodeID string) error
+	// デフォルトプレイリスト（後で聴く）
 	GetDefaultPlaylist(ctx context.Context, userID string) (*response.PlaylistDetailDataResponse, error)
 
 	// デフォルトプレイリスト作成（ユーザー登録時に呼び出される）
 	CreateDefaultPlaylist(ctx context.Context, userID uuid.UUID) error
+
+	// エピソードのプレイリスト所属一括更新
+	UpdateEpisodePlaylists(ctx context.Context, userID, episodeID string, req request.UpdateEpisodePlaylistsRequest) (*response.EpisodePlaylistIDsDataResponse, error)
 }
 
 type playlistService struct {
+	db            *gorm.DB
 	playlistRepo  repository.PlaylistRepository
 	episodeRepo   repository.EpisodeRepository
 	storageClient storage.Client
@@ -47,11 +49,13 @@ type playlistService struct {
 
 // NewPlaylistService は playlistService を生成して PlaylistService として返す
 func NewPlaylistService(
+	db *gorm.DB,
 	playlistRepo repository.PlaylistRepository,
 	episodeRepo repository.EpisodeRepository,
 	storageClient storage.Client,
 ) PlaylistService {
 	return &playlistService{
+		db:            db,
 		playlistRepo:  playlistRepo,
 		episodeRepo:   episodeRepo,
 		storageClient: storageClient,
@@ -268,122 +272,6 @@ func (s *playlistService) DeletePlaylist(ctx context.Context, userID, playlistID
 	return s.playlistRepo.Delete(ctx, pid)
 }
 
-// AddItem はプレイリストにアイテムを追加する
-func (s *playlistService) AddItem(ctx context.Context, userID, playlistID string, req request.AddPlaylistItemRequest) (*response.PlaylistItemDataResponse, error) {
-	uid, err := uuid.Parse(userID)
-	if err != nil {
-		return nil, err
-	}
-
-	pid, err := uuid.Parse(playlistID)
-	if err != nil {
-		return nil, err
-	}
-
-	eid, err := uuid.Parse(req.EpisodeID)
-	if err != nil {
-		return nil, err
-	}
-
-	playlist, err := s.playlistRepo.FindByID(ctx, pid)
-	if err != nil {
-		return nil, err
-	}
-
-	// オーナーチェック
-	if playlist.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("このプレイリストへのアクセス権限がありません")
-	}
-
-	// エピソードの存在確認
-	episode, err := s.episodeRepo.FindByID(ctx, eid)
-	if err != nil {
-		return nil, err
-	}
-
-	// 重複チェック
-	_, err = s.playlistRepo.FindItemByPlaylistIDAndEpisodeID(ctx, pid, eid)
-	if err == nil {
-		return nil, apperror.ErrAlreadyInPlaylist.WithMessage("このエピソードは既にプレイリストに追加されています")
-	}
-	if !apperror.IsCode(err, apperror.CodeNotFound) {
-		return nil, err
-	}
-
-	// 最大 position を取得
-	maxPosition, err := s.playlistRepo.GetMaxPosition(ctx, pid)
-	if err != nil {
-		return nil, err
-	}
-
-	item := &model.PlaylistItem{
-		PlaylistID: pid,
-		EpisodeID:  eid,
-		Position:   maxPosition + 1,
-		Episode:    *episode,
-	}
-
-	if err := s.playlistRepo.CreateItem(ctx, item); err != nil {
-		return nil, err
-	}
-
-	// アイテムを再取得してリレーションをプリロード
-	item, err = s.playlistRepo.FindItemByID(ctx, item.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	return &response.PlaylistItemDataResponse{
-		Data: s.toPlaylistItemResponse(ctx, item),
-	}, nil
-}
-
-// RemoveItem はプレイリストからアイテムを削除する
-func (s *playlistService) RemoveItem(ctx context.Context, userID, playlistID, itemID string) error {
-	uid, err := uuid.Parse(userID)
-	if err != nil {
-		return err
-	}
-
-	pid, err := uuid.Parse(playlistID)
-	if err != nil {
-		return err
-	}
-
-	iid, err := uuid.Parse(itemID)
-	if err != nil {
-		return err
-	}
-
-	playlist, err := s.playlistRepo.FindByID(ctx, pid)
-	if err != nil {
-		return err
-	}
-
-	// オーナーチェック
-	if playlist.UserID != uid {
-		return apperror.ErrForbidden.WithMessage("このプレイリストへのアクセス権限がありません")
-	}
-
-	// アイテムの存在確認とプレイリストの一致チェック
-	item, err := s.playlistRepo.FindItemByID(ctx, iid)
-	if err != nil {
-		return err
-	}
-
-	if item.PlaylistID != pid {
-		return apperror.ErrNotFound.WithMessage("プレイリストアイテムが見つかりません")
-	}
-
-	// アイテムを削除
-	if err := s.playlistRepo.DeleteItem(ctx, iid); err != nil {
-		return err
-	}
-
-	// 削除されたアイテムより後のアイテムの position を調整
-	return s.playlistRepo.DecrementPositionsAfter(ctx, pid, item.Position)
-}
-
 // ReorderItems はプレイリストアイテムを並び替える
 func (s *playlistService) ReorderItems(ctx context.Context, userID, playlistID string, req request.ReorderPlaylistItemsRequest) (*response.PlaylistDetailDataResponse, error) {
 	uid, err := uuid.Parse(userID)
@@ -432,57 +320,6 @@ func (s *playlistService) ReorderItems(ctx context.Context, userID, playlistID s
 	}, nil
 }
 
-// AddToDefaultPlaylist はデフォルトプレイリスト（後で聴く）にエピソードを追加する
-func (s *playlistService) AddToDefaultPlaylist(ctx context.Context, userID, episodeID string) (*response.PlaylistItemDataResponse, error) {
-	uid, err := uuid.Parse(userID)
-	if err != nil {
-		return nil, err
-	}
-
-	// デフォルトプレイリストを取得
-	playlist, err := s.playlistRepo.FindDefaultByUserID(ctx, uid)
-	if err != nil {
-		return nil, err
-	}
-
-	return s.AddItem(ctx, userID, playlist.ID.String(), request.AddPlaylistItemRequest{
-		EpisodeID: episodeID,
-	})
-}
-
-// RemoveFromDefaultPlaylist はデフォルトプレイリスト（後で聴く）からエピソードを削除する
-func (s *playlistService) RemoveFromDefaultPlaylist(ctx context.Context, userID, episodeID string) error {
-	uid, err := uuid.Parse(userID)
-	if err != nil {
-		return err
-	}
-
-	eid, err := uuid.Parse(episodeID)
-	if err != nil {
-		return err
-	}
-
-	// デフォルトプレイリストを取得
-	playlist, err := s.playlistRepo.FindDefaultByUserID(ctx, uid)
-	if err != nil {
-		return err
-	}
-
-	// エピソードに対応するアイテムを検索
-	item, err := s.playlistRepo.FindItemByPlaylistIDAndEpisodeID(ctx, playlist.ID, eid)
-	if err != nil {
-		return err
-	}
-
-	// アイテムを削除
-	if err := s.playlistRepo.DeleteItem(ctx, item.ID); err != nil {
-		return err
-	}
-
-	// 削除されたアイテムより後のアイテムの position を調整
-	return s.playlistRepo.DecrementPositionsAfter(ctx, playlist.ID, item.Position)
-}
-
 // GetDefaultPlaylist はデフォルトプレイリスト（後で聴く）を取得する
 func (s *playlistService) GetDefaultPlaylist(ctx context.Context, userID string) (*response.PlaylistDetailDataResponse, error) {
 	uid, err := uuid.Parse(userID)
@@ -509,6 +346,145 @@ func (s *playlistService) CreateDefaultPlaylist(ctx context.Context, userID uuid
 	}
 
 	return s.playlistRepo.Create(ctx, playlist)
+}
+
+// UpdateEpisodePlaylists はエピソードのプレイリスト所属を一括更新する
+func (s *playlistService) UpdateEpisodePlaylists(ctx context.Context, userID, episodeID string, req request.UpdateEpisodePlaylistsRequest) (*response.EpisodePlaylistIDsDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	// エピソードの存在確認
+	if _, err := s.episodeRepo.FindByID(ctx, eid); err != nil {
+		return nil, err
+	}
+
+	// リクエストの playlistIDs を UUID にパース＋重複排除
+	seen := make(map[uuid.UUID]bool)
+	var requestedIDs []uuid.UUID
+	for _, idStr := range req.PlaylistIDs {
+		id, err := uuid.Parse(idStr)
+		if err != nil {
+			return nil, err
+		}
+		if !seen[id] {
+			seen[id] = true
+			requestedIDs = append(requestedIDs, id)
+		}
+	}
+
+	// 指定プレイリストのオーナーチェック（全てが認証ユーザーのものか確認）
+	for _, pid := range requestedIDs {
+		playlist, err := s.playlistRepo.FindByID(ctx, pid)
+		if err != nil {
+			return nil, err
+		}
+		if playlist.UserID != uid {
+			return nil, apperror.ErrForbidden.WithMessage("このプレイリストへのアクセス権限がありません")
+		}
+	}
+
+	// 現在の所属プレイリスト ID 取得
+	currentIDs, err := s.playlistRepo.FindPlaylistIDsByUserIDAndEpisodeID(ctx, uid, eid)
+	if err != nil {
+		return nil, err
+	}
+
+	// 差分計算
+	currentSet := make(map[uuid.UUID]bool)
+	for _, id := range currentIDs {
+		currentSet[id] = true
+	}
+
+	requestedSet := make(map[uuid.UUID]bool)
+	for _, id := range requestedIDs {
+		requestedSet[id] = true
+	}
+
+	var toAdd []uuid.UUID
+	for _, id := range requestedIDs {
+		if !currentSet[id] {
+			toAdd = append(toAdd, id)
+		}
+	}
+
+	var toRemove []uuid.UUID
+	for _, id := range currentIDs {
+		if !requestedSet[id] {
+			toRemove = append(toRemove, id)
+		}
+	}
+
+	// 差分がない場合は早期リターン
+	if len(toAdd) == 0 && len(toRemove) == 0 {
+		resultIDs := requestedIDs
+		if resultIDs == nil {
+			resultIDs = []uuid.UUID{}
+		}
+		return &response.EpisodePlaylistIDsDataResponse{
+			Data: response.EpisodePlaylistIDsResponse{
+				PlaylistIDs: resultIDs,
+			},
+		}, nil
+	}
+
+	// トランザクション内で追加・削除を実行
+	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 削除: 各プレイリストからエピソードを外す
+		for _, pid := range toRemove {
+			item, err := s.playlistRepo.FindItemByPlaylistIDAndEpisodeID(ctx, pid, eid)
+			if err != nil {
+				return err
+			}
+			if err := s.playlistRepo.DeleteItem(ctx, item.ID); err != nil {
+				return err
+			}
+			if err := s.playlistRepo.DecrementPositionsAfter(ctx, pid, item.Position); err != nil {
+				return err
+			}
+		}
+
+		// 追加: 各プレイリストにエピソードを追加
+		for _, pid := range toAdd {
+			maxPosition, err := s.playlistRepo.GetMaxPosition(ctx, pid)
+			if err != nil {
+				return err
+			}
+			item := &model.PlaylistItem{
+				PlaylistID: pid,
+				EpisodeID:  eid,
+				Position:   maxPosition + 1,
+			}
+			if err := s.playlistRepo.CreateItem(ctx, item); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	// 更新後の所属 ID を取得して返却
+	updatedIDs, err := s.playlistRepo.FindPlaylistIDsByUserIDAndEpisodeID(ctx, uid, eid)
+	if err != nil {
+		return nil, err
+	}
+	if updatedIDs == nil {
+		updatedIDs = []uuid.UUID{}
+	}
+
+	return &response.EpisodePlaylistIDsDataResponse{
+		Data: response.EpisodePlaylistIDsResponse{
+			PlaylistIDs: updatedIDs,
+		},
+	}, nil
 }
 
 // toPlaylistDetailResponse は model.Playlist を response.PlaylistDetailResponse に変換する
