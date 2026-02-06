@@ -455,71 +455,6 @@ DELETE /me/playlists/:playlistId
 
 ---
 
-## プレイリストにアイテム追加
-
-```
-POST /me/playlists/:playlistId/items
-```
-
-**リクエスト:**
-```json
-{
-  "episodeId": "uuid"
-}
-```
-
-| フィールド | 型 | 必須 | 説明 |
-|------------|-----|:----:|------|
-| episodeId | uuid | ◯ | 追加するエピソードの ID |
-
-**レスポンス（201 Created）:**
-```json
-{
-  "data": {
-    "id": "uuid",
-    "position": 0,
-    "episode": {
-      "id": "uuid",
-      "title": "エピソードタイトル",
-      "description": "説明",
-      "artwork": { "id": "uuid", "url": "..." },
-      "fullAudio": { "id": "uuid", "url": "...", "durationMs": 180000 },
-      "playCount": 100,
-      "publishedAt": "2025-01-01T00:00:00Z",
-      "channel": {
-        "id": "uuid",
-        "name": "チャンネル名",
-        "artwork": { "id": "uuid", "url": "..." }
-      }
-    },
-    "addedAt": "2025-01-01T00:00:00Z"
-  }
-}
-```
-
-**エラー（409 Conflict）:**
-```json
-{
-  "error": {
-    "code": "ALREADY_IN_PLAYLIST",
-    "message": "このエピソードは既にプレイリストに追加されています"
-  }
-}
-```
-
----
-
-## プレイリストからアイテム削除
-
-```
-DELETE /me/playlists/:playlistId/items/:itemId
-```
-
-**レスポンス（204 No Content）:**
-レスポンスボディなし
-
----
-
 ## プレイリストアイテム並び替え
 
 ```
@@ -542,48 +477,53 @@ POST /me/playlists/:playlistId/items/reorder
 
 ---
 
-## デフォルトプレイリスト（後で聴く）一覧取得
+## エピソードのプレイリスト所属一括更新
 
-デフォルトプレイリスト（後で聴く）の内容を取得するショートカット。
-
-```
-GET /me/default-playlist
-```
-
-**レスポンス:**
-プレイリスト詳細と同じ形式
-
----
-
-## デフォルトプレイリスト（後で聴く）に追加
+エピソードが所属するプレイリストを一括更新する。指定した `playlistIds` の状態に同期される（差分で追加・削除を実行）。
 
 ```
-POST /episodes/:episodeId/default-playlist
+PUT /episodes/:episodeId/playlists
 ```
 
-**レスポンス（201 Created）:**
-プレイリストアイテムと同じ形式
-
-**エラー（409 Conflict）:**
+**リクエスト:**
 ```json
 {
-  "error": {
-    "code": "ALREADY_IN_PLAYLIST",
-    "message": "このエピソードは既にプレイリストに追加されています"
+  "playlistIds": ["uuid1", "uuid2"]
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| playlistIds | uuid[] | | エピソードを所属させるプレイリスト ID の配列。空配列で全プレイリストから外す |
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "playlistIds": ["uuid1", "uuid2"]
   }
 }
 ```
 
----
-
-## デフォルトプレイリスト（後で聴く）から削除
-
+**エラー（403 Forbidden）:**
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "このプレイリストへのアクセス権限がありません"
+  }
+}
 ```
-DELETE /episodes/:episodeId/default-playlist
-```
 
-**レスポンス（204 No Content）:**
-レスポンスボディなし
+**エラー（404 Not Found）:**
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "エピソードが見つかりません"
+  }
+}
+```
 
 ---
 
