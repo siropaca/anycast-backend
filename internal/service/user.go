@@ -6,6 +6,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/model"
+	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
@@ -17,6 +18,7 @@ type UserService interface {
 type userService struct {
 	userRepo      repository.UserRepository
 	channelRepo   repository.ChannelRepository
+	episodeRepo   repository.EpisodeRepository
 	storageClient storage.Client
 }
 
@@ -24,11 +26,13 @@ type userService struct {
 func NewUserService(
 	userRepo repository.UserRepository,
 	channelRepo repository.ChannelRepository,
+	episodeRepo repository.EpisodeRepository,
 	storageClient storage.Client,
 ) UserService {
 	return &userService{
 		userRepo:      userRepo,
 		channelRepo:   channelRepo,
+		episodeRepo:   episodeRepo,
 		storageClient: storageClient,
 	}
 }
@@ -58,8 +62,18 @@ func (s *userService) GetUser(ctx context.Context, username string) (*response.P
 		}
 	}
 
+	// チャンネルごとの公開済みエピソード数を取得
+	channelIDs := make([]uuid.UUID, len(channels))
+	for i, c := range channels {
+		channelIDs[i] = c.ID
+	}
+	episodeCounts, err := s.episodeRepo.CountPublishedByChannelIDs(ctx, channelIDs)
+	if err != nil {
+		return nil, err
+	}
+
 	// チャンネル一覧のレスポンスを構築
-	channelResponses, err := s.toPublicUserChannelResponses(ctx, channels)
+	channelResponses, err := s.toPublicUserChannelResponses(ctx, channels, episodeCounts)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +91,7 @@ func (s *userService) GetUser(ctx context.Context, username string) (*response.P
 }
 
 // toPublicUserChannelResponses は Channel のスライスを公開ユーザー用チャンネルレスポンスのスライスに変換する
-func (s *userService) toPublicUserChannelResponses(ctx context.Context, channels []model.Channel) ([]response.PublicUserChannelResponse, error) {
+func (s *userService) toPublicUserChannelResponses(ctx context.Context, channels []model.Channel, episodeCounts map[uuid.UUID]int) ([]response.PublicUserChannelResponse, error) {
 	result := make([]response.PublicUserChannelResponse, len(channels))
 
 	for i, c := range channels {
@@ -92,9 +106,10 @@ func (s *userService) toPublicUserChannelResponses(ctx context.Context, channels
 				SortOrder: c.Category.SortOrder,
 				IsActive:  c.Category.IsActive,
 			},
-			PublishedAt: c.PublishedAt,
-			CreatedAt:   c.CreatedAt,
-			UpdatedAt:   c.UpdatedAt,
+			EpisodeCount: episodeCounts[c.ID],
+			PublishedAt:  c.PublishedAt,
+			CreatedAt:    c.CreatedAt,
+			UpdatedAt:    c.UpdatedAt,
 		}
 
 		if c.Artwork != nil {

@@ -21,6 +21,7 @@ GET /users/:username
         "description": "説明",
         "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
         "artwork": { "id": "uuid", "url": "..." },
+        "episodeCount": 12,
         "publishedAt": "2025-01-01T00:00:00Z",
         "createdAt": "2025-01-01T00:00:00Z",
         "updatedAt": "2025-01-01T00:00:00Z"
@@ -34,6 +35,7 @@ GET /users/:username
 > **Note:**
 > - 他ユーザーの情報は公開プロフィールのみ（email は非公開）
 > - `channels` には公開中のチャンネルのみ含まれます
+> - `episodeCount` は公開済みエピソードの件数です
 
 ---
 

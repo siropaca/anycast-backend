@@ -8,14 +8,15 @@ import (
 
 // 公開ユーザーのチャンネル情報のレスポンス
 type PublicUserChannelResponse struct {
-	ID          uuid.UUID        `json:"id" validate:"required"`
-	Name        string           `json:"name" validate:"required"`
-	Description string           `json:"description" validate:"required"`
-	Category    CategoryResponse `json:"category" validate:"required"`
-	Artwork     *ArtworkResponse `json:"artwork" extensions:"x-nullable"`
-	PublishedAt *time.Time       `json:"publishedAt" extensions:"x-nullable"`
-	CreatedAt   time.Time        `json:"createdAt" validate:"required"`
-	UpdatedAt   time.Time        `json:"updatedAt" validate:"required"`
+	ID           uuid.UUID        `json:"id" validate:"required"`
+	Name         string           `json:"name" validate:"required"`
+	Description  string           `json:"description" validate:"required"`
+	Category     CategoryResponse `json:"category" validate:"required"`
+	Artwork      *ArtworkResponse `json:"artwork" extensions:"x-nullable"`
+	EpisodeCount int              `json:"episodeCount" validate:"required"`
+	PublishedAt  *time.Time       `json:"publishedAt" extensions:"x-nullable"`
+	CreatedAt    time.Time        `json:"createdAt" validate:"required"`
+	UpdatedAt    time.Time        `json:"updatedAt" validate:"required"`
 }
 
 // チャンネルオーナー情報のレスポンス

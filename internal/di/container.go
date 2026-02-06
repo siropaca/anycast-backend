@@ -234,7 +234,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	followService := service.NewFollowService(followRepo, userRepo, storageClient)
 	reactionService := service.NewReactionService(reactionRepo, storageClient)
 	recommendationService := service.NewRecommendationService(recommendationRepo, categoryRepo, storageClient)
-	userService := service.NewUserService(userRepo, channelRepo, storageClient)
+	userService := service.NewUserService(userRepo, channelRepo, episodeRepo, storageClient)
 
 	// Handler 層
 	voiceHandler := handler.NewVoiceHandler(voiceService)

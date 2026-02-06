@@ -17,6 +17,7 @@ import (
 type EpisodeRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*model.Episode, error)
 	FindByChannelID(ctx context.Context, channelID uuid.UUID, filter EpisodeFilter) ([]model.Episode, int64, error)
+	CountPublishedByChannelIDs(ctx context.Context, channelIDs []uuid.UUID) (map[uuid.UUID]int, error)
 	Create(ctx context.Context, episode *model.Episode) error
 	Update(ctx context.Context, episode *model.Episode) error
 	Delete(ctx context.Context, id uuid.UUID) error
@@ -79,6 +80,36 @@ func (r *episodeRepository) FindByChannelID(ctx context.Context, channelID uuid.
 	}
 
 	return episodes, total, nil
+}
+
+// CountPublishedByChannelIDs は指定されたチャンネル群ごとの公開済みエピソード数を取得する
+func (r *episodeRepository) CountPublishedByChannelIDs(ctx context.Context, channelIDs []uuid.UUID) (map[uuid.UUID]int, error) {
+	if len(channelIDs) == 0 {
+		return map[uuid.UUID]int{}, nil
+	}
+
+	type countRow struct {
+		ChannelID uuid.UUID
+		Count     int
+	}
+
+	var rows []countRow
+	if err := r.db.WithContext(ctx).
+		Model(&model.Episode{}).
+		Select("channel_id, COUNT(*) AS count").
+		Where("channel_id IN ? AND published_at IS NOT NULL AND published_at <= ?", channelIDs, time.Now()).
+		Group("channel_id").
+		Find(&rows).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to count published episodes by channel IDs", "error", err)
+		return nil, apperror.ErrInternal.WithMessage("エピソード数の取得に失敗しました").WithError(err)
+	}
+
+	result := make(map[uuid.UUID]int, len(rows))
+	for _, row := range rows {
+		result[row.ChannelID] = row.Count
+	}
+
+	return result, nil
 }
 
 // Create はエピソードを作成する

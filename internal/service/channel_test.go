@@ -68,6 +68,11 @@ func (m *mockEpisodeRepositoryForChannel) Delete(ctx context.Context, id uuid.UU
 	return args.Error(0)
 }
 
+func (m *mockEpisodeRepositoryForChannel) CountPublishedByChannelIDs(ctx context.Context, channelIDs []uuid.UUID) (map[uuid.UUID]int, error) {
+	args := m.Called(ctx, channelIDs)
+	return args.Get(0).(map[uuid.UUID]int), args.Error(1)
+}
+
 func (m *mockEpisodeRepositoryForChannel) IncrementPlayCount(ctx context.Context, id uuid.UUID) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)

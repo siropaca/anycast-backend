@@ -7910,6 +7910,7 @@ const docTemplate = `{
                 "category",
                 "createdAt",
                 "description",
+                "episodeCount",
                 "id",
                 "name",
                 "updatedAt"
@@ -7931,6 +7932,9 @@ const docTemplate = `{
                 },
                 "description": {
                     "type": "string"
+                },
+                "episodeCount": {
+                    "type": "integer"
                 },
                 "id": {
                     "type": "string"
