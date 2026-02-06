@@ -18,6 +18,10 @@ func (s *stubClient) ChatWithOptions(_ context.Context, _, _ string, _ ChatOptio
 	return "stub", nil
 }
 
+func (s *stubClient) ModelInfo() string {
+	return "Stub / stub-model"
+}
+
 func TestRegistry_RegisterAndGet(t *testing.T) {
 	t.Run("登録したプロバイダのクライアントを取得できる", func(t *testing.T) {
 		r := NewRegistry()

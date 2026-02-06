@@ -33,6 +33,10 @@ func (m *mockLLMClient) ChatWithOptions(ctx context.Context, systemPrompt, userP
 	return args.String(0), args.Error(1)
 }
 
+func (m *mockLLMClient) ModelInfo() string {
+	return "Mock / mock-model"
+}
+
 // ScriptJobRepository のモック
 type mockScriptJobRepository struct {
 	mock.Mock

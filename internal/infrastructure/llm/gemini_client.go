@@ -61,6 +61,11 @@ func (c *geminiClient) Chat(ctx context.Context, systemPrompt, userPrompt string
 	return c.ChatWithOptions(ctx, systemPrompt, userPrompt, ChatOptions{})
 }
 
+// ModelInfo はプロバイダ名とモデル名を返す
+func (c *geminiClient) ModelInfo() string {
+	return fmt.Sprintf("Gemini / %s", c.model)
+}
+
 // ChatWithOptions はオプション付きで LLM と対話する
 func (c *geminiClient) ChatWithOptions(ctx context.Context, systemPrompt, userPrompt string, opts ChatOptions) (string, error) {
 	temp := defaultTemperature

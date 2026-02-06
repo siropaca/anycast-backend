@@ -568,6 +568,7 @@ func (s *scriptJobService) executePhase2(ctx context.Context, briefJSON string, 
 	temp := phase2Config.Temperature
 	opts := llm.ChatOptions{Temperature: &temp, EnableWebSearch: true}
 
+	t.Trace("phase2", "model_info", s.llmRegistry.GetModelInfo(phase2Config.Provider))
 	t.Trace("phase2", "system_prompt", phase2SystemPrompt)
 	t.Trace("phase2", "user_prompt", briefJSON)
 
@@ -616,6 +617,7 @@ func (s *scriptJobService) executePhase3(ctx context.Context, brief script.Brief
 	sysPrompt := getPhase3SystemPrompt(brief.Constraints.TalkMode, brief.Constraints.WithEmotion)
 	userPrompt := buildPhase3UserPrompt(brief, phase2)
 
+	t.Trace("phase3", "model_info", s.llmRegistry.GetModelInfo(phase3Config.Provider))
 	t.Trace("phase3", "system_prompt", sysPrompt)
 	t.Trace("phase3", "user_prompt", userPrompt)
 
@@ -654,6 +656,7 @@ func (s *scriptJobService) executePhase4(ctx context.Context, draftText string, 
 
 	userPrompt := "## ブリーフ\n" + briefJSON + "\n\n## ドラフト台本\n" + draftText
 
+	t.Trace("phase4", "model_info", s.llmRegistry.GetModelInfo(phase4Config.Provider))
 	t.Trace("phase4", "system_prompt", phase4SystemPrompt)
 	t.Trace("phase4", "user_prompt", userPrompt)
 
@@ -683,6 +686,11 @@ func (s *scriptJobService) executePhase5(ctx context.Context, job *model.ScriptJ
 	config := script.ValidatorConfig{
 		TalkMode:        brief.Constraints.TalkMode,
 		DurationMinutes: brief.Episode.DurationMinutes,
+	}
+
+	// model_info を先に記録（パッチ修正が実行される場合のため）
+	if s.llmRegistry != nil {
+		t.Trace("phase5", "model_info", s.llmRegistry.GetModelInfo(phase5Config.Provider))
 	}
 
 	// 1回目のチェック

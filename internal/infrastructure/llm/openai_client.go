@@ -81,6 +81,11 @@ func (c *openAIClient) ChatWithOptions(ctx context.Context, systemPrompt, userPr
 	})
 }
 
+// ModelInfo はプロバイダ名とモデル名を返す
+func (c *openAIClient) ModelInfo() string {
+	return fmt.Sprintf("OpenAI / %s", c.model)
+}
+
 // chatWithResponsesAPI は Responses API を使って web_search 付きで LLM と対話する
 func (c *openAIClient) chatWithResponsesAPI(ctx context.Context, systemPrompt, userPrompt string, opts ChatOptions) (string, error) {
 	temp := defaultTemperature

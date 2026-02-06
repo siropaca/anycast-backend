@@ -37,6 +37,8 @@ type ChatOptions struct {
 type Client interface {
 	Chat(ctx context.Context, systemPrompt, userPrompt string) (string, error)
 	ChatWithOptions(ctx context.Context, systemPrompt, userPrompt string, opts ChatOptions) (string, error)
+	// ModelInfo はプロバイダ名とモデル名を返す（例: "OpenAI / gpt-4o"）
+	ModelInfo() string
 }
 
 // NewClient は設定に応じた LLM クライアントを生成する

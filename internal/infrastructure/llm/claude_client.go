@@ -2,6 +2,7 @@ package llm
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/anthropics/anthropic-sdk-go"
 	"github.com/anthropics/anthropic-sdk-go/option"
@@ -41,6 +42,11 @@ func newClaudeClient(apiKey, model string) Client {
 // Chat はシステムプロンプトとユーザープロンプトを使って LLM と対話する
 func (c *claudeClient) Chat(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
 	return c.ChatWithOptions(ctx, systemPrompt, userPrompt, ChatOptions{})
+}
+
+// ModelInfo はプロバイダ名とモデル名を返す
+func (c *claudeClient) ModelInfo() string {
+	return fmt.Sprintf("Claude / %s", c.model)
 }
 
 // ChatWithOptions はオプション付きで LLM と対話する

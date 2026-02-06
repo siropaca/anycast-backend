@@ -35,3 +35,12 @@ func (r *Registry) Has(provider Provider) bool {
 	_, ok := r.clients[provider]
 	return ok
 }
+
+// GetModelInfo は指定されたプロバイダのモデル情報を返す
+func (r *Registry) GetModelInfo(provider Provider) string {
+	client, ok := r.clients[provider]
+	if !ok {
+		return string(provider)
+	}
+	return client.ModelInfo()
+}
