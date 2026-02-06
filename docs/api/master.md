@@ -60,10 +60,49 @@ GET /categories
       "id": "uuid",
       "slug": "technology",
       "name": "テクノロジー",
+      "image": { "id": "uuid", "url": "..." },
       "sortOrder": 0,
       "isActive": true
     }
   ]
+}
+```
+
+---
+
+## カテゴリ取得（スラッグ指定）
+
+```
+GET /categories/:slug
+```
+
+**パスパラメータ:**
+
+| パラメータ | 型 | 説明 |
+|------------|-----|------|
+| slug | string | カテゴリスラッグ |
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "slug": "technology",
+    "name": "テクノロジー",
+    "image": { "id": "uuid", "url": "..." },
+    "sortOrder": 0,
+    "isActive": true
+  }
+}
+```
+
+**エラー（404 Not Found）:**
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "カテゴリが見つかりません"
+  }
 }
 ```
 

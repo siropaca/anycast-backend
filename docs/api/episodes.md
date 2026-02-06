@@ -81,6 +81,7 @@ GET /channels/:channelId/episodes/:episodeId
       "completed": false,
       "playedAt": "2025-01-01T00:00:00Z"
     },
+    "playlistIds": ["uuid1", "uuid2"],
     "playCount": 123,
     "publishedAt": "2025-01-01T00:00:00Z",
     "createdAt": "2025-01-01T00:00:00Z",
@@ -92,6 +93,8 @@ GET /channels/:channelId/episodes/:episodeId
 > **Note:** `voiceStyle` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
 >
 > **Note:** `playback` は認証済みの場合のみ含まれます。未認証または再生履歴がない場合は `null` になります。
+>
+> **Note:** `playlistIds` は認証済みの場合のみ含まれます。未認証の場合は `null` になります。エピソードがどのプレイリストにも含まれていない場合は空配列 `[]` になります。
 
 ---
 
@@ -409,6 +412,7 @@ GET /me/channels/:channelId/episodes/:episodeId
       "completed": false,
       "playedAt": "2025-01-01T00:00:00Z"
     },
+    "playlistIds": ["uuid1", "uuid2"],
     "playCount": 123,
     "publishedAt": "2025-01-01T00:00:00Z",
     "createdAt": "2025-01-01T00:00:00Z",
@@ -418,6 +422,8 @@ GET /me/channels/:channelId/episodes/:episodeId
 ```
 
 > **Note:** `playback` は認証済みの場合のみ含まれます。再生履歴がない場合は `null` になります。
+>
+> **Note:** `playlistIds` は認証済みユーザーの場合のみ含まれます。エピソードがどのプレイリストにも含まれていない場合は空配列 `[]` になります。
 
 **エラー（403 Forbidden）:**
 ```json
