@@ -297,4 +297,3 @@ func (h *PlaylistHandler) UpdateEpisodePlaylists(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
-
