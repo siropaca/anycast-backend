@@ -724,6 +724,15 @@ type PhaseConfig struct {
 
 プロバイダを変更したい場合は `script_prompts.go` の `phaseXConfig` の `Provider` を変更するだけでよい。
 
+#### レートリミットに関する注意
+
+Claude API には入力トークン数のレートリミット（例: 30,000 tokens/分）がある。
+Web Search を有効にした Phase で大量のトークンを消費すると、直後の Phase がレートリミットに引っかかる可能性がある。
+
+現在の構成では Phase 2 を OpenAI（Web Search あり）にしているのは、この問題を回避するため。
+Claude の `claude_client.go` には Web Search 機能（`WebSearchTool20250305`）が実装済みなので、
+レートリミットが緩和された場合は Phase 2 を Claude に切り替えることも可能。
+
 ### Client インターフェース
 
 ```go
