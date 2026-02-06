@@ -230,11 +230,30 @@ func (s *bgmService) toSystemBgmWithEpisodesResponses(ctx context.Context, bgms 
 }
 
 // toSystemBgmWithEpisodesResponse は SystemBgm をエピソード・チャンネル情報付きレスポンス DTO に変換する
-// SystemBgm はシステム提供の BGM のため、episodes と channels は常に空配列を返す
 func (s *bgmService) toSystemBgmWithEpisodesResponse(ctx context.Context, b model.SystemBgm) (response.BgmWithEpisodesResponse, error) {
 	audioResponse, err := s.toAudioResponse(ctx, b.Audio)
 	if err != nil {
 		return response.BgmWithEpisodesResponse{}, err
+	}
+
+	episodes := make([]response.BgmEpisodeResponse, len(b.Episodes))
+	for i, e := range b.Episodes {
+		episodes[i] = response.BgmEpisodeResponse{
+			ID:    e.ID,
+			Title: e.Title,
+			Channel: response.BgmEpisodeChannelResponse{
+				ID:   e.Channel.ID,
+				Name: e.Channel.Name,
+			},
+		}
+	}
+
+	channels := make([]response.BgmChannelResponse, len(b.Channels))
+	for i, c := range b.Channels {
+		channels[i] = response.BgmChannelResponse{
+			ID:   c.ID,
+			Name: c.Name,
+		}
 	}
 
 	return response.BgmWithEpisodesResponse{
@@ -242,8 +261,8 @@ func (s *bgmService) toSystemBgmWithEpisodesResponse(ctx context.Context, b mode
 		Name:      b.Name,
 		IsSystem:  true,
 		Audio:     audioResponse,
-		Episodes:  []response.BgmEpisodeResponse{},
-		Channels:  []response.BgmChannelResponse{},
+		Episodes:  episodes,
+		Channels:  channels,
 		CreatedAt: b.CreatedAt,
 		UpdatedAt: b.UpdatedAt,
 	}, nil

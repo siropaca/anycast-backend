@@ -17,7 +17,9 @@ type SystemBgm struct {
 	UpdatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP"`
 
 	// リレーション
-	Audio Audio `gorm:"foreignKey:AudioID"`
+	Audio    Audio     `gorm:"foreignKey:AudioID"`
+	Episodes []Episode `gorm:"foreignKey:SystemBgmID"`
+	Channels []Channel `gorm:"foreignKey:DefaultSystemBgmID"`
 }
 
 // TableName はテーブル名を返す（マイグレーション後の新テーブル名）

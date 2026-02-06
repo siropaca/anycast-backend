@@ -50,6 +50,8 @@ func (r *systemBgmRepository) FindActive(ctx context.Context, filter SystemBgmFi
 	// ページネーションとリレーションのプリロード
 	if err := tx.
 		Preload("Audio").
+		Preload("Episodes.Channel").
+		Preload("Channels").
 		Order("sort_order ASC").
 		Limit(filter.Limit).
 		Offset(filter.Offset).
@@ -82,6 +84,8 @@ func (r *systemBgmRepository) FindByID(ctx context.Context, id uuid.UUID) (*mode
 
 	if err := r.db.WithContext(ctx).
 		Preload("Audio").
+		Preload("Episodes.Channel").
+		Preload("Channels").
 		First(&bgm, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperror.ErrNotFound.WithMessage("システム BGM が見つかりません")
