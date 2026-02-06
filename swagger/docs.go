@@ -5962,13 +5962,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "emotion": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "speakerId": {
                     "type": "string"
                 },
                 "text": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 500
                 }
             }
         },
@@ -6288,13 +6290,15 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "emotion": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "speakerId": {
                     "type": "string"
                 },
                 "text": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 500
                 }
             }
         },
@@ -6302,7 +6306,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "userPrompt": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 2000
                 }
             }
         },

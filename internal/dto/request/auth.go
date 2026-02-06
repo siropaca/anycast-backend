@@ -35,5 +35,5 @@ type LogoutRequest struct {
 
 // ユーザープロンプト更新リクエスト
 type UpdateUserPromptRequest struct {
-	UserPrompt *string `json:"userPrompt"`
+	UserPrompt *string `json:"userPrompt" binding:"omitempty,max=2000"`
 }

@@ -20,6 +20,14 @@ import (
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
+// 音声生成のデフォルトパラメータ
+const (
+	defaultBgmVolumeDB    = -20.0
+	defaultFadeOutMs      = 3000
+	defaultPaddingStartMs = 1000
+	defaultPaddingEndMs   = 3000
+)
+
 // AudioJobService は非同期音声生成ジョブを管理するインターフェースを表す
 type AudioJobService interface {
 	CreateJob(ctx context.Context, userID, channelID, episodeID string, req request.GenerateAudioAsyncRequest) (*response.AudioJobResponse, error)
@@ -134,22 +142,22 @@ func (s *audioJobService) CreateJob(ctx context.Context, userID, channelID, epis
 	}
 
 	// デフォルト値を設定
-	bgmVolumeDB := -15.0
+	bgmVolumeDB := defaultBgmVolumeDB
 	if req.BgmVolumeDB != nil {
 		bgmVolumeDB = *req.BgmVolumeDB
 	}
 
-	fadeOutMs := 3000
+	fadeOutMs := defaultFadeOutMs
 	if req.FadeOutMs != nil {
 		fadeOutMs = *req.FadeOutMs
 	}
 
-	paddingStartMs := 500
+	paddingStartMs := defaultPaddingStartMs
 	if req.PaddingStartMs != nil {
 		paddingStartMs = *req.PaddingStartMs
 	}
 
-	paddingEndMs := 1000
+	paddingEndMs := defaultPaddingEndMs
 	if req.PaddingEndMs != nil {
 		paddingEndMs = *req.PaddingEndMs
 	}
