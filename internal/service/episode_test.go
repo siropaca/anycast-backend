@@ -20,9 +20,16 @@ func TestToEpisodeResponse(t *testing.T) {
 	now := time.Now()
 	episodeID := uuid.New()
 	channelID := uuid.New()
+	ownerID := uuid.New()
 	audioID := uuid.New()
 	artworkID := uuid.New()
 	description := "Test Description"
+
+	owner := &model.User{
+		ID:          ownerID,
+		Username:    "testowner",
+		DisplayName: "Test Owner",
+	}
 
 	baseEpisode := &model.Episode{
 		ID:          episodeID,
@@ -39,10 +46,14 @@ func TestToEpisodeResponse(t *testing.T) {
 		svc := &episodeService{storageClient: mockStorage}
 		ctx := context.Background()
 
-		resp, err := svc.toEpisodeResponse(ctx, baseEpisode)
+		resp, err := svc.toEpisodeResponse(ctx, baseEpisode, owner)
 
 		assert.NoError(t, err)
 		assert.Equal(t, episodeID, resp.ID)
+		assert.Equal(t, ownerID, resp.Owner.ID)
+		assert.Equal(t, "testowner", resp.Owner.Username)
+		assert.Equal(t, "Test Owner", resp.Owner.DisplayName)
+		assert.Nil(t, resp.Owner.Avatar)
 		assert.Equal(t, "Test Episode", resp.Title)
 		assert.Equal(t, description, resp.Description)
 		assert.NotNil(t, resp.PublishedAt)
@@ -58,7 +69,7 @@ func TestToEpisodeResponse(t *testing.T) {
 		episode := *baseEpisode
 		episode.FullAudio = nil
 
-		resp, err := svc.toEpisodeResponse(ctx, &episode)
+		resp, err := svc.toEpisodeResponse(ctx, &episode, owner)
 
 		assert.NoError(t, err)
 		assert.Nil(t, resp.FullAudio)
@@ -80,7 +91,7 @@ func TestToEpisodeResponse(t *testing.T) {
 			DurationMs: 180000,
 		}
 
-		resp, err := svc.toEpisodeResponse(ctx, &episode)
+		resp, err := svc.toEpisodeResponse(ctx, &episode, owner)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, resp.FullAudio)
@@ -103,7 +114,7 @@ func TestToEpisodeResponse(t *testing.T) {
 			Path: "images/artwork.png",
 		}
 
-		resp, err := svc.toEpisodeResponse(ctx, &episode)
+		resp, err := svc.toEpisodeResponse(ctx, &episode, owner)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, resp.Artwork)
@@ -120,7 +131,7 @@ func TestToEpisodeResponse(t *testing.T) {
 		episode := *baseEpisode
 		episode.PublishedAt = nil
 
-		resp, err := svc.toEpisodeResponse(ctx, &episode)
+		resp, err := svc.toEpisodeResponse(ctx, &episode, owner)
 
 		assert.NoError(t, err)
 		assert.Nil(t, resp.PublishedAt)
@@ -130,6 +141,13 @@ func TestToEpisodeResponse(t *testing.T) {
 func TestToEpisodeResponses(t *testing.T) {
 	now := time.Now()
 	channelID := uuid.New()
+	ownerID := uuid.New()
+
+	owner := &model.User{
+		ID:          ownerID,
+		Username:    "testowner",
+		DisplayName: "Test Owner",
+	}
 
 	episodes := []model.Episode{
 		{
@@ -155,7 +173,7 @@ func TestToEpisodeResponses(t *testing.T) {
 		svc := &episodeService{storageClient: mockStorage}
 		ctx := context.Background()
 
-		result, err := svc.toEpisodeResponses(ctx, episodes)
+		result, err := svc.toEpisodeResponses(ctx, episodes, owner)
 
 		assert.NoError(t, err)
 		assert.Len(t, result, 2)
@@ -168,7 +186,7 @@ func TestToEpisodeResponses(t *testing.T) {
 		svc := &episodeService{storageClient: mockStorage}
 		ctx := context.Background()
 
-		result, err := svc.toEpisodeResponses(ctx, []model.Episode{})
+		result, err := svc.toEpisodeResponses(ctx, []model.Episode{}, owner)
 
 		assert.NoError(t, err)
 		assert.Len(t, result, 0)

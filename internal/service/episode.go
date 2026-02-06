@@ -121,7 +121,7 @@ func (s *episodeService) GetEpisode(ctx context.Context, userID, channelID, epis
 		}
 	}
 
-	resp, err := s.toEpisodeResponse(ctx, episode)
+	resp, err := s.toEpisodeResponse(ctx, episode, &channel.User)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +168,7 @@ func (s *episodeService) GetMyChannelEpisode(ctx context.Context, userID, channe
 		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
 	}
 
-	resp, err := s.toEpisodeResponse(ctx, episode)
+	resp, err := s.toEpisodeResponse(ctx, episode, &channel.User)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +206,7 @@ func (s *episodeService) ListMyChannelEpisodes(ctx context.Context, userID, chan
 		return nil, err
 	}
 
-	responses, err := s.toEpisodeResponses(ctx, episodes)
+	responses, err := s.toEpisodeResponses(ctx, episodes, &channel.User)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +259,7 @@ func (s *episodeService) ListChannelEpisodes(ctx context.Context, userID, channe
 		return nil, err
 	}
 
-	responses, err := s.toEpisodeResponses(ctx, episodes)
+	responses, err := s.toEpisodeResponses(ctx, episodes, &channel.User)
 	if err != nil {
 		return nil, err
 	}
@@ -405,7 +405,7 @@ func (s *episodeService) UpdateEpisode(ctx context.Context, userID, channelID, e
 		return nil, err
 	}
 
-	resp, err := s.toEpisodeResponse(ctx, updated)
+	resp, err := s.toEpisodeResponse(ctx, updated, &channel.User)
 	if err != nil {
 		return nil, err
 	}
@@ -541,7 +541,7 @@ func (s *episodeService) PublishEpisode(ctx context.Context, userID, channelID, 
 		return nil, err
 	}
 
-	resp, err := s.toEpisodeResponse(ctx, updated)
+	resp, err := s.toEpisodeResponse(ctx, updated, &channel.User)
 	if err != nil {
 		return nil, err
 	}
@@ -602,7 +602,7 @@ func (s *episodeService) UnpublishEpisode(ctx context.Context, userID, channelID
 		return nil, err
 	}
 
-	resp, err := s.toEpisodeResponse(ctx, updated)
+	resp, err := s.toEpisodeResponse(ctx, updated, &channel.User)
 	if err != nil {
 		return nil, err
 	}
@@ -633,12 +633,40 @@ func (s *episodeService) IncrementPlayCount(ctx context.Context, episodeID strin
 	return s.episodeRepo.IncrementPlayCount(ctx, eid)
 }
 
+// toChannelOwnerResponse は User からチャンネルオーナーレスポンスを生成する
+func (s *episodeService) toChannelOwnerResponse(ctx context.Context, user *model.User) (response.ChannelOwnerResponse, error) {
+	ownerResp := response.ChannelOwnerResponse{
+		ID:          user.ID,
+		Username:    user.Username,
+		DisplayName: user.DisplayName,
+	}
+
+	if user.Avatar != nil {
+		var avatarURL string
+		if storage.IsExternalURL(user.Avatar.Path) {
+			avatarURL = user.Avatar.Path
+		} else {
+			var err error
+			avatarURL, err = s.storageClient.GenerateSignedURL(ctx, user.Avatar.Path, storage.SignedURLExpirationImage)
+			if err != nil {
+				return response.ChannelOwnerResponse{}, err
+			}
+		}
+		ownerResp.Avatar = &response.AvatarResponse{
+			ID:  user.Avatar.ID,
+			URL: avatarURL,
+		}
+	}
+
+	return ownerResp, nil
+}
+
 // toEpisodeResponses は Episode のスライスをレスポンス DTO のスライスに変換する
-func (s *episodeService) toEpisodeResponses(ctx context.Context, episodes []model.Episode) ([]response.EpisodeResponse, error) {
+func (s *episodeService) toEpisodeResponses(ctx context.Context, episodes []model.Episode, owner *model.User) ([]response.EpisodeResponse, error) {
 	result := make([]response.EpisodeResponse, len(episodes))
 
 	for i, e := range episodes {
-		resp, err := s.toEpisodeResponse(ctx, &e)
+		resp, err := s.toEpisodeResponse(ctx, &e, owner)
 		if err != nil {
 			return nil, err
 		}
@@ -649,9 +677,15 @@ func (s *episodeService) toEpisodeResponses(ctx context.Context, episodes []mode
 }
 
 // toEpisodeResponse は Episode をレスポンス DTO に変換する
-func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode) (response.EpisodeResponse, error) {
+func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode, owner *model.User) (response.EpisodeResponse, error) {
+	ownerResp, err := s.toChannelOwnerResponse(ctx, owner)
+	if err != nil {
+		return response.EpisodeResponse{}, err
+	}
+
 	resp := response.EpisodeResponse{
 		ID:            e.ID,
+		Owner:         ownerResp,
 		Title:         e.Title,
 		Description:   e.Description,
 		VoiceStyle:    e.VoiceStyle,
@@ -833,7 +867,7 @@ func (s *episodeService) SetEpisodeBgm(ctx context.Context, userID, channelID, e
 		return nil, err
 	}
 
-	resp, err := s.toEpisodeResponse(ctx, updated)
+	resp, err := s.toEpisodeResponse(ctx, updated, &channel.User)
 	if err != nil {
 		return nil, err
 	}
@@ -897,7 +931,7 @@ func (s *episodeService) DeleteEpisodeBgm(ctx context.Context, userID, channelID
 		return nil, err
 	}
 
-	resp, err := s.toEpisodeResponse(ctx, updated)
+	resp, err := s.toEpisodeResponse(ctx, updated, &channel.User)
 	if err != nil {
 		return nil, err
 	}

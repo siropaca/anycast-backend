@@ -22,6 +22,7 @@ type Channel struct {
 	UpdatedAt          time.Time  `gorm:"not null;default:CURRENT_TIMESTAMP"`
 
 	// リレーション
+	User              User               `gorm:"foreignKey:UserID"`
 	Category          Category           `gorm:"foreignKey:CategoryID"`
 	Artwork           *Image             `gorm:"foreignKey:ArtworkID"`
 	DefaultBgm        *Bgm               `gorm:"foreignKey:DefaultBgmID"`

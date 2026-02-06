@@ -18,6 +18,14 @@ type PublicUserChannelResponse struct {
 	UpdatedAt   time.Time        `json:"updatedAt" validate:"required"`
 }
 
+// チャンネルオーナー情報のレスポンス
+type ChannelOwnerResponse struct {
+	ID          uuid.UUID       `json:"id" validate:"required"`
+	Username    string          `json:"username" validate:"required"`
+	DisplayName string          `json:"displayName" validate:"required"`
+	Avatar      *AvatarResponse `json:"avatar" extensions:"x-nullable"`
+}
+
 // 公開ユーザー情報のレスポンス
 type PublicUserResponse struct {
 	ID          uuid.UUID                   `json:"id" validate:"required"`

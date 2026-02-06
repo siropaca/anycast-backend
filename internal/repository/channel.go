@@ -65,6 +65,8 @@ func (r *channelRepository) FindByUserID(ctx context.Context, userID uuid.UUID, 
 
 	// ページネーションとリレーションのプリロード
 	if err := tx.
+		Preload("User").
+		Preload("User.Avatar").
 		Preload("Category").
 		Preload("Artwork").
 		Preload("DefaultBgm").
@@ -107,6 +109,8 @@ func (r *channelRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.
 	var channel model.Channel
 
 	if err := r.db.WithContext(ctx).
+		Preload("User").
+		Preload("User.Avatar").
 		Preload("Category").
 		Preload("Artwork").
 		Preload("DefaultBgm").

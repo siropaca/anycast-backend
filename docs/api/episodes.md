@@ -21,6 +21,7 @@ GET /channels/:channelId/episodes
   "data": [
     {
       "id": "uuid",
+      "owner": { "id": "uuid", "username": "testuser", "displayName": "テストユーザー", "avatar": null },
       "title": "エピソードタイトル",
       "description": "エピソードの説明",
       "fullAudio": { "id": "uuid", "url": "...", "durationMs": 180000 },
@@ -53,6 +54,7 @@ GET /channels/:channelId/episodes/:episodeId
 {
   "data": {
     "id": "uuid",
+    "owner": { "id": "uuid", "username": "testuser", "displayName": "テストユーザー", "avatar": null },
     "title": "エピソードタイトル",
     "description": "エピソードの説明",
     "voiceStyle": "Read aloud in a warm, welcoming tone",
@@ -330,6 +332,7 @@ GET /me/channels/:channelId/episodes
   "data": [
     {
       "id": "uuid",
+      "owner": { "id": "uuid", "username": "testuser", "displayName": "テストユーザー", "avatar": null },
       "title": "エピソードタイトル",
       "description": "エピソードの説明",
       "fullAudio": { "id": "uuid", "url": "...", "durationMs": 180000 },
@@ -389,6 +392,7 @@ GET /me/channels/:channelId/episodes/:episodeId
 {
   "data": {
     "id": "uuid",
+    "owner": { "id": "uuid", "username": "testuser", "displayName": "テストユーザー", "avatar": null },
     "title": "エピソードタイトル",
     "description": "エピソードの説明",
     "artwork": { "id": "uuid", "url": "..." },

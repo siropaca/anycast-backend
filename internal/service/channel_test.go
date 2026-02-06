@@ -92,6 +92,11 @@ func TestToChannelResponse(t *testing.T) {
 		PublishedAt: &now,
 		CreatedAt:   now,
 		UpdatedAt:   now,
+		User: model.User{
+			ID:          userID,
+			Username:    "testuser",
+			DisplayName: "Test User",
+		},
 		Category: model.Category{
 			ID:   categoryID,
 			Slug: "technology",
@@ -127,6 +132,10 @@ func TestToChannelResponse(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, channelID, resp.ID)
+		assert.Equal(t, userID, resp.Owner.ID)
+		assert.Equal(t, "testuser", resp.Owner.Username)
+		assert.Equal(t, "Test User", resp.Owner.DisplayName)
+		assert.Nil(t, resp.Owner.Avatar)
 		assert.Equal(t, "Test Channel", resp.Name)
 		assert.Equal(t, "Test Description", resp.Description)
 		assert.Equal(t, "Test User Prompt", resp.UserPrompt)
@@ -222,16 +231,24 @@ func TestToChannelResponses(t *testing.T) {
 	now := time.Now()
 	categoryID := uuid.New()
 
+	userID1 := uuid.New()
+	userID2 := uuid.New()
+
 	channels := []model.Channel{
 		{
 			ID:          uuid.New(),
-			UserID:      uuid.New(),
+			UserID:      userID1,
 			Name:        "Channel 1",
 			Description: "Description 1",
 			UserPrompt:  "Prompt 1",
 			CategoryID:  categoryID,
 			CreatedAt:   now,
 			UpdatedAt:   now,
+			User: model.User{
+				ID:          userID1,
+				Username:    "user1",
+				DisplayName: "User 1",
+			},
 			Category: model.Category{
 				ID:   categoryID,
 				Slug: "tech",
@@ -240,13 +257,18 @@ func TestToChannelResponses(t *testing.T) {
 		},
 		{
 			ID:          uuid.New(),
-			UserID:      uuid.New(),
+			UserID:      userID2,
 			Name:        "Channel 2",
 			Description: "Description 2",
 			UserPrompt:  "Prompt 2",
 			CategoryID:  categoryID,
 			CreatedAt:   now,
 			UpdatedAt:   now,
+			User: model.User{
+				ID:          userID2,
+				Username:    "user2",
+				DisplayName: "User 2",
+			},
 			Category: model.Category{
 				ID:   categoryID,
 				Slug: "tech",

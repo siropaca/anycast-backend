@@ -22,6 +22,7 @@ GET /channels
   "data": [
     {
       "id": "uuid",
+      "owner": { "id": "uuid", "username": "testuser", "displayName": "テストユーザー", "avatar": null },
       "name": "チャンネル名",
       "description": "説明",
       "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
@@ -53,6 +54,12 @@ GET /channels/:channelId
 {
   "data": {
     "id": "uuid",
+    "owner": {
+      "id": "uuid",
+      "username": "testuser",
+      "displayName": "テストユーザー",
+      "avatar": { "id": "uuid", "url": "https://storage.example.com/images/xxx.png?signature=..." }
+    },
     "name": "チャンネル名",
     "description": "説明",
     "userPrompt": "明るく楽しい雰囲気で...",
@@ -88,6 +95,7 @@ GET /channels/:channelId
     "episodes": [
       {
         "id": "uuid",
+        "owner": { "id": "uuid", "username": "testuser", "displayName": "テストユーザー", "avatar": null },
         "title": "第1回 AIについて語る",
         "description": "AIの未来について...",
         "voiceStyle": "normal",
@@ -124,9 +132,10 @@ GET /channels/:channelId
 ```
 
 > **Note:**
+> - `owner` はチャンネルを作成したユーザーの公開情報です。`avatar` はアバター未設定の場合 `null` になります。
 > - チャンネルの `userPrompt` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
 > - `defaultBgm.isSystem` が `true` の場合はシステム BGM、`false` の場合はユーザー所有の BGM です。
-> - `episodes` はチャンネルに紐づくエピソード一覧です。
+> - `episodes` はチャンネルに紐づくエピソード一覧です。各エピソードにも `owner` が含まれます。
 
 ---
 
@@ -346,6 +355,7 @@ GET /me/channels
   "data": [
     {
       "id": "uuid",
+      "owner": { "id": "uuid", "username": "testuser", "displayName": "テストユーザー", "avatar": null },
       "name": "チャンネル名",
       "description": "説明",
       "userPrompt": "明るく楽しい雰囲気で...",
@@ -389,6 +399,12 @@ GET /me/channels/:channelId
 {
   "data": {
     "id": "uuid",
+    "owner": {
+      "id": "uuid",
+      "username": "testuser",
+      "displayName": "テストユーザー",
+      "avatar": { "id": "uuid", "url": "https://storage.example.com/images/xxx.png?signature=..." }
+    },
     "name": "チャンネル名",
     "description": "説明",
     "userPrompt": "明るく楽しい雰囲気で...",
@@ -423,6 +439,7 @@ GET /me/channels/:channelId
     "episodes": [
       {
         "id": "uuid",
+        "owner": { "id": "uuid", "username": "testuser", "displayName": "テストユーザー", "avatar": null },
         "title": "第1回 AIについて語る",
         "description": "AIの未来について...",
         "voiceStyle": "normal",

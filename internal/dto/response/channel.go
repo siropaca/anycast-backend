@@ -9,6 +9,7 @@ import (
 // チャンネル情報のレスポンス
 type ChannelResponse struct {
 	ID          uuid.UUID                  `json:"id" validate:"required"`
+	Owner       ChannelOwnerResponse       `json:"owner" validate:"required"`
 	Name        string                     `json:"name" validate:"required"`
 	Description string                     `json:"description" validate:"required"`
 	UserPrompt  string                     `json:"userPrompt" validate:"required"`

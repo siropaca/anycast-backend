@@ -728,6 +728,34 @@ func (s *channelService) processCharacterInputs(ctx context.Context, userID uuid
 	return characterIDs, nil
 }
 
+// toChannelOwnerResponse は User からチャンネルオーナーレスポンスを生成する
+func (s *channelService) toChannelOwnerResponse(ctx context.Context, user *model.User) (response.ChannelOwnerResponse, error) {
+	ownerResp := response.ChannelOwnerResponse{
+		ID:          user.ID,
+		Username:    user.Username,
+		DisplayName: user.DisplayName,
+	}
+
+	if user.Avatar != nil {
+		var avatarURL string
+		if storage.IsExternalURL(user.Avatar.Path) {
+			avatarURL = user.Avatar.Path
+		} else {
+			var err error
+			avatarURL, err = s.storageClient.GenerateSignedURL(ctx, user.Avatar.Path, storage.SignedURLExpirationImage)
+			if err != nil {
+				return response.ChannelOwnerResponse{}, err
+			}
+		}
+		ownerResp.Avatar = &response.AvatarResponse{
+			ID:  user.Avatar.ID,
+			URL: avatarURL,
+		}
+	}
+
+	return ownerResp, nil
+}
+
 // toChannelResponses は Channel のスライスをレスポンス DTO のスライスに変換する
 // ListMyChannels で使用するため、常にオーナーとして扱う
 func (s *channelService) toChannelResponses(ctx context.Context, channels []model.Channel) ([]response.ChannelResponse, error) {
@@ -752,19 +780,26 @@ func (s *channelService) toChannelResponse(ctx context.Context, c *model.Channel
 		userPrompt = c.UserPrompt
 	}
 
+	// オーナー情報を生成
+	ownerResp, err := s.toChannelOwnerResponse(ctx, &c.User)
+	if err != nil {
+		return response.ChannelResponse{}, err
+	}
+
 	// エピソード一覧を取得
 	episodes, _, err := s.episodeRepo.FindByChannelID(ctx, c.ID, repository.EpisodeFilter{Limit: 10000})
 	if err != nil {
 		return response.ChannelResponse{}, err
 	}
 
-	episodeResponses, err := s.toEpisodeResponses(ctx, episodes)
+	episodeResponses, err := s.toEpisodeResponses(ctx, episodes, &c.User)
 	if err != nil {
 		return response.ChannelResponse{}, err
 	}
 
 	resp := response.ChannelResponse{
 		ID:          c.ID,
+		Owner:       ownerResp,
 		Name:        c.Name,
 		Description: c.Description,
 		UserPrompt:  userPrompt,
@@ -859,11 +894,11 @@ func (s *channelService) toCharacterResponsesFromChannelCharacters(channelCharac
 }
 
 // toEpisodeResponses は Episode のスライスをレスポンス DTO のスライスに変換する
-func (s *channelService) toEpisodeResponses(ctx context.Context, episodes []model.Episode) ([]response.EpisodeResponse, error) {
+func (s *channelService) toEpisodeResponses(ctx context.Context, episodes []model.Episode, owner *model.User) ([]response.EpisodeResponse, error) {
 	result := make([]response.EpisodeResponse, len(episodes))
 
 	for i, e := range episodes {
-		resp, err := s.toEpisodeResponse(ctx, &e)
+		resp, err := s.toEpisodeResponse(ctx, &e, owner)
 		if err != nil {
 			return nil, err
 		}
@@ -874,9 +909,15 @@ func (s *channelService) toEpisodeResponses(ctx context.Context, episodes []mode
 }
 
 // toEpisodeResponse は Episode をレスポンス DTO に変換する
-func (s *channelService) toEpisodeResponse(ctx context.Context, e *model.Episode) (response.EpisodeResponse, error) {
+func (s *channelService) toEpisodeResponse(ctx context.Context, e *model.Episode, owner *model.User) (response.EpisodeResponse, error) {
+	ownerResp, err := s.toChannelOwnerResponse(ctx, owner)
+	if err != nil {
+		return response.EpisodeResponse{}, err
+	}
+
 	resp := response.EpisodeResponse{
 		ID:            e.ID,
+		Owner:         ownerResp,
 		Title:         e.Title,
 		Description:   e.Description,
 		VoiceStyle:    e.VoiceStyle,

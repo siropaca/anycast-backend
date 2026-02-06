@@ -8,8 +8,9 @@ import (
 
 // エピソード情報のレスポンス
 type EpisodeResponse struct {
-	ID            uuid.UUID           `json:"id" validate:"required"`
-	Title         string              `json:"title" validate:"required"`
+	ID            uuid.UUID              `json:"id" validate:"required"`
+	Owner         ChannelOwnerResponse   `json:"owner" validate:"required"`
+	Title         string                 `json:"title" validate:"required"`
 	Description   string              `json:"description" validate:"required"`
 	VoiceStyle    string              `json:"voiceStyle" validate:"required"`
 	Artwork       *ArtworkResponse    `json:"artwork" extensions:"x-nullable"`

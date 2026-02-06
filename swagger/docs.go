@@ -6831,6 +6831,33 @@ const docTemplate = `{
                 }
             }
         },
+        "response.ChannelOwnerResponse": {
+            "type": "object",
+            "required": [
+                "displayName",
+                "id",
+                "username"
+            ],
+            "properties": {
+                "avatar": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.AvatarResponse"
+                        }
+                    ],
+                    "x-nullable": true
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "response.ChannelResponse": {
             "type": "object",
             "required": [
@@ -6841,6 +6868,7 @@ const docTemplate = `{
                 "episodes",
                 "id",
                 "name",
+                "owner",
                 "updatedAt",
                 "userPrompt"
             ],
@@ -6887,6 +6915,9 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "owner": {
+                    "$ref": "#/definitions/response.ChannelOwnerResponse"
                 },
                 "publishedAt": {
                     "type": "string",
@@ -7190,6 +7221,7 @@ const docTemplate = `{
                 "createdAt",
                 "description",
                 "id",
+                "owner",
                 "playCount",
                 "title",
                 "updatedAt",
@@ -7231,6 +7263,9 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "string"
+                },
+                "owner": {
+                    "$ref": "#/definitions/response.ChannelOwnerResponse"
                 },
                 "playCount": {
                     "type": "integer"

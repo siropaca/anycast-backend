@@ -6825,6 +6825,33 @@
                 }
             }
         },
+        "response.ChannelOwnerResponse": {
+            "type": "object",
+            "required": [
+                "displayName",
+                "id",
+                "username"
+            ],
+            "properties": {
+                "avatar": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.AvatarResponse"
+                        }
+                    ],
+                    "x-nullable": true
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "response.ChannelResponse": {
             "type": "object",
             "required": [
@@ -6835,6 +6862,7 @@
                 "episodes",
                 "id",
                 "name",
+                "owner",
                 "updatedAt",
                 "userPrompt"
             ],
@@ -6881,6 +6909,9 @@
                 },
                 "name": {
                     "type": "string"
+                },
+                "owner": {
+                    "$ref": "#/definitions/response.ChannelOwnerResponse"
                 },
                 "publishedAt": {
                     "type": "string",
@@ -7184,6 +7215,7 @@
                 "createdAt",
                 "description",
                 "id",
+                "owner",
                 "playCount",
                 "title",
                 "updatedAt",
@@ -7225,6 +7257,9 @@
                 },
                 "id": {
                     "type": "string"
+                },
+                "owner": {
+                    "$ref": "#/definitions/response.ChannelOwnerResponse"
                 },
                 "playCount": {
                     "type": "integer"
