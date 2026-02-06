@@ -6,7 +6,7 @@ DELETE FROM audios WHERE path LIKE 'audios/%' AND path IN (
 	'audios/しゅわしゅわハニーレモン350ml.mp3',
 	'audios/10℃.mp3',
 	'audios/SUMMER_TRIANGLE.mp3',
-	'audios/パステルハウス.mp3',
+	'audios/pastel_house.mp3',
 	'audios/野良猫は宇宙を目指した.mp3',
-	'audios/昼下がり気分.mp3'
+	'audios/feeling_like_afternoon.mp3'
 );
