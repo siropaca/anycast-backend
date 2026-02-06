@@ -112,7 +112,6 @@
 | PATCH | `/api/v1/me/playlists/:playlistId` | プレイリスト更新 | Owner | ✅ | [詳細](./engagement.md#プレイリスト更新) |
 | DELETE | `/api/v1/me/playlists/:playlistId` | プレイリスト削除 | Owner | ✅ | [詳細](./engagement.md#プレイリスト削除) |
 | POST | `/api/v1/me/playlists/:playlistId/items/reorder` | プレイリストアイテム並び替え | Owner | ✅ | [詳細](./engagement.md#プレイリストアイテム並び替え) |
-| GET | `/api/v1/me/default-playlist` | デフォルトプレイリスト（後で聴く）一覧取得 | Owner | ✅ | [詳細](./engagement.md#デフォルトプレイリスト後で聴く一覧取得) |
 | PUT | `/api/v1/episodes/:episodeId/playlists` | エピソードのプレイリスト所属一括更新 | Owner | ✅ | - |
 | **Playback History（再生履歴）** | - | - | - | - | [engagement.md](./engagement.md#playback-history再生履歴) |
 | PUT | `/api/v1/episodes/:episodeId/playback` | 再生履歴を更新 | Owner | ✅ | [詳細](./engagement.md#再生履歴を更新) |

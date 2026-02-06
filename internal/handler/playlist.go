@@ -298,30 +298,3 @@ func (h *PlaylistHandler) UpdateEpisodePlaylists(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-// GetDefaultPlaylist godoc
-// @Summary デフォルトプレイリスト（後で聴く）一覧取得
-// @Description デフォルトプレイリスト（後で聴く）の内容を取得します
-// @Tags me
-// @Accept json
-// @Produce json
-// @Success 200 {object} response.PlaylistDetailDataResponse
-// @Failure 401 {object} response.ErrorResponse
-// @Failure 404 {object} response.ErrorResponse
-// @Failure 500 {object} response.ErrorResponse
-// @Security BearerAuth
-// @Router /me/default-playlist [get]
-func (h *PlaylistHandler) GetDefaultPlaylist(c *gin.Context) {
-	userID, ok := middleware.GetUserID(c)
-	if !ok {
-		Error(c, apperror.ErrUnauthorized)
-		return
-	}
-
-	result, err := h.playlistService.GetDefaultPlaylist(c.Request.Context(), userID)
-	if err != nil {
-		Error(c, err)
-		return
-	}
-
-	c.JSON(http.StatusOK, result)
-}

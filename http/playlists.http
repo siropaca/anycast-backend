@@ -103,10 +103,3 @@ Authorization: Bearer {{token}}
   "playlistIds": []
 }
 
-### =======================================
-### デフォルトプレイリスト（後で聴く）
-### =======================================
-
-### デフォルトプレイリスト（後で聴く）一覧取得
-GET {{baseUrl}}/me/default-playlist
-Authorization: Bearer {{token}}

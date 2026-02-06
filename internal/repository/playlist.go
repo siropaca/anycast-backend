@@ -17,7 +17,6 @@ type PlaylistRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*model.Playlist, error)
 	FindByIDWithItems(ctx context.Context, id uuid.UUID) (*model.Playlist, error)
 	FindByUserID(ctx context.Context, userID uuid.UUID, limit, offset int) ([]model.Playlist, int64, error)
-	FindDefaultByUserID(ctx context.Context, userID uuid.UUID) (*model.Playlist, error)
 	ExistsByUserIDAndName(ctx context.Context, userID uuid.UUID, name string) (bool, error)
 	Create(ctx context.Context, playlist *model.Playlist) error
 	Update(ctx context.Context, playlist *model.Playlist) error
@@ -115,25 +114,6 @@ func (r *playlistRepository) FindByUserID(ctx context.Context, userID uuid.UUID,
 	}
 
 	return playlists, total, nil
-}
-
-// FindDefaultByUserID は指定されたユーザーのデフォルトプレイリストを取得する
-func (r *playlistRepository) FindDefaultByUserID(ctx context.Context, userID uuid.UUID) (*model.Playlist, error) {
-	var playlist model.Playlist
-
-	if err := r.db.WithContext(ctx).
-		Where("user_id = ? AND is_default = true", userID).
-		First(&playlist).Error; err != nil {
-
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, apperror.ErrNotFound.WithMessage("デフォルトプレイリストが見つかりません")
-		}
-
-		logger.FromContext(ctx).Error("failed to fetch default playlist", "error", err, "user_id", userID)
-		return nil, apperror.ErrInternal.WithMessage("デフォルトプレイリストの取得に失敗しました").WithError(err)
-	}
-
-	return &playlist, nil
 }
 
 // ExistsByUserIDAndName は指定されたユーザーと名前のプレイリストが存在するか確認する

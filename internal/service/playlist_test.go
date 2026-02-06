@@ -41,14 +41,6 @@ func (m *mockPlaylistRepository) FindByUserID(ctx context.Context, userID uuid.U
 	return args.Get(0).([]model.Playlist), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *mockPlaylistRepository) FindDefaultByUserID(ctx context.Context, userID uuid.UUID) (*model.Playlist, error) {
-	args := m.Called(ctx, userID)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*model.Playlist), args.Error(1)
-}
-
 func (m *mockPlaylistRepository) ExistsByUserIDAndName(ctx context.Context, userID uuid.UUID, name string) (bool, error) {
 	args := m.Called(ctx, userID, name)
 	return args.Bool(0), args.Error(1)

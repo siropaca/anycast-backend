@@ -30,9 +30,6 @@ type PlaylistService interface {
 	// プレイリストアイテム管理
 	ReorderItems(ctx context.Context, userID, playlistID string, req request.ReorderPlaylistItemsRequest) (*response.PlaylistDetailDataResponse, error)
 
-	// デフォルトプレイリスト（後で聴く）
-	GetDefaultPlaylist(ctx context.Context, userID string) (*response.PlaylistDetailDataResponse, error)
-
 	// デフォルトプレイリスト作成（ユーザー登録時に呼び出される）
 	CreateDefaultPlaylist(ctx context.Context, userID uuid.UUID) error
 
@@ -318,22 +315,6 @@ func (s *playlistService) ReorderItems(ctx context.Context, userID, playlistID s
 	return &response.PlaylistDetailDataResponse{
 		Data: s.toPlaylistDetailResponse(ctx, playlist),
 	}, nil
-}
-
-// GetDefaultPlaylist はデフォルトプレイリスト（後で聴く）を取得する
-func (s *playlistService) GetDefaultPlaylist(ctx context.Context, userID string) (*response.PlaylistDetailDataResponse, error) {
-	uid, err := uuid.Parse(userID)
-	if err != nil {
-		return nil, err
-	}
-
-	// デフォルトプレイリストを取得
-	playlist, err := s.playlistRepo.FindDefaultByUserID(ctx, uid)
-	if err != nil {
-		return nil, err
-	}
-
-	return s.GetPlaylist(ctx, userID, playlist.ID.String())
 }
 
 // CreateDefaultPlaylist はユーザーのデフォルトプレイリストを作成する

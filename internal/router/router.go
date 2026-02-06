@@ -99,7 +99,6 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.PATCH("/me/playlists/:playlistId", container.PlaylistHandler.UpdatePlaylist)
 	authenticated.DELETE("/me/playlists/:playlistId", container.PlaylistHandler.DeletePlaylist)
 	authenticated.POST("/me/playlists/:playlistId/items/reorder", container.PlaylistHandler.ReorderItems)
-	authenticated.GET("/me/default-playlist", container.PlaylistHandler.GetDefaultPlaylist)
 
 	// Playback History
 	authenticated.GET("/me/playback-history", container.PlaybackHistoryHandler.ListPlaybackHistory)
