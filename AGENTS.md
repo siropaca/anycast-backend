@@ -9,6 +9,7 @@
 | [docs/specs/system.md](docs/specs/system.md) | システム設定（タイムアウト、外部サービス連携など） |
 | [docs/specs/script-generate-async-api.md](docs/specs/script-generate-async-api.md) | 台本生成 API（非同期）詳細設計 |
 | [docs/specs/script-prompt-workflow.md](docs/specs/script-prompt-workflow.md) | 台本生成プロンプトワークフロー仕様（多段階生成・品質検証） |
+| [docs/specs/audio-generate-async-api.md](docs/specs/audio-generate-async-api.md) | 音声生成 API（非同期）詳細設計 |
 | [docs/api/README.md](docs/api/README.md) | API 設計 |
 | [docs/adr/](docs/adr/) | Architecture Decision Records |
 

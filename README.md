@@ -85,6 +85,7 @@ cp .env.example .env        # 環境変数ファイルの作成
 |------|------|------------|
 | `PORT` | サーバーのポート番号 | 8081 |
 | `DATABASE_URL` | PostgreSQL 接続 URL | - |
+| `DB_LOG_LEVEL` | DB クエリのログレベル（silent / error / warn / info） | silent |
 | `APP_ENV` | 環境（development / production） | development |
 | `AUTH_SECRET` | JWT 検証用シークレットキー（フロントエンドの AUTH_SECRET と同じ値） | - |
 | `CORS_ALLOWED_ORIGINS` | CORS 許可オリジン（カンマ区切りで複数指定可能） | http://localhost:3210 |
@@ -234,5 +235,6 @@ make swagger
 │   ├── router/          # ルーティング
 │   └── service/         # ビジネスロジック層
 ├── README.md
-└── CLAUDE.md
+├── CLAUDE.md
+└── AGENTS.md
 ```
