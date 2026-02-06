@@ -7214,6 +7214,25 @@ const docTemplate = `{
                 }
             }
         },
+        "response.EpisodePlaybackResponse": {
+            "type": "object",
+            "required": [
+                "completed",
+                "playedAt",
+                "progressMs"
+            ],
+            "properties": {
+                "completed": {
+                    "type": "boolean"
+                },
+                "playedAt": {
+                    "type": "string"
+                },
+                "progressMs": {
+                    "type": "integer"
+                }
+            }
+        },
         "response.EpisodeResponse": {
             "type": "object",
             "required": [
@@ -7269,6 +7288,14 @@ const docTemplate = `{
                 },
                 "playCount": {
                     "type": "integer"
+                },
+                "playback": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.EpisodePlaybackResponse"
+                        }
+                    ],
+                    "x-nullable": true
                 },
                 "publishedAt": {
                     "type": "string",

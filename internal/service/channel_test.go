@@ -128,7 +128,7 @@ func TestToChannelResponse(t *testing.T) {
 		svc := &channelService{storageClient: mockStorage, episodeRepo: mockEpisodeRepo}
 		ctx := context.Background()
 
-		resp, err := svc.toChannelResponse(ctx, baseChannel, true)
+		resp, err := svc.toChannelResponse(ctx, baseChannel, true, uuid.Nil)
 
 		assert.NoError(t, err)
 		assert.Equal(t, channelID, resp.ID)
@@ -161,7 +161,7 @@ func TestToChannelResponse(t *testing.T) {
 		svc := &channelService{storageClient: mockStorage, episodeRepo: mockEpisodeRepo}
 		ctx := context.Background()
 
-		resp, err := svc.toChannelResponse(ctx, baseChannel, false)
+		resp, err := svc.toChannelResponse(ctx, baseChannel, false, uuid.Nil)
 
 		assert.NoError(t, err)
 		assert.Equal(t, channelID, resp.ID)
@@ -180,7 +180,7 @@ func TestToChannelResponse(t *testing.T) {
 		channel := *baseChannel
 		channel.Artwork = nil
 
-		resp, err := svc.toChannelResponse(ctx, &channel, true)
+		resp, err := svc.toChannelResponse(ctx, &channel, true, uuid.Nil)
 
 		assert.NoError(t, err)
 		assert.Nil(t, resp.Artwork)
@@ -201,7 +201,7 @@ func TestToChannelResponse(t *testing.T) {
 			Path: "images/artwork.png",
 		}
 
-		resp, err := svc.toChannelResponse(ctx, &channel, true)
+		resp, err := svc.toChannelResponse(ctx, &channel, true, uuid.Nil)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, resp.Artwork)
@@ -220,7 +220,7 @@ func TestToChannelResponse(t *testing.T) {
 		channel := *baseChannel
 		channel.PublishedAt = nil
 
-		resp, err := svc.toChannelResponse(ctx, &channel, true)
+		resp, err := svc.toChannelResponse(ctx, &channel, true, uuid.Nil)
 
 		assert.NoError(t, err)
 		assert.Nil(t, resp.PublishedAt)
@@ -284,7 +284,7 @@ func TestToChannelResponses(t *testing.T) {
 		svc := &channelService{storageClient: mockStorage, episodeRepo: mockEpisodeRepo}
 		ctx := context.Background()
 
-		result, err := svc.toChannelResponses(ctx, channels)
+		result, err := svc.toChannelResponses(ctx, channels, uuid.Nil)
 
 		assert.NoError(t, err)
 		assert.Len(t, result, 2)
@@ -299,7 +299,7 @@ func TestToChannelResponses(t *testing.T) {
 		svc := &channelService{storageClient: mockStorage, episodeRepo: mockEpisodeRepo}
 		ctx := context.Background()
 
-		result, err := svc.toChannelResponses(ctx, channels)
+		result, err := svc.toChannelResponses(ctx, channels, uuid.Nil)
 
 		assert.NoError(t, err)
 		assert.Equal(t, "Prompt 1", result[0].UserPrompt)
@@ -311,7 +311,7 @@ func TestToChannelResponses(t *testing.T) {
 		svc := &channelService{storageClient: mockStorage}
 		ctx := context.Background()
 
-		result, err := svc.toChannelResponses(ctx, []model.Channel{})
+		result, err := svc.toChannelResponses(ctx, []model.Channel{}, uuid.Nil)
 
 		assert.NoError(t, err)
 		assert.Len(t, result, 0)

@@ -8,19 +8,27 @@ import (
 
 // エピソード情報のレスポンス
 type EpisodeResponse struct {
-	ID            uuid.UUID              `json:"id" validate:"required"`
-	Owner         ChannelOwnerResponse   `json:"owner" validate:"required"`
-	Title         string                 `json:"title" validate:"required"`
-	Description   string              `json:"description" validate:"required"`
-	VoiceStyle    string              `json:"voiceStyle" validate:"required"`
-	Artwork       *ArtworkResponse    `json:"artwork" extensions:"x-nullable"`
-	FullAudio     *AudioResponse      `json:"fullAudio" extensions:"x-nullable"`
-	Bgm           *EpisodeBgmResponse `json:"bgm" extensions:"x-nullable"`
-	AudioOutdated bool                `json:"audioOutdated" validate:"required"`
-	PlayCount     int                 `json:"playCount" validate:"required"`
-	PublishedAt   *time.Time          `json:"publishedAt" extensions:"x-nullable"`
-	CreatedAt     time.Time           `json:"createdAt" validate:"required"`
-	UpdatedAt     time.Time           `json:"updatedAt" validate:"required"`
+	ID            uuid.UUID                `json:"id" validate:"required"`
+	Owner         ChannelOwnerResponse     `json:"owner" validate:"required"`
+	Title         string                   `json:"title" validate:"required"`
+	Description   string                   `json:"description" validate:"required"`
+	VoiceStyle    string                   `json:"voiceStyle" validate:"required"`
+	Artwork       *ArtworkResponse         `json:"artwork" extensions:"x-nullable"`
+	FullAudio     *AudioResponse           `json:"fullAudio" extensions:"x-nullable"`
+	Bgm           *EpisodeBgmResponse      `json:"bgm" extensions:"x-nullable"`
+	Playback      *EpisodePlaybackResponse `json:"playback" extensions:"x-nullable"`
+	AudioOutdated bool                     `json:"audioOutdated" validate:"required"`
+	PlayCount     int                      `json:"playCount" validate:"required"`
+	PublishedAt   *time.Time               `json:"publishedAt" extensions:"x-nullable"`
+	CreatedAt     time.Time                `json:"createdAt" validate:"required"`
+	UpdatedAt     time.Time                `json:"updatedAt" validate:"required"`
+}
+
+// エピソードの再生位置情報のレスポンス
+type EpisodePlaybackResponse struct {
+	ProgressMs int       `json:"progressMs" validate:"required"`
+	Completed  bool      `json:"completed" validate:"required"`
+	PlayedAt   time.Time `json:"playedAt" validate:"required"`
 }
 
 // エピソードに設定された BGM のレスポンス

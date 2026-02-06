@@ -39,16 +39,17 @@ type ChannelService interface {
 }
 
 type channelService struct {
-	db            *gorm.DB
-	channelRepo   repository.ChannelRepository
-	characterRepo repository.CharacterRepository
-	categoryRepo  repository.CategoryRepository
-	imageRepo     repository.ImageRepository
-	voiceRepo     repository.VoiceRepository
-	episodeRepo   repository.EpisodeRepository
-	bgmRepo       repository.BgmRepository
-	systemBgmRepo repository.SystemBgmRepository
-	storageClient storage.Client
+	db                  *gorm.DB
+	channelRepo         repository.ChannelRepository
+	characterRepo       repository.CharacterRepository
+	categoryRepo        repository.CategoryRepository
+	imageRepo           repository.ImageRepository
+	voiceRepo           repository.VoiceRepository
+	episodeRepo         repository.EpisodeRepository
+	bgmRepo             repository.BgmRepository
+	systemBgmRepo       repository.SystemBgmRepository
+	playbackHistoryRepo repository.PlaybackHistoryRepository
+	storageClient       storage.Client
 }
 
 // NewChannelService は channelService を生成して ChannelService として返す
@@ -62,19 +63,21 @@ func NewChannelService(
 	episodeRepo repository.EpisodeRepository,
 	bgmRepo repository.BgmRepository,
 	systemBgmRepo repository.SystemBgmRepository,
+	playbackHistoryRepo repository.PlaybackHistoryRepository,
 	storageClient storage.Client,
 ) ChannelService {
 	return &channelService{
-		db:            db,
-		channelRepo:   channelRepo,
-		characterRepo: characterRepo,
-		categoryRepo:  categoryRepo,
-		imageRepo:     imageRepo,
-		voiceRepo:     voiceRepo,
-		episodeRepo:   episodeRepo,
-		bgmRepo:       bgmRepo,
-		systemBgmRepo: systemBgmRepo,
-		storageClient: storageClient,
+		db:                  db,
+		channelRepo:         channelRepo,
+		characterRepo:       characterRepo,
+		categoryRepo:        categoryRepo,
+		imageRepo:           imageRepo,
+		voiceRepo:           voiceRepo,
+		episodeRepo:         episodeRepo,
+		bgmRepo:             bgmRepo,
+		systemBgmRepo:       systemBgmRepo,
+		playbackHistoryRepo: playbackHistoryRepo,
+		storageClient:       storageClient,
 	}
 }
 
@@ -108,7 +111,7 @@ func (s *channelService) GetChannel(ctx context.Context, userID, channelID strin
 		return nil, apperror.ErrNotFound.WithMessage("チャンネルが見つかりません")
 	}
 
-	resp, err := s.toChannelResponse(ctx, channel, isOwner)
+	resp, err := s.toChannelResponse(ctx, channel, isOwner, uid)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +143,7 @@ func (s *channelService) GetMyChannel(ctx context.Context, userID, channelID str
 		return nil, apperror.ErrForbidden.WithMessage("このチャンネルへのアクセス権限がありません")
 	}
 
-	resp, err := s.toChannelResponse(ctx, channel, true)
+	resp, err := s.toChannelResponse(ctx, channel, true, uid)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +165,7 @@ func (s *channelService) ListMyChannels(ctx context.Context, userID string, filt
 		return nil, err
 	}
 
-	responses, err := s.toChannelResponses(ctx, channels)
+	responses, err := s.toChannelResponses(ctx, channels, uid)
 	if err != nil {
 		return nil, err
 	}
@@ -296,7 +299,7 @@ func (s *channelService) CreateChannel(ctx context.Context, userID string, req r
 		return nil, err
 	}
 
-	resp, err := s.toChannelResponse(ctx, created, true)
+	resp, err := s.toChannelResponse(ctx, created, true, uuid.Nil)
 	if err != nil {
 		return nil, err
 	}
@@ -427,7 +430,7 @@ func (s *channelService) UpdateChannel(ctx context.Context, userID, channelID st
 		return nil, err
 	}
 
-	resp, err := s.toChannelResponse(ctx, updated, true)
+	resp, err := s.toChannelResponse(ctx, updated, true, uuid.Nil)
 	if err != nil {
 		return nil, err
 	}
@@ -547,7 +550,7 @@ func (s *channelService) PublishChannel(ctx context.Context, userID, channelID s
 		return nil, err
 	}
 
-	resp, err := s.toChannelResponse(ctx, updated, true)
+	resp, err := s.toChannelResponse(ctx, updated, true, uuid.Nil)
 	if err != nil {
 		return nil, err
 	}
@@ -593,7 +596,7 @@ func (s *channelService) UnpublishChannel(ctx context.Context, userID, channelID
 		return nil, err
 	}
 
-	resp, err := s.toChannelResponse(ctx, updated, true)
+	resp, err := s.toChannelResponse(ctx, updated, true, uuid.Nil)
 	if err != nil {
 		return nil, err
 	}
@@ -642,7 +645,7 @@ func (s *channelService) DeleteDefaultBgm(ctx context.Context, userID, channelID
 		return nil, err
 	}
 
-	resp, err := s.toChannelResponse(ctx, updated, true)
+	resp, err := s.toChannelResponse(ctx, updated, true, uuid.Nil)
 	if err != nil {
 		return nil, err
 	}
@@ -758,11 +761,11 @@ func (s *channelService) toChannelOwnerResponse(ctx context.Context, user *model
 
 // toChannelResponses は Channel のスライスをレスポンス DTO のスライスに変換する
 // ListMyChannels で使用するため、常にオーナーとして扱う
-func (s *channelService) toChannelResponses(ctx context.Context, channels []model.Channel) ([]response.ChannelResponse, error) {
+func (s *channelService) toChannelResponses(ctx context.Context, channels []model.Channel, userID uuid.UUID) ([]response.ChannelResponse, error) {
 	result := make([]response.ChannelResponse, len(channels))
 
 	for i, c := range channels {
-		resp, err := s.toChannelResponse(ctx, &c, true)
+		resp, err := s.toChannelResponse(ctx, &c, true, userID)
 		if err != nil {
 			return nil, err
 		}
@@ -774,7 +777,7 @@ func (s *channelService) toChannelResponses(ctx context.Context, channels []mode
 
 // toChannelResponse は Channel をレスポンス DTO に変換する
 // isOwner が false の場合、userPrompt は空文字になる
-func (s *channelService) toChannelResponse(ctx context.Context, c *model.Channel, isOwner bool) (response.ChannelResponse, error) {
+func (s *channelService) toChannelResponse(ctx context.Context, c *model.Channel, isOwner bool, userID uuid.UUID) (response.ChannelResponse, error) {
 	userPrompt := ""
 	if isOwner {
 		userPrompt = c.UserPrompt
@@ -792,7 +795,7 @@ func (s *channelService) toChannelResponse(ctx context.Context, c *model.Channel
 		return response.ChannelResponse{}, err
 	}
 
-	episodeResponses, err := s.toEpisodeResponses(ctx, episodes, &c.User)
+	episodeResponses, err := s.toEpisodeResponses(ctx, episodes, &c.User, userID)
 	if err != nil {
 		return response.ChannelResponse{}, err
 	}
@@ -894,11 +897,25 @@ func (s *channelService) toCharacterResponsesFromChannelCharacters(channelCharac
 }
 
 // toEpisodeResponses は Episode のスライスをレスポンス DTO のスライスに変換する
-func (s *channelService) toEpisodeResponses(ctx context.Context, episodes []model.Episode, owner *model.User) ([]response.EpisodeResponse, error) {
-	result := make([]response.EpisodeResponse, len(episodes))
+func (s *channelService) toEpisodeResponses(ctx context.Context, episodes []model.Episode, owner *model.User, userID uuid.UUID) ([]response.EpisodeResponse, error) {
+	// 認証済みの場合は再生履歴を一括取得して map に変換
+	playbackMap := make(map[uuid.UUID]*model.PlaybackHistory)
+	if userID != uuid.Nil && len(episodes) > 0 {
+		episodeIDs := make([]uuid.UUID, len(episodes))
+		for i, e := range episodes {
+			episodeIDs[i] = e.ID
+		}
+		histories, err := s.playbackHistoryRepo.FindByUserIDAndEpisodeIDs(ctx, userID, episodeIDs)
+		if err == nil {
+			for i := range histories {
+				playbackMap[histories[i].EpisodeID] = &histories[i]
+			}
+		}
+	}
 
+	result := make([]response.EpisodeResponse, len(episodes))
 	for i, e := range episodes {
-		resp, err := s.toEpisodeResponse(ctx, &e, owner)
+		resp, err := s.toEpisodeResponse(ctx, &e, owner, playbackMap[e.ID])
 		if err != nil {
 			return nil, err
 		}
@@ -909,7 +926,7 @@ func (s *channelService) toEpisodeResponses(ctx context.Context, episodes []mode
 }
 
 // toEpisodeResponse は Episode をレスポンス DTO に変換する
-func (s *channelService) toEpisodeResponse(ctx context.Context, e *model.Episode, owner *model.User) (response.EpisodeResponse, error) {
+func (s *channelService) toEpisodeResponse(ctx context.Context, e *model.Episode, owner *model.User, playback *model.PlaybackHistory) (response.EpisodeResponse, error) {
 	ownerResp, err := s.toChannelOwnerResponse(ctx, owner)
 	if err != nil {
 		return response.EpisodeResponse{}, err
@@ -989,6 +1006,14 @@ func (s *channelService) toEpisodeResponse(ctx context.Context, e *model.Episode
 				URL:        signedURL,
 				DurationMs: e.SystemBgm.Audio.DurationMs,
 			},
+		}
+	}
+
+	if playback != nil {
+		resp.Playback = &response.EpisodePlaybackResponse{
+			ProgressMs: playback.ProgressMs,
+			Completed:  playback.Completed,
+			PlayedAt:   playback.PlayedAt,
 		}
 	}
 

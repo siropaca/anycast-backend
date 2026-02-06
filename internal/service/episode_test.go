@@ -46,7 +46,7 @@ func TestToEpisodeResponse(t *testing.T) {
 		svc := &episodeService{storageClient: mockStorage}
 		ctx := context.Background()
 
-		resp, err := svc.toEpisodeResponse(ctx, baseEpisode, owner)
+		resp, err := svc.toEpisodeResponse(ctx, baseEpisode, owner, nil)
 
 		assert.NoError(t, err)
 		assert.Equal(t, episodeID, resp.ID)
@@ -69,7 +69,7 @@ func TestToEpisodeResponse(t *testing.T) {
 		episode := *baseEpisode
 		episode.FullAudio = nil
 
-		resp, err := svc.toEpisodeResponse(ctx, &episode, owner)
+		resp, err := svc.toEpisodeResponse(ctx, &episode, owner, nil)
 
 		assert.NoError(t, err)
 		assert.Nil(t, resp.FullAudio)
@@ -91,7 +91,7 @@ func TestToEpisodeResponse(t *testing.T) {
 			DurationMs: 180000,
 		}
 
-		resp, err := svc.toEpisodeResponse(ctx, &episode, owner)
+		resp, err := svc.toEpisodeResponse(ctx, &episode, owner, nil)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, resp.FullAudio)
@@ -114,7 +114,7 @@ func TestToEpisodeResponse(t *testing.T) {
 			Path: "images/artwork.png",
 		}
 
-		resp, err := svc.toEpisodeResponse(ctx, &episode, owner)
+		resp, err := svc.toEpisodeResponse(ctx, &episode, owner, nil)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, resp.Artwork)
@@ -131,7 +131,7 @@ func TestToEpisodeResponse(t *testing.T) {
 		episode := *baseEpisode
 		episode.PublishedAt = nil
 
-		resp, err := svc.toEpisodeResponse(ctx, &episode, owner)
+		resp, err := svc.toEpisodeResponse(ctx, &episode, owner, nil)
 
 		assert.NoError(t, err)
 		assert.Nil(t, resp.PublishedAt)

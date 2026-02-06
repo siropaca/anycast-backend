@@ -76,6 +76,11 @@ GET /channels/:channelId/episodes/:episodeId
         "emotion": "嬉しそうに"
       }
     ],
+    "playback": {
+      "progressMs": 60000,
+      "completed": false,
+      "playedAt": "2025-01-01T00:00:00Z"
+    },
     "playCount": 123,
     "publishedAt": "2025-01-01T00:00:00Z",
     "createdAt": "2025-01-01T00:00:00Z",
@@ -85,6 +90,8 @@ GET /channels/:channelId/episodes/:episodeId
 ```
 
 > **Note:** `voiceStyle` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
+>
+> **Note:** `playback` は認証済みの場合のみ含まれます。未認証または再生履歴がない場合は `null` になります。
 
 ---
 
@@ -397,6 +404,11 @@ GET /me/channels/:channelId/episodes/:episodeId
     "description": "エピソードの説明",
     "artwork": { "id": "uuid", "url": "..." },
     "fullAudio": { "id": "uuid", "url": "...", "durationMs": 180000 },
+    "playback": {
+      "progressMs": 60000,
+      "completed": false,
+      "playedAt": "2025-01-01T00:00:00Z"
+    },
     "playCount": 123,
     "publishedAt": "2025-01-01T00:00:00Z",
     "createdAt": "2025-01-01T00:00:00Z",
@@ -404,6 +416,8 @@ GET /me/channels/:channelId/episodes/:episodeId
   }
 }
 ```
+
+> **Note:** `playback` は認証済みの場合のみ含まれます。再生履歴がない場合は `null` になります。
 
 **エラー（403 Forbidden）:**
 ```json

@@ -14,6 +14,7 @@ import (
 type PlaybackHistoryRepository interface {
 	FindByUserID(ctx context.Context, userID uuid.UUID, completed *bool, limit, offset int) ([]model.PlaybackHistory, int64, error)
 	FindByUserIDAndEpisodeID(ctx context.Context, userID, episodeID uuid.UUID) (*model.PlaybackHistory, error)
+	FindByUserIDAndEpisodeIDs(ctx context.Context, userID uuid.UUID, episodeIDs []uuid.UUID) ([]model.PlaybackHistory, error)
 	Upsert(ctx context.Context, history *model.PlaybackHistory) error
 	Delete(ctx context.Context, id uuid.UUID) error
 }
@@ -69,6 +70,21 @@ func (r *playbackHistoryRepository) FindByUserIDAndEpisodeID(ctx context.Context
 		return nil, err
 	}
 	return &history, nil
+}
+
+// FindByUserIDAndEpisodeIDs はユーザーと複数エピソードに対応する再生履歴を一括取得する
+func (r *playbackHistoryRepository) FindByUserIDAndEpisodeIDs(ctx context.Context, userID uuid.UUID, episodeIDs []uuid.UUID) ([]model.PlaybackHistory, error) {
+	if len(episodeIDs) == 0 {
+		return nil, nil
+	}
+
+	var histories []model.PlaybackHistory
+	if err := r.db.WithContext(ctx).
+		Where("user_id = ? AND episode_id IN ?", userID, episodeIDs).
+		Find(&histories).Error; err != nil {
+		return nil, err
+	}
+	return histories, nil
 }
 
 // Upsert は再生履歴を作成または更新する

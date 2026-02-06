@@ -117,6 +117,11 @@ GET /channels/:channelId
             "durationMs": 180000
           }
         },
+        "playback": {
+          "progressMs": 60000,
+          "completed": false,
+          "playedAt": "2025-01-01T00:00:00Z"
+        },
         "audioOutdated": false,
         "playCount": 100,
         "publishedAt": "2025-01-01T00:00:00Z",
@@ -136,6 +141,7 @@ GET /channels/:channelId
 > - チャンネルの `userPrompt` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
 > - `defaultBgm.isSystem` が `true` の場合はシステム BGM、`false` の場合はユーザー所有の BGM です。
 > - `episodes` はチャンネルに紐づくエピソード一覧です。各エピソードにも `owner` が含まれます。
+> - `playback` は認証済みの場合のみ含まれます。未認証または再生履歴がない場合は `null` になります。
 
 ---
 
@@ -461,6 +467,11 @@ GET /me/channels/:channelId
             "durationMs": 180000
           }
         },
+        "playback": {
+          "progressMs": 60000,
+          "completed": false,
+          "playedAt": "2025-01-01T00:00:00Z"
+        },
         "audioOutdated": false,
         "playCount": 100,
         "publishedAt": "2025-01-01T00:00:00Z",
@@ -474,6 +485,8 @@ GET /me/channels/:channelId
   }
 }
 ```
+
+> **Note:** `playback` は認証済みの場合のみ含まれます。再生履歴がない場合は `null` になります。
 
 **エラー（403 Forbidden）:**
 ```json

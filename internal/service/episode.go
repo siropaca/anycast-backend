@@ -32,15 +32,16 @@ type EpisodeService interface {
 }
 
 type episodeService struct {
-	episodeRepo    repository.EpisodeRepository
-	channelRepo    repository.ChannelRepository
-	scriptLineRepo repository.ScriptLineRepository
-	audioRepo      repository.AudioRepository
-	imageRepo      repository.ImageRepository
-	bgmRepo        repository.BgmRepository
-	systemBgmRepo  repository.SystemBgmRepository
-	storageClient  storage.Client
-	ttsClient      tts.Client
+	episodeRepo         repository.EpisodeRepository
+	channelRepo         repository.ChannelRepository
+	scriptLineRepo      repository.ScriptLineRepository
+	audioRepo           repository.AudioRepository
+	imageRepo           repository.ImageRepository
+	bgmRepo             repository.BgmRepository
+	systemBgmRepo       repository.SystemBgmRepository
+	playbackHistoryRepo repository.PlaybackHistoryRepository
+	storageClient       storage.Client
+	ttsClient           tts.Client
 }
 
 // NewEpisodeService は episodeService を生成して EpisodeService として返す
@@ -52,19 +53,21 @@ func NewEpisodeService(
 	imageRepo repository.ImageRepository,
 	bgmRepo repository.BgmRepository,
 	systemBgmRepo repository.SystemBgmRepository,
+	playbackHistoryRepo repository.PlaybackHistoryRepository,
 	storageClient storage.Client,
 	ttsClient tts.Client,
 ) EpisodeService {
 	return &episodeService{
-		episodeRepo:    episodeRepo,
-		channelRepo:    channelRepo,
-		scriptLineRepo: scriptLineRepo,
-		audioRepo:      audioRepo,
-		imageRepo:      imageRepo,
-		bgmRepo:        bgmRepo,
-		systemBgmRepo:  systemBgmRepo,
-		storageClient:  storageClient,
-		ttsClient:      ttsClient,
+		episodeRepo:         episodeRepo,
+		channelRepo:         channelRepo,
+		scriptLineRepo:      scriptLineRepo,
+		audioRepo:           audioRepo,
+		imageRepo:           imageRepo,
+		bgmRepo:             bgmRepo,
+		systemBgmRepo:       systemBgmRepo,
+		playbackHistoryRepo: playbackHistoryRepo,
+		storageClient:       storageClient,
+		ttsClient:           ttsClient,
 	}
 }
 
@@ -121,7 +124,16 @@ func (s *episodeService) GetEpisode(ctx context.Context, userID, channelID, epis
 		}
 	}
 
-	resp, err := s.toEpisodeResponse(ctx, episode, &channel.User)
+	// 認証済みの場合は再生履歴を取得
+	var playback *model.PlaybackHistory
+	if userID != "" {
+		ph, err := s.playbackHistoryRepo.FindByUserIDAndEpisodeID(ctx, uid, eid)
+		if err == nil {
+			playback = ph
+		}
+	}
+
+	resp, err := s.toEpisodeResponse(ctx, episode, &channel.User, playback)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +180,14 @@ func (s *episodeService) GetMyChannelEpisode(ctx context.Context, userID, channe
 		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
 	}
 
-	resp, err := s.toEpisodeResponse(ctx, episode, &channel.User)
+	// 再生履歴を取得
+	var playback *model.PlaybackHistory
+	ph, err := s.playbackHistoryRepo.FindByUserIDAndEpisodeID(ctx, uid, eid)
+	if err == nil {
+		playback = ph
+	}
+
+	resp, err := s.toEpisodeResponse(ctx, episode, &channel.User, playback)
 	if err != nil {
 		return nil, err
 	}
@@ -405,7 +424,7 @@ func (s *episodeService) UpdateEpisode(ctx context.Context, userID, channelID, e
 		return nil, err
 	}
 
-	resp, err := s.toEpisodeResponse(ctx, updated, &channel.User)
+	resp, err := s.toEpisodeResponse(ctx, updated, &channel.User, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -541,7 +560,7 @@ func (s *episodeService) PublishEpisode(ctx context.Context, userID, channelID, 
 		return nil, err
 	}
 
-	resp, err := s.toEpisodeResponse(ctx, updated, &channel.User)
+	resp, err := s.toEpisodeResponse(ctx, updated, &channel.User, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -602,7 +621,7 @@ func (s *episodeService) UnpublishEpisode(ctx context.Context, userID, channelID
 		return nil, err
 	}
 
-	resp, err := s.toEpisodeResponse(ctx, updated, &channel.User)
+	resp, err := s.toEpisodeResponse(ctx, updated, &channel.User, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -666,7 +685,7 @@ func (s *episodeService) toEpisodeResponses(ctx context.Context, episodes []mode
 	result := make([]response.EpisodeResponse, len(episodes))
 
 	for i, e := range episodes {
-		resp, err := s.toEpisodeResponse(ctx, &e, owner)
+		resp, err := s.toEpisodeResponse(ctx, &e, owner, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -677,7 +696,7 @@ func (s *episodeService) toEpisodeResponses(ctx context.Context, episodes []mode
 }
 
 // toEpisodeResponse は Episode をレスポンス DTO に変換する
-func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode, owner *model.User) (response.EpisodeResponse, error) {
+func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode, owner *model.User, playback *model.PlaybackHistory) (response.EpisodeResponse, error) {
 	ownerResp, err := s.toChannelOwnerResponse(ctx, owner)
 	if err != nil {
 		return response.EpisodeResponse{}, err
@@ -757,6 +776,14 @@ func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode
 				URL:        signedURL,
 				DurationMs: e.SystemBgm.Audio.DurationMs,
 			},
+		}
+	}
+
+	if playback != nil {
+		resp.Playback = &response.EpisodePlaybackResponse{
+			ProgressMs: playback.ProgressMs,
+			Completed:  playback.Completed,
+			PlayedAt:   playback.PlayedAt,
 		}
 	}
 
@@ -867,7 +894,7 @@ func (s *episodeService) SetEpisodeBgm(ctx context.Context, userID, channelID, e
 		return nil, err
 	}
 
-	resp, err := s.toEpisodeResponse(ctx, updated, &channel.User)
+	resp, err := s.toEpisodeResponse(ctx, updated, &channel.User, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -931,7 +958,7 @@ func (s *episodeService) DeleteEpisodeBgm(ctx context.Context, userID, channelID
 		return nil, err
 	}
 
-	resp, err := s.toEpisodeResponse(ctx, updated, &channel.User)
+	resp, err := s.toEpisodeResponse(ctx, updated, &channel.User, nil)
 	if err != nil {
 		return nil, err
 	}
