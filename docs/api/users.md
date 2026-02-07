@@ -13,7 +13,9 @@ GET /users/:username
     "id": "uuid",
     "username": "user_name",
     "displayName": "ユーザー名",
+    "bio": "自己紹介文",
     "avatar": { "id": "uuid", "url": "..." },
+    "headerImage": { "id": "uuid", "url": "..." },
     "channels": [
       {
         "id": "uuid",
@@ -53,7 +55,9 @@ GET /me
     "email": "user@example.com",
     "username": "user_name",
     "displayName": "ユーザー名",
+    "bio": "自己紹介文",
     "avatar": { "id": "uuid", "url": "..." },
+    "headerImage": { "id": "uuid", "url": "..." },
     "userPrompt": "台本生成の基本方針...",
     "hasPassword": true,
     "oauthProviders": ["google"],
@@ -75,7 +79,9 @@ PATCH /me
 {
   "username": "new_username",
   "displayName": "新しい名前",
-  "avatarImageId": "uuid"
+  "bio": "自己紹介文",
+  "avatarImageId": "uuid",
+  "headerImageId": "uuid"
 }
 ```
 
@@ -104,7 +110,9 @@ PATCH /me/prompt
     "email": "user@example.com",
     "username": "user_name",
     "displayName": "ユーザー名",
+    "bio": "自己紹介文",
     "avatar": { "id": "uuid", "url": "..." },
+    "headerImage": { "id": "uuid", "url": "..." },
     "userPrompt": "台本生成の基本方針...",
     "hasPassword": true,
     "oauthProviders": ["google"],

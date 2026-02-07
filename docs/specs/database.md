@@ -20,6 +20,7 @@ erDiagram
     users ||--o{ feedbacks : has
     users ||--o{ contacts : has
     users ||--o| images : avatar
+    users ||--o| images : header_image
     categories ||--o{ channels : has
     categories ||--o| images : image
     channels ||--o{ channel_characters : has
@@ -147,6 +148,8 @@ erDiagram
         varchar display_name
         user_role role
         uuid avatar_id FK
+        uuid header_image_id FK
+        varchar bio
         text user_prompt
         timestamp created_at
         timestamp updated_at
@@ -325,6 +328,8 @@ erDiagram
 | display_name | VARCHAR(20) | | - | 表示名 |
 | role | user_role | | `user` | ロール |
 | avatar_id | UUID | ◯ | - | アバター画像（images 参照） |
+| header_image_id | UUID | ◯ | - | ヘッダー画像（images 参照） |
+| bio | VARCHAR(200) | | '' | 自己紹介文 |
 | user_prompt | TEXT | | '' | 台本生成の基本方針（全チャンネル・エピソードに適用） |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
@@ -336,6 +341,7 @@ erDiagram
 
 **外部キー:**
 - avatar_id → images(id) ON DELETE SET NULL
+- header_image_id → images(id) ON DELETE SET NULL
 
 ---
 
