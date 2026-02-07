@@ -17,6 +17,21 @@ INSERT INTO images (id, mime_type, path, filename, file_size) VALUES
 	('e8ff3f67-40c0-4323-94cf-053fc3dd5376', 'image/jpeg', 'https://picsum.photos/seed/avatar-user10/200/200', 'avatar-user10.jpg', 0);
 
 -- ===========================================
+-- ユーザーヘッダー画像（10枚）
+-- ===========================================
+INSERT INTO images (id, mime_type, path, filename, file_size) VALUES
+	('a1b2c3d4-1111-4000-8000-000000000001', 'image/jpeg', 'https://picsum.photos/seed/header-user1/1500/500', 'header-user1.jpg', 0),
+	('a1b2c3d4-2222-4000-8000-000000000002', 'image/jpeg', 'https://picsum.photos/seed/header-user2/1500/500', 'header-user2.jpg', 0),
+	('a1b2c3d4-3333-4000-8000-000000000003', 'image/jpeg', 'https://picsum.photos/seed/header-user3/1500/500', 'header-user3.jpg', 0),
+	('a1b2c3d4-4444-4000-8000-000000000004', 'image/jpeg', 'https://picsum.photos/seed/header-user4/1500/500', 'header-user4.jpg', 0),
+	('a1b2c3d4-5555-4000-8000-000000000005', 'image/jpeg', 'https://picsum.photos/seed/header-user5/1500/500', 'header-user5.jpg', 0),
+	('a1b2c3d4-6666-4000-8000-000000000006', 'image/jpeg', 'https://picsum.photos/seed/header-user6/1500/500', 'header-user6.jpg', 0),
+	('a1b2c3d4-7777-4000-8000-000000000007', 'image/jpeg', 'https://picsum.photos/seed/header-user7/1500/500', 'header-user7.jpg', 0),
+	('a1b2c3d4-8888-4000-8000-000000000008', 'image/jpeg', 'https://picsum.photos/seed/header-user8/1500/500', 'header-user8.jpg', 0),
+	('a1b2c3d4-9999-4000-8000-000000000009', 'image/jpeg', 'https://picsum.photos/seed/header-user9/1500/500', 'header-user9.jpg', 0),
+	('a1b2c3d4-aaaa-4000-8000-00000000000a', 'image/jpeg', 'https://picsum.photos/seed/header-user10/1500/500', 'header-user10.jpg', 0);
+
+-- ===========================================
 -- チャンネルアートワーク画像（15枚）
 -- ===========================================
 INSERT INTO images (id, mime_type, path, filename, file_size) VALUES

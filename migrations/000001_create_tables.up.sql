@@ -103,6 +103,8 @@ CREATE TABLE users (
 	username VARCHAR(20) NOT NULL UNIQUE,
 	display_name VARCHAR(20) NOT NULL,
 	avatar_id UUID REFERENCES images (id) ON DELETE SET NULL,
+	header_image_id UUID REFERENCES images (id) ON DELETE SET NULL,
+	bio VARCHAR(200) NOT NULL DEFAULT '',
 	role user_role NOT NULL DEFAULT 'user',
 	user_prompt VARCHAR(2000) NOT NULL DEFAULT '',
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
