@@ -3184,6 +3184,41 @@ const docTemplate = `{
                     }
                 }
             },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "認証済みユーザーのアカウントを削除します",
+                "tags": [
+                    "me"
+                ],
+                "summary": "アカウント削除",
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "patch": {
                 "security": [
                     {
@@ -6588,6 +6623,8 @@ const docTemplate = `{
         "response.CategoryResponse": {
             "type": "object",
             "required": [
+                "channelCount",
+                "episodeCount",
                 "id",
                 "isActive",
                 "name",
@@ -6595,6 +6632,12 @@ const docTemplate = `{
                 "sortOrder"
             ],
             "properties": {
+                "channelCount": {
+                    "type": "integer"
+                },
+                "episodeCount": {
+                    "type": "integer"
+                },
                 "id": {
                     "type": "string"
                 },

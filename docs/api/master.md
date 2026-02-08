@@ -61,6 +61,8 @@ GET /categories
       "slug": "technology",
       "name": "テクノロジー",
       "image": { "id": "uuid", "url": "..." },
+      "channelCount": 5,
+      "episodeCount": 30,
       "sortOrder": 0,
       "isActive": true
     }
@@ -90,6 +92,8 @@ GET /categories/:slug
     "slug": "technology",
     "name": "テクノロジー",
     "image": { "id": "uuid", "url": "..." },
+    "channelCount": 5,
+    "episodeCount": 30,
     "sortOrder": 0,
     "isActive": true
   }

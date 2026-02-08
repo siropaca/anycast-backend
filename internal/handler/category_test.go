@@ -46,8 +46,8 @@ func TestCategoryHandler_ListCategories(t *testing.T) {
 	t.Run("カテゴリ一覧を取得できる", func(t *testing.T) {
 		mockSvc := new(mockCategoryService)
 		categories := []response.CategoryResponse{
-			{ID: uuid.New(), Slug: "technology", Name: "テクノロジー", SortOrder: 0, IsActive: true},
-			{ID: uuid.New(), Slug: "news", Name: "ニュース", SortOrder: 1, IsActive: true},
+			{ID: uuid.New(), Slug: "technology", Name: "テクノロジー", ChannelCount: 5, EpisodeCount: 30, SortOrder: 0, IsActive: true},
+			{ID: uuid.New(), Slug: "news", Name: "ニュース", ChannelCount: 3, EpisodeCount: 15, SortOrder: 1, IsActive: true},
 		}
 		mockSvc.On("ListCategories", mock.Anything).Return(categories, nil)
 
@@ -64,6 +64,10 @@ func TestCategoryHandler_ListCategories(t *testing.T) {
 		err := json.Unmarshal(w.Body.Bytes(), &resp)
 		assert.NoError(t, err)
 		assert.Len(t, resp["data"], 2)
+		assert.Equal(t, float64(5), resp["data"][0]["channelCount"])
+		assert.Equal(t, float64(30), resp["data"][0]["episodeCount"])
+		assert.Equal(t, float64(3), resp["data"][1]["channelCount"])
+		assert.Equal(t, float64(15), resp["data"][1]["episodeCount"])
 		mockSvc.AssertExpectations(t)
 	})
 
@@ -114,8 +118,10 @@ func TestCategoryHandler_ListCategories(t *testing.T) {
 					ID:  imageID,
 					URL: "https://example.com/image.png",
 				},
-				SortOrder: 0,
-				IsActive:  true,
+				ChannelCount: 2,
+				EpisodeCount: 10,
+				SortOrder:    0,
+				IsActive:     true,
 			},
 		}
 		mockSvc.On("ListCategories", mock.Anything).Return(categories, nil)
@@ -142,11 +148,13 @@ func TestCategoryHandler_GetCategoryBySlug(t *testing.T) {
 	t.Run("スラッグ指定でカテゴリを取得できる", func(t *testing.T) {
 		mockSvc := new(mockCategoryService)
 		category := response.CategoryResponse{
-			ID:        uuid.New(),
-			Slug:      "technology",
-			Name:      "テクノロジー",
-			SortOrder: 0,
-			IsActive:  true,
+			ID:           uuid.New(),
+			Slug:         "technology",
+			Name:         "テクノロジー",
+			ChannelCount: 5,
+			EpisodeCount: 30,
+			SortOrder:    0,
+			IsActive:     true,
 		}
 		mockSvc.On("GetCategoryBySlug", mock.Anything, "technology").Return(category, nil)
 
@@ -163,6 +171,8 @@ func TestCategoryHandler_GetCategoryBySlug(t *testing.T) {
 		err := json.Unmarshal(w.Body.Bytes(), &resp)
 		assert.NoError(t, err)
 		assert.Equal(t, "technology", resp["data"]["slug"])
+		assert.Equal(t, float64(5), resp["data"]["channelCount"])
+		assert.Equal(t, float64(30), resp["data"]["episodeCount"])
 		mockSvc.AssertExpectations(t)
 	})
 

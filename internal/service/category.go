@@ -6,6 +6,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/model"
+	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
@@ -35,9 +36,19 @@ func (s *categoryService) ListCategories(ctx context.Context) ([]response.Catego
 		return nil, err
 	}
 
+	categoryIDs := make([]uuid.UUID, len(categories))
+	for i, c := range categories {
+		categoryIDs[i] = c.ID
+	}
+
+	statsMap, err := s.categoryRepo.FindStatsByCategoryIDs(ctx, categoryIDs)
+	if err != nil {
+		return nil, err
+	}
+
 	result := make([]response.CategoryResponse, len(categories))
 	for i, c := range categories {
-		resp, err := s.toCategoryResponse(ctx, &c)
+		resp, err := s.toCategoryResponse(ctx, &c, statsMap[c.ID])
 		if err != nil {
 			return nil, err
 		}
@@ -54,17 +65,24 @@ func (s *categoryService) GetCategoryBySlug(ctx context.Context, slug string) (r
 		return response.CategoryResponse{}, err
 	}
 
-	return s.toCategoryResponse(ctx, category)
+	statsMap, err := s.categoryRepo.FindStatsByCategoryIDs(ctx, []uuid.UUID{category.ID})
+	if err != nil {
+		return response.CategoryResponse{}, err
+	}
+
+	return s.toCategoryResponse(ctx, category, statsMap[category.ID])
 }
 
 // toCategoryResponse は Category モデルをレスポンス DTO に変換する
-func (s *categoryService) toCategoryResponse(ctx context.Context, c *model.Category) (response.CategoryResponse, error) {
+func (s *categoryService) toCategoryResponse(ctx context.Context, c *model.Category, stats repository.CategoryStats) (response.CategoryResponse, error) {
 	resp := response.CategoryResponse{
-		ID:        c.ID,
-		Slug:      c.Slug,
-		Name:      c.Name,
-		SortOrder: c.SortOrder,
-		IsActive:  c.IsActive,
+		ID:           c.ID,
+		Slug:         c.Slug,
+		Name:         c.Name,
+		ChannelCount: stats.ChannelCount,
+		EpisodeCount: stats.EpisodeCount,
+		SortOrder:    c.SortOrder,
+		IsActive:     c.IsActive,
 	}
 
 	if c.Image != nil {

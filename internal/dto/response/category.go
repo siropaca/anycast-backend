@@ -8,8 +8,10 @@ type CategoryResponse struct {
 	Slug      string           `json:"slug" validate:"required"`
 	Name      string           `json:"name" validate:"required"`
 	Image     *ArtworkResponse `json:"image"`
-	SortOrder int              `json:"sortOrder" validate:"required"`
-	IsActive  bool             `json:"isActive" validate:"required"`
+	ChannelCount int              `json:"channelCount" validate:"required"`
+	EpisodeCount int              `json:"episodeCount" validate:"required"`
+	SortOrder    int              `json:"sortOrder" validate:"required"`
+	IsActive     bool             `json:"isActive" validate:"required"`
 }
 
 // カテゴリ単体のレスポンス
