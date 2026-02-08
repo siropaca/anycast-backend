@@ -74,6 +74,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 
 	// Me（自分のリソース）
 	authenticated.GET("/me", container.AuthHandler.GetMe)
+	authenticated.PATCH("/me", container.AuthHandler.UpdateMe)
 	authenticated.PATCH("/me/prompt", container.AuthHandler.UpdatePrompt)
 	authenticated.GET("/me/channels", container.ChannelHandler.ListMyChannels)
 	authenticated.GET("/me/channels/:channelId", container.ChannelHandler.GetMyChannel)

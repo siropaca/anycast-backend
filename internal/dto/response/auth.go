@@ -28,8 +28,10 @@ type MeResponse struct {
 	Email          string          `json:"email" validate:"required"`
 	Username       string          `json:"username" validate:"required"`
 	DisplayName    string          `json:"displayName" validate:"required"`
+	Bio            string          `json:"bio" validate:"required"`
 	Role           string          `json:"role" validate:"required"`
 	Avatar         *AvatarResponse `json:"avatar" extensions:"x-nullable"`
+	HeaderImage    *AvatarResponse `json:"headerImage" extensions:"x-nullable"`
 	UserPrompt     string          `json:"userPrompt" validate:"required"`
 	HasPassword    bool            `json:"hasPassword" validate:"required"`
 	OAuthProviders []string        `json:"oauthProviders" validate:"required"`

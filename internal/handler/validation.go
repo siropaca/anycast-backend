@@ -23,6 +23,11 @@ var fieldNameMap = map[string]string{
 	"RefreshToken":   "リフレッシュトークン",
 	"ExpiresAt":      "有効期限",
 
+	// ユーザープロフィール
+	"Bio":           "自己紹介",
+	"AvatarImageID": "アバター画像 ID",
+	"HeaderImageID": "ヘッダー画像 ID",
+
 	// チャンネル・エピソード
 	"Title":              "タイトル",
 	"Description":        "説明",

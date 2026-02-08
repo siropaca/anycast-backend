@@ -6,3 +6,13 @@
 ### ユーザー取得
 GET {{baseUrl}}/users/YOUR_USERNAME_HERE
 Authorization: Bearer {{token}}
+
+### ユーザー情報更新
+PATCH {{baseUrl}}/me
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "displayName": "テスト太郎",
+  "bio": "よろしくお願いします"
+}

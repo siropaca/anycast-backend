@@ -44,6 +44,7 @@ type AuthService interface {
 	RefreshToken(ctx context.Context, req request.RefreshTokenRequest) (*RefreshResult, error)
 	Logout(ctx context.Context, userID string, req request.LogoutRequest) error
 	GetMe(ctx context.Context, userID string) (*response.MeResponse, error)
+	UpdateMe(ctx context.Context, userID string, req request.UpdateMeRequest) (*response.MeResponse, error)
 	UpdatePrompt(ctx context.Context, userID string, req request.UpdateUserPromptRequest) (*response.MeResponse, error)
 }
 
@@ -461,40 +462,114 @@ func (s *authService) GetMe(ctx context.Context, userID string) (*response.MeRes
 	}
 
 	// アバター画像を取得
-	var avatar *response.AvatarResponse
-	if user.AvatarID != nil {
-		image, err := s.imageRepo.FindByID(ctx, *user.AvatarID)
-		if err == nil {
-			if storage.IsExternalURL(image.Path) {
-				avatar = &response.AvatarResponse{
-					ID:  image.ID,
-					URL: image.Path,
-				}
-			} else {
-				signedURL, err := s.storageClient.GenerateSignedURL(ctx, image.Path, storage.SignedURLExpirationImage)
-				if err == nil {
-					avatar = &response.AvatarResponse{
-						ID:  image.ID,
-						URL: signedURL,
-					}
-				}
-			}
-		}
-		// アバターが見つからない場合やURL生成に失敗した場合はエラーにせず nil のまま
-	}
+	avatar := s.resolveImageResponse(ctx, user.AvatarID)
+
+	// ヘッダー画像を取得
+	headerImage := s.resolveImageResponse(ctx, user.HeaderImageID)
 
 	return &response.MeResponse{
 		ID:             user.ID,
 		Email:          user.Email,
 		Username:       user.Username,
 		DisplayName:    user.DisplayName,
+		Bio:            user.Bio,
 		Role:           string(user.Role),
 		Avatar:         avatar,
+		HeaderImage:    headerImage,
 		UserPrompt:     user.UserPrompt,
 		HasPassword:    hasPassword,
 		OAuthProviders: providers,
 		CreatedAt:      user.CreatedAt,
 	}, nil
+}
+
+// UpdateMe はユーザーのプロフィール情報を更新する
+func (s *authService) UpdateMe(ctx context.Context, userID string, req request.UpdateMeRequest) (*response.MeResponse, error) {
+	// UUID をパース
+	id, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// ユーザーを取得
+	user, err := s.userRepo.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// displayName, bio を更新
+	user.DisplayName = req.DisplayName
+	user.Bio = req.Bio
+
+	// avatarImageId の処理
+	if req.AvatarImageID != nil {
+		if *req.AvatarImageID == "" {
+			user.AvatarID = nil
+		} else {
+			avatarID, err := uuid.Parse(*req.AvatarImageID)
+			if err != nil {
+				return nil, err
+			}
+			if _, err := s.imageRepo.FindByID(ctx, avatarID); err != nil {
+				return nil, err
+			}
+			user.AvatarID = &avatarID
+		}
+		user.Avatar = nil
+	}
+
+	// headerImageId の処理
+	if req.HeaderImageID != nil {
+		if *req.HeaderImageID == "" {
+			user.HeaderImageID = nil
+		} else {
+			headerID, err := uuid.Parse(*req.HeaderImageID)
+			if err != nil {
+				return nil, err
+			}
+			if _, err := s.imageRepo.FindByID(ctx, headerID); err != nil {
+				return nil, err
+			}
+			user.HeaderImageID = &headerID
+		}
+		user.HeaderImage = nil
+	}
+
+	if err := s.userRepo.Update(ctx, user); err != nil {
+		return nil, err
+	}
+
+	// 更新後のユーザー情報を返す
+	return s.GetMe(ctx, userID)
+}
+
+// resolveImageResponse は画像 ID から AvatarResponse を生成する
+func (s *authService) resolveImageResponse(ctx context.Context, imageID *uuid.UUID) *response.AvatarResponse {
+	if imageID == nil {
+		return nil
+	}
+
+	image, err := s.imageRepo.FindByID(ctx, *imageID)
+	if err != nil {
+		return nil
+	}
+
+	if storage.IsExternalURL(image.Path) {
+		return &response.AvatarResponse{
+			ID:  image.ID,
+			URL: image.Path,
+		}
+	}
+
+	signedURL, err := s.storageClient.GenerateSignedURL(ctx, image.Path, storage.SignedURLExpirationImage)
+	if err != nil {
+		return nil
+	}
+
+	return &response.AvatarResponse{
+		ID:  image.ID,
+		URL: signedURL,
+	}
 }
 
 // UpdatePrompt はユーザーの台本生成用プロンプトを更新する

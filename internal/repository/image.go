@@ -72,7 +72,7 @@ func (r *imageRepository) Delete(ctx context.Context, id uuid.UUID) error {
 
 // FindOrphaned はどのテーブルからも参照されていない孤児レコードを取得する
 //
-// 対象: users.avatar_id, channels.artwork_id, episodes.artwork_id, characters.avatar_id
+// 対象: users.avatar_id, users.header_image_id, channels.artwork_id, episodes.artwork_id, characters.avatar_id
 // 条件: created_at から 1 時間以上経過したレコードのみ
 func (r *imageRepository) FindOrphaned(ctx context.Context) ([]model.Image, error) {
 	var images []model.Image
@@ -81,6 +81,7 @@ func (r *imageRepository) FindOrphaned(ctx context.Context) ([]model.Image, erro
 		SELECT i.* FROM images i
 		WHERE i.created_at < NOW() - INTERVAL '1 hour'
 		AND NOT EXISTS (SELECT 1 FROM users u WHERE u.avatar_id = i.id)
+		AND NOT EXISTS (SELECT 1 FROM users u WHERE u.header_image_id = i.id)
 		AND NOT EXISTS (SELECT 1 FROM channels c WHERE c.artwork_id = i.id)
 		AND NOT EXISTS (SELECT 1 FROM episodes e WHERE e.artwork_id = i.id)
 		AND NOT EXISTS (SELECT 1 FROM characters ch WHERE ch.avatar_id = i.id)

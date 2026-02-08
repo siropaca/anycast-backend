@@ -3183,6 +3183,61 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "ユーザーのプロフィール情報（表示名、自己紹介、アバター画像、ヘッダー画像）を更新します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "me"
+                ],
+                "summary": "ユーザー情報更新",
+                "parameters": [
+                    {
+                        "description": "ユーザー情報更新リクエスト",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.UpdateMeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.MeDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/me/audio-jobs": {
@@ -6020,6 +6075,28 @@ const docTemplate = `{
                 }
             }
         },
+        "request.UpdateMeRequest": {
+            "type": "object",
+            "required": [
+                "displayName"
+            ],
+            "properties": {
+                "avatarImageId": {
+                    "type": "string"
+                },
+                "bio": {
+                    "type": "string",
+                    "maxLength": 200
+                },
+                "displayName": {
+                    "type": "string",
+                    "maxLength": 20
+                },
+                "headerImageId": {
+                    "type": "string"
+                }
+            }
+        },
         "request.UpdatePlaybackRequest": {
             "type": "object",
             "properties": {
@@ -7426,6 +7503,7 @@ const docTemplate = `{
         "response.MeResponse": {
             "type": "object",
             "required": [
+                "bio",
                 "createdAt",
                 "displayName",
                 "email",
@@ -7445,6 +7523,9 @@ const docTemplate = `{
                     ],
                     "x-nullable": true
                 },
+                "bio": {
+                    "type": "string"
+                },
                 "createdAt": {
                     "type": "string"
                 },
@@ -7456,6 +7537,14 @@ const docTemplate = `{
                 },
                 "hasPassword": {
                     "type": "boolean"
+                },
+                "headerImage": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.AvatarResponse"
+                        }
+                    ],
+                    "x-nullable": true
                 },
                 "id": {
                     "type": "string"
