@@ -209,3 +209,50 @@ PATCH /me/prompt
 
 1. **User.userPrompt** - ユーザーの基本方針
 2. **Channel.userPrompt** - チャンネル固有の方針
+
+---
+
+## アカウント削除
+
+```
+DELETE /me
+```
+
+自分のアカウントを削除する。アカウントに紐づくすべてのデータが物理削除される。実行中のジョブがある場合はキャンセルしてから削除する。
+
+**処理の流れ:**
+
+1. 実行中の音声生成ジョブ・台本生成ジョブをキャンセル
+2. ユーザーレコードを物理削除（関連データは ON DELETE CASCADE で連鎖削除）
+
+**削除されるデータ:**
+
+| データ | 削除方法 |
+|--------|----------|
+| credentials | CASCADE |
+| oauth_accounts | CASCADE |
+| refresh_tokens | CASCADE |
+| channels（→ episodes → script_lines, audio_jobs） | CASCADE |
+| characters | CASCADE |
+| bgms | CASCADE |
+| playlists（→ playlist_items） | CASCADE |
+| reactions | CASCADE |
+| playback_histories | CASCADE |
+| follows（フォロー・被フォロー両方） | CASCADE |
+| comments | CASCADE |
+| feedbacks | CASCADE |
+
+**削除されないデータ:**
+
+| データ | 挙動 |
+|--------|------|
+| contacts | `user_id` が SET NULL（お問い合わせ履歴は保持） |
+| images / audios | 参照が外れ孤児化（バッチ処理でクリーンアップ） |
+
+**レスポンス:** `204 No Content`
+
+**エラー:**
+
+| コード | 説明 |
+|--------|------|
+| 401 | 認証が必要 |

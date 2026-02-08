@@ -30,6 +30,7 @@
 | PATCH | `/api/v1/me/username` | ユーザー名変更 | Owner | | [詳細](./users.md#ユーザー名変更) |
 | GET | `/api/v1/me/username/check` | ユーザー名利用可否チェック | Owner | | [詳細](./users.md#ユーザー名利用可否チェック) |
 | PATCH | `/api/v1/me/prompt` | ユーザープロンプト更新 | Owner | ✅ | [詳細](./users.md#ユーザープロンプト更新) |
+| DELETE | `/api/v1/me` | アカウント削除 | Owner | ✅ | [詳細](./users.md#アカウント削除) |
 | **Channels** | - | - | - | - | [channels.md](./channels.md) |
 | GET | `/api/v1/channels` | チャンネル一覧取得 | Public | | [詳細](./channels.md#チャンネル一覧取得) |
 | GET | `/api/v1/channels/:channelId` | チャンネル取得 | Optional | ✅ | [詳細](./channels.md#チャンネル取得) |
