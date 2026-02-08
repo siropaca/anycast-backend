@@ -71,11 +71,14 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 
 	// Auth（認証必須）
 	authenticated.POST("/auth/logout", container.AuthHandler.Logout)
+	authenticated.PUT("/auth/password", container.AuthHandler.ChangePassword)
 
 	// Me（自分のリソース）
 	authenticated.GET("/me", container.AuthHandler.GetMe)
 	authenticated.PATCH("/me", container.AuthHandler.UpdateMe)
 	authenticated.DELETE("/me", container.AuthHandler.DeleteMe)
+	authenticated.PATCH("/me/username", container.AuthHandler.UpdateUsername)
+	authenticated.GET("/me/username/check", container.AuthHandler.CheckUsernameAvailability)
 	authenticated.PATCH("/me/prompt", container.AuthHandler.UpdatePrompt)
 	authenticated.GET("/me/channels", container.ChannelHandler.ListMyChannels)
 	authenticated.GET("/me/channels/:channelId", container.ChannelHandler.GetMyChannel)

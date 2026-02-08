@@ -42,10 +42,13 @@ type AuthService interface {
 	Login(ctx context.Context, req request.LoginRequest) (*AuthResult, error)
 	OAuthGoogle(ctx context.Context, req request.OAuthGoogleRequest) (*AuthResult, error)
 	RefreshToken(ctx context.Context, req request.RefreshTokenRequest) (*RefreshResult, error)
+	ChangePassword(ctx context.Context, userID string, req request.ChangePasswordRequest) error
 	Logout(ctx context.Context, userID string, req request.LogoutRequest) error
 	GetMe(ctx context.Context, userID string) (*response.MeResponse, error)
 	UpdateMe(ctx context.Context, userID string, req request.UpdateMeRequest) (*response.MeResponse, error)
 	UpdatePrompt(ctx context.Context, userID string, req request.UpdateUserPromptRequest) (*response.MeResponse, error)
+	UpdateUsername(ctx context.Context, userID string, req request.UpdateUsernameRequest) (*response.MeResponse, error)
+	CheckUsernameAvailability(ctx context.Context, userID string, req request.CheckUsernameRequest) (*response.UsernameCheckResponse, error)
 	DeleteMe(ctx context.Context, userID string) error
 }
 
@@ -340,6 +343,40 @@ func (s *authService) Logout(ctx context.Context, userID string, req request.Log
 	return s.refreshTokenRepo.DeleteByToken(ctx, req.RefreshToken)
 }
 
+// ChangePassword は認証済みユーザーのパスワードを更新する
+func (s *authService) ChangePassword(ctx context.Context, userID string, req request.ChangePasswordRequest) error {
+	// UUID をパース
+	id, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+
+	// 認証情報を取得
+	credential, err := s.credentialRepo.FindByUserID(ctx, id)
+	if err != nil {
+		if apperror.IsCode(err, apperror.CodeNotFound) {
+			return apperror.ErrInvalidCredentials.WithMessage("現在のパスワードが正しくありません")
+		}
+		return err
+	}
+
+	// 現在のパスワードを検証
+	if err := s.passwordHasher.Compare(credential.PasswordHash, req.CurrentPassword); err != nil {
+		return apperror.ErrInvalidCredentials.WithMessage("現在のパスワードが正しくありません")
+	}
+
+	// 新しいパスワードをハッシュ化
+	hashedPassword, err := s.passwordHasher.Hash(req.NewPassword)
+	if err != nil {
+		logger.FromContext(ctx).Error("failed to hash password", "error", err)
+		return apperror.ErrInternal.WithMessage("パスワードのハッシュ化に失敗しました").WithError(err)
+	}
+
+	// パスワードを更新
+	credential.PasswordHash = hashedPassword
+	return s.credentialRepo.Update(ctx, credential)
+}
+
 // createRefreshToken はリフレッシュトークンを生成して DB に保存する
 func (s *authService) createRefreshToken(ctx context.Context, userID uuid.UUID) (string, error) {
 	tokenStr, err := token.Generate()
@@ -605,6 +642,101 @@ func (s *authService) UpdatePrompt(ctx context.Context, userID string, req reque
 
 	// 更新後のユーザー情報を返す
 	return s.GetMe(ctx, userID)
+}
+
+// usernameRegex はユーザー名に使用可能な文字パターン（英数字・アンダースコア・日本語）
+var usernameRegex = regexp.MustCompile(`^[a-zA-Z0-9_\p{Hiragana}\p{Katakana}\p{Han}]+$`)
+
+// validateUsernameFormat はユーザー名の形式を検証する
+func validateUsernameFormat(username string) error {
+	if !usernameRegex.MatchString(username) {
+		return apperror.ErrValidation.WithMessage("ユーザー名に使用できない文字が含まれています")
+	}
+	if strings.HasPrefix(username, "__") {
+		return apperror.ErrValidation.WithMessage("ユーザー名を __ で始めることはできません")
+	}
+	return nil
+}
+
+// UpdateUsername はユーザー名を変更する
+func (s *authService) UpdateUsername(ctx context.Context, userID string, req request.UpdateUsernameRequest) (*response.MeResponse, error) {
+	// UUID をパース
+	id, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// ユーザーを取得
+	user, err := s.userRepo.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// ユーザー名の形式を検証
+	if err := validateUsernameFormat(req.Username); err != nil {
+		return nil, err
+	}
+
+	// 現在のユーザー名と同じなら変更せず返す
+	if user.Username == req.Username {
+		return s.GetMe(ctx, userID)
+	}
+
+	// 重複チェック
+	exists, err := s.userRepo.ExistsByUsername(ctx, req.Username)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, apperror.ErrDuplicateUsername.WithMessage("このユーザー名は既に使用されています")
+	}
+
+	// ユーザー名を更新
+	user.Username = req.Username
+	if err := s.userRepo.Update(ctx, user); err != nil {
+		return nil, err
+	}
+
+	return s.GetMe(ctx, userID)
+}
+
+// CheckUsernameAvailability はユーザー名の利用可否をチェックする
+func (s *authService) CheckUsernameAvailability(ctx context.Context, userID string, req request.CheckUsernameRequest) (*response.UsernameCheckResponse, error) {
+	// UUID をパース
+	id, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// ユーザーを取得
+	user, err := s.userRepo.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// ユーザー名の形式を検証
+	if err := validateUsernameFormat(req.Username); err != nil {
+		return nil, err
+	}
+
+	// 自分の現在のユーザー名なら利用可能
+	if user.Username == req.Username {
+		return &response.UsernameCheckResponse{
+			Username:  req.Username,
+			Available: true,
+		}, nil
+	}
+
+	// 重複チェック
+	exists, err := s.userRepo.ExistsByUsername(ctx, req.Username)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.UsernameCheckResponse{
+		Username:  req.Username,
+		Available: !exists,
+	}, nil
 }
 
 // DeleteMe はユーザーアカウントを削除する

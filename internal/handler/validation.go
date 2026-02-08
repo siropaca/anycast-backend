@@ -15,13 +15,16 @@ var fieldNameMap = map[string]string{
 	"Name": "名前",
 
 	// 認証
-	"Email":          "メールアドレス",
-	"Password":       "パスワード",
-	"DisplayName":    "表示名",
-	"ProviderUserID": "プロバイダーユーザー ID",
-	"AccessToken":    "アクセストークン",
-	"RefreshToken":   "リフレッシュトークン",
-	"ExpiresAt":      "有効期限",
+	"Email":           "メールアドレス",
+	"Password":        "パスワード",
+	"DisplayName":     "表示名",
+	"ProviderUserID":  "プロバイダーユーザー ID",
+	"AccessToken":     "アクセストークン",
+	"RefreshToken":    "リフレッシュトークン",
+	"ExpiresAt":       "有効期限",
+	"CurrentPassword": "現在のパスワード",
+	"NewPassword":     "新しいパスワード",
+	"Username":        "ユーザー名",
 
 	// ユーザープロフィール
 	"Bio":           "自己紹介",

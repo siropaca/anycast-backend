@@ -22,7 +22,7 @@
 | POST | `/api/v1/auth/oauth/google` | Google OAuth 認証 | Guest | ✅ | [詳細](./auth.md#google-oauth-認証) |
 | POST | `/api/v1/auth/refresh` | トークンリフレッシュ | Guest | ✅ | [詳細](./auth.md#トークンリフレッシュ) |
 | POST | `/api/v1/auth/logout` | ログアウト | Owner | ✅ | [詳細](./auth.md#ログアウト) |
-| PUT | `/api/v1/auth/password` | パスワード更新 | Owner | | [詳細](./auth.md#パスワード更新) |
+| PUT | `/api/v1/auth/password` | パスワード更新 | Owner | ✅ | [詳細](./auth.md#パスワード更新) |
 | **Users（ユーザー）** | - | - | - | - | [users.md](./users.md) |
 | GET | `/api/v1/users/:username` | ユーザー取得 | Public | ✅ | [詳細](./users.md#ユーザー取得) |
 | GET | `/api/v1/me` | 現在のユーザー取得 | Owner | ✅ | [詳細](./users.md#現在のユーザー取得) |

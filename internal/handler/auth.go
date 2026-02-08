@@ -227,6 +227,40 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// ChangePassword godoc
+// @Summary パスワード更新
+// @Description 認証済みユーザーのパスワードを更新します
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body request.ChangePasswordRequest true "パスワード更新リクエスト"
+// @Security BearerAuth
+// @Success 204
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /auth/password [put]
+func (h *AuthHandler) ChangePassword(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	var req request.ChangePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
+		return
+	}
+
+	if err := h.authService.ChangePassword(c.Request.Context(), userID, req); err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
 // GetMe godoc
 // @Summary 現在のユーザー取得
 // @Description 認証済みユーザーの情報を取得します
@@ -311,6 +345,76 @@ func (h *AuthHandler) DeleteMe(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+// UpdateUsername godoc
+// @Summary ユーザー名変更
+// @Description ユーザー名を変更します
+// @Tags me
+// @Accept json
+// @Produce json
+// @Param request body request.UpdateUsernameRequest true "ユーザー名変更リクエスト"
+// @Security BearerAuth
+// @Success 200 {object} response.MeDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /me/username [patch]
+func (h *AuthHandler) UpdateUsername(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	var req request.UpdateUsernameRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
+		return
+	}
+
+	me, err := h.authService.UpdateUsername(c.Request.Context(), userID, req)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	Success(c, http.StatusOK, me)
+}
+
+// CheckUsernameAvailability godoc
+// @Summary ユーザー名利用可否チェック
+// @Description 指定したユーザー名が利用可能かどうかを確認します
+// @Tags me
+// @Produce json
+// @Param username query string true "チェック対象のユーザー名"
+// @Security BearerAuth
+// @Success 200 {object} response.UsernameCheckDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /me/username/check [get]
+func (h *AuthHandler) CheckUsernameAvailability(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	var req request.CheckUsernameRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
+		return
+	}
+
+	result, err := h.authService.CheckUsernameAvailability(c.Request.Context(), userID, req)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	Success(c, http.StatusOK, result)
 }
 
 // UpdatePrompt godoc

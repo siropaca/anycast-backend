@@ -52,6 +52,16 @@ Content-Type: application/json
   "refreshToken": "YOUR_REFRESH_TOKEN_HERE"
 }
 
+### パスワード更新
+PUT {{baseUrl}}/auth/password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "currentPassword": "password123",
+  "newPassword": "newpassword456"
+}
+
 ### 現在のユーザー取得
 GET {{baseUrl}}/me
 Authorization: Bearer {{token}}

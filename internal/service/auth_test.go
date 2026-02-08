@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"regexp"
 	"testing"
 	"time"
@@ -95,6 +96,25 @@ func (m *mockCredentialRepository) FindByUserID(ctx context.Context, userID uuid
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*model.Credential), args.Error(1)
+}
+
+func (m *mockCredentialRepository) Update(ctx context.Context, credential *model.Credential) error {
+	args := m.Called(ctx, credential)
+	return args.Error(0)
+}
+
+type mockPasswordHasher struct {
+	mock.Mock
+}
+
+func (m *mockPasswordHasher) Hash(password string) (string, error) {
+	args := m.Called(password)
+	return args.String(0), args.Error(1)
+}
+
+func (m *mockPasswordHasher) Compare(hashedPassword, password string) error {
+	args := m.Called(hashedPassword, password)
+	return args.Error(0)
 }
 
 type mockOAuthAccountRepository struct {
@@ -317,6 +337,17 @@ func newAuthServiceForTestWithJobs(
 		userRepo:      userRepo,
 		audioJobRepo:  audioJobRepo,
 		scriptJobRepo: scriptJobRepo,
+	}
+}
+
+// newAuthServiceForTestWithPassword はパスワードハッシャー付きのテスト用 authService を組み立てるヘルパー
+func newAuthServiceForTestWithPassword(
+	credentialRepo *mockCredentialRepository,
+	passwordHasher *mockPasswordHasher,
+) *authService {
+	return &authService{
+		credentialRepo: credentialRepo,
+		passwordHasher: passwordHasher,
 	}
 }
 
@@ -709,5 +740,319 @@ func TestDeleteMe(t *testing.T) {
 		err := svc.DeleteMe(ctx, "invalid-uuid")
 
 		assert.Error(t, err)
+	})
+}
+
+func TestChangePassword(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+
+	t.Run("パスワード更新が成功する", func(t *testing.T) {
+		credentialRepo := new(mockCredentialRepository)
+		passwordHasher := new(mockPasswordHasher)
+		svc := newAuthServiceForTestWithPassword(credentialRepo, passwordHasher)
+
+		credential := &model.Credential{
+			UserID:       userID,
+			PasswordHash: "hashed_current_password",
+		}
+		credentialRepo.On("FindByUserID", ctx, userID).Return(credential, nil)
+		passwordHasher.On("Compare", "hashed_current_password", "current_password").Return(nil)
+		passwordHasher.On("Hash", "new_password123").Return("hashed_new_password", nil)
+		credentialRepo.On("Update", ctx, mock.MatchedBy(func(c *model.Credential) bool {
+			return c.PasswordHash == "hashed_new_password"
+		})).Return(nil)
+
+		err := svc.ChangePassword(ctx, userID.String(), request.ChangePasswordRequest{
+			CurrentPassword: "current_password",
+			NewPassword:     "new_password123",
+		})
+
+		assert.NoError(t, err)
+		credentialRepo.AssertExpectations(t)
+		passwordHasher.AssertExpectations(t)
+	})
+
+	t.Run("現在のパスワードが間違っている場合はエラーを返す", func(t *testing.T) {
+		credentialRepo := new(mockCredentialRepository)
+		passwordHasher := new(mockPasswordHasher)
+		svc := newAuthServiceForTestWithPassword(credentialRepo, passwordHasher)
+
+		credential := &model.Credential{
+			UserID:       userID,
+			PasswordHash: "hashed_current_password",
+		}
+		credentialRepo.On("FindByUserID", ctx, userID).Return(credential, nil)
+		passwordHasher.On("Compare", "hashed_current_password", "wrong_password").Return(errors.New("mismatch"))
+
+		err := svc.ChangePassword(ctx, userID.String(), request.ChangePasswordRequest{
+			CurrentPassword: "wrong_password",
+			NewPassword:     "new_password123",
+		})
+
+		assert.Error(t, err)
+		assert.True(t, apperror.IsCode(err, apperror.CodeInvalidCredentials))
+		credentialRepo.AssertExpectations(t)
+		passwordHasher.AssertExpectations(t)
+	})
+
+	t.Run("認証情報が存在しない場合はエラーを返す", func(t *testing.T) {
+		credentialRepo := new(mockCredentialRepository)
+		passwordHasher := new(mockPasswordHasher)
+		svc := newAuthServiceForTestWithPassword(credentialRepo, passwordHasher)
+
+		credentialRepo.On("FindByUserID", ctx, userID).Return(nil, apperror.ErrNotFound.WithMessage("認証情報が見つかりません"))
+
+		err := svc.ChangePassword(ctx, userID.String(), request.ChangePasswordRequest{
+			CurrentPassword: "current_password",
+			NewPassword:     "new_password123",
+		})
+
+		assert.Error(t, err)
+		assert.True(t, apperror.IsCode(err, apperror.CodeInvalidCredentials))
+		credentialRepo.AssertExpectations(t)
+	})
+
+	t.Run("無効な UUID の場合はエラーを返す", func(t *testing.T) {
+		credentialRepo := new(mockCredentialRepository)
+		passwordHasher := new(mockPasswordHasher)
+		svc := newAuthServiceForTestWithPassword(credentialRepo, passwordHasher)
+
+		err := svc.ChangePassword(ctx, "invalid-uuid", request.ChangePasswordRequest{
+			CurrentPassword: "current_password",
+			NewPassword:     "new_password123",
+		})
+
+		assert.Error(t, err)
+	})
+}
+
+func TestValidateUsernameFormat(t *testing.T) {
+	tests := []struct {
+		name     string
+		username string
+		wantErr  bool
+	}{
+		{name: "英数字のみ", username: "user123", wantErr: false},
+		{name: "アンダースコアを含む", username: "user_name", wantErr: false},
+		{name: "日本語（ひらがな）", username: "たろう", wantErr: false},
+		{name: "日本語（カタカナ）", username: "タロウ", wantErr: false},
+		{name: "日本語（漢字）", username: "太郎", wantErr: false},
+		{name: "混合（英数字と日本語）", username: "user太郎123", wantErr: false},
+		{name: "アンダースコア1つで始まる", username: "_user", wantErr: false},
+		{name: "__ で始まる", username: "__system", wantErr: true},
+		{name: "ハイフンを含む", username: "user-name", wantErr: true},
+		{name: "スペースを含む", username: "user name", wantErr: true},
+		{name: "記号を含む", username: "user@name", wantErr: true},
+		{name: "ドットを含む", username: "user.name", wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateUsernameFormat(tt.username)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestUpdateUsername(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+
+	baseUser := &model.User{
+		ID:          userID,
+		Email:       "test@example.com",
+		Username:    "current_user",
+		DisplayName: "Test User",
+		Role:        model.RoleUser,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+
+	t.Run("ユーザー名変更が成功する", func(t *testing.T) {
+		userRepo := new(mockUserRepositoryForAuth)
+		credentialRepo := new(mockCredentialRepository)
+		oauthAccountRepo := new(mockOAuthAccountRepository)
+		imageRepo := new(mockImageRepositoryForAuth)
+		storageClient := new(mockStorageClientForAuth)
+		svc := newAuthServiceForTest(userRepo, credentialRepo, oauthAccountRepo, imageRepo, storageClient)
+
+		user := *baseUser
+		userRepo.On("FindByID", ctx, userID).Return(&user, nil).Twice()
+		userRepo.On("ExistsByUsername", ctx, "new_user").Return(false, nil)
+		userRepo.On("Update", ctx, mock.MatchedBy(func(u *model.User) bool {
+			return u.Username == "new_user"
+		})).Return(nil)
+		credentialRepo.On("FindByUserID", ctx, userID).Return(nil, apperror.ErrNotFound)
+		oauthAccountRepo.On("FindByUserID", ctx, userID).Return([]model.OAuthAccount{}, nil)
+
+		result, err := svc.UpdateUsername(ctx, userID.String(), request.UpdateUsernameRequest{
+			Username: "new_user",
+		})
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		userRepo.AssertExpectations(t)
+	})
+
+	t.Run("同じユーザー名なら変更せず返す", func(t *testing.T) {
+		userRepo := new(mockUserRepositoryForAuth)
+		credentialRepo := new(mockCredentialRepository)
+		oauthAccountRepo := new(mockOAuthAccountRepository)
+		imageRepo := new(mockImageRepositoryForAuth)
+		storageClient := new(mockStorageClientForAuth)
+		svc := newAuthServiceForTest(userRepo, credentialRepo, oauthAccountRepo, imageRepo, storageClient)
+
+		user := *baseUser
+		userRepo.On("FindByID", ctx, userID).Return(&user, nil).Twice()
+		credentialRepo.On("FindByUserID", ctx, userID).Return(nil, apperror.ErrNotFound)
+		oauthAccountRepo.On("FindByUserID", ctx, userID).Return([]model.OAuthAccount{}, nil)
+
+		result, err := svc.UpdateUsername(ctx, userID.String(), request.UpdateUsernameRequest{
+			Username: "current_user",
+		})
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Equal(t, "current_user", result.Username)
+		userRepo.AssertExpectations(t)
+	})
+
+	t.Run("形式不正の場合はエラーを返す", func(t *testing.T) {
+		userRepo := new(mockUserRepositoryForAuth)
+		svc := newAuthServiceForTest(userRepo, nil, nil, nil, nil)
+
+		user := *baseUser
+		userRepo.On("FindByID", ctx, userID).Return(&user, nil)
+
+		result, err := svc.UpdateUsername(ctx, userID.String(), request.UpdateUsernameRequest{
+			Username: "user-name",
+		})
+
+		assert.Nil(t, result)
+		assert.Error(t, err)
+		assert.True(t, apperror.IsCode(err, apperror.CodeValidation))
+	})
+
+	t.Run("__ 始まりの場合はエラーを返す", func(t *testing.T) {
+		userRepo := new(mockUserRepositoryForAuth)
+		svc := newAuthServiceForTest(userRepo, nil, nil, nil, nil)
+
+		user := *baseUser
+		userRepo.On("FindByID", ctx, userID).Return(&user, nil)
+
+		result, err := svc.UpdateUsername(ctx, userID.String(), request.UpdateUsernameRequest{
+			Username: "__reserved",
+		})
+
+		assert.Nil(t, result)
+		assert.Error(t, err)
+		assert.True(t, apperror.IsCode(err, apperror.CodeValidation))
+	})
+
+	t.Run("重複する場合は 409 エラーを返す", func(t *testing.T) {
+		userRepo := new(mockUserRepositoryForAuth)
+		svc := newAuthServiceForTest(userRepo, nil, nil, nil, nil)
+
+		user := *baseUser
+		userRepo.On("FindByID", ctx, userID).Return(&user, nil)
+		userRepo.On("ExistsByUsername", ctx, "taken_user").Return(true, nil)
+
+		result, err := svc.UpdateUsername(ctx, userID.String(), request.UpdateUsernameRequest{
+			Username: "taken_user",
+		})
+
+		assert.Nil(t, result)
+		assert.Error(t, err)
+		assert.True(t, apperror.IsCode(err, apperror.CodeDuplicateUsername))
+		userRepo.AssertExpectations(t)
+	})
+}
+
+func TestCheckUsernameAvailability(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+
+	baseUser := &model.User{
+		ID:          userID,
+		Email:       "test@example.com",
+		Username:    "current_user",
+		DisplayName: "Test User",
+		Role:        model.RoleUser,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+
+	t.Run("利用可能なユーザー名の場合 available: true を返す", func(t *testing.T) {
+		userRepo := new(mockUserRepositoryForAuth)
+		svc := newAuthServiceForTest(userRepo, nil, nil, nil, nil)
+
+		user := *baseUser
+		userRepo.On("FindByID", ctx, userID).Return(&user, nil)
+		userRepo.On("ExistsByUsername", ctx, "available_name").Return(false, nil)
+
+		result, err := svc.CheckUsernameAvailability(ctx, userID.String(), request.CheckUsernameRequest{
+			Username: "available_name",
+		})
+
+		assert.NoError(t, err)
+		assert.Equal(t, "available_name", result.Username)
+		assert.True(t, result.Available)
+		userRepo.AssertExpectations(t)
+	})
+
+	t.Run("既に使用されているユーザー名の場合 available: false を返す", func(t *testing.T) {
+		userRepo := new(mockUserRepositoryForAuth)
+		svc := newAuthServiceForTest(userRepo, nil, nil, nil, nil)
+
+		user := *baseUser
+		userRepo.On("FindByID", ctx, userID).Return(&user, nil)
+		userRepo.On("ExistsByUsername", ctx, "taken_name").Return(true, nil)
+
+		result, err := svc.CheckUsernameAvailability(ctx, userID.String(), request.CheckUsernameRequest{
+			Username: "taken_name",
+		})
+
+		assert.NoError(t, err)
+		assert.Equal(t, "taken_name", result.Username)
+		assert.False(t, result.Available)
+		userRepo.AssertExpectations(t)
+	})
+
+	t.Run("自分の現在のユーザー名の場合 available: true を返す", func(t *testing.T) {
+		userRepo := new(mockUserRepositoryForAuth)
+		svc := newAuthServiceForTest(userRepo, nil, nil, nil, nil)
+
+		user := *baseUser
+		userRepo.On("FindByID", ctx, userID).Return(&user, nil)
+
+		result, err := svc.CheckUsernameAvailability(ctx, userID.String(), request.CheckUsernameRequest{
+			Username: "current_user",
+		})
+
+		assert.NoError(t, err)
+		assert.Equal(t, "current_user", result.Username)
+		assert.True(t, result.Available)
+		userRepo.AssertExpectations(t)
+	})
+
+	t.Run("形式不正の場合はエラーを返す", func(t *testing.T) {
+		userRepo := new(mockUserRepositoryForAuth)
+		svc := newAuthServiceForTest(userRepo, nil, nil, nil, nil)
+
+		user := *baseUser
+		userRepo.On("FindByID", ctx, userID).Return(&user, nil)
+
+		result, err := svc.CheckUsernameAvailability(ctx, userID.String(), request.CheckUsernameRequest{
+			Username: "invalid-name",
+		})
+
+		assert.Nil(t, result)
+		assert.Error(t, err)
+		assert.True(t, apperror.IsCode(err, apperror.CodeValidation))
 	})
 }

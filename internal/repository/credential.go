@@ -16,6 +16,7 @@ import (
 type CredentialRepository interface {
 	Create(ctx context.Context, credential *model.Credential) error
 	FindByUserID(ctx context.Context, userID uuid.UUID) (*model.Credential, error)
+	Update(ctx context.Context, credential *model.Credential) error
 }
 
 type credentialRepository struct {
@@ -50,4 +51,14 @@ func (r *credentialRepository) FindByUserID(ctx context.Context, userID uuid.UUI
 	}
 
 	return &credential, nil
+}
+
+// Update はパスワード認証情報を更新する
+func (r *credentialRepository) Update(ctx context.Context, credential *model.Credential) error {
+	if err := r.db.WithContext(ctx).Save(credential).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to update credential", "error", err)
+		return apperror.ErrInternal.WithMessage("認証情報の更新に失敗しました").WithError(err)
+	}
+
+	return nil
 }

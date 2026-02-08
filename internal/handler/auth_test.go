@@ -89,6 +89,27 @@ func (m *mockAuthService) UpdatePrompt(ctx context.Context, userID string, req r
 	return args.Get(0).(*response.MeResponse), args.Error(1)
 }
 
+func (m *mockAuthService) ChangePassword(ctx context.Context, userID string, req request.ChangePasswordRequest) error {
+	args := m.Called(ctx, userID, req)
+	return args.Error(0)
+}
+
+func (m *mockAuthService) UpdateUsername(ctx context.Context, userID string, req request.UpdateUsernameRequest) (*response.MeResponse, error) {
+	args := m.Called(ctx, userID, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.MeResponse), args.Error(1)
+}
+
+func (m *mockAuthService) CheckUsernameAvailability(ctx context.Context, userID string, req request.CheckUsernameRequest) (*response.UsernameCheckResponse, error) {
+	args := m.Called(ctx, userID, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.UsernameCheckResponse), args.Error(1)
+}
+
 func (m *mockAuthService) DeleteMe(ctx context.Context, userID string) error {
 	args := m.Called(ctx, userID)
 	return args.Error(0)
@@ -134,6 +155,8 @@ func setupAuthenticatedAuthRouter(h *AuthHandler, userID string) *gin.Engine {
 	})
 	r.GET("/me", h.GetMe)
 	r.DELETE("/me", h.DeleteMe)
+	r.PATCH("/me/username", h.UpdateUsername)
+	r.GET("/me/username/check", h.CheckUsernameAvailability)
 	r.POST("/auth/logout", h.Logout)
 	return r
 }
@@ -844,6 +867,157 @@ func TestAuthHandler_DeleteMe(t *testing.T) {
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+}
+
+func TestAuthHandler_UpdateUsername(t *testing.T) {
+	userID := uuid.New().String()
+
+	t.Run("ユーザー名変更が成功する", func(t *testing.T) {
+		mockSvc := new(mockAuthService)
+		mockTM := new(mockTokenManager)
+
+		me := &response.MeResponse{
+			ID:             uuid.MustParse(userID),
+			Email:          "test@example.com",
+			Username:       "new_user",
+			DisplayName:    "Test User",
+			Role:           "user",
+			HasPassword:    true,
+			OAuthProviders: []string{},
+			CreatedAt:      time.Now(),
+		}
+		mockSvc.On("UpdateUsername", mock.Anything, userID, request.UpdateUsernameRequest{
+			Username: "new_user",
+		}).Return(me, nil)
+
+		handler := NewAuthHandler(mockSvc, mockTM)
+		router := setupAuthenticatedAuthRouter(handler, userID)
+
+		reqBody := request.UpdateUsernameRequest{Username: "new_user"}
+		body, _ := json.Marshal(reqBody)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("PATCH", "/me/username", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var resp map[string]response.MeResponse
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+		assert.Equal(t, "new_user", resp["data"].Username)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("バリデーションエラーの場合は 400 を返す", func(t *testing.T) {
+		mockSvc := new(mockAuthService)
+		mockTM := new(mockTokenManager)
+
+		handler := NewAuthHandler(mockSvc, mockTM)
+		router := setupAuthenticatedAuthRouter(handler, userID)
+
+		// username が短すぎる
+		reqBody := map[string]string{"username": "ab"}
+		body, _ := json.Marshal(reqBody)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("PATCH", "/me/username", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("重複の場合は 409 を返す", func(t *testing.T) {
+		mockSvc := new(mockAuthService)
+		mockTM := new(mockTokenManager)
+
+		mockSvc.On("UpdateUsername", mock.Anything, userID, request.UpdateUsernameRequest{
+			Username: "taken_user",
+		}).Return(nil, apperror.ErrDuplicateUsername.WithMessage("このユーザー名は既に使用されています"))
+
+		handler := NewAuthHandler(mockSvc, mockTM)
+		router := setupAuthenticatedAuthRouter(handler, userID)
+
+		reqBody := request.UpdateUsernameRequest{Username: "taken_user"}
+		body, _ := json.Marshal(reqBody)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("PATCH", "/me/username", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusConflict, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+}
+
+func TestAuthHandler_CheckUsernameAvailability(t *testing.T) {
+	userID := uuid.New().String()
+
+	t.Run("利用可能なユーザー名のチェックが成功する", func(t *testing.T) {
+		mockSvc := new(mockAuthService)
+		mockTM := new(mockTokenManager)
+
+		checkResp := &response.UsernameCheckResponse{
+			Username:  "available_name",
+			Available: true,
+		}
+		mockSvc.On("CheckUsernameAvailability", mock.Anything, userID, request.CheckUsernameRequest{
+			Username: "available_name",
+		}).Return(checkResp, nil)
+
+		handler := NewAuthHandler(mockSvc, mockTM)
+		router := setupAuthenticatedAuthRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/me/username/check?username=available_name", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var resp map[string]response.UsernameCheckResponse
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+		assert.Equal(t, "available_name", resp["data"].Username)
+		assert.True(t, resp["data"].Available)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("バリデーションエラーの場合は 400 を返す", func(t *testing.T) {
+		mockSvc := new(mockAuthService)
+		mockTM := new(mockTokenManager)
+
+		handler := NewAuthHandler(mockSvc, mockTM)
+		router := setupAuthenticatedAuthRouter(handler, userID)
+
+		// username パラメータなし
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/me/username/check", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("サービスがエラーを返すとエラーレスポンスを返す", func(t *testing.T) {
+		mockSvc := new(mockAuthService)
+		mockTM := new(mockTokenManager)
+
+		mockSvc.On("CheckUsernameAvailability", mock.Anything, userID, request.CheckUsernameRequest{
+			Username: "invalid_name",
+		}).Return(nil, apperror.ErrValidation.WithMessage("ユーザー名に使用できない文字が含まれています"))
+
+		handler := NewAuthHandler(mockSvc, mockTM)
+		router := setupAuthenticatedAuthRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/me/username/check?username=invalid_name", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
 		mockSvc.AssertExpectations(t)
 	})
 }

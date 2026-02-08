@@ -33,7 +33,23 @@ type LogoutRequest struct {
 	RefreshToken string `json:"refreshToken" binding:"required"`
 }
 
+// パスワード更新リクエスト
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"currentPassword" binding:"required"`
+	NewPassword     string `json:"newPassword" binding:"required,min=8,max=100"`
+}
+
 // ユーザープロンプト更新リクエスト
 type UpdateUserPromptRequest struct {
 	UserPrompt *string `json:"userPrompt" binding:"omitempty,max=2000"`
+}
+
+// ユーザー名変更リクエスト
+type UpdateUsernameRequest struct {
+	Username string `json:"username" binding:"required,min=3,max=20"`
+}
+
+// ユーザー名利用可否チェックリクエスト
+type CheckUsernameRequest struct {
+	Username string `form:"username" binding:"required,min=3,max=20"`
 }
