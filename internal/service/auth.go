@@ -46,6 +46,7 @@ type AuthService interface {
 	GetMe(ctx context.Context, userID string) (*response.MeResponse, error)
 	UpdateMe(ctx context.Context, userID string, req request.UpdateMeRequest) (*response.MeResponse, error)
 	UpdatePrompt(ctx context.Context, userID string, req request.UpdateUserPromptRequest) (*response.MeResponse, error)
+	DeleteMe(ctx context.Context, userID string) error
 }
 
 type authService struct {
@@ -55,6 +56,8 @@ type authService struct {
 	refreshTokenRepo repository.RefreshTokenRepository
 	imageRepo        repository.ImageRepository
 	playlistRepo     repository.PlaylistRepository
+	audioJobRepo     repository.AudioJobRepository
+	scriptJobRepo    repository.ScriptJobRepository
 	passwordHasher   crypto.PasswordHasher
 	storageClient    storage.Client
 }
@@ -67,6 +70,8 @@ func NewAuthService(
 	refreshTokenRepo repository.RefreshTokenRepository,
 	imageRepo repository.ImageRepository,
 	playlistRepo repository.PlaylistRepository,
+	audioJobRepo repository.AudioJobRepository,
+	scriptJobRepo repository.ScriptJobRepository,
 	passwordHasher crypto.PasswordHasher,
 	storageClient storage.Client,
 ) AuthService {
@@ -77,6 +82,8 @@ func NewAuthService(
 		refreshTokenRepo: refreshTokenRepo,
 		imageRepo:        imageRepo,
 		playlistRepo:     playlistRepo,
+		audioJobRepo:     audioJobRepo,
+		scriptJobRepo:    scriptJobRepo,
 		passwordHasher:   passwordHasher,
 		storageClient:    storageClient,
 	}
@@ -598,6 +605,31 @@ func (s *authService) UpdatePrompt(ctx context.Context, userID string, req reque
 
 	// 更新後のユーザー情報を返す
 	return s.GetMe(ctx, userID)
+}
+
+// DeleteMe はユーザーアカウントを削除する
+func (s *authService) DeleteMe(ctx context.Context, userID string) error {
+	// UUID をパース
+	id, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+
+	// ユーザーの存在確認
+	if _, err := s.userRepo.FindByID(ctx, id); err != nil {
+		return err
+	}
+
+	// 実行中ジョブをキャンセル
+	if err := s.audioJobRepo.CancelActiveByUserID(ctx, id); err != nil {
+		return err
+	}
+	if err := s.scriptJobRepo.CancelActiveByUserID(ctx, id); err != nil {
+		return err
+	}
+
+	// ユーザーを削除（ON DELETE CASCADE で関連データも削除される）
+	return s.userRepo.Delete(ctx, id)
 }
 
 // createDefaultPlaylist はユーザーのデフォルトプレイリストを作成する

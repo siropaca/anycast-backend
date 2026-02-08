@@ -71,6 +71,11 @@ func (m *mockAudioJobRepository) UpdateProgress(ctx context.Context, id uuid.UUI
 	return args.Error(0)
 }
 
+func (m *mockAudioJobRepository) CancelActiveByUserID(ctx context.Context, userID uuid.UUID) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
+
 func TestAudioJobService_GetJob(t *testing.T) {
 	userID := uuid.New()
 	jobID := uuid.New()

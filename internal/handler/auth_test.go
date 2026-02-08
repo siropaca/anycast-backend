@@ -89,6 +89,11 @@ func (m *mockAuthService) UpdatePrompt(ctx context.Context, userID string, req r
 	return args.Get(0).(*response.MeResponse), args.Error(1)
 }
 
+func (m *mockAuthService) DeleteMe(ctx context.Context, userID string) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
+
 // TokenManager のモック
 type mockTokenManager struct {
 	mock.Mock
@@ -128,6 +133,7 @@ func setupAuthenticatedAuthRouter(h *AuthHandler, userID string) *gin.Engine {
 		c.Next()
 	})
 	r.GET("/me", h.GetMe)
+	r.DELETE("/me", h.DeleteMe)
 	r.POST("/auth/logout", h.Logout)
 	return r
 }
@@ -780,6 +786,61 @@ func TestAuthHandler_GetMe(t *testing.T) {
 
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", "/me", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+}
+
+func TestAuthHandler_DeleteMe(t *testing.T) {
+	userID := uuid.New().String()
+
+	t.Run("アカウント削除が成功する", func(t *testing.T) {
+		mockSvc := new(mockAuthService)
+		mockTM := new(mockTokenManager)
+
+		mockSvc.On("DeleteMe", mock.Anything, userID).Return(nil)
+
+		handler := NewAuthHandler(mockSvc, mockTM)
+		router := setupAuthenticatedAuthRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("DELETE", "/me", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNoContent, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("ユーザーが見つからない場合は 404 を返す", func(t *testing.T) {
+		mockSvc := new(mockAuthService)
+		mockTM := new(mockTokenManager)
+
+		mockSvc.On("DeleteMe", mock.Anything, userID).Return(apperror.ErrNotFound.WithMessage("ユーザーが見つかりません"))
+
+		handler := NewAuthHandler(mockSvc, mockTM)
+		router := setupAuthenticatedAuthRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("DELETE", "/me", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("サービスがエラーを返すとエラーレスポンスを返す", func(t *testing.T) {
+		mockSvc := new(mockAuthService)
+		mockTM := new(mockTokenManager)
+
+		mockSvc.On("DeleteMe", mock.Anything, userID).Return(apperror.ErrInternal.WithMessage("削除に失敗しました"))
+
+		handler := NewAuthHandler(mockSvc, mockTM)
+		router := setupAuthenticatedAuthRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("DELETE", "/me", http.NoBody)
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)

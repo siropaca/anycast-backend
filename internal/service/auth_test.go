@@ -14,6 +14,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/model"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
+	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
 // --- モック定義 ---
@@ -72,6 +73,11 @@ func (m *mockUserRepositoryForAuth) ExistsByEmail(ctx context.Context, email str
 func (m *mockUserRepositoryForAuth) ExistsByUsername(ctx context.Context, username string) (bool, error) {
 	args := m.Called(ctx, username)
 	return args.Bool(0), args.Error(1)
+}
+
+func (m *mockUserRepositoryForAuth) Delete(ctx context.Context, id uuid.UUID) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
 }
 
 type mockCredentialRepository struct {
@@ -145,6 +151,124 @@ func (m *mockImageRepositoryForAuth) FindOrphaned(ctx context.Context) ([]model.
 	return args.Get(0).([]model.Image), args.Error(1)
 }
 
+type mockAudioJobRepositoryForAuth struct {
+	mock.Mock
+}
+
+func (m *mockAudioJobRepositoryForAuth) FindByID(ctx context.Context, id uuid.UUID) (*model.AudioJob, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.AudioJob), args.Error(1)
+}
+
+func (m *mockAudioJobRepositoryForAuth) FindByUserID(ctx context.Context, userID uuid.UUID, filter repository.AudioJobFilter) ([]model.AudioJob, error) {
+	args := m.Called(ctx, userID, filter)
+	return args.Get(0).([]model.AudioJob), args.Error(1)
+}
+
+func (m *mockAudioJobRepositoryForAuth) FindByEpisodeID(ctx context.Context, episodeID uuid.UUID) ([]model.AudioJob, error) {
+	args := m.Called(ctx, episodeID)
+	return args.Get(0).([]model.AudioJob), args.Error(1)
+}
+
+func (m *mockAudioJobRepositoryForAuth) FindPendingByEpisodeID(ctx context.Context, episodeID uuid.UUID) (*model.AudioJob, error) {
+	args := m.Called(ctx, episodeID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.AudioJob), args.Error(1)
+}
+
+func (m *mockAudioJobRepositoryForAuth) Create(ctx context.Context, job *model.AudioJob) error {
+	args := m.Called(ctx, job)
+	return args.Error(0)
+}
+
+func (m *mockAudioJobRepositoryForAuth) Update(ctx context.Context, job *model.AudioJob) error {
+	args := m.Called(ctx, job)
+	return args.Error(0)
+}
+
+func (m *mockAudioJobRepositoryForAuth) UpdateProgress(ctx context.Context, id uuid.UUID, progress int) error {
+	args := m.Called(ctx, id, progress)
+	return args.Error(0)
+}
+
+func (m *mockAudioJobRepositoryForAuth) Delete(ctx context.Context, id uuid.UUID) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *mockAudioJobRepositoryForAuth) CancelActiveByUserID(ctx context.Context, userID uuid.UUID) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
+
+type mockScriptJobRepositoryForAuth struct {
+	mock.Mock
+}
+
+func (m *mockScriptJobRepositoryForAuth) FindByID(ctx context.Context, id uuid.UUID) (*model.ScriptJob, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.ScriptJob), args.Error(1)
+}
+
+func (m *mockScriptJobRepositoryForAuth) FindByUserID(ctx context.Context, userID uuid.UUID, filter repository.ScriptJobFilter) ([]model.ScriptJob, error) {
+	args := m.Called(ctx, userID, filter)
+	return args.Get(0).([]model.ScriptJob), args.Error(1)
+}
+
+func (m *mockScriptJobRepositoryForAuth) FindByEpisodeID(ctx context.Context, episodeID uuid.UUID) ([]model.ScriptJob, error) {
+	args := m.Called(ctx, episodeID)
+	return args.Get(0).([]model.ScriptJob), args.Error(1)
+}
+
+func (m *mockScriptJobRepositoryForAuth) FindPendingByEpisodeID(ctx context.Context, episodeID uuid.UUID) (*model.ScriptJob, error) {
+	args := m.Called(ctx, episodeID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.ScriptJob), args.Error(1)
+}
+
+func (m *mockScriptJobRepositoryForAuth) FindLatestCompletedByEpisodeID(ctx context.Context, episodeID uuid.UUID) (*model.ScriptJob, error) {
+	args := m.Called(ctx, episodeID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.ScriptJob), args.Error(1)
+}
+
+func (m *mockScriptJobRepositoryForAuth) Create(ctx context.Context, job *model.ScriptJob) error {
+	args := m.Called(ctx, job)
+	return args.Error(0)
+}
+
+func (m *mockScriptJobRepositoryForAuth) Update(ctx context.Context, job *model.ScriptJob) error {
+	args := m.Called(ctx, job)
+	return args.Error(0)
+}
+
+func (m *mockScriptJobRepositoryForAuth) UpdateProgress(ctx context.Context, id uuid.UUID, progress int) error {
+	args := m.Called(ctx, id, progress)
+	return args.Error(0)
+}
+
+func (m *mockScriptJobRepositoryForAuth) Delete(ctx context.Context, id uuid.UUID) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *mockScriptJobRepositoryForAuth) CancelActiveByUserID(ctx context.Context, userID uuid.UUID) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
+
 type mockStorageClientForAuth struct {
 	mock.Mock
 }
@@ -180,6 +304,19 @@ func newAuthServiceForTest(
 		oauthAccountRepo: oauthAccountRepo,
 		imageRepo:        imageRepo,
 		storageClient:    storageClient,
+	}
+}
+
+// newAuthServiceForTestWithJobs はジョブ Repository 付きのテスト用 authService を組み立てるヘルパー
+func newAuthServiceForTestWithJobs(
+	userRepo *mockUserRepositoryForAuth,
+	audioJobRepo *mockAudioJobRepositoryForAuth,
+	scriptJobRepo *mockScriptJobRepositoryForAuth,
+) *authService {
+	return &authService{
+		userRepo:      userRepo,
+		audioJobRepo:  audioJobRepo,
+		scriptJobRepo: scriptJobRepo,
 	}
 }
 
@@ -466,5 +603,111 @@ func TestUpdateMe(t *testing.T) {
 		assert.NotNil(t, result.Avatar)
 		assert.Equal(t, avatarImageID, result.Avatar.ID)
 		userRepo.AssertExpectations(t)
+	})
+}
+
+func TestDeleteMe(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+
+	t.Run("アカウント削除が成功する", func(t *testing.T) {
+		userRepo := new(mockUserRepositoryForAuth)
+		audioJobRepo := new(mockAudioJobRepositoryForAuth)
+		scriptJobRepo := new(mockScriptJobRepositoryForAuth)
+		svc := newAuthServiceForTestWithJobs(userRepo, audioJobRepo, scriptJobRepo)
+
+		userRepo.On("FindByID", ctx, userID).Return(&model.User{ID: userID}, nil)
+		audioJobRepo.On("CancelActiveByUserID", ctx, userID).Return(nil)
+		scriptJobRepo.On("CancelActiveByUserID", ctx, userID).Return(nil)
+		userRepo.On("Delete", ctx, userID).Return(nil)
+
+		err := svc.DeleteMe(ctx, userID.String())
+
+		assert.NoError(t, err)
+		userRepo.AssertExpectations(t)
+		audioJobRepo.AssertExpectations(t)
+		scriptJobRepo.AssertExpectations(t)
+	})
+
+	t.Run("ユーザーが見つからない場合はエラーを返す", func(t *testing.T) {
+		userRepo := new(mockUserRepositoryForAuth)
+		audioJobRepo := new(mockAudioJobRepositoryForAuth)
+		scriptJobRepo := new(mockScriptJobRepositoryForAuth)
+		svc := newAuthServiceForTestWithJobs(userRepo, audioJobRepo, scriptJobRepo)
+
+		userRepo.On("FindByID", ctx, userID).Return(nil, apperror.ErrNotFound.WithMessage("ユーザーが見つかりません"))
+
+		err := svc.DeleteMe(ctx, userID.String())
+
+		assert.Error(t, err)
+		assert.True(t, apperror.IsCode(err, apperror.CodeNotFound))
+		userRepo.AssertExpectations(t)
+	})
+
+	t.Run("音声ジョブキャンセルが失敗した場合はエラーを返す", func(t *testing.T) {
+		userRepo := new(mockUserRepositoryForAuth)
+		audioJobRepo := new(mockAudioJobRepositoryForAuth)
+		scriptJobRepo := new(mockScriptJobRepositoryForAuth)
+		svc := newAuthServiceForTestWithJobs(userRepo, audioJobRepo, scriptJobRepo)
+
+		userRepo.On("FindByID", ctx, userID).Return(&model.User{ID: userID}, nil)
+		audioJobRepo.On("CancelActiveByUserID", ctx, userID).Return(apperror.ErrInternal.WithMessage("キャンセルに失敗しました"))
+
+		err := svc.DeleteMe(ctx, userID.String())
+
+		assert.Error(t, err)
+		assert.True(t, apperror.IsCode(err, apperror.CodeInternal))
+		userRepo.AssertExpectations(t)
+		audioJobRepo.AssertExpectations(t)
+	})
+
+	t.Run("台本ジョブキャンセルが失敗した場合はエラーを返す", func(t *testing.T) {
+		userRepo := new(mockUserRepositoryForAuth)
+		audioJobRepo := new(mockAudioJobRepositoryForAuth)
+		scriptJobRepo := new(mockScriptJobRepositoryForAuth)
+		svc := newAuthServiceForTestWithJobs(userRepo, audioJobRepo, scriptJobRepo)
+
+		userRepo.On("FindByID", ctx, userID).Return(&model.User{ID: userID}, nil)
+		audioJobRepo.On("CancelActiveByUserID", ctx, userID).Return(nil)
+		scriptJobRepo.On("CancelActiveByUserID", ctx, userID).Return(apperror.ErrInternal.WithMessage("キャンセルに失敗しました"))
+
+		err := svc.DeleteMe(ctx, userID.String())
+
+		assert.Error(t, err)
+		assert.True(t, apperror.IsCode(err, apperror.CodeInternal))
+		userRepo.AssertExpectations(t)
+		audioJobRepo.AssertExpectations(t)
+		scriptJobRepo.AssertExpectations(t)
+	})
+
+	t.Run("ユーザー削除が失敗した場合はエラーを返す", func(t *testing.T) {
+		userRepo := new(mockUserRepositoryForAuth)
+		audioJobRepo := new(mockAudioJobRepositoryForAuth)
+		scriptJobRepo := new(mockScriptJobRepositoryForAuth)
+		svc := newAuthServiceForTestWithJobs(userRepo, audioJobRepo, scriptJobRepo)
+
+		userRepo.On("FindByID", ctx, userID).Return(&model.User{ID: userID}, nil)
+		audioJobRepo.On("CancelActiveByUserID", ctx, userID).Return(nil)
+		scriptJobRepo.On("CancelActiveByUserID", ctx, userID).Return(nil)
+		userRepo.On("Delete", ctx, userID).Return(apperror.ErrInternal.WithMessage("削除に失敗しました"))
+
+		err := svc.DeleteMe(ctx, userID.String())
+
+		assert.Error(t, err)
+		assert.True(t, apperror.IsCode(err, apperror.CodeInternal))
+		userRepo.AssertExpectations(t)
+		audioJobRepo.AssertExpectations(t)
+		scriptJobRepo.AssertExpectations(t)
+	})
+
+	t.Run("無効な UUID の場合はエラーを返す", func(t *testing.T) {
+		userRepo := new(mockUserRepositoryForAuth)
+		audioJobRepo := new(mockAudioJobRepositoryForAuth)
+		scriptJobRepo := new(mockScriptJobRepositoryForAuth)
+		svc := newAuthServiceForTestWithJobs(userRepo, audioJobRepo, scriptJobRepo)
+
+		err := svc.DeleteMe(ctx, "invalid-uuid")
+
+		assert.Error(t, err)
 	})
 }

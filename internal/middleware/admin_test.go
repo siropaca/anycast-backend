@@ -72,6 +72,11 @@ func (m *mockUserRepository) Update(ctx context.Context, user *model.User) error
 	return args.Error(0)
 }
 
+func (m *mockUserRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
 func setupAdminRouter(userRepo *mockUserRepository) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()

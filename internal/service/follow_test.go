@@ -98,6 +98,11 @@ func (m *mockUserRepository) ExistsByUsername(ctx context.Context, username stri
 	return args.Bool(0), args.Error(1)
 }
 
+func (m *mockUserRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
 func TestNewFollowService(t *testing.T) {
 	t.Run("FollowService を作成できる", func(t *testing.T) {
 		mockRepo := new(mockFollowRepository)

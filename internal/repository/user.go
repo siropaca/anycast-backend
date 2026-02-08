@@ -22,6 +22,7 @@ type UserRepository interface {
 	FindByEmail(ctx context.Context, email string) (*model.User, error)
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
 	ExistsByUsername(ctx context.Context, username string) (bool, error)
+	Delete(ctx context.Context, id uuid.UUID) error
 }
 
 type userRepository struct {
@@ -140,4 +141,19 @@ func (r *userRepository) ExistsByUsername(ctx context.Context, username string) 
 	}
 
 	return count > 0, nil
+}
+
+// Delete は指定された ID のユーザーを削除する
+func (r *userRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	result := r.db.WithContext(ctx).Delete(&model.User{}, "id = ?", id)
+	if result.Error != nil {
+		logger.FromContext(ctx).Error("failed to delete user", "error", result.Error, "user_id", id)
+		return apperror.ErrInternal.WithMessage("ユーザーの削除に失敗しました").WithError(result.Error)
+	}
+
+	if result.RowsAffected == 0 {
+		return apperror.ErrNotFound.WithMessage("ユーザーが見つかりません")
+	}
+
+	return nil
 }

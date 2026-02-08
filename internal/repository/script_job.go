@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -23,6 +24,7 @@ type ScriptJobRepository interface {
 	Update(ctx context.Context, job *model.ScriptJob) error
 	UpdateProgress(ctx context.Context, id uuid.UUID, progress int) error
 	Delete(ctx context.Context, id uuid.UUID) error
+	CancelActiveByUserID(ctx context.Context, userID uuid.UUID) error
 }
 
 // ScriptJobFilter は台本ジョブ検索のフィルタ条件
@@ -184,6 +186,29 @@ func (r *scriptJobRepository) Delete(ctx context.Context, id uuid.UUID) error {
 
 	if result.RowsAffected == 0 {
 		return apperror.ErrNotFound.WithMessage("台本生成ジョブが見つかりません")
+	}
+
+	return nil
+}
+
+// CancelActiveByUserID はユーザーの実行中ジョブを一括キャンセルする
+func (r *scriptJobRepository) CancelActiveByUserID(ctx context.Context, userID uuid.UUID) error {
+	now := time.Now()
+
+	if err := r.db.WithContext(ctx).
+		Model(&model.ScriptJob{}).
+		Where("user_id = ?", userID).
+		Where("status IN ?", []model.ScriptJobStatus{
+			model.ScriptJobStatusPending,
+			model.ScriptJobStatusProcessing,
+			model.ScriptJobStatusCanceling,
+		}).
+		Updates(map[string]interface{}{
+			"status":       model.ScriptJobStatusCanceled,
+			"completed_at": &now,
+		}).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to cancel active script jobs", "error", err, "user_id", userID)
+		return apperror.ErrInternal.WithMessage("台本生成ジョブのキャンセルに失敗しました").WithError(err)
 	}
 
 	return nil

@@ -288,6 +288,31 @@ func (h *AuthHandler) UpdateMe(c *gin.Context) {
 	Success(c, http.StatusOK, me)
 }
 
+// DeleteMe godoc
+// @Summary アカウント削除
+// @Description 認証済みユーザーのアカウントを削除します
+// @Tags me
+// @Security BearerAuth
+// @Success 204
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /me [delete]
+func (h *AuthHandler) DeleteMe(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	if err := h.authService.DeleteMe(c.Request.Context(), userID); err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
 // UpdatePrompt godoc
 // @Summary ユーザープロンプト更新
 // @Description ユーザーの台本生成用プロンプト（基本方針）を更新します

@@ -102,6 +102,11 @@ func (m *mockScriptJobRepository) UpdateProgress(ctx context.Context, id uuid.UU
 	return args.Error(0)
 }
 
+func (m *mockScriptJobRepository) CancelActiveByUserID(ctx context.Context, userID uuid.UUID) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
+
 func TestScriptJobStatus(t *testing.T) {
 	t.Run("ScriptJobStatus 定数が正しい", func(t *testing.T) {
 		assert.Equal(t, model.ScriptJobStatus("pending"), model.ScriptJobStatusPending)
