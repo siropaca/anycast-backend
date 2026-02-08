@@ -8054,6 +8054,7 @@ const docTemplate = `{
         "response.PublicUserResponse": {
             "type": "object",
             "required": [
+                "bio",
                 "channels",
                 "createdAt",
                 "displayName",
@@ -8069,6 +8070,9 @@ const docTemplate = `{
                     ],
                     "x-nullable": true
                 },
+                "bio": {
+                    "type": "string"
+                },
                 "channels": {
                     "type": "array",
                     "items": {
@@ -8080,6 +8084,14 @@ const docTemplate = `{
                 },
                 "displayName": {
                     "type": "string"
+                },
+                "headerImage": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.AvatarResponse"
+                        }
+                    ],
+                    "x-nullable": true
                 },
                 "id": {
                     "type": "string"

@@ -62,6 +62,19 @@ func (s *userService) GetUser(ctx context.Context, username string) (*response.P
 		}
 	}
 
+	// ヘッダー画像の署名付き URL を生成
+	var headerImage *response.AvatarResponse
+	if user.HeaderImage != nil {
+		headerImageURL, err := s.generateImageURL(ctx, user.HeaderImage)
+		if err != nil {
+			return nil, err
+		}
+		headerImage = &response.AvatarResponse{
+			ID:  user.HeaderImage.ID,
+			URL: headerImageURL,
+		}
+	}
+
 	// チャンネルごとの公開済みエピソード数を取得
 	channelIDs := make([]uuid.UUID, len(channels))
 	for i, c := range channels {
@@ -83,7 +96,9 @@ func (s *userService) GetUser(ctx context.Context, username string) (*response.P
 			ID:          user.ID,
 			Username:    user.Username,
 			DisplayName: user.DisplayName,
+			Bio:         user.Bio,
 			Avatar:      avatar,
+			HeaderImage: headerImage,
 			Channels:    channelResponses,
 			CreatedAt:   user.CreatedAt,
 		},

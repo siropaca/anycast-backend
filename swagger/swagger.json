@@ -8048,6 +8048,7 @@
         "response.PublicUserResponse": {
             "type": "object",
             "required": [
+                "bio",
                 "channels",
                 "createdAt",
                 "displayName",
@@ -8063,6 +8064,9 @@
                     ],
                     "x-nullable": true
                 },
+                "bio": {
+                    "type": "string"
+                },
                 "channels": {
                     "type": "array",
                     "items": {
@@ -8074,6 +8078,14 @@
                 },
                 "displayName": {
                     "type": "string"
+                },
+                "headerImage": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.AvatarResponse"
+                        }
+                    ],
+                    "x-nullable": true
                 },
                 "id": {
                     "type": "string"

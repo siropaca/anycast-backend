@@ -91,6 +91,7 @@ func (r *userRepository) FindByUsernameWithAvatar(ctx context.Context, username 
 
 	if err := r.db.WithContext(ctx).
 		Preload("Avatar").
+		Preload("HeaderImage").
 		First(&user, "username = ?", username).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, apperror.ErrNotFound.WithMessage("ユーザーが見つかりません")
