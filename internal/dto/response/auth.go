@@ -70,3 +70,14 @@ type TokenRefreshResponse struct {
 type TokenRefreshDataResponse struct {
 	Data TokenRefreshResponse `json:"data" validate:"required"`
 }
+
+// ユーザー名利用可否チェックレスポンス
+type UsernameCheckResponse struct {
+	Username  string `json:"username" validate:"required"`
+	Available bool   `json:"available" validate:"required"`
+}
+
+// ユーザー名利用可否チェックレスポンス（data ラッパー）
+type UsernameCheckDataResponse struct {
+	Data UsernameCheckResponse `json:"data" validate:"required"`
+}

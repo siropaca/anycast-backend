@@ -16,3 +16,16 @@ Content-Type: application/json
   "displayName": "テスト太郎",
   "bio": "よろしくお願いします"
 }
+
+### ユーザー名変更
+PATCH {{baseUrl}}/me/username
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "username": "new_username"
+}
+
+### ユーザー名利用可否チェック
+GET {{baseUrl}}/me/username/check?username=new_username
+Authorization: Bearer {{token}}
