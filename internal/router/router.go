@@ -107,6 +107,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 
 	// Playback History
 	authenticated.GET("/me/playback-history", container.PlaybackHistoryHandler.ListPlaybackHistory)
+	authenticated.DELETE("/me/playback-history", container.PlaybackHistoryHandler.DeleteAllPlaybackHistory)
 
 	// Follows
 	authenticated.GET("/me/follows", container.FollowHandler.ListFollows)

@@ -18,6 +18,7 @@ type PlaybackHistoryService interface {
 	ListPlaybackHistory(ctx context.Context, userID string, completed *bool, limit, offset int) (*response.PlaybackHistoryListWithPaginationResponse, error)
 	UpdatePlayback(ctx context.Context, userID, episodeID string, req request.UpdatePlaybackRequest) (*response.PlaybackDataResponse, error)
 	DeletePlayback(ctx context.Context, userID, episodeID string) error
+	DeleteAllPlaybackHistory(ctx context.Context, userID string) error
 }
 
 type playbackHistoryService struct {
@@ -145,6 +146,16 @@ func (s *playbackHistoryService) DeletePlayback(ctx context.Context, userID, epi
 	}
 
 	return s.playbackHistoryRepo.Delete(ctx, history.ID)
+}
+
+// DeleteAllPlaybackHistory はユーザーの再生履歴をすべて削除する
+func (s *playbackHistoryService) DeleteAllPlaybackHistory(ctx context.Context, userID string) error {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+
+	return s.playbackHistoryRepo.DeleteAllByUserID(ctx, uid)
 }
 
 // toPlaybackHistoryItemResponse は PlaybackHistory を PlaybackHistoryItemResponse に変換する

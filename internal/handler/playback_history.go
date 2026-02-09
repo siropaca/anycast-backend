@@ -57,6 +57,30 @@ func (h *PlaybackHistoryHandler) ListPlaybackHistory(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// DeleteAllPlaybackHistory godoc
+// @Summary 再生履歴をすべて削除
+// @Description 認証済みユーザーの再生履歴をすべて削除します
+// @Tags me
+// @Security BearerAuth
+// @Success 204
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /me/playback-history [delete]
+func (h *PlaybackHistoryHandler) DeleteAllPlaybackHistory(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	if err := h.playbackHistoryService.DeleteAllPlaybackHistory(c.Request.Context(), userID); err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
 // UpdatePlayback godoc
 // @Summary 再生履歴を更新
 // @Description 再生位置や完了状態を更新します（なければ作成）

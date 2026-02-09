@@ -120,6 +120,8 @@
 | PUT | `/api/v1/episodes/:episodeId/playback` | 再生履歴を更新 | Owner | ✅ | [詳細](./engagement.md#再生履歴を更新) |
 | DELETE | `/api/v1/episodes/:episodeId/playback` | 再生履歴を削除 | Owner | ✅ | [詳細](./engagement.md#再生履歴を削除) |
 | GET | `/api/v1/me/playback-history` | 再生履歴一覧を取得 | Owner | ✅ | [詳細](./engagement.md#再生履歴一覧を取得) |
+| DELETE | `/api/v1/me/playback-history` | 再生履歴をすべて削除 | Owner | | [詳細](./engagement.md#再生履歴をすべて削除) |
+| POST | `/api/v1/me/playback-history/batch-delete` | 再生履歴を一括削除 | Owner | | [詳細](./engagement.md#再生履歴を一括削除) |
 | **Follows（フォロー）** | - | - | - | - | [engagement.md](./engagement.md#followsフォロー) |
 | GET | `/api/v1/users/:username/follow` | フォロー状態取得 | Owner | ✅ | [詳細](./engagement.md#フォロー状態取得) |
 | POST | `/api/v1/users/:username/follow` | フォロー登録 | Owner | ✅ | [詳細](./engagement.md#フォロー登録) |

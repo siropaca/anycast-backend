@@ -587,6 +587,53 @@ DELETE /episodes/:episodeId/playback
 
 ---
 
+## 再生履歴をすべて削除
+
+```
+DELETE /me/playback-history
+```
+
+認証済みユーザーの再生履歴をすべて削除する。
+
+**レスポンス（204 No Content）:**
+レスポンスボディなし
+
+---
+
+## 再生履歴を一括削除
+
+```
+POST /me/playback-history/batch-delete
+```
+
+指定したエピソードの再生履歴を一括削除する。
+
+**リクエスト:**
+```json
+{
+  "episodeIds": ["uuid1", "uuid2", "uuid3"]
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| episodeIds | uuid[] | ◯ | 削除対象のエピソード ID 配列（1〜100件） |
+
+**レスポンス（204 No Content）:**
+レスポンスボディなし
+
+**エラー（400 Bad Request）:**
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "エピソード ID は1〜100件で指定してください"
+  }
+}
+```
+
+---
+
 ## 再生履歴一覧を取得
 
 ```

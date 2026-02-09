@@ -17,6 +17,7 @@ type PlaybackHistoryRepository interface {
 	FindByUserIDAndEpisodeIDs(ctx context.Context, userID uuid.UUID, episodeIDs []uuid.UUID) ([]model.PlaybackHistory, error)
 	Upsert(ctx context.Context, history *model.PlaybackHistory) error
 	Delete(ctx context.Context, id uuid.UUID) error
+	DeleteAllByUserID(ctx context.Context, userID uuid.UUID) error
 }
 
 type playbackHistoryRepository struct {
@@ -102,4 +103,9 @@ func (r *playbackHistoryRepository) Upsert(ctx context.Context, history *model.P
 // Delete は再生履歴を削除する
 func (r *playbackHistoryRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return r.db.WithContext(ctx).Delete(&model.PlaybackHistory{}, id).Error
+}
+
+// DeleteAllByUserID はユーザーの再生履歴をすべて削除する
+func (r *playbackHistoryRepository) DeleteAllByUserID(ctx context.Context, userID uuid.UUID) error {
+	return r.db.WithContext(ctx).Where("user_id = ?", userID).Delete(&model.PlaybackHistory{}).Error
 }
