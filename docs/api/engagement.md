@@ -256,11 +256,11 @@ GET /me/likes
 
 ---
 
-# Playlists（プレイリスト）
+# Playlists（再生リスト）
 
-YouTube 式のプレイリスト機能。各ユーザーにはデフォルトプレイリスト（後で聴く）が自動作成される。
+YouTube 式の再生リスト機能。各ユーザーにはデフォルト再生リスト（後で聴く）が自動作成される。
 
-## プレイリスト一覧取得
+## 再生リスト一覧取得
 
 ```
 GET /me/playlists
@@ -297,7 +297,7 @@ GET /me/playlists
 
 ---
 
-## プレイリスト詳細取得
+## 再生リスト詳細取得
 
 ```
 GET /me/playlists/:playlistId
@@ -340,7 +340,7 @@ GET /me/playlists/:playlistId
 
 ---
 
-## プレイリスト作成
+## 再生リスト作成
 
 ```
 POST /me/playlists
@@ -356,7 +356,7 @@ POST /me/playlists
 
 | フィールド | 型 | 必須 | 説明 |
 |------------|-----|:----:|------|
-| name | string | ◯ | プレイリスト名（100文字以内） |
+| name | string | ◯ | 再生リスト名（100文字以内） |
 | description | string | | 説明（500文字以内） |
 
 **レスポンス（201 Created）:**
@@ -379,14 +379,14 @@ POST /me/playlists
 {
   "error": {
     "code": "DUPLICATE_NAME",
-    "message": "この名前のプレイリストは既に存在します"
+    "message": "この名前の再生リストは既に存在します"
   }
 }
 ```
 
 ---
 
-## プレイリスト更新
+## 再生リスト更新
 
 ```
 PATCH /me/playlists/:playlistId
@@ -402,7 +402,7 @@ PATCH /me/playlists/:playlistId
 
 | フィールド | 型 | 必須 | 説明 |
 |------------|-----|:----:|------|
-| name | string | | プレイリスト名（100文字以内、デフォルトプレイリストは変更不可） |
+| name | string | | 再生リスト名（100文字以内、デフォルト再生リストは変更不可） |
 | description | string | | 説明（500文字以内） |
 
 **レスポンス（200 OK）:**
@@ -425,20 +425,20 @@ PATCH /me/playlists/:playlistId
 {
   "error": {
     "code": "DEFAULT_PLAYLIST",
-    "message": "デフォルトプレイリストの名前は変更できません"
+    "message": "デフォルト再生リストの名前は変更できません"
   }
 }
 ```
 
 ---
 
-## プレイリスト削除
+## 再生リスト削除
 
 ```
 DELETE /me/playlists/:playlistId
 ```
 
-デフォルトプレイリストは削除不可。
+デフォルト再生リストは削除不可。
 
 **レスポンス（204 No Content）:**
 レスポンスボディなし
@@ -448,14 +448,14 @@ DELETE /me/playlists/:playlistId
 {
   "error": {
     "code": "DEFAULT_PLAYLIST",
-    "message": "デフォルトプレイリストは削除できません"
+    "message": "デフォルト再生リストは削除できません"
   }
 }
 ```
 
 ---
 
-## プレイリストアイテム並び替え
+## 再生リストアイテム並び替え
 
 ```
 POST /me/playlists/:playlistId/items/reorder
@@ -473,13 +473,13 @@ POST /me/playlists/:playlistId/items/reorder
 | itemIds | uuid[] | ◯ | 新しい順序でのアイテム ID 配列 |
 
 **レスポンス（200 OK）:**
-プレイリスト詳細と同じ形式
+再生リスト詳細と同じ形式
 
 ---
 
-## エピソードのプレイリスト所属一括更新
+## エピソードの再生リスト所属一括更新
 
-エピソードが所属するプレイリストを一括更新する。指定した `playlistIds` の状態に同期される（差分で追加・削除を実行）。
+エピソードが所属する再生リストを一括更新する。指定した `playlistIds` の状態に同期される（差分で追加・削除を実行）。
 
 ```
 PUT /episodes/:episodeId/playlists
@@ -494,7 +494,7 @@ PUT /episodes/:episodeId/playlists
 
 | フィールド | 型 | 必須 | 説明 |
 |------------|-----|:----:|------|
-| playlistIds | uuid[] | | エピソードを所属させるプレイリスト ID の配列。空配列で全プレイリストから外す |
+| playlistIds | uuid[] | | エピソードを所属させる再生リスト ID の配列。空配列で全再生リストから外す |
 
 **レスポンス（200 OK）:**
 ```json
@@ -510,7 +510,7 @@ PUT /episodes/:episodeId/playlists
 {
   "error": {
     "code": "FORBIDDEN",
-    "message": "このプレイリストへのアクセス権限がありません"
+    "message": "この再生リストへのアクセス権限がありません"
   }
 }
 ```

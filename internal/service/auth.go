@@ -135,7 +135,7 @@ func (s *authService) Register(ctx context.Context, req request.RegisterRequest)
 		return nil, err
 	}
 
-	// デフォルトプレイリストを作成
+	// デフォルト再生リストを作成
 	if err := s.createDefaultPlaylist(ctx, user.ID); err != nil {
 		logger.FromContext(ctx).Error("failed to create default playlist", "error", err, "user_id", user.ID)
 		// エラーでもユーザー登録は成功させる（ログだけ残す）
@@ -269,7 +269,7 @@ func (s *authService) OAuthGoogle(ctx context.Context, req request.OAuthGoogleRe
 		return nil, err
 	}
 
-	// デフォルトプレイリストを作成
+	// デフォルト再生リストを作成
 	if err := s.createDefaultPlaylist(ctx, user.ID); err != nil {
 		logger.FromContext(ctx).Error("failed to create default playlist", "error", err, "user_id", user.ID)
 		// エラーでもユーザー登録は成功させる（ログだけ残す）
@@ -764,7 +764,7 @@ func (s *authService) DeleteMe(ctx context.Context, userID string) error {
 	return s.userRepo.Delete(ctx, id)
 }
 
-// createDefaultPlaylist はユーザーのデフォルトプレイリストを作成する
+// createDefaultPlaylist はユーザーのデフォルト再生リストを作成する
 func (s *authService) createDefaultPlaylist(ctx context.Context, userID uuid.UUID) error {
 	playlist := &model.Playlist{
 		UserID:      userID,

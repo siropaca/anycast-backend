@@ -560,7 +560,7 @@ func TestRecommendationService_GetRecommendedEpisodes(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 
-	t.Run("ログイン時は途中再生→デフォルトプレイリスト（後で聴く）→パーソナライズの順で返す", func(t *testing.T) {
+	t.Run("ログイン時は途中再生→デフォルト再生リスト（後で聴く）→パーソナライズの順で返す", func(t *testing.T) {
 		mockRepo := new(mockRecommendationRepository)
 		mockStorage := new(mockStorageClient)
 		mockCatRepo := new(mockCategoryRepository)
@@ -602,7 +602,7 @@ func TestRecommendationService_GetRecommendedEpisodes(t *testing.T) {
 		assert.Len(t, result.Data, 3)
 		// 途中再生が最初
 		assert.Equal(t, inProgressEpID, result.Data[0].ID)
-		// デフォルトプレイリスト（後で聴く）が次
+		// デフォルト再生リスト（後で聴く）が次
 		assert.Equal(t, defaultPlaylistEpID, result.Data[1].ID)
 		assert.True(t, result.Data[1].InDefaultPlaylist)
 		// 途中再生のエピソードには再生進捗がある

@@ -604,15 +604,15 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 
 #### playlists
 
-ユーザーのプレイリストを管理する。
+ユーザーの再生リストを管理する。
 
 | カラム名 | 型 | NULLABLE | デフォルト | 説明 |
 |----------|-----|:--------:|------------|------|
 | id | UUID | | gen_random_uuid() | 主キー |
 | user_id | UUID | | - | 所有ユーザー（users 参照） |
-| name | VARCHAR(100) | | - | プレイリスト名 |
+| name | VARCHAR(100) | | - | 再生リスト名 |
 | description | TEXT | | '' | 説明 |
-| is_default | BOOLEAN | | false | デフォルトプレイリストフラグ |
+| is_default | BOOLEAN | | false | デフォルト再生リストフラグ |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
 
@@ -626,20 +626,20 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 - user_id → users(id) ON DELETE CASCADE
 
 **制約:**
-- 各ユーザーにつき is_default = true のプレイリストは 1 つのみ
+- 各ユーザーにつき is_default = true の再生リストは 1 つのみ
 
 ---
 
 #### playlist_items
 
-プレイリスト内のアイテム（エピソード）を管理する。
+再生リスト内のアイテム（エピソード）を管理する。
 
 | カラム名 | 型 | NULLABLE | デフォルト | 説明 |
 |----------|-----|:--------:|------------|------|
 | id | UUID | | gen_random_uuid() | 主キー |
-| playlist_id | UUID | | - | プレイリスト（playlists 参照） |
+| playlist_id | UUID | | - | 再生リスト（playlists 参照） |
 | episode_id | UUID | | - | エピソード（episodes 参照） |
-| position | INTEGER | | - | プレイリスト内の順序（0始まり） |
+| position | INTEGER | | - | 再生リスト内の順序（0始まり） |
 | added_at | TIMESTAMP | | CURRENT_TIMESTAMP | 追加日時 |
 
 **インデックス:**
@@ -654,7 +654,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 - episode_id → episodes(id) ON DELETE CASCADE
 
 **制約:**
-- 同一プレイリスト内で同じエピソードは 1 回のみ
+- 同一再生リスト内で同じエピソードは 1 回のみ
 - position の一意性は DEFERRABLE で並び替え時の一時的な重複を許容
 
 ---

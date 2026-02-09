@@ -4,22 +4,22 @@
 @token = YOUR_TOKEN_HERE
 
 ### ===========================
-### プレイリスト管理
+### 再生リスト管理
 ### ===========================
 
-### 自分のプレイリスト一覧取得
+### 自分の再生リスト一覧取得
 GET {{baseUrl}}/me/playlists
 Authorization: Bearer {{token}}
 
-### 自分のプレイリスト一覧取得（ページネーション）
+### 自分の再生リスト一覧取得（ページネーション）
 GET {{baseUrl}}/me/playlists?limit=10&offset=0
 Authorization: Bearer {{token}}
 
-### プレイリスト詳細取得
+### 再生リスト詳細取得
 GET {{baseUrl}}/me/playlists/YOUR_PLAYLIST_ID_HERE
 Authorization: Bearer {{token}}
 
-### プレイリスト作成
+### 再生リスト作成
 POST {{baseUrl}}/me/playlists
 Content-Type: application/json
 Authorization: Bearer {{token}}
@@ -29,7 +29,7 @@ Authorization: Bearer {{token}}
   "description": "お気に入りのエピソード"
 }
 
-### プレイリスト作成（説明なし）
+### 再生リスト作成（説明なし）
 POST {{baseUrl}}/me/playlists
 Content-Type: application/json
 Authorization: Bearer {{token}}
@@ -38,7 +38,7 @@ Authorization: Bearer {{token}}
   "name": "通勤用"
 }
 
-### プレイリスト更新
+### 再生リスト更新
 PATCH {{baseUrl}}/me/playlists/YOUR_PLAYLIST_ID_HERE
 Content-Type: application/json
 Authorization: Bearer {{token}}
@@ -48,7 +48,7 @@ Authorization: Bearer {{token}}
   "description": "新しい説明"
 }
 
-### プレイリスト更新（名前のみ）
+### 再生リスト更新（名前のみ）
 PATCH {{baseUrl}}/me/playlists/YOUR_PLAYLIST_ID_HERE
 Content-Type: application/json
 Authorization: Bearer {{token}}
@@ -57,15 +57,15 @@ Authorization: Bearer {{token}}
   "name": "更新された名前"
 }
 
-### プレイリスト削除
+### 再生リスト削除
 DELETE {{baseUrl}}/me/playlists/YOUR_PLAYLIST_ID_HERE
 Authorization: Bearer {{token}}
 
 ### ===========================
-### プレイリストアイテム管理
+### 再生リストアイテム管理
 ### ===========================
 
-### プレイリストアイテム並び替え
+### 再生リストアイテム並び替え
 POST {{baseUrl}}/me/playlists/YOUR_PLAYLIST_ID_HERE/items/reorder
 Content-Type: application/json
 Authorization: Bearer {{token}}
@@ -79,10 +79,10 @@ Authorization: Bearer {{token}}
 }
 
 ### =======================================
-### エピソードのプレイリスト所属管理
+### エピソードの再生リスト所属管理
 ### =======================================
 
-### エピソードのプレイリスト所属一括更新
+### エピソードの再生リスト所属一括更新
 PUT {{baseUrl}}/episodes/YOUR_EPISODE_ID_HERE/playlists
 Content-Type: application/json
 Authorization: Bearer {{token}}
@@ -94,7 +94,7 @@ Authorization: Bearer {{token}}
   ]
 }
 
-### エピソードを全プレイリストから外す
+### エピソードを全再生リストから外す
 PUT {{baseUrl}}/episodes/YOUR_EPISODE_ID_HERE/playlists
 Content-Type: application/json
 Authorization: Bearer {{token}}

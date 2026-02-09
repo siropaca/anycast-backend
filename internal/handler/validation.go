@@ -67,8 +67,8 @@ var fieldNameMap = map[string]string{
 	// リアクション
 	"ReactionType": "リアクションタイプ",
 
-	// プレイリスト
-	"PlaylistIDs": "プレイリスト ID リスト",
+	// 再生リスト
+	"PlaylistIDs": "再生リスト ID リスト",
 
 	// 検索
 	"Q": "検索キーワード",

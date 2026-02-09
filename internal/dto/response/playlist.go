@@ -6,7 +6,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// プレイリスト情報のレスポンス
+// 再生リスト情報のレスポンス
 type PlaylistResponse struct {
 	ID          uuid.UUID `json:"id" validate:"required"`
 	Name        string    `json:"name" validate:"required"`
@@ -17,7 +17,7 @@ type PlaylistResponse struct {
 	UpdatedAt   time.Time `json:"updatedAt" validate:"required"`
 }
 
-// プレイリスト詳細のレスポンス（アイテム含む）
+// 再生リスト詳細のレスポンス（アイテム含む）
 type PlaylistDetailResponse struct {
 	ID          uuid.UUID              `json:"id" validate:"required"`
 	Name        string                 `json:"name" validate:"required"`
@@ -28,7 +28,7 @@ type PlaylistDetailResponse struct {
 	UpdatedAt   time.Time              `json:"updatedAt" validate:"required"`
 }
 
-// プレイリストアイテム情報のレスポンス
+// 再生リストアイテム情報のレスポンス
 type PlaylistItemResponse struct {
 	ID       uuid.UUID               `json:"id" validate:"required"`
 	Position int                     `json:"position" validate:"required"`
@@ -36,7 +36,7 @@ type PlaylistItemResponse struct {
 	AddedAt  time.Time               `json:"addedAt" validate:"required"`
 }
 
-// プレイリスト内のエピソード情報のレスポンス
+// 再生リスト内のエピソード情報のレスポンス
 type PlaylistEpisodeResponse struct {
 	ID          uuid.UUID               `json:"id" validate:"required"`
 	Title       string                  `json:"title" validate:"required"`
@@ -48,35 +48,35 @@ type PlaylistEpisodeResponse struct {
 	Channel     PlaylistChannelResponse `json:"channel" validate:"required"`
 }
 
-// プレイリスト内のチャンネル情報のレスポンス
+// 再生リスト内のチャンネル情報のレスポンス
 type PlaylistChannelResponse struct {
 	ID      uuid.UUID        `json:"id" validate:"required"`
 	Name    string           `json:"name" validate:"required"`
 	Artwork *ArtworkResponse `json:"artwork" extensions:"x-nullable"`
 }
 
-// プレイリスト一覧（ページネーション付き）のレスポンス
+// 再生リスト一覧（ページネーション付き）のレスポンス
 type PlaylistListWithPaginationResponse struct {
 	Data       []PlaylistResponse `json:"data" validate:"required"`
 	Pagination PaginationResponse `json:"pagination" validate:"required"`
 }
 
-// プレイリスト詳細のラッパーレスポンス
+// 再生リスト詳細のラッパーレスポンス
 type PlaylistDataResponse struct {
 	Data PlaylistResponse `json:"data" validate:"required"`
 }
 
-// プレイリスト詳細（アイテム含む）のラッパーレスポンス
+// 再生リスト詳細（アイテム含む）のラッパーレスポンス
 type PlaylistDetailDataResponse struct {
 	Data PlaylistDetailResponse `json:"data" validate:"required"`
 }
 
-// エピソードのプレイリスト所属 ID 一覧のレスポンス
+// エピソードの再生リスト所属 ID 一覧のレスポンス
 type EpisodePlaylistIDsResponse struct {
 	PlaylistIDs []uuid.UUID `json:"playlistIds" validate:"required"`
 }
 
-// エピソードのプレイリスト所属 ID 一覧のラッパーレスポンス
+// エピソードの再生リスト所属 ID 一覧のラッパーレスポンス
 type EpisodePlaylistIDsDataResponse struct {
 	Data EpisodePlaylistIDsResponse `json:"data" validate:"required"`
 }

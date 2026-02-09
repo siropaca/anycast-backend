@@ -12,7 +12,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// PlaylistRepository はプレイリストデータへのアクセスインターフェース
+// PlaylistRepository は再生リストデータへのアクセスインターフェース
 type PlaylistRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*model.Playlist, error)
 	FindByIDWithItems(ctx context.Context, id uuid.UUID) (*model.Playlist, error)
@@ -23,7 +23,7 @@ type PlaylistRepository interface {
 	Delete(ctx context.Context, id uuid.UUID) error
 	CountItemsByPlaylistID(ctx context.Context, playlistID uuid.UUID) (int64, error)
 
-	// エピソードのプレイリスト所属
+	// エピソードの再生リスト所属
 	FindPlaylistIDsByUserIDAndEpisodeID(ctx context.Context, userID, episodeID uuid.UUID) ([]uuid.UUID, error)
 
 	// PlaylistItem 関連
@@ -46,7 +46,7 @@ func NewPlaylistRepository(db *gorm.DB) PlaylistRepository {
 	return &playlistRepository{db: db}
 }
 
-// FindByID は指定された ID のプレイリストを取得する
+// FindByID は指定された ID の再生リストを取得する
 func (r *playlistRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Playlist, error) {
 	var playlist model.Playlist
 
@@ -54,17 +54,17 @@ func (r *playlistRepository) FindByID(ctx context.Context, id uuid.UUID) (*model
 		First(&playlist, "id = ?", id).Error; err != nil {
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, apperror.ErrNotFound.WithMessage("プレイリストが見つかりません")
+			return nil, apperror.ErrNotFound.WithMessage("再生リストが見つかりません")
 		}
 
 		logger.FromContext(ctx).Error("failed to fetch playlist", "error", err, "playlist_id", id)
-		return nil, apperror.ErrInternal.WithMessage("プレイリストの取得に失敗しました").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("再生リストの取得に失敗しました").WithError(err)
 	}
 
 	return &playlist, nil
 }
 
-// FindByIDWithItems は指定された ID のプレイリストをアイテムと一緒に取得する
+// FindByIDWithItems は指定された ID の再生リストをアイテムと一緒に取得する
 func (r *playlistRepository) FindByIDWithItems(ctx context.Context, id uuid.UUID) (*model.Playlist, error) {
 	var playlist model.Playlist
 
@@ -80,17 +80,17 @@ func (r *playlistRepository) FindByIDWithItems(ctx context.Context, id uuid.UUID
 		First(&playlist, "id = ?", id).Error; err != nil {
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, apperror.ErrNotFound.WithMessage("プレイリストが見つかりません")
+			return nil, apperror.ErrNotFound.WithMessage("再生リストが見つかりません")
 		}
 
 		logger.FromContext(ctx).Error("failed to fetch playlist with items", "error", err, "playlist_id", id)
-		return nil, apperror.ErrInternal.WithMessage("プレイリストの取得に失敗しました").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("再生リストの取得に失敗しました").WithError(err)
 	}
 
 	return &playlist, nil
 }
 
-// FindByUserID は指定されたユーザーのプレイリスト一覧を取得する
+// FindByUserID は指定されたユーザーの再生リスト一覧を取得する
 func (r *playlistRepository) FindByUserID(ctx context.Context, userID uuid.UUID, limit, offset int) ([]model.Playlist, int64, error) {
 	var playlists []model.Playlist
 	var total int64
@@ -100,23 +100,23 @@ func (r *playlistRepository) FindByUserID(ctx context.Context, userID uuid.UUID,
 	// 総件数を取得
 	if err := tx.Count(&total).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to count playlists", "error", err, "user_id", userID)
-		return nil, 0, apperror.ErrInternal.WithMessage("プレイリスト数の取得に失敗しました").WithError(err)
+		return nil, 0, apperror.ErrInternal.WithMessage("再生リスト数の取得に失敗しました").WithError(err)
 	}
 
-	// デフォルトプレイリストを先頭に、その後は作成日時順
+	// デフォルト再生リストを先頭に、その後は作成日時順
 	if err := tx.
 		Order("is_default DESC, created_at DESC").
 		Limit(limit).
 		Offset(offset).
 		Find(&playlists).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to fetch playlists", "error", err, "user_id", userID)
-		return nil, 0, apperror.ErrInternal.WithMessage("プレイリスト一覧の取得に失敗しました").WithError(err)
+		return nil, 0, apperror.ErrInternal.WithMessage("再生リスト一覧の取得に失敗しました").WithError(err)
 	}
 
 	return playlists, total, nil
 }
 
-// ExistsByUserIDAndName は指定されたユーザーと名前のプレイリストが存在するか確認する
+// ExistsByUserIDAndName は指定されたユーザーと名前の再生リストが存在するか確認する
 func (r *playlistRepository) ExistsByUserIDAndName(ctx context.Context, userID uuid.UUID, name string) (bool, error) {
 	var count int64
 
@@ -125,48 +125,48 @@ func (r *playlistRepository) ExistsByUserIDAndName(ctx context.Context, userID u
 		Where("user_id = ? AND name = ?", userID, name).
 		Count(&count).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to check playlist existence", "error", err, "user_id", userID, "name", name)
-		return false, apperror.ErrInternal.WithMessage("プレイリストの確認に失敗しました").WithError(err)
+		return false, apperror.ErrInternal.WithMessage("再生リストの確認に失敗しました").WithError(err)
 	}
 
 	return count > 0, nil
 }
 
-// Create はプレイリストを作成する
+// Create は再生リストを作成する
 func (r *playlistRepository) Create(ctx context.Context, playlist *model.Playlist) error {
 	if err := r.db.WithContext(ctx).Create(playlist).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to create playlist", "error", err)
-		return apperror.ErrInternal.WithMessage("プレイリストの作成に失敗しました").WithError(err)
+		return apperror.ErrInternal.WithMessage("再生リストの作成に失敗しました").WithError(err)
 	}
 
 	return nil
 }
 
-// Update はプレイリストを更新する
+// Update は再生リストを更新する
 func (r *playlistRepository) Update(ctx context.Context, playlist *model.Playlist) error {
 	if err := r.db.WithContext(ctx).Save(playlist).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to update playlist", "error", err, "playlist_id", playlist.ID)
-		return apperror.ErrInternal.WithMessage("プレイリストの更新に失敗しました").WithError(err)
+		return apperror.ErrInternal.WithMessage("再生リストの更新に失敗しました").WithError(err)
 	}
 
 	return nil
 }
 
-// Delete はプレイリストを削除する
+// Delete は再生リストを削除する
 func (r *playlistRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	result := r.db.WithContext(ctx).Delete(&model.Playlist{}, "id = ?", id)
 	if result.Error != nil {
 		logger.FromContext(ctx).Error("failed to delete playlist", "error", result.Error, "playlist_id", id)
-		return apperror.ErrInternal.WithMessage("プレイリストの削除に失敗しました").WithError(result.Error)
+		return apperror.ErrInternal.WithMessage("再生リストの削除に失敗しました").WithError(result.Error)
 	}
 
 	if result.RowsAffected == 0 {
-		return apperror.ErrNotFound.WithMessage("プレイリストが見つかりません")
+		return apperror.ErrNotFound.WithMessage("再生リストが見つかりません")
 	}
 
 	return nil
 }
 
-// CountItemsByPlaylistID はプレイリスト内のアイテム数を取得する
+// CountItemsByPlaylistID は再生リスト内のアイテム数を取得する
 func (r *playlistRepository) CountItemsByPlaylistID(ctx context.Context, playlistID uuid.UUID) (int64, error) {
 	var count int64
 
@@ -175,13 +175,13 @@ func (r *playlistRepository) CountItemsByPlaylistID(ctx context.Context, playlis
 		Where("playlist_id = ?", playlistID).
 		Count(&count).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to count playlist items", "error", err, "playlist_id", playlistID)
-		return 0, apperror.ErrInternal.WithMessage("プレイリストアイテム数の取得に失敗しました").WithError(err)
+		return 0, apperror.ErrInternal.WithMessage("再生リストアイテム数の取得に失敗しました").WithError(err)
 	}
 
 	return count, nil
 }
 
-// FindItemByID は指定された ID のプレイリストアイテムを取得する
+// FindItemByID は指定された ID の再生リストアイテムを取得する
 func (r *playlistRepository) FindItemByID(ctx context.Context, id uuid.UUID) (*model.PlaylistItem, error) {
 	var item model.PlaylistItem
 
@@ -194,17 +194,17 @@ func (r *playlistRepository) FindItemByID(ctx context.Context, id uuid.UUID) (*m
 		First(&item, "id = ?", id).Error; err != nil {
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, apperror.ErrNotFound.WithMessage("プレイリストアイテムが見つかりません")
+			return nil, apperror.ErrNotFound.WithMessage("再生リストアイテムが見つかりません")
 		}
 
 		logger.FromContext(ctx).Error("failed to fetch playlist item", "error", err, "item_id", id)
-		return nil, apperror.ErrInternal.WithMessage("プレイリストアイテムの取得に失敗しました").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("再生リストアイテムの取得に失敗しました").WithError(err)
 	}
 
 	return &item, nil
 }
 
-// FindItemsByPlaylistID は指定されたプレイリストのアイテム一覧を取得する
+// FindItemsByPlaylistID は指定された再生リストのアイテム一覧を取得する
 func (r *playlistRepository) FindItemsByPlaylistID(ctx context.Context, playlistID uuid.UUID) ([]model.PlaylistItem, error) {
 	var items []model.PlaylistItem
 
@@ -218,13 +218,13 @@ func (r *playlistRepository) FindItemsByPlaylistID(ctx context.Context, playlist
 		Order("position ASC").
 		Find(&items).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to fetch playlist items", "error", err, "playlist_id", playlistID)
-		return nil, apperror.ErrInternal.WithMessage("プレイリストアイテム一覧の取得に失敗しました").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("再生リストアイテム一覧の取得に失敗しました").WithError(err)
 	}
 
 	return items, nil
 }
 
-// FindItemByPlaylistIDAndEpisodeID は指定されたプレイリストとエピソードのアイテムを取得する
+// FindItemByPlaylistIDAndEpisodeID は指定された再生リストとエピソードのアイテムを取得する
 func (r *playlistRepository) FindItemByPlaylistIDAndEpisodeID(ctx context.Context, playlistID, episodeID uuid.UUID) (*model.PlaylistItem, error) {
 	var item model.PlaylistItem
 
@@ -233,42 +233,42 @@ func (r *playlistRepository) FindItemByPlaylistIDAndEpisodeID(ctx context.Contex
 		First(&item).Error; err != nil {
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, apperror.ErrNotFound.WithMessage("プレイリストアイテムが見つかりません")
+			return nil, apperror.ErrNotFound.WithMessage("再生リストアイテムが見つかりません")
 		}
 
 		logger.FromContext(ctx).Error("failed to fetch playlist item", "error", err, "playlist_id", playlistID, "episode_id", episodeID)
-		return nil, apperror.ErrInternal.WithMessage("プレイリストアイテムの取得に失敗しました").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("再生リストアイテムの取得に失敗しました").WithError(err)
 	}
 
 	return &item, nil
 }
 
-// CreateItem はプレイリストアイテムを作成する
+// CreateItem は再生リストアイテムを作成する
 func (r *playlistRepository) CreateItem(ctx context.Context, item *model.PlaylistItem) error {
 	if err := r.db.WithContext(ctx).Create(item).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to create playlist item", "error", err)
-		return apperror.ErrInternal.WithMessage("プレイリストアイテムの作成に失敗しました").WithError(err)
+		return apperror.ErrInternal.WithMessage("再生リストアイテムの作成に失敗しました").WithError(err)
 	}
 
 	return nil
 }
 
-// DeleteItem はプレイリストアイテムを削除する
+// DeleteItem は再生リストアイテムを削除する
 func (r *playlistRepository) DeleteItem(ctx context.Context, id uuid.UUID) error {
 	result := r.db.WithContext(ctx).Delete(&model.PlaylistItem{}, "id = ?", id)
 	if result.Error != nil {
 		logger.FromContext(ctx).Error("failed to delete playlist item", "error", result.Error, "item_id", id)
-		return apperror.ErrInternal.WithMessage("プレイリストアイテムの削除に失敗しました").WithError(result.Error)
+		return apperror.ErrInternal.WithMessage("再生リストアイテムの削除に失敗しました").WithError(result.Error)
 	}
 
 	if result.RowsAffected == 0 {
-		return apperror.ErrNotFound.WithMessage("プレイリストアイテムが見つかりません")
+		return apperror.ErrNotFound.WithMessage("再生リストアイテムが見つかりません")
 	}
 
 	return nil
 }
 
-// GetMaxPosition はプレイリスト内の最大 position を取得する
+// GetMaxPosition は再生リスト内の最大 position を取得する
 func (r *playlistRepository) GetMaxPosition(ctx context.Context, playlistID uuid.UUID) (int, error) {
 	var maxPosition *int
 
@@ -288,7 +288,7 @@ func (r *playlistRepository) GetMaxPosition(ctx context.Context, playlistID uuid
 	return *maxPosition, nil
 }
 
-// UpdateItemPositions はプレイリストアイテムの position を一括更新する
+// UpdateItemPositions は再生リストアイテムの position を一括更新する
 func (r *playlistRepository) UpdateItemPositions(ctx context.Context, playlistID uuid.UUID, itemIDs []uuid.UUID) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for i, itemID := range itemIDs {
@@ -316,7 +316,7 @@ func (r *playlistRepository) DecrementPositionsAfter(ctx context.Context, playli
 	return nil
 }
 
-// FindPlaylistIDsByUserIDAndEpisodeID は指定されたユーザーのプレイリストのうち、エピソードが含まれるプレイリスト ID 一覧を返す
+// FindPlaylistIDsByUserIDAndEpisodeID は指定されたユーザーの再生リストのうち、エピソードが含まれる再生リスト ID 一覧を返す
 func (r *playlistRepository) FindPlaylistIDsByUserIDAndEpisodeID(ctx context.Context, userID, episodeID uuid.UUID) ([]uuid.UUID, error) {
 	var playlistIDs []uuid.UUID
 
@@ -327,7 +327,7 @@ func (r *playlistRepository) FindPlaylistIDsByUserIDAndEpisodeID(ctx context.Con
 		Where("playlists.user_id = ? AND playlist_items.episode_id = ?", userID, episodeID).
 		Scan(&playlistIDs).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to fetch playlist IDs by user and episode", "error", err, "user_id", userID, "episode_id", episodeID)
-		return nil, apperror.ErrInternal.WithMessage("プレイリスト所属情報の取得に失敗しました").WithError(err)
+		return nil, apperror.ErrInternal.WithMessage("再生リスト所属情報の取得に失敗しました").WithError(err)
 	}
 
 	return playlistIDs, nil

@@ -329,7 +329,7 @@ CREATE TABLE reactions (
 CREATE INDEX idx_reactions_user_id ON reactions (user_id);
 CREATE INDEX idx_reactions_episode_id ON reactions (episode_id);
 
--- プレイリスト
+-- 再生リスト
 CREATE TABLE playlists (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 	user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
@@ -344,7 +344,7 @@ CREATE TABLE playlists (
 CREATE INDEX idx_playlists_user_id ON playlists (user_id);
 CREATE UNIQUE INDEX idx_playlists_user_id_default ON playlists (user_id) WHERE is_default = true;
 
--- プレイリストアイテム
+-- 再生リストアイテム
 CREATE TABLE playlist_items (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 	playlist_id UUID NOT NULL REFERENCES playlists (id) ON DELETE CASCADE,

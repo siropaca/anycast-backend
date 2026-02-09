@@ -475,7 +475,7 @@ INSERT INTO follows (user_id, target_user_id) VALUES
 	('8450d256-8630-4044-8a69-fc8671e6e5c1', '8def69af-dae9-4641-a0e5-100107626933'),
 	('c878a2b4-ade5-44d3-b8ec-d5be985f6dcb', '8def69af-dae9-4641-a0e5-100107626933');
 
--- 全ユーザーにデフォルトプレイリスト「後で聴く」を作成
+-- 全ユーザーにデフォルト再生リスト「後で聴く」を作成
 INSERT INTO playlists (id, user_id, name, is_default) VALUES
 	('11111111-1111-1111-1111-111111111111', '8def69af-dae9-4641-a0e5-100107626933', '後で聴く', true),
 	('22222222-2222-2222-2222-222222222222', '8eada3a5-f413-4eeb-9cd5-12def60d4596', '後で聴く', true),

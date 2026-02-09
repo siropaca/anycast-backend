@@ -15,25 +15,25 @@ import (
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
-// DefaultPlaylistName はデフォルトプレイリストの名前
+// DefaultPlaylistName はデフォルト再生リストの名前
 const DefaultPlaylistName = "後で聴く"
 
-// PlaylistService はプレイリスト関連のビジネスロジックインターフェースを表す
+// PlaylistService は再生リスト関連のビジネスロジックインターフェースを表す
 type PlaylistService interface {
-	// プレイリスト管理
+	// 再生リスト管理
 	ListPlaylists(ctx context.Context, userID string, limit, offset int) (*response.PlaylistListWithPaginationResponse, error)
 	GetPlaylist(ctx context.Context, userID, playlistID string) (*response.PlaylistDetailDataResponse, error)
 	CreatePlaylist(ctx context.Context, userID string, req request.CreatePlaylistRequest) (*response.PlaylistDataResponse, error)
 	UpdatePlaylist(ctx context.Context, userID, playlistID string, req request.UpdatePlaylistRequest) (*response.PlaylistDataResponse, error)
 	DeletePlaylist(ctx context.Context, userID, playlistID string) error
 
-	// プレイリストアイテム管理
+	// 再生リストアイテム管理
 	ReorderItems(ctx context.Context, userID, playlistID string, req request.ReorderPlaylistItemsRequest) (*response.PlaylistDetailDataResponse, error)
 
-	// デフォルトプレイリスト作成（ユーザー登録時に呼び出される）
+	// デフォルト再生リスト作成（ユーザー登録時に呼び出される）
 	CreateDefaultPlaylist(ctx context.Context, userID uuid.UUID) error
 
-	// エピソードのプレイリスト所属一括更新
+	// エピソードの再生リスト所属一括更新
 	UpdateEpisodePlaylists(ctx context.Context, userID, episodeID string, req request.UpdateEpisodePlaylistsRequest) (*response.EpisodePlaylistIDsDataResponse, error)
 }
 
@@ -59,7 +59,7 @@ func NewPlaylistService(
 	}
 }
 
-// ListPlaylists は自分のプレイリスト一覧を取得する
+// ListPlaylists は自分の再生リスト一覧を取得する
 func (s *playlistService) ListPlaylists(ctx context.Context, userID string, limit, offset int) (*response.PlaylistListWithPaginationResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -100,7 +100,7 @@ func (s *playlistService) ListPlaylists(ctx context.Context, userID string, limi
 	}, nil
 }
 
-// GetPlaylist は自分のプレイリスト詳細を取得する
+// GetPlaylist は自分の再生リスト詳細を取得する
 func (s *playlistService) GetPlaylist(ctx context.Context, userID, playlistID string) (*response.PlaylistDetailDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -119,7 +119,7 @@ func (s *playlistService) GetPlaylist(ctx context.Context, userID, playlistID st
 
 	// オーナーチェック
 	if playlist.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("このプレイリストへのアクセス権限がありません")
+		return nil, apperror.ErrForbidden.WithMessage("この再生リストへのアクセス権限がありません")
 	}
 
 	return &response.PlaylistDetailDataResponse{
@@ -127,7 +127,7 @@ func (s *playlistService) GetPlaylist(ctx context.Context, userID, playlistID st
 	}, nil
 }
 
-// CreatePlaylist はプレイリストを作成する
+// CreatePlaylist は再生リストを作成する
 func (s *playlistService) CreatePlaylist(ctx context.Context, userID string, req request.CreatePlaylistRequest) (*response.PlaylistDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -140,7 +140,7 @@ func (s *playlistService) CreatePlaylist(ctx context.Context, userID string, req
 		return nil, err
 	}
 	if exists {
-		return nil, apperror.ErrDuplicateName.WithMessage("この名前のプレイリストは既に存在します")
+		return nil, apperror.ErrDuplicateName.WithMessage("この名前の再生リストは既に存在します")
 	}
 
 	description := ""
@@ -172,7 +172,7 @@ func (s *playlistService) CreatePlaylist(ctx context.Context, userID string, req
 	}, nil
 }
 
-// UpdatePlaylist はプレイリストを更新する
+// UpdatePlaylist は再生リストを更新する
 func (s *playlistService) UpdatePlaylist(ctx context.Context, userID, playlistID string, req request.UpdatePlaylistRequest) (*response.PlaylistDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -191,12 +191,12 @@ func (s *playlistService) UpdatePlaylist(ctx context.Context, userID, playlistID
 
 	// オーナーチェック
 	if playlist.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("このプレイリストへのアクセス権限がありません")
+		return nil, apperror.ErrForbidden.WithMessage("この再生リストへのアクセス権限がありません")
 	}
 
-	// デフォルトプレイリストの名前変更は不可
+	// デフォルト再生リストの名前変更は不可
 	if playlist.IsDefault && req.Name != nil {
-		return nil, apperror.ErrDefaultPlaylist.WithMessage("デフォルトプレイリストの名前は変更できません")
+		return nil, apperror.ErrDefaultPlaylist.WithMessage("デフォルト再生リストの名前は変更できません")
 	}
 
 	// 名前の重複チェック（名前が変更される場合のみ）
@@ -206,7 +206,7 @@ func (s *playlistService) UpdatePlaylist(ctx context.Context, userID, playlistID
 			return nil, err
 		}
 		if exists {
-			return nil, apperror.ErrDuplicateName.WithMessage("この名前のプレイリストは既に存在します")
+			return nil, apperror.ErrDuplicateName.WithMessage("この名前の再生リストは既に存在します")
 		}
 		playlist.Name = *req.Name
 	}
@@ -239,7 +239,7 @@ func (s *playlistService) UpdatePlaylist(ctx context.Context, userID, playlistID
 	}, nil
 }
 
-// DeletePlaylist はプレイリストを削除する
+// DeletePlaylist は再生リストを削除する
 func (s *playlistService) DeletePlaylist(ctx context.Context, userID, playlistID string) error {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -258,18 +258,18 @@ func (s *playlistService) DeletePlaylist(ctx context.Context, userID, playlistID
 
 	// オーナーチェック
 	if playlist.UserID != uid {
-		return apperror.ErrForbidden.WithMessage("このプレイリストへのアクセス権限がありません")
+		return apperror.ErrForbidden.WithMessage("この再生リストへのアクセス権限がありません")
 	}
 
-	// デフォルトプレイリストは削除不可
+	// デフォルト再生リストは削除不可
 	if playlist.IsDefault {
-		return apperror.ErrDefaultPlaylist.WithMessage("デフォルトプレイリストは削除できません")
+		return apperror.ErrDefaultPlaylist.WithMessage("デフォルト再生リストは削除できません")
 	}
 
 	return s.playlistRepo.Delete(ctx, pid)
 }
 
-// ReorderItems はプレイリストアイテムを並び替える
+// ReorderItems は再生リストアイテムを並び替える
 func (s *playlistService) ReorderItems(ctx context.Context, userID, playlistID string, req request.ReorderPlaylistItemsRequest) (*response.PlaylistDetailDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -288,7 +288,7 @@ func (s *playlistService) ReorderItems(ctx context.Context, userID, playlistID s
 
 	// オーナーチェック
 	if playlist.UserID != uid {
-		return nil, apperror.ErrForbidden.WithMessage("このプレイリストへのアクセス権限がありません")
+		return nil, apperror.ErrForbidden.WithMessage("この再生リストへのアクセス権限がありません")
 	}
 
 	// アイテム ID を UUID にパース
@@ -306,7 +306,7 @@ func (s *playlistService) ReorderItems(ctx context.Context, userID, playlistID s
 		return nil, err
 	}
 
-	// 更新後のプレイリストを取得して返す
+	// 更新後の再生リストを取得して返す
 	playlist, err = s.playlistRepo.FindByIDWithItems(ctx, pid)
 	if err != nil {
 		return nil, err
@@ -317,7 +317,7 @@ func (s *playlistService) ReorderItems(ctx context.Context, userID, playlistID s
 	}, nil
 }
 
-// CreateDefaultPlaylist はユーザーのデフォルトプレイリストを作成する
+// CreateDefaultPlaylist はユーザーのデフォルト再生リストを作成する
 func (s *playlistService) CreateDefaultPlaylist(ctx context.Context, userID uuid.UUID) error {
 	playlist := &model.Playlist{
 		UserID:      userID,
@@ -329,7 +329,7 @@ func (s *playlistService) CreateDefaultPlaylist(ctx context.Context, userID uuid
 	return s.playlistRepo.Create(ctx, playlist)
 }
 
-// UpdateEpisodePlaylists はエピソードのプレイリスト所属を一括更新する
+// UpdateEpisodePlaylists はエピソードの再生リスト所属を一括更新する
 func (s *playlistService) UpdateEpisodePlaylists(ctx context.Context, userID, episodeID string, req request.UpdateEpisodePlaylistsRequest) (*response.EpisodePlaylistIDsDataResponse, error) {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
@@ -360,18 +360,18 @@ func (s *playlistService) UpdateEpisodePlaylists(ctx context.Context, userID, ep
 		}
 	}
 
-	// 指定プレイリストのオーナーチェック（全てが認証ユーザーのものか確認）
+	// 指定再生リストのオーナーチェック（全てが認証ユーザーのものか確認）
 	for _, pid := range requestedIDs {
 		playlist, err := s.playlistRepo.FindByID(ctx, pid)
 		if err != nil {
 			return nil, err
 		}
 		if playlist.UserID != uid {
-			return nil, apperror.ErrForbidden.WithMessage("このプレイリストへのアクセス権限がありません")
+			return nil, apperror.ErrForbidden.WithMessage("この再生リストへのアクセス権限がありません")
 		}
 	}
 
-	// 現在の所属プレイリスト ID 取得
+	// 現在の所属再生リスト ID 取得
 	currentIDs, err := s.playlistRepo.FindPlaylistIDsByUserIDAndEpisodeID(ctx, uid, eid)
 	if err != nil {
 		return nil, err
@@ -417,7 +417,7 @@ func (s *playlistService) UpdateEpisodePlaylists(ctx context.Context, userID, ep
 
 	// トランザクション内で追加・削除を実行
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		// 削除: 各プレイリストからエピソードを外す
+		// 削除: 各再生リストからエピソードを外す
 		for _, pid := range toRemove {
 			item, err := s.playlistRepo.FindItemByPlaylistIDAndEpisodeID(ctx, pid, eid)
 			if err != nil {
@@ -431,7 +431,7 @@ func (s *playlistService) UpdateEpisodePlaylists(ctx context.Context, userID, ep
 			}
 		}
 
-		// 追加: 各プレイリストにエピソードを追加
+		// 追加: 各再生リストにエピソードを追加
 		for _, pid := range toAdd {
 			maxPosition, err := s.playlistRepo.GetMaxPosition(ctx, pid)
 			if err != nil {

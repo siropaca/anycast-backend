@@ -2728,7 +2728,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "エピソードが所属するプレイリストを一括更新します",
+                "description": "エピソードが所属する再生リストを一括更新します",
                 "consumes": [
                     "application/json"
                 ],
@@ -2738,7 +2738,7 @@ const docTemplate = `{
                 "tags": [
                     "episodes"
                 ],
-                "summary": "エピソードのプレイリスト所属一括更新",
+                "summary": "エピソードの再生リスト所属一括更新",
                 "parameters": [
                     {
                         "type": "string",
@@ -2748,7 +2748,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "プレイリスト所属更新リクエスト",
+                        "description": "再生リスト所属更新リクエスト",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -4533,7 +4533,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "自分のプレイリスト一覧を取得します",
+                "description": "自分の再生リスト一覧を取得します",
                 "consumes": [
                     "application/json"
                 ],
@@ -4543,7 +4543,7 @@ const docTemplate = `{
                 "tags": [
                     "me"
                 ],
-                "summary": "自分のプレイリスト一覧取得",
+                "summary": "自分の再生リスト一覧取得",
                 "parameters": [
                     {
                         "type": "integer",
@@ -4585,7 +4585,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "新しいプレイリストを作成します",
+                "description": "新しい再生リストを作成します",
                 "consumes": [
                     "application/json"
                 ],
@@ -4595,10 +4595,10 @@ const docTemplate = `{
                 "tags": [
                     "me"
                 ],
-                "summary": "プレイリスト作成",
+                "summary": "再生リスト作成",
                 "parameters": [
                     {
-                        "description": "プレイリスト作成リクエスト",
+                        "description": "再生リスト作成リクエスト",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -4648,7 +4648,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "自分のプレイリスト詳細を取得します（アイテム含む）",
+                "description": "自分の再生リスト詳細を取得します（アイテム含む）",
                 "consumes": [
                     "application/json"
                 ],
@@ -4658,11 +4658,11 @@ const docTemplate = `{
                 "tags": [
                     "me"
                 ],
-                "summary": "自分のプレイリスト詳細取得",
+                "summary": "自分の再生リスト詳細取得",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "プレイリスト ID",
+                        "description": "再生リスト ID",
                         "name": "playlistId",
                         "in": "path",
                         "required": true
@@ -4713,7 +4713,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "指定したプレイリストを削除します（デフォルトプレイリストは削除不可）",
+                "description": "指定した再生リストを削除します（デフォルト再生リストは削除不可）",
                 "consumes": [
                     "application/json"
                 ],
@@ -4723,11 +4723,11 @@ const docTemplate = `{
                 "tags": [
                     "me"
                 ],
-                "summary": "プレイリスト削除",
+                "summary": "再生リスト削除",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "プレイリスト ID",
+                        "description": "再生リスト ID",
                         "name": "playlistId",
                         "in": "path",
                         "required": true
@@ -4775,7 +4775,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "指定したプレイリストを更新します",
+                "description": "指定した再生リストを更新します",
                 "consumes": [
                     "application/json"
                 ],
@@ -4785,17 +4785,17 @@ const docTemplate = `{
                 "tags": [
                     "me"
                 ],
-                "summary": "プレイリスト更新",
+                "summary": "再生リスト更新",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "プレイリスト ID",
+                        "description": "再生リスト ID",
                         "name": "playlistId",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "プレイリスト更新リクエスト",
+                        "description": "再生リスト更新リクエスト",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -4857,7 +4857,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "プレイリスト内のアイテムの順序を変更します",
+                "description": "再生リスト内のアイテムの順序を変更します",
                 "consumes": [
                     "application/json"
                 ],
@@ -4867,11 +4867,11 @@ const docTemplate = `{
                 "tags": [
                     "me"
                 ],
-                "summary": "プレイリストアイテム並び替え",
+                "summary": "再生リストアイテム並び替え",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "プレイリスト ID",
+                        "description": "再生リスト ID",
                         "name": "playlistId",
                         "in": "path",
                         "required": true
@@ -5209,7 +5209,7 @@ const docTemplate = `{
         },
         "/recommendations/episodes": {
             "get": {
-                "description": "おすすめエピソード一覧を取得します。未ログイン時は人気順・新着順、ログイン時は途中再生・デフォルトプレイリスト（後で聴く）・パーソナライズに基づく結果を返します。",
+                "description": "おすすめエピソード一覧を取得します。未ログイン時は人気順・新着順、ログイン時は途中再生・デフォルト再生リスト（後で聴く）・パーソナライズに基づく結果を返します。",
                 "consumes": [
                     "application/json"
                 ],

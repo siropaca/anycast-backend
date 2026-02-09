@@ -11,7 +11,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/service"
 )
 
-// プレイリスト関連のハンドラー
+// 再生リスト関連のハンドラー
 type PlaylistHandler struct {
 	playlistService service.PlaylistService
 }
@@ -22,8 +22,8 @@ func NewPlaylistHandler(ps service.PlaylistService) *PlaylistHandler {
 }
 
 // ListPlaylists godoc
-// @Summary 自分のプレイリスト一覧取得
-// @Description 自分のプレイリスト一覧を取得します
+// @Summary 自分の再生リスト一覧取得
+// @Description 自分の再生リスト一覧を取得します
 // @Tags me
 // @Accept json
 // @Produce json
@@ -57,12 +57,12 @@ func (h *PlaylistHandler) ListPlaylists(c *gin.Context) {
 }
 
 // GetPlaylist godoc
-// @Summary 自分のプレイリスト詳細取得
-// @Description 自分のプレイリスト詳細を取得します（アイテム含む）
+// @Summary 自分の再生リスト詳細取得
+// @Description 自分の再生リスト詳細を取得します（アイテム含む）
 // @Tags me
 // @Accept json
 // @Produce json
-// @Param playlistId path string true "プレイリスト ID"
+// @Param playlistId path string true "再生リスト ID"
 // @Success 200 {object} response.PlaylistDetailDataResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
@@ -94,12 +94,12 @@ func (h *PlaylistHandler) GetPlaylist(c *gin.Context) {
 }
 
 // CreatePlaylist godoc
-// @Summary プレイリスト作成
-// @Description 新しいプレイリストを作成します
+// @Summary 再生リスト作成
+// @Description 新しい再生リストを作成します
 // @Tags me
 // @Accept json
 // @Produce json
-// @Param request body request.CreatePlaylistRequest true "プレイリスト作成リクエスト"
+// @Param request body request.CreatePlaylistRequest true "再生リスト作成リクエスト"
 // @Success 201 {object} response.PlaylistDataResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
@@ -130,13 +130,13 @@ func (h *PlaylistHandler) CreatePlaylist(c *gin.Context) {
 }
 
 // UpdatePlaylist godoc
-// @Summary プレイリスト更新
-// @Description 指定したプレイリストを更新します
+// @Summary 再生リスト更新
+// @Description 指定した再生リストを更新します
 // @Tags me
 // @Accept json
 // @Produce json
-// @Param playlistId path string true "プレイリスト ID"
-// @Param request body request.UpdatePlaylistRequest true "プレイリスト更新リクエスト"
+// @Param playlistId path string true "再生リスト ID"
+// @Param request body request.UpdatePlaylistRequest true "再生リスト更新リクエスト"
 // @Success 200 {object} response.PlaylistDataResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
@@ -175,12 +175,12 @@ func (h *PlaylistHandler) UpdatePlaylist(c *gin.Context) {
 }
 
 // DeletePlaylist godoc
-// @Summary プレイリスト削除
-// @Description 指定したプレイリストを削除します（デフォルトプレイリストは削除不可）
+// @Summary 再生リスト削除
+// @Description 指定した再生リストを削除します（デフォルト再生リストは削除不可）
 // @Tags me
 // @Accept json
 // @Produce json
-// @Param playlistId path string true "プレイリスト ID"
+// @Param playlistId path string true "再生リスト ID"
 // @Success 204 "No Content"
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
@@ -211,12 +211,12 @@ func (h *PlaylistHandler) DeletePlaylist(c *gin.Context) {
 }
 
 // ReorderItems godoc
-// @Summary プレイリストアイテム並び替え
-// @Description プレイリスト内のアイテムの順序を変更します
+// @Summary 再生リストアイテム並び替え
+// @Description 再生リスト内のアイテムの順序を変更します
 // @Tags me
 // @Accept json
 // @Produce json
-// @Param playlistId path string true "プレイリスト ID"
+// @Param playlistId path string true "再生リスト ID"
 // @Param request body request.ReorderPlaylistItemsRequest true "並び替えリクエスト"
 // @Success 200 {object} response.PlaylistDetailDataResponse
 // @Failure 400 {object} response.ErrorResponse
@@ -255,13 +255,13 @@ func (h *PlaylistHandler) ReorderItems(c *gin.Context) {
 }
 
 // UpdateEpisodePlaylists godoc
-// @Summary エピソードのプレイリスト所属一括更新
-// @Description エピソードが所属するプレイリストを一括更新します
+// @Summary エピソードの再生リスト所属一括更新
+// @Description エピソードが所属する再生リストを一括更新します
 // @Tags episodes
 // @Accept json
 // @Produce json
 // @Param episodeId path string true "エピソード ID"
-// @Param request body request.UpdateEpisodePlaylistsRequest true "プレイリスト所属更新リクエスト"
+// @Param request body request.UpdateEpisodePlaylistsRequest true "再生リスト所属更新リクエスト"
 // @Success 200 {object} response.EpisodePlaylistIDsDataResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse

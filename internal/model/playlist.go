@@ -6,7 +6,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
-// Playlist はプレイリスト情報を表す
+// Playlist は再生リスト情報を表す
 type Playlist struct {
 	ID          uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	UserID      uuid.UUID `gorm:"type:uuid;not null;column:user_id"`
@@ -20,7 +20,7 @@ type Playlist struct {
 	Items []PlaylistItem `gorm:"foreignKey:PlaylistID"`
 }
 
-// PlaylistItem はプレイリストアイテム情報を表す
+// PlaylistItem は再生リストアイテム情報を表す
 type PlaylistItem struct {
 	ID         uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	PlaylistID uuid.UUID `gorm:"type:uuid;not null;column:playlist_id"`

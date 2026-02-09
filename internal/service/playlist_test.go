@@ -120,7 +120,7 @@ func (m *mockPlaylistRepository) FindPlaylistIDsByUserIDAndEpisodeID(ctx context
 	return args.Get(0).([]uuid.UUID), args.Error(1)
 }
 
-// EpisodeRepository のモック（プレイリストテスト用）
+// EpisodeRepository のモック（再生リストテスト用）
 type mockEpisodeRepositoryForPlaylist struct {
 	mock.Mock
 }
@@ -240,7 +240,7 @@ func TestUpdateEpisodePlaylists(t *testing.T) {
 		mockEpisode.AssertExpectations(t)
 	})
 
-	t.Run("他ユーザーのプレイリスト指定でエラー", func(t *testing.T) {
+	t.Run("他ユーザーの再生リスト指定でエラー", func(t *testing.T) {
 		mockPlaylist := new(mockPlaylistRepository)
 		mockEpisode := new(mockEpisodeRepositoryForPlaylist)
 		mockStorage := new(mockStorageClient)

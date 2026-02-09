@@ -141,7 +141,7 @@ func (s *episodeService) GetEpisode(ctx context.Context, userID, channelID, epis
 		return nil, err
 	}
 
-	// 認証済みの場合はプレイリスト所属情報を取得
+	// 認証済みの場合は再生リスト所属情報を取得
 	if userID != "" {
 		playlistIDs, err := s.playlistRepo.FindPlaylistIDsByUserIDAndEpisodeID(ctx, uid, eid)
 		if err == nil {
@@ -206,7 +206,7 @@ func (s *episodeService) GetMyChannelEpisode(ctx context.Context, userID, channe
 		return nil, err
 	}
 
-	// プレイリスト所属情報を取得
+	// 再生リスト所属情報を取得
 	playlistIDs, err := s.playlistRepo.FindPlaylistIDsByUserIDAndEpisodeID(ctx, uid, eid)
 	if err == nil {
 		if playlistIDs == nil {
