@@ -11,6 +11,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/model"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
+	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
 // FollowRepository のモック
@@ -96,6 +97,14 @@ func (m *mockUserRepository) ExistsByEmail(ctx context.Context, email string) (b
 func (m *mockUserRepository) ExistsByUsername(ctx context.Context, username string) (bool, error) {
 	args := m.Called(ctx, username)
 	return args.Bool(0), args.Error(1)
+}
+
+func (m *mockUserRepository) Search(ctx context.Context, filter repository.SearchUserFilter) ([]model.User, int64, error) {
+	args := m.Called(ctx, filter)
+	if args.Get(0) == nil {
+		return nil, 0, args.Error(2)
+	}
+	return args.Get(0).([]model.User), args.Get(1).(int64), args.Error(2)
 }
 
 func (m *mockUserRepository) Delete(ctx context.Context, id uuid.UUID) error {

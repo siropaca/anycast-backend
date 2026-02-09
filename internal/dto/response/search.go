@@ -46,3 +46,18 @@ type SearchEpisodeListResponse struct {
 	Data       []SearchEpisodeResponse `json:"data" validate:"required"`
 	Pagination PaginationResponse      `json:"pagination" validate:"required"`
 }
+
+// ユーザー検索結果のレスポンス
+type SearchUserResponse struct {
+	ID          uuid.UUID        `json:"id" validate:"required"`
+	Username    string           `json:"username" validate:"required"`
+	DisplayName string           `json:"displayName" validate:"required"`
+	Avatar      *ArtworkResponse `json:"avatar" extensions:"x-nullable"`
+	CreatedAt   time.Time        `json:"createdAt" validate:"required"`
+}
+
+// ユーザー検索結果一覧（ページネーション付き）のレスポンス
+type SearchUserListResponse struct {
+	Data       []SearchUserResponse `json:"data" validate:"required"`
+	Pagination PaginationResponse   `json:"pagination" validate:"required"`
+}

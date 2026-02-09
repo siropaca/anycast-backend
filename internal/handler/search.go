@@ -92,3 +92,38 @@ func (h *SearchHandler) SearchEpisodes(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+
+// SearchUsers godoc
+// @Summary ユーザー検索
+// @Description ユーザーをキーワードで検索します。username, displayName を対象にフリーワード検索を行います。
+// @Tags search
+// @Accept json
+// @Produce json
+// @Param q query string true "検索キーワード"
+// @Param limit query int false "取得件数（デフォルト: 20、最大: 100）"
+// @Param offset query int false "オフセット（デフォルト: 0）"
+// @Success 200 {object} response.SearchUserListResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /search/users [get]
+func (h *SearchHandler) SearchUsers(c *gin.Context) {
+	var req request.SearchUsersRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
+		return
+	}
+
+	filter := repository.SearchUserFilter{
+		Query:  req.Q,
+		Limit:  req.Limit,
+		Offset: req.Offset,
+	}
+
+	result, err := h.searchService.SearchUsers(c.Request.Context(), filter)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}

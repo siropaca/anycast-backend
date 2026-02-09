@@ -12,6 +12,13 @@ import (
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 )
 
+// SearchUserFilter はユーザー検索のフィルタ条件を表す
+type SearchUserFilter struct {
+	Query  string
+	Limit  int
+	Offset int
+}
+
 // UserRepository はユーザーデータへのアクセスインターフェース
 type UserRepository interface {
 	Create(ctx context.Context, user *model.User) error
@@ -22,6 +29,7 @@ type UserRepository interface {
 	FindByEmail(ctx context.Context, email string) (*model.User, error)
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
 	ExistsByUsername(ctx context.Context, username string) (bool, error)
+	Search(ctx context.Context, filter SearchUserFilter) ([]model.User, int64, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
@@ -141,6 +149,32 @@ func (r *userRepository) ExistsByUsername(ctx context.Context, username string) 
 	}
 
 	return count > 0, nil
+}
+
+// Search はキーワードでユーザーを検索する
+func (r *userRepository) Search(ctx context.Context, filter SearchUserFilter) ([]model.User, int64, error) {
+	keyword := "%" + filter.Query + "%"
+
+	tx := r.db.WithContext(ctx).Model(&model.User{}).
+		Where("(username ILIKE ? OR display_name ILIKE ?)", keyword, keyword)
+
+	var total int64
+	if err := tx.Count(&total).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to count search users", "error", err)
+		return nil, 0, apperror.ErrInternal.WithMessage("ユーザーの検索に失敗しました").WithError(err)
+	}
+
+	var users []model.User
+	if err := tx.Preload("Avatar").
+		Order("created_at DESC").
+		Limit(filter.Limit).
+		Offset(filter.Offset).
+		Find(&users).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to search users", "error", err)
+		return nil, 0, apperror.ErrInternal.WithMessage("ユーザーの検索に失敗しました").WithError(err)
+	}
+
+	return users, total, nil
 }
 
 // Delete は指定された ID のユーザーを削除する

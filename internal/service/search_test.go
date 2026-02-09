@@ -63,7 +63,7 @@ func TestSearchService_SearchChannels(t *testing.T) {
 		}
 		mockChannelRepo.On("Search", mock.Anything, filter).Return(channels, int64(2), nil)
 
-		svc := NewSearchService(mockChannelRepo, new(mockEpisodeRepository), mockStorage)
+		svc := NewSearchService(mockChannelRepo, new(mockEpisodeRepository), new(mockUserRepository), mockStorage)
 		result, err := svc.SearchChannels(ctx, filter)
 
 		assert.NoError(t, err)
@@ -108,7 +108,7 @@ func TestSearchService_SearchChannels(t *testing.T) {
 		}
 		mockChannelRepo.On("Search", mock.Anything, filter).Return(channels, int64(1), nil)
 
-		svc := NewSearchService(mockChannelRepo, new(mockEpisodeRepository), mockStorage)
+		svc := NewSearchService(mockChannelRepo, new(mockEpisodeRepository), new(mockUserRepository), mockStorage)
 		result, err := svc.SearchChannels(ctx, filter)
 
 		assert.NoError(t, err)
@@ -153,7 +153,7 @@ func TestSearchService_SearchChannels(t *testing.T) {
 		mockChannelRepo.On("Search", mock.Anything, filter).Return(channels, int64(1), nil)
 		mockStorage.On("GenerateSignedURL", mock.Anything, "images/artwork.png", mock.Anything).Return("https://signed-url.example.com/artwork.png", nil)
 
-		svc := NewSearchService(mockChannelRepo, new(mockEpisodeRepository), mockStorage)
+		svc := NewSearchService(mockChannelRepo, new(mockEpisodeRepository), new(mockUserRepository), mockStorage)
 		result, err := svc.SearchChannels(ctx, filter)
 
 		assert.NoError(t, err)
@@ -200,7 +200,7 @@ func TestSearchService_SearchChannels(t *testing.T) {
 		}
 		mockChannelRepo.On("Search", mock.Anything, filter).Return(channels, int64(1), nil)
 
-		svc := NewSearchService(mockChannelRepo, new(mockEpisodeRepository), mockStorage)
+		svc := NewSearchService(mockChannelRepo, new(mockEpisodeRepository), new(mockUserRepository), mockStorage)
 		result, err := svc.SearchChannels(ctx, filter)
 
 		assert.NoError(t, err)
@@ -221,7 +221,7 @@ func TestSearchService_SearchChannels(t *testing.T) {
 		}
 		mockChannelRepo.On("Search", mock.Anything, filter).Return([]model.Channel{}, int64(0), nil)
 
-		svc := NewSearchService(mockChannelRepo, new(mockEpisodeRepository), mockStorage)
+		svc := NewSearchService(mockChannelRepo, new(mockEpisodeRepository), new(mockUserRepository), mockStorage)
 		result, err := svc.SearchChannels(ctx, filter)
 
 		assert.NoError(t, err)
@@ -242,7 +242,7 @@ func TestSearchService_SearchChannels(t *testing.T) {
 		}
 		mockChannelRepo.On("Search", mock.Anything, filter).Return(nil, int64(0), errors.New("db error"))
 
-		svc := NewSearchService(mockChannelRepo, new(mockEpisodeRepository), mockStorage)
+		svc := NewSearchService(mockChannelRepo, new(mockEpisodeRepository), new(mockUserRepository), mockStorage)
 		result, err := svc.SearchChannels(ctx, filter)
 
 		assert.Error(t, err)
@@ -296,7 +296,7 @@ func TestSearchService_SearchEpisodes(t *testing.T) {
 		}
 		mockEpisodeRepo.On("Search", mock.Anything, filter).Return(episodes, int64(2), nil)
 
-		svc := NewSearchService(new(mockChannelRepository), mockEpisodeRepo, mockStorage)
+		svc := NewSearchService(new(mockChannelRepository), mockEpisodeRepo, new(mockUserRepository), mockStorage)
 		result, err := svc.SearchEpisodes(ctx, filter)
 
 		assert.NoError(t, err)
@@ -322,7 +322,7 @@ func TestSearchService_SearchEpisodes(t *testing.T) {
 		}
 		mockEpisodeRepo.On("Search", mock.Anything, filter).Return([]model.Episode{}, int64(0), nil)
 
-		svc := NewSearchService(new(mockChannelRepository), mockEpisodeRepo, mockStorage)
+		svc := NewSearchService(new(mockChannelRepository), mockEpisodeRepo, new(mockUserRepository), mockStorage)
 		result, err := svc.SearchEpisodes(ctx, filter)
 
 		assert.NoError(t, err)
@@ -343,11 +343,177 @@ func TestSearchService_SearchEpisodes(t *testing.T) {
 		}
 		mockEpisodeRepo.On("Search", mock.Anything, filter).Return(nil, int64(0), errors.New("db error"))
 
-		svc := NewSearchService(new(mockChannelRepository), mockEpisodeRepo, mockStorage)
+		svc := NewSearchService(new(mockChannelRepository), mockEpisodeRepo, new(mockUserRepository), mockStorage)
 		result, err := svc.SearchEpisodes(ctx, filter)
 
 		assert.Error(t, err)
 		assert.Nil(t, result)
 		mockEpisodeRepo.AssertExpectations(t)
+	})
+}
+
+func TestSearchService_SearchUsers(t *testing.T) {
+	ctx := context.Background()
+	now := time.Now()
+
+	t.Run("キーワードでユーザーを検索できる", func(t *testing.T) {
+		mockUserRepo := new(mockUserRepository)
+		mockStorage := new(mockStorageClient)
+
+		users := []model.User{
+			{
+				ID:          uuid.New(),
+				Username:    "techuser",
+				DisplayName: "テックユーザー",
+				CreatedAt:   now,
+				UpdatedAt:   now,
+			},
+			{
+				ID:          uuid.New(),
+				Username:    "techfan",
+				DisplayName: "テックファン",
+				CreatedAt:   now,
+				UpdatedAt:   now,
+			},
+		}
+
+		filter := repository.SearchUserFilter{
+			Query:  "tech",
+			Limit:  20,
+			Offset: 0,
+		}
+		mockUserRepo.On("Search", mock.Anything, filter).Return(users, int64(2), nil)
+
+		svc := NewSearchService(new(mockChannelRepository), new(mockEpisodeRepository), mockUserRepo, mockStorage)
+		result, err := svc.SearchUsers(ctx, filter)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Len(t, result.Data, 2)
+		assert.Equal(t, int64(2), result.Pagination.Total)
+		assert.Equal(t, 20, result.Pagination.Limit)
+		assert.Equal(t, 0, result.Pagination.Offset)
+		assert.Equal(t, "techuser", result.Data[0].Username)
+		assert.Equal(t, "テックユーザー", result.Data[0].DisplayName)
+		assert.Equal(t, "techfan", result.Data[1].Username)
+		mockUserRepo.AssertExpectations(t)
+	})
+
+	t.Run("アバター付きのユーザーを検索できる", func(t *testing.T) {
+		mockUserRepo := new(mockUserRepository)
+		mockStorage := new(mockStorageClient)
+
+		avatarID := uuid.New()
+		users := []model.User{
+			{
+				ID:          uuid.New(),
+				Username:    "techuser",
+				DisplayName: "テックユーザー",
+				AvatarID:    &avatarID,
+				Avatar: &model.Image{
+					ID:   avatarID,
+					Path: "images/avatar.png",
+				},
+				CreatedAt: now,
+				UpdatedAt: now,
+			},
+		}
+
+		filter := repository.SearchUserFilter{
+			Query:  "tech",
+			Limit:  20,
+			Offset: 0,
+		}
+		mockUserRepo.On("Search", mock.Anything, filter).Return(users, int64(1), nil)
+		mockStorage.On("GenerateSignedURL", mock.Anything, "images/avatar.png", mock.Anything).Return("https://signed-url.example.com/avatar.png", nil)
+
+		svc := NewSearchService(new(mockChannelRepository), new(mockEpisodeRepository), mockUserRepo, mockStorage)
+		result, err := svc.SearchUsers(ctx, filter)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Len(t, result.Data, 1)
+		assert.NotNil(t, result.Data[0].Avatar)
+		assert.Equal(t, avatarID, result.Data[0].Avatar.ID)
+		assert.Equal(t, "https://signed-url.example.com/avatar.png", result.Data[0].Avatar.URL)
+		mockUserRepo.AssertExpectations(t)
+		mockStorage.AssertExpectations(t)
+	})
+
+	t.Run("外部 URL のアバターは署名なしで返す", func(t *testing.T) {
+		mockUserRepo := new(mockUserRepository)
+		mockStorage := new(mockStorageClient)
+
+		avatarID := uuid.New()
+		users := []model.User{
+			{
+				ID:          uuid.New(),
+				Username:    "techuser",
+				DisplayName: "テックユーザー",
+				AvatarID:    &avatarID,
+				Avatar: &model.Image{
+					ID:   avatarID,
+					Path: "https://external.example.com/avatar.png",
+				},
+				CreatedAt: now,
+				UpdatedAt: now,
+			},
+		}
+
+		filter := repository.SearchUserFilter{
+			Query:  "tech",
+			Limit:  20,
+			Offset: 0,
+		}
+		mockUserRepo.On("Search", mock.Anything, filter).Return(users, int64(1), nil)
+
+		svc := NewSearchService(new(mockChannelRepository), new(mockEpisodeRepository), mockUserRepo, mockStorage)
+		result, err := svc.SearchUsers(ctx, filter)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.NotNil(t, result.Data[0].Avatar)
+		assert.Equal(t, "https://external.example.com/avatar.png", result.Data[0].Avatar.URL)
+		mockUserRepo.AssertExpectations(t)
+	})
+
+	t.Run("検索結果が空の場合は空配列を返す", func(t *testing.T) {
+		mockUserRepo := new(mockUserRepository)
+		mockStorage := new(mockStorageClient)
+
+		filter := repository.SearchUserFilter{
+			Query:  "存在しないキーワード",
+			Limit:  20,
+			Offset: 0,
+		}
+		mockUserRepo.On("Search", mock.Anything, filter).Return([]model.User{}, int64(0), nil)
+
+		svc := NewSearchService(new(mockChannelRepository), new(mockEpisodeRepository), mockUserRepo, mockStorage)
+		result, err := svc.SearchUsers(ctx, filter)
+
+		assert.NoError(t, err)
+		assert.NotNil(t, result)
+		assert.Len(t, result.Data, 0)
+		assert.Equal(t, int64(0), result.Pagination.Total)
+		mockUserRepo.AssertExpectations(t)
+	})
+
+	t.Run("リポジトリエラー時はエラーを返す", func(t *testing.T) {
+		mockUserRepo := new(mockUserRepository)
+		mockStorage := new(mockStorageClient)
+
+		filter := repository.SearchUserFilter{
+			Query:  "tech",
+			Limit:  20,
+			Offset: 0,
+		}
+		mockUserRepo.On("Search", mock.Anything, filter).Return(nil, int64(0), errors.New("db error"))
+
+		svc := NewSearchService(new(mockChannelRepository), new(mockEpisodeRepository), mockUserRepo, mockStorage)
+		result, err := svc.SearchUsers(ctx, filter)
+
+		assert.Error(t, err)
+		assert.Nil(t, result)
+		mockUserRepo.AssertExpectations(t)
 	})
 }

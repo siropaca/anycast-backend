@@ -76,6 +76,14 @@ func (m *mockUserRepositoryForAuth) ExistsByUsername(ctx context.Context, userna
 	return args.Bool(0), args.Error(1)
 }
 
+func (m *mockUserRepositoryForAuth) Search(ctx context.Context, filter repository.SearchUserFilter) ([]model.User, int64, error) {
+	args := m.Called(ctx, filter)
+	if args.Get(0) == nil {
+		return nil, 0, args.Error(2)
+	}
+	return args.Get(0).([]model.User), args.Get(1).(int64), args.Error(2)
+}
+
 func (m *mockUserRepositoryForAuth) Delete(ctx context.Context, id uuid.UUID) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)

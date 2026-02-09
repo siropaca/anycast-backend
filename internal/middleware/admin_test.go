@@ -13,6 +13,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/model"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
+	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
 // UserRepository のモック
@@ -70,6 +71,14 @@ func (m *mockUserRepository) FindByUsernameWithAvatar(ctx context.Context, usern
 func (m *mockUserRepository) Update(ctx context.Context, user *model.User) error {
 	args := m.Called(ctx, user)
 	return args.Error(0)
+}
+
+func (m *mockUserRepository) Search(ctx context.Context, filter repository.SearchUserFilter) ([]model.User, int64, error) {
+	args := m.Called(ctx, filter)
+	if args.Get(0) == nil {
+		return nil, 0, args.Error(2)
+	}
+	return args.Get(0).([]model.User), args.Get(1).(int64), args.Error(2)
 }
 
 func (m *mockUserRepository) Delete(ctx context.Context, id uuid.UUID) error {

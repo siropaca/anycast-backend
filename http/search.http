@@ -25,3 +25,13 @@ GET {{baseUrl}}/search/episodes?q=AI&limit=5&offset=0
 ### エピソード検索（ログイン済み）
 GET {{baseUrl}}/search/episodes?q=AI
 Authorization: Bearer {{token}}
+
+### ユーザー検索（基本）
+GET {{baseUrl}}/search/users?q=テック
+
+### ユーザー検索（ページネーション）
+GET {{baseUrl}}/search/users?q=テック&limit=5&offset=0
+
+### ユーザー検索（ログイン済み）
+GET {{baseUrl}}/search/users?q=テック
+Authorization: Bearer {{token}}

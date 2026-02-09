@@ -12,3 +12,9 @@ type SearchEpisodesRequest struct {
 	PaginationRequest
 	Q string `form:"q" binding:"required,max=255"`
 }
+
+// ユーザー検索リクエスト
+type SearchUsersRequest struct {
+	PaginationRequest
+	Q string `form:"q" binding:"required,max=255"`
+}

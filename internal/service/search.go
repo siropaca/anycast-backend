@@ -13,11 +13,13 @@ import (
 type SearchService interface {
 	SearchChannels(ctx context.Context, filter repository.SearchChannelFilter) (*response.SearchChannelListResponse, error)
 	SearchEpisodes(ctx context.Context, filter repository.SearchEpisodeFilter) (*response.SearchEpisodeListResponse, error)
+	SearchUsers(ctx context.Context, filter repository.SearchUserFilter) (*response.SearchUserListResponse, error)
 }
 
 type searchService struct {
 	channelRepo   repository.ChannelRepository
 	episodeRepo   repository.EpisodeRepository
+	userRepo      repository.UserRepository
 	storageClient storage.Client
 }
 
@@ -25,11 +27,13 @@ type searchService struct {
 func NewSearchService(
 	channelRepo repository.ChannelRepository,
 	episodeRepo repository.EpisodeRepository,
+	userRepo repository.UserRepository,
 	storageClient storage.Client,
 ) SearchService {
 	return &searchService{
 		channelRepo:   channelRepo,
 		episodeRepo:   episodeRepo,
+		userRepo:      userRepo,
 		storageClient: storageClient,
 	}
 }
@@ -126,4 +130,55 @@ func toSearchEpisodeResponse(e *model.Episode) response.SearchEpisodeResponse {
 		CreatedAt:   e.CreatedAt,
 		UpdatedAt:   e.UpdatedAt,
 	}
+}
+
+// SearchUsers はユーザーをキーワードで検索する
+func (s *searchService) SearchUsers(ctx context.Context, filter repository.SearchUserFilter) (*response.SearchUserListResponse, error) {
+	users, total, err := s.userRepo.Search(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	data := make([]response.SearchUserResponse, len(users))
+	for i, u := range users {
+		resp, err := s.toSearchUserResponse(ctx, &u)
+		if err != nil {
+			return nil, err
+		}
+		data[i] = resp
+	}
+
+	return &response.SearchUserListResponse{
+		Data:       data,
+		Pagination: response.PaginationResponse{Total: total, Limit: filter.Limit, Offset: filter.Offset},
+	}, nil
+}
+
+// toSearchUserResponse は User を検索用レスポンス DTO に変換する
+func (s *searchService) toSearchUserResponse(ctx context.Context, u *model.User) (response.SearchUserResponse, error) {
+	resp := response.SearchUserResponse{
+		ID:          u.ID,
+		Username:    u.Username,
+		DisplayName: u.DisplayName,
+		CreatedAt:   u.CreatedAt,
+	}
+
+	if u.Avatar != nil {
+		var avatarURL string
+		if storage.IsExternalURL(u.Avatar.Path) {
+			avatarURL = u.Avatar.Path
+		} else {
+			var err error
+			avatarURL, err = s.storageClient.GenerateSignedURL(ctx, u.Avatar.Path, storage.SignedURLExpirationImage)
+			if err != nil {
+				return response.SearchUserResponse{}, err
+			}
+		}
+		resp.Avatar = &response.ArtworkResponse{
+			ID:  u.Avatar.ID,
+			URL: avatarURL,
+		}
+	}
+
+	return resp, nil
 }
