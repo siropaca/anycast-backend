@@ -47,6 +47,7 @@ type Container struct {
 	FollowHandler          *handler.FollowHandler
 	ReactionHandler        *handler.ReactionHandler
 	RecommendationHandler  *handler.RecommendationHandler
+	SearchHandler          *handler.SearchHandler
 	UserHandler            *handler.UserHandler
 	TokenManager           jwt.TokenManager
 	UserRepository         repository.UserRepository
@@ -234,6 +235,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	followService := service.NewFollowService(followRepo, userRepo, storageClient)
 	reactionService := service.NewReactionService(reactionRepo, storageClient)
 	recommendationService := service.NewRecommendationService(recommendationRepo, categoryRepo, storageClient)
+	searchService := service.NewSearchService(channelRepo, storageClient)
 	userService := service.NewUserService(userRepo, channelRepo, episodeRepo, storageClient)
 
 	// Handler 層
@@ -260,6 +262,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	followHandler := handler.NewFollowHandler(followService)
 	reactionHandler := handler.NewReactionHandler(reactionService)
 	recommendationHandler := handler.NewRecommendationHandler(recommendationService)
+	searchHandler := handler.NewSearchHandler(searchService)
 	userHandler := handler.NewUserHandler(userService)
 
 	return &Container{
@@ -286,6 +289,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		FollowHandler:          followHandler,
 		ReactionHandler:        reactionHandler,
 		RecommendationHandler:  recommendationHandler,
+		SearchHandler:          searchHandler,
 		UserHandler:            userHandler,
 		TokenManager:           tokenManager,
 		UserRepository:         userRepo,

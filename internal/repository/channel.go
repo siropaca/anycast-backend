@@ -18,6 +18,7 @@ type ChannelRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*model.Channel, error)
 	FindByUserID(ctx context.Context, userID uuid.UUID, filter ChannelFilter) ([]model.Channel, int64, error)
 	FindPublishedByUserID(ctx context.Context, userID uuid.UUID) ([]model.Channel, error)
+	Search(ctx context.Context, filter SearchChannelFilter) ([]model.Channel, int64, error)
 	Create(ctx context.Context, channel *model.Channel) error
 	Update(ctx context.Context, channel *model.Channel) error
 	Delete(ctx context.Context, id uuid.UUID) error
@@ -29,6 +30,14 @@ type ChannelFilter struct {
 	Status *string // "published" or "draft"
 	Limit  int
 	Offset int
+}
+
+// SearchChannelFilter はチャンネル検索のフィルタ条件を表す
+type SearchChannelFilter struct {
+	Query        string
+	CategorySlug *string
+	Limit        int
+	Offset       int
 }
 
 type channelRepository struct {
@@ -165,6 +174,44 @@ func (r *channelRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	}
 
 	return nil
+}
+
+// Search は公開チャンネルをキーワードで検索する
+func (r *channelRepository) Search(ctx context.Context, filter SearchChannelFilter) ([]model.Channel, int64, error) {
+	var channels []model.Channel
+	var total int64
+
+	keyword := "%" + filter.Query + "%"
+
+	tx := r.db.WithContext(ctx).Model(&model.Channel{}).
+		Where("published_at IS NOT NULL AND published_at <= ?", time.Now()).
+		Where("(name ILIKE ? OR description ILIKE ?)", keyword, keyword)
+
+	// カテゴリスラッグでフィルタ
+	if filter.CategorySlug != nil {
+		tx = tx.Joins("JOIN categories ON categories.id = channels.category_id").
+			Where("categories.slug = ?", *filter.CategorySlug)
+	}
+
+	// 総件数を取得
+	if err := tx.Count(&total).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to count search results", "error", err)
+		return nil, 0, apperror.ErrInternal.WithMessage("チャンネル検索の件数取得に失敗しました").WithError(err)
+	}
+
+	// ページネーションとリレーションのプリロード
+	if err := tx.
+		Preload("Category").
+		Preload("Artwork").
+		Order("created_at DESC").
+		Limit(filter.Limit).
+		Offset(filter.Offset).
+		Find(&channels).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to search channels", "error", err)
+		return nil, 0, apperror.ErrInternal.WithMessage("チャンネル検索に失敗しました").WithError(err)
+	}
+
+	return channels, total, nil
 }
 
 // ReplaceChannelCharacters はチャンネルに紐づくキャラクターを置き換える

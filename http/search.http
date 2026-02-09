@@ -1,0 +1,17 @@
+@baseUrl = http://localhost:8081/api/v1
+
+# トークン生成: make token
+@token = YOUR_TOKEN_HERE
+
+### チャンネル検索（基本）
+GET {{baseUrl}}/search/channels?q=テック
+
+### チャンネル検索（カテゴリフィルタ）
+GET {{baseUrl}}/search/channels?q=テック&categorySlug=technology
+
+### チャンネル検索（ページネーション）
+GET {{baseUrl}}/search/channels?q=テック&limit=5&offset=0
+
+### チャンネル検索（ログイン済み）
+GET {{baseUrl}}/search/channels?q=テック
+Authorization: Bearer {{token}}

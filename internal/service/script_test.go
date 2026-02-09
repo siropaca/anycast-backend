@@ -34,6 +34,14 @@ func (m *mockChannelRepository) FindPublishedByUserID(ctx context.Context, userI
 	return args.Get(0).([]model.Channel), args.Error(1)
 }
 
+func (m *mockChannelRepository) Search(ctx context.Context, filter repository.SearchChannelFilter) ([]model.Channel, int64, error) {
+	args := m.Called(ctx, filter)
+	if args.Get(0) == nil {
+		return nil, 0, args.Error(2)
+	}
+	return args.Get(0).([]model.Channel), args.Get(1).(int64), args.Error(2)
+}
+
 func (m *mockChannelRepository) Create(ctx context.Context, channel *model.Channel) error {
 	args := m.Called(ctx, channel)
 	return args.Error(0)

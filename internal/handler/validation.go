@@ -70,6 +70,9 @@ var fieldNameMap = map[string]string{
 	// プレイリスト
 	"PlaylistIDs": "プレイリスト ID リスト",
 
+	// 検索
+	"Q": "検索キーワード",
+
 	// その他
 	"Status": "ステータス",
 }
