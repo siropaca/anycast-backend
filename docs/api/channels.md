@@ -159,8 +159,6 @@ POST /channels
   "userPrompt": "明るく楽しい雰囲気で...",
   "categoryId": "uuid",
   "artworkImageId": "uuid",
-  "defaultBgmId": "uuid",
-  "defaultSystemBgmId": "uuid",
   "characters": {
     "connect": [
       { "id": "uuid" }
@@ -189,16 +187,12 @@ POST /channels
 | description | 必須、2000文字以内 |
 | userPrompt | 必須、2000文字以内 |
 | categoryId | 必須、UUID 形式 |
-| defaultBgmId | UUID 形式、自分が所有する BGM のみ |
-| defaultSystemBgmId | UUID 形式、is_active = true のシステム BGM のみ |
 | characters | 必須、connect と create の合計が 1〜2 件 |
 | characters.connect[].id | 必須、UUID 形式、自分が所有するキャラクターのみ |
 | characters.create[].name | 必須、255文字以内、同一ユーザー内で一意、`__` 始まり禁止 |
 | characters.create[].persona | 2000文字以内 |
 | characters.create[].avatarId | UUID 形式 |
 | characters.create[].voiceId | 必須、UUID 形式、is_active = true のボイスのみ |
-
-> **Note:** `defaultBgmId` と `defaultSystemBgmId` は同時に指定できません。
 
 ---
 
@@ -215,9 +209,7 @@ PATCH /channels/:channelId
   "description": "新しい説明",
   "userPrompt": "明るく楽しい雰囲気で...",
   "categoryId": "uuid",
-  "artworkImageId": "uuid",
-  "defaultBgmId": "uuid",
-  "defaultSystemBgmId": "uuid"
+  "artworkImageId": "uuid"
 }
 ```
 
@@ -228,13 +220,8 @@ PATCH /channels/:channelId
 | description | 必須、2000文字以内 |
 | userPrompt | 必須、2000文字以内 |
 | categoryId | 必須、UUID 形式 |
-| defaultBgmId | UUID 形式、自分が所有する BGM のみ、空文字で削除 |
-| defaultSystemBgmId | UUID 形式、is_active = true のシステム BGM のみ、空文字で削除 |
 
-> **Note:**
-> - 公開状態の変更は専用エンドポイント（[チャンネル公開](#チャンネル公開) / [チャンネル非公開](#チャンネル非公開)）を使用してください。
-> - `defaultBgmId` と `defaultSystemBgmId` は同時に指定できません。
-> - デフォルト BGM の削除は専用エンドポイント（[デフォルト BGM 削除](#デフォルト-bgm-削除)）または空文字を指定してください。
+> **Note:** 公開状態の変更は専用エンドポイント（[チャンネル公開](#チャンネル公開) / [チャンネル非公開](#チャンネル非公開)）を使用してください。デフォルト BGM の設定・削除は専用エンドポイント（[デフォルト BGM 設定](#デフォルト-bgm-設定) / [デフォルト BGM 削除](#デフォルト-bgm-削除)）を使用してください。
 
 ---
 
@@ -299,6 +286,76 @@ POST /channels/:channelId/unpublish
     "publishedAt": null,
     "createdAt": "2025-01-01T00:00:00Z",
     "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+---
+
+## デフォルト BGM 設定
+
+```
+PUT /channels/:channelId/default-bgm
+```
+
+チャンネルにデフォルト BGM を設定する。ユーザー BGM またはシステム BGM のどちらかを指定する。
+
+**リクエスト:**
+```json
+{
+  "bgmId": "uuid",
+  "systemBgmId": "uuid"
+}
+```
+
+**バリデーション:**
+
+| フィールド | ルール |
+|------------|--------|
+| bgmId | UUID 形式、自分が所有する BGM のみ |
+| systemBgmId | UUID 形式、is_active = true のシステム BGM のみ |
+
+> **Note:** `bgmId` と `systemBgmId` は同時に指定できません。いずれか一方を必ず指定してください。
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "name": "チャンネル名",
+    "description": "説明",
+    "defaultBgm": {
+      "id": "uuid",
+      "name": "Chill BGM",
+      "isSystem": false,
+      "audio": {
+        "id": "uuid",
+        "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
+        "durationMs": 180000
+      }
+    },
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+**エラー（400 Bad Request）:**
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "bgmId と systemBgmId は同時に指定できません"
+  }
+}
+```
+
+**エラー（403 Forbidden）:**
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "このチャンネルのデフォルト BGM 設定権限がありません"
   }
 }
 ```

@@ -880,6 +880,80 @@ const docTemplate = `{
             }
         },
         "/channels/{channelId}/default-bgm": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したチャンネルにデフォルト BGM を設定します。ユーザー BGM またはシステム BGM のどちらかを指定します。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "channels"
+                ],
+                "summary": "チャンネルのデフォルト BGM 設定",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "チャンネル ID",
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "デフォルト BGM 設定リクエスト",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SetDefaultBgmRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ChannelDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "delete": {
                 "security": [
                     {
@@ -6028,12 +6102,6 @@ const docTemplate = `{
                 "characters": {
                     "$ref": "#/definitions/request.ChannelCharactersInput"
                 },
-                "defaultBgmId": {
-                    "type": "string"
-                },
-                "defaultSystemBgmId": {
-                    "type": "string"
-                },
                 "description": {
                     "type": "string",
                     "maxLength": 2000
@@ -6396,6 +6464,17 @@ const docTemplate = `{
                 }
             }
         },
+        "request.SetDefaultBgmRequest": {
+            "type": "object",
+            "properties": {
+                "bgmId": {
+                    "type": "string"
+                },
+                "systemBgmId": {
+                    "type": "string"
+                }
+            }
+        },
         "request.SetEpisodeBgmRequest": {
             "type": "object",
             "properties": {
@@ -6427,12 +6506,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "categoryId": {
-                    "type": "string"
-                },
-                "defaultBgmId": {
-                    "type": "string"
-                },
-                "defaultSystemBgmId": {
                     "type": "string"
                 },
                 "description": {

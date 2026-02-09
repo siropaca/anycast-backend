@@ -35,6 +35,7 @@ type ChannelService interface {
 	DeleteChannel(ctx context.Context, userID, channelID string) error
 	PublishChannel(ctx context.Context, userID, channelID string, publishedAt *string) (*response.ChannelDataResponse, error)
 	UnpublishChannel(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error)
+	SetDefaultBgm(ctx context.Context, userID, channelID string, req request.SetDefaultBgmRequest) (*response.ChannelDataResponse, error)
 	DeleteDefaultBgm(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error)
 }
 
@@ -211,45 +212,6 @@ func (s *channelService) CreateChannel(ctx context.Context, userID string, req r
 		return nil, apperror.ErrValidation.WithMessage(fmt.Sprintf("キャラクターは %d〜%d 人で設定してください", MinCharactersPerChannel, MaxCharactersPerChannel))
 	}
 
-	// デフォルト BGM のバリデーション（同時指定不可）
-	if req.DefaultBgmID != nil && req.DefaultSystemBgmID != nil {
-		return nil, apperror.ErrValidation.WithMessage("defaultBgmId と defaultSystemBgmId は同時に指定できません")
-	}
-
-	// ユーザー BGM の存在確認とオーナーチェック
-	var defaultBgmID *uuid.UUID
-	if req.DefaultBgmID != nil {
-		bgmID, err := uuid.Parse(*req.DefaultBgmID)
-		if err != nil {
-			return nil, err
-		}
-		bgm, err := s.bgmRepo.FindByID(ctx, bgmID)
-		if err != nil {
-			return nil, err
-		}
-		if bgm.UserID != uid {
-			return nil, apperror.ErrForbidden.WithMessage("この BGM へのアクセス権限がありません")
-		}
-		defaultBgmID = &bgmID
-	}
-
-	// システム BGM の存在確認とアクティブチェック
-	var defaultSystemBgmID *uuid.UUID
-	if req.DefaultSystemBgmID != nil {
-		systemBgmID, err := uuid.Parse(*req.DefaultSystemBgmID)
-		if err != nil {
-			return nil, err
-		}
-		systemBgm, err := s.systemBgmRepo.FindByID(ctx, systemBgmID)
-		if err != nil {
-			return nil, err
-		}
-		if !systemBgm.IsActive {
-			return nil, apperror.ErrNotFound.WithMessage("このシステム BGM は利用できません")
-		}
-		defaultSystemBgmID = &systemBgmID
-	}
-
 	var created *model.Channel
 
 	// トランザクションでキャラクター作成・チャンネル作成・紐づけを実行
@@ -266,14 +228,12 @@ func (s *channelService) CreateChannel(ctx context.Context, userID string, req r
 
 		// チャンネルモデルを作成
 		channel := &model.Channel{
-			UserID:             uid,
-			Name:               req.Name,
-			Description:        req.Description,
-			UserPrompt:         req.UserPrompt,
-			CategoryID:         categoryID,
-			ArtworkID:          artworkID,
-			DefaultBgmID:       defaultBgmID,
-			DefaultSystemBgmID: defaultSystemBgmID,
+			UserID:      uid,
+			Name:        req.Name,
+			Description: req.Description,
+			UserPrompt:  req.UserPrompt,
+			CategoryID:  categoryID,
+			ArtworkID:   artworkID,
 		}
 
 		// チャンネルを保存
@@ -362,61 +322,6 @@ func (s *channelService) UpdateChannel(ctx context.Context, userID, channelID st
 			channel.ArtworkID = &artworkID
 		}
 		channel.Artwork = nil
-	}
-
-	// デフォルト BGM の更新（同時指定不可）
-	if req.DefaultBgmID != nil && req.DefaultSystemBgmID != nil {
-		return nil, apperror.ErrValidation.WithMessage("defaultBgmId と defaultSystemBgmId は同時に指定できません")
-	}
-
-	// ユーザー BGM の更新
-	if req.DefaultBgmID != nil {
-		if *req.DefaultBgmID == "" {
-			// 空文字の場合は null に設定
-			channel.DefaultBgmID = nil
-		} else {
-			bgmID, err := uuid.Parse(*req.DefaultBgmID)
-			if err != nil {
-				return nil, err
-			}
-			bgm, err := s.bgmRepo.FindByID(ctx, bgmID)
-			if err != nil {
-				return nil, err
-			}
-			if bgm.UserID != uid {
-				return nil, apperror.ErrForbidden.WithMessage("この BGM へのアクセス権限がありません")
-			}
-			channel.DefaultBgmID = &bgmID
-			// ユーザー BGM を設定する場合はシステム BGM をクリア
-			channel.DefaultSystemBgmID = nil
-		}
-		channel.DefaultBgm = nil
-		channel.DefaultSystemBgm = nil
-	}
-
-	// システム BGM の更新
-	if req.DefaultSystemBgmID != nil {
-		if *req.DefaultSystemBgmID == "" {
-			// 空文字の場合は null に設定
-			channel.DefaultSystemBgmID = nil
-		} else {
-			systemBgmID, err := uuid.Parse(*req.DefaultSystemBgmID)
-			if err != nil {
-				return nil, err
-			}
-			systemBgm, err := s.systemBgmRepo.FindByID(ctx, systemBgmID)
-			if err != nil {
-				return nil, err
-			}
-			if !systemBgm.IsActive {
-				return nil, apperror.ErrNotFound.WithMessage("このシステム BGM は利用できません")
-			}
-			channel.DefaultSystemBgmID = &systemBgmID
-			// システム BGM を設定する場合はユーザー BGM をクリア
-			channel.DefaultBgmID = nil
-		}
-		channel.DefaultBgm = nil
-		channel.DefaultSystemBgm = nil
 	}
 
 	// チャンネルを更新
@@ -584,6 +489,105 @@ func (s *channelService) UnpublishChannel(ctx context.Context, userID, channelID
 
 	// 公開日時を null に設定（非公開化）
 	channel.PublishedAt = nil
+
+	// チャンネルを更新
+	if err := s.channelRepo.Update(ctx, channel); err != nil {
+		return nil, err
+	}
+
+	// リレーションをプリロードして取得
+	updated, err := s.channelRepo.FindByID(ctx, channel.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := s.toChannelResponse(ctx, updated, true, uuid.Nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.ChannelDataResponse{
+		Data: resp,
+	}, nil
+}
+
+// SetDefaultBgm は指定されたチャンネルにデフォルト BGM を設定する
+func (s *channelService) SetDefaultBgm(ctx context.Context, userID, channelID string, req request.SetDefaultBgmRequest) (*response.ChannelDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	// bgmId と systemBgmId の同時指定チェック
+	if req.BgmID != nil && req.SystemBgmID != nil {
+		return nil, apperror.ErrValidation.WithMessage("bgmId と systemBgmId は同時に指定できません")
+	}
+
+	// どちらも指定されていない場合
+	if req.BgmID == nil && req.SystemBgmID == nil {
+		return nil, apperror.ErrValidation.WithMessage("bgmId または systemBgmId のいずれかを指定してください")
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("このチャンネルのデフォルト BGM 設定権限がありません")
+	}
+
+	// 前の BGM 設定をクリア
+	channel.DefaultBgmID = nil
+	channel.DefaultSystemBgmID = nil
+	channel.DefaultBgm = nil
+	channel.DefaultSystemBgm = nil
+
+	// ユーザー BGM を設定
+	if req.BgmID != nil {
+		bgmID, err := uuid.Parse(*req.BgmID)
+		if err != nil {
+			return nil, apperror.ErrValidation.WithMessage("無効な bgmId です")
+		}
+
+		// BGM の存在確認とオーナーチェック
+		bgm, err := s.bgmRepo.FindByID(ctx, bgmID)
+		if err != nil {
+			return nil, err
+		}
+
+		if bgm.UserID != uid {
+			return nil, apperror.ErrForbidden.WithMessage("この BGM へのアクセス権限がありません")
+		}
+
+		channel.DefaultBgmID = &bgmID
+	}
+
+	// システム BGM を設定
+	if req.SystemBgmID != nil {
+		systemBgmID, err := uuid.Parse(*req.SystemBgmID)
+		if err != nil {
+			return nil, apperror.ErrValidation.WithMessage("無効な systemBgmId です")
+		}
+
+		// システム BGM の存在確認とアクティブチェック
+		systemBgm, err := s.systemBgmRepo.FindByID(ctx, systemBgmID)
+		if err != nil {
+			return nil, err
+		}
+
+		if !systemBgm.IsActive {
+			return nil, apperror.ErrNotFound.WithMessage("このシステム BGM は利用できません")
+		}
+
+		channel.DefaultSystemBgmID = &systemBgmID
+	}
 
 	// チャンネルを更新
 	if err := s.channelRepo.Update(ctx, channel); err != nil {
