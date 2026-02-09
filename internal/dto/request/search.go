@@ -6,3 +6,9 @@ type SearchChannelsRequest struct {
 	Q            string  `form:"q" binding:"required,max=255"`
 	CategorySlug *string `form:"categorySlug" binding:"omitempty,max=50"`
 }
+
+// エピソード検索リクエスト
+type SearchEpisodesRequest struct {
+	PaginationRequest
+	Q string `form:"q" binding:"required,max=255"`
+}

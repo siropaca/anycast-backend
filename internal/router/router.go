@@ -192,6 +192,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	optionalAuth.GET("/recommendations/episodes", container.RecommendationHandler.GetRecommendedEpisodes)
 	optionalAuth.GET("/categories", container.CategoryHandler.ListCategories)
 	optionalAuth.GET("/search/channels", container.SearchHandler.SearchChannels)
+	optionalAuth.GET("/search/episodes", container.SearchHandler.SearchEpisodes)
 	optionalAuth.POST("/contacts", container.ContactHandler.CreateContact)
 
 	// Admin（認証必須 + 管理者権限必須）

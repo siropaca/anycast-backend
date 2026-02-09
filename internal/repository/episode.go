@@ -17,6 +17,7 @@ import (
 type EpisodeRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*model.Episode, error)
 	FindByChannelID(ctx context.Context, channelID uuid.UUID, filter EpisodeFilter) ([]model.Episode, int64, error)
+	Search(ctx context.Context, filter SearchEpisodeFilter) ([]model.Episode, int64, error)
 	CountPublishedByChannelIDs(ctx context.Context, channelIDs []uuid.UUID) (map[uuid.UUID]int, error)
 	Create(ctx context.Context, episode *model.Episode) error
 	Update(ctx context.Context, episode *model.Episode) error
@@ -27,6 +28,13 @@ type EpisodeRepository interface {
 // EpisodeFilter はエピソード検索のフィルタ条件を表す
 type EpisodeFilter struct {
 	Status *string // "published" or "draft"
+	Limit  int
+	Offset int
+}
+
+// SearchEpisodeFilter はエピソード検索のフィルタ条件を表す
+type SearchEpisodeFilter struct {
+	Query  string
 	Limit  int
 	Offset int
 }
@@ -77,6 +85,39 @@ func (r *episodeRepository) FindByChannelID(ctx context.Context, channelID uuid.
 		Find(&episodes).Error; err != nil {
 		logger.FromContext(ctx).Error("failed to fetch episodes", "error", err, "channel_id", channelID)
 		return nil, 0, apperror.ErrInternal.WithMessage("エピソード一覧の取得に失敗しました").WithError(err)
+	}
+
+	return episodes, total, nil
+}
+
+// Search は公開エピソードをキーワードで検索する
+func (r *episodeRepository) Search(ctx context.Context, filter SearchEpisodeFilter) ([]model.Episode, int64, error) {
+	var episodes []model.Episode
+	var total int64
+
+	keyword := "%" + filter.Query + "%"
+
+	tx := r.db.WithContext(ctx).Model(&model.Episode{}).
+		Joins("JOIN channels ON channels.id = episodes.channel_id").
+		Where("episodes.published_at IS NOT NULL AND episodes.published_at <= ?", time.Now()).
+		Where("channels.published_at IS NOT NULL AND channels.published_at <= ?", time.Now()).
+		Where("(episodes.title ILIKE ? OR episodes.description ILIKE ?)", keyword, keyword)
+
+	// 総件数を取得
+	if err := tx.Count(&total).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to count episode search results", "error", err)
+		return nil, 0, apperror.ErrInternal.WithMessage("エピソード検索の件数取得に失敗しました").WithError(err)
+	}
+
+	// ページネーションとリレーションのプリロード
+	if err := tx.
+		Preload("Channel").
+		Order("episodes.created_at DESC").
+		Limit(filter.Limit).
+		Offset(filter.Offset).
+		Find(&episodes).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to search episodes", "error", err)
+		return nil, 0, apperror.ErrInternal.WithMessage("エピソード検索に失敗しました").WithError(err)
 	}
 
 	return episodes, total, nil

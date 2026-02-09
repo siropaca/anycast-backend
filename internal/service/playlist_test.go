@@ -138,6 +138,14 @@ func (m *mockEpisodeRepositoryForPlaylist) FindByChannelID(ctx context.Context, 
 	return args.Get(0).([]model.Episode), args.Get(1).(int64), args.Error(2)
 }
 
+func (m *mockEpisodeRepositoryForPlaylist) Search(ctx context.Context, filter repository.SearchEpisodeFilter) ([]model.Episode, int64, error) {
+	args := m.Called(ctx, filter)
+	if args.Get(0) == nil {
+		return nil, 0, args.Error(2)
+	}
+	return args.Get(0).([]model.Episode), args.Get(1).(int64), args.Error(2)
+}
+
 func (m *mockEpisodeRepositoryForPlaylist) Create(ctx context.Context, episode *model.Episode) error {
 	args := m.Called(ctx, episode)
 	return args.Error(0)

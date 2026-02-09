@@ -15,3 +15,13 @@ GET {{baseUrl}}/search/channels?q=テック&limit=5&offset=0
 ### チャンネル検索（ログイン済み）
 GET {{baseUrl}}/search/channels?q=テック
 Authorization: Bearer {{token}}
+
+### エピソード検索（基本）
+GET {{baseUrl}}/search/episodes?q=AI
+
+### エピソード検索（ページネーション）
+GET {{baseUrl}}/search/episodes?q=AI&limit=5&offset=0
+
+### エピソード検索（ログイン済み）
+GET {{baseUrl}}/search/episodes?q=AI
+Authorization: Bearer {{token}}

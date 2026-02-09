@@ -101,7 +101,7 @@
 | GET | `/api/v1/recommendations/episodes` | おすすめエピソード取得 | Optional | ✅ | [詳細](./recommendations.md#おすすめエピソード取得) |
 | **Search（検索）** | - | - | - | - | [engagement.md](./engagement.md) |
 | GET | `/api/v1/search/channels` | チャンネル検索 | Public | ✅ | [詳細](./engagement.md#チャンネル検索) |
-| GET | `/api/v1/search/episodes` | エピソード検索 | Public | | [詳細](./engagement.md#エピソード検索) |
+| GET | `/api/v1/search/episodes` | エピソード検索 | Public | ✅ | [詳細](./engagement.md#エピソード検索) |
 | GET | `/api/v1/search/users` | ユーザー検索 | Public | | [詳細](./engagement.md#ユーザー検索) |
 | **Reactions（リアクション）** | - | - | - | - | [engagement.md](./engagement.md#reactionsリアクション) |
 | GET | `/api/v1/episodes/:episodeId/reactions` | リアクション状態取得 | Owner | ✅ | [詳細](./engagement.md#リアクション状態取得) |

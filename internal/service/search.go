@@ -12,20 +12,24 @@ import (
 // SearchService は検索関連のビジネスロジックインターフェースを表す
 type SearchService interface {
 	SearchChannels(ctx context.Context, filter repository.SearchChannelFilter) (*response.SearchChannelListResponse, error)
+	SearchEpisodes(ctx context.Context, filter repository.SearchEpisodeFilter) (*response.SearchEpisodeListResponse, error)
 }
 
 type searchService struct {
 	channelRepo   repository.ChannelRepository
+	episodeRepo   repository.EpisodeRepository
 	storageClient storage.Client
 }
 
 // NewSearchService は searchService を生成して SearchService として返す
 func NewSearchService(
 	channelRepo repository.ChannelRepository,
+	episodeRepo repository.EpisodeRepository,
 	storageClient storage.Client,
 ) SearchService {
 	return &searchService{
 		channelRepo:   channelRepo,
+		episodeRepo:   episodeRepo,
 		storageClient: storageClient,
 	}
 }
@@ -88,4 +92,38 @@ func (s *searchService) toSearchChannelResponse(ctx context.Context, c *model.Ch
 	}
 
 	return resp, nil
+}
+
+// SearchEpisodes は公開エピソードをキーワードで検索する
+func (s *searchService) SearchEpisodes(ctx context.Context, filter repository.SearchEpisodeFilter) (*response.SearchEpisodeListResponse, error) {
+	episodes, total, err := s.episodeRepo.Search(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	data := make([]response.SearchEpisodeResponse, len(episodes))
+	for i, e := range episodes {
+		data[i] = toSearchEpisodeResponse(&e)
+	}
+
+	return &response.SearchEpisodeListResponse{
+		Data:       data,
+		Pagination: response.PaginationResponse{Total: total, Limit: filter.Limit, Offset: filter.Offset},
+	}, nil
+}
+
+// toSearchEpisodeResponse は Episode を検索用レスポンス DTO に変換する
+func toSearchEpisodeResponse(e *model.Episode) response.SearchEpisodeResponse {
+	return response.SearchEpisodeResponse{
+		ID:          e.ID,
+		Title:       e.Title,
+		Description: e.Description,
+		Channel: response.SearchEpisodeChannelResponse{
+			ID:   e.Channel.ID,
+			Name: e.Channel.Name,
+		},
+		PublishedAt: e.PublishedAt,
+		CreatedAt:   e.CreatedAt,
+		UpdatedAt:   e.UpdatedAt,
+	}
 }
