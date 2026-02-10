@@ -73,6 +73,7 @@
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/unpublish` | エピソード非公開 | Owner | ✅ | [詳細](./episodes.md#エピソード非公開) |
 | GET | `/api/v1/me/channels/:channelId/episodes` | 自分のチャンネルのエピソード一覧 | Owner | ✅ | [詳細](./episodes.md#自分のチャンネルのエピソード一覧取得) |
 | GET | `/api/v1/me/channels/:channelId/episodes/:episodeId` | 自分のチャンネルのエピソード取得 | Owner | ✅ | [詳細](./episodes.md#自分のチャンネルのエピソード取得) |
+| POST | `/api/v1/episodes/:episodeId/play` | 再生回数カウント | Owner | ✅ | [詳細](./episodes.md#再生回数カウント) |
 | **Script（台本）** | - | - | - | - | [script.md](./script.md) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/generate-async` | 台本を AI で生成（非同期） | Owner | ✅ | [詳細](./script.md#台本を-ai-で生成非同期) |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId/script-jobs/latest` | 最新完了済み台本生成ジョブ取得 | Owner | ✅ | [詳細](./script.md#最新完了済み台本生成ジョブ取得) |
@@ -120,7 +121,7 @@
 | PUT | `/api/v1/episodes/:episodeId/playback` | 再生履歴を更新 | Owner | ✅ | [詳細](./engagement.md#再生履歴を更新) |
 | DELETE | `/api/v1/episodes/:episodeId/playback` | 再生履歴を削除 | Owner | ✅ | [詳細](./engagement.md#再生履歴を削除) |
 | GET | `/api/v1/me/playback-history` | 再生履歴一覧を取得 | Owner | ✅ | [詳細](./engagement.md#再生履歴一覧を取得) |
-| DELETE | `/api/v1/me/playback-history` | 再生履歴をすべて削除 | Owner | | [詳細](./engagement.md#再生履歴をすべて削除) |
+| DELETE | `/api/v1/me/playback-history` | 再生履歴をすべて削除 | Owner | ✅ | [詳細](./engagement.md#再生履歴をすべて削除) |
 | POST | `/api/v1/me/playback-history/batch-delete` | 再生履歴を一括削除 | Owner | | [詳細](./engagement.md#再生履歴を一括削除) |
 | **Follows（フォロー）** | - | - | - | - | [engagement.md](./engagement.md#followsフォロー) |
 | GET | `/api/v1/users/:username/follow` | フォロー状態取得 | Owner | ✅ | [詳細](./engagement.md#フォロー状態取得) |
