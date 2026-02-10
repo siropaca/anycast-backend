@@ -131,14 +131,69 @@ func (s *audioJobService) CreateJob(ctx context.Context, userID, channelID, epis
 		return nil, apperror.ErrValidation.WithMessage("このエピソードは既に音声生成中です")
 	}
 
-	// 台本行の存在確認
-	scriptLines, err := s.scriptLineRepo.FindByEpisodeIDWithVoice(ctx, eid)
-	if err != nil {
-		return nil, err
+	// type に応じたバリデーション
+	jobType := model.AudioJobType(req.Type)
+
+	switch jobType {
+	case model.AudioJobTypeVoice, model.AudioJobTypeFull:
+		// 台本行の存在確認
+		scriptLines, err := s.scriptLineRepo.FindByEpisodeIDWithVoice(ctx, eid)
+		if err != nil {
+			return nil, err
+		}
+		if len(scriptLines) == 0 {
+			return nil, apperror.ErrValidation.WithMessage("このエピソードには台本行がありません")
+		}
+	case model.AudioJobTypeRemix:
+		// voice_audio_id の存在確認
+		if episode.VoiceAudioID == nil {
+			return nil, apperror.ErrValidation.WithMessage("ボイス音声がありません。先に音声生成を実行してください")
+		}
 	}
 
-	if len(scriptLines) == 0 {
-		return nil, apperror.ErrValidation.WithMessage("このエピソードには台本行がありません")
+	// BGM バリデーション（full / remix の場合）
+	var bgmID *uuid.UUID
+	var systemBgmID *uuid.UUID
+
+	if jobType == model.AudioJobTypeFull || jobType == model.AudioJobTypeRemix {
+		// bgmId と systemBgmId の同時指定チェック
+		if req.BgmID != nil && req.SystemBgmID != nil {
+			return nil, apperror.ErrValidation.WithMessage("bgmId と systemBgmId は同時に指定できません")
+		}
+		// どちらも指定されていない場合
+		if req.BgmID == nil && req.SystemBgmID == nil {
+			return nil, apperror.ErrValidation.WithMessage("bgmId または systemBgmId のいずれかを指定してください")
+		}
+
+		if req.BgmID != nil {
+			bid, err := uuid.Parse(*req.BgmID)
+			if err != nil {
+				return nil, apperror.ErrValidation.WithMessage("無効な bgmId です")
+			}
+			bgm, err := s.bgmRepo.FindByID(ctx, bid)
+			if err != nil {
+				return nil, err
+			}
+			if bgm.UserID != uid {
+				return nil, apperror.ErrForbidden.WithMessage("この BGM へのアクセス権限がありません")
+			}
+			bgmID = &bid
+		}
+
+		if req.SystemBgmID != nil {
+			sbid, err := uuid.Parse(*req.SystemBgmID)
+			if err != nil {
+				return nil, apperror.ErrValidation.WithMessage("無効な systemBgmId です")
+			}
+			systemBgm, err := s.systemBgmRepo.FindByID(ctx, sbid)
+			if err != nil {
+				return nil, err
+			}
+			if !systemBgm.IsActive {
+				return nil, apperror.ErrNotFound.WithMessage("このシステム BGM は利用できません")
+			}
+			systemBgmID = &sbid
+		}
 	}
 
 	// デフォルト値を設定
@@ -172,8 +227,11 @@ func (s *audioJobService) CreateJob(ctx context.Context, userID, channelID, epis
 		EpisodeID:      eid,
 		UserID:         uid,
 		Status:         model.AudioJobStatusPending,
+		JobType:        jobType,
 		Progress:       0,
 		VoiceStyle:     voiceStyle,
+		BgmID:          bgmID,
+		SystemBgmID:    systemBgmID,
 		BgmVolumeDB:    bgmVolumeDB,
 		FadeOutMs:      fadeOutMs,
 		PaddingStartMs: paddingStartMs,
@@ -211,6 +269,7 @@ func (s *audioJobService) CreateJob(ctx context.Context, userID, channelID, epis
 	return &response.AudioJobResponse{
 		ID:       job.ID,
 		Status:   string(job.Status),
+		JobType:  string(job.JobType),
 		Progress: job.Progress,
 	}, nil
 }
@@ -313,8 +372,19 @@ func (s *audioJobService) ExecuteJob(ctx context.Context, jobID string) error {
 	// WebSocket で開始通知
 	s.notifyProgress(job.ID.String(), job.UserID.String(), 0, "音声生成を開始しています...")
 
+	// ジョブタイプに応じて処理を実行
+	var execErr error
+	switch job.JobType {
+	case model.AudioJobTypeRemix:
+		execErr = s.executeRemixInternal(ctx, job)
+	case model.AudioJobTypeVoice, model.AudioJobTypeFull:
+		execErr = s.executeJobInternal(ctx, job)
+	default:
+		execErr = s.executeJobInternal(ctx, job)
+	}
+
 	// 処理実行（エラー時はジョブを失敗状態に）
-	if err := s.executeJobInternal(ctx, job); err != nil {
+	if err := execErr; err != nil {
 		// キャンセルによるエラーの場合は失敗扱いにしない
 		if apperror.IsCode(err, apperror.CodeCanceled) {
 			log.Info("job was canceled during execution", "job_id", jobID)
@@ -423,29 +493,61 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 	// 進捗: 50%
 	s.updateProgress(ctx, job, 50, "音声生成完了")
 
+	// ボイス音声を GCS に保存
+	s.updateProgress(ctx, job, 52, "ボイス音声を保存中...")
+	voiceAudioID := uuid.New()
+	voiceAudioPath := storage.GenerateAudioPath(voiceAudioID.String())
+
+	if _, err := s.storageClient.Upload(ctx, voiceAudio, voiceAudioPath, "audio/mpeg"); err != nil {
+		log.Error("failed to upload voice audio", "error", err)
+		return apperror.ErrInternal.WithMessage("ボイス音声のアップロードに失敗しました").WithError(err)
+	}
+
+	voiceDurationMs, err := audio.GetDurationMsE(voiceAudio)
+	if err != nil {
+		log.Warn("failed to get voice audio duration", "error", err)
+	}
+
+	voiceAudioRecord := &model.Audio{
+		ID:         voiceAudioID,
+		MimeType:   "audio/mpeg",
+		Path:       voiceAudioPath,
+		Filename:   voiceAudioID.String() + ".mp3",
+		FileSize:   len(voiceAudio),
+		DurationMs: voiceDurationMs,
+	}
+
+	if err := s.audioRepo.Create(ctx, voiceAudioRecord); err != nil {
+		log.Error("failed to create voice audio record", "error", err)
+		return apperror.ErrInternal.WithMessage("ボイス音声レコードの保存に失敗しました").WithError(err)
+	}
+
+	// エピソードにボイス音声を設定
+	episode.VoiceAudioID = &voiceAudioID
+	episode.VoiceAudio = nil
+
 	// 最終的な音声データ
 	var finalAudio []byte
-	voiceDurationMs := 0
 
 	// キャンセルチェック（BGM ミキシング前）
 	if err := s.checkCanceled(ctx, job); err != nil {
 		return err
 	}
 
-	// BGM がある場合はミキシング
-	if episode.BgmID != nil || episode.SystemBgmID != nil {
+	// type=full の場合は BGM ミキシング
+	if job.JobType == model.AudioJobTypeFull && (job.BgmID != nil || job.SystemBgmID != nil) {
 		s.updateProgress(ctx, job, 55, "BGM をミキシング中...")
 
 		// BGM データを取得
 		var bgmPath string
-		if episode.BgmID != nil {
-			bgm, err := s.bgmRepo.FindByID(ctx, *episode.BgmID)
+		if job.BgmID != nil {
+			bgm, err := s.bgmRepo.FindByID(ctx, *job.BgmID)
 			if err != nil {
 				return err
 			}
 			bgmPath = bgm.Audio.Path
-		} else if episode.SystemBgmID != nil {
-			systemBgm, err := s.systemBgmRepo.FindByID(ctx, *episode.SystemBgmID)
+		} else if job.SystemBgmID != nil {
+			systemBgm, err := s.systemBgmRepo.FindByID(ctx, *job.SystemBgmID)
 			if err != nil {
 				return err
 			}
@@ -457,13 +559,6 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 		if err != nil {
 			log.Error("failed to download BGM", "error", err, "path", bgmPath)
 			return apperror.ErrInternal.WithMessage("BGM のダウンロードに失敗しました").WithError(err)
-		}
-
-		// 音声の長さを取得
-		voiceDurationMs, err = audio.GetDurationMsE(voiceAudio)
-		if err != nil {
-			log.Error("failed to get audio duration", "error", err)
-			return apperror.ErrInternal.WithMessage("音声長の取得に失敗しました").WithError(err)
 		}
 
 		// 進捗: 70%
@@ -539,6 +634,14 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 	episode.AudioOutdated = false
 	if job.VoiceStyle != "" {
 		episode.VoiceStyle = job.VoiceStyle
+	}
+
+	// full の場合は BGM 情報をエピソードに記録
+	if job.JobType == model.AudioJobTypeFull {
+		episode.BgmID = job.BgmID
+		episode.SystemBgmID = job.SystemBgmID
+		episode.Bgm = nil
+		episode.SystemBgm = nil
 	}
 
 	if err := s.episodeRepo.Update(ctx, episode); err != nil {
@@ -792,12 +895,189 @@ func (s *audioJobService) notifyFailed(jobID, userID string, errorCode, errorMes
 	})
 }
 
+// executeRemixInternal は BGM リミックス処理を実行する
+func (s *audioJobService) executeRemixInternal(ctx context.Context, job *model.AudioJob) error {
+	log := logger.FromContext(ctx)
+
+	// エピソードを取得
+	episode, err := s.episodeRepo.FindByID(ctx, job.EpisodeID)
+	if err != nil {
+		return err
+	}
+
+	// voice_audio_id の存在確認
+	if episode.VoiceAudioID == nil {
+		return apperror.ErrValidation.WithMessage("ボイス音声がありません")
+	}
+
+	if episode.VoiceAudio == nil {
+		return apperror.ErrInternal.WithMessage("ボイス音声の読み込みに失敗しました")
+	}
+
+	// BGM の設定確認（ジョブに紐づく BGM を使用）
+	if job.BgmID == nil && job.SystemBgmID == nil {
+		return apperror.ErrValidation.WithMessage("BGM が設定されていません")
+	}
+
+	// 進捗: 10%
+	s.updateProgress(ctx, job, 10, "ボイス音声をダウンロード中...")
+
+	// ボイス音声を GCS からダウンロード
+	voiceAudioData, err := s.downloadFromStorage(ctx, episode.VoiceAudio.Path)
+	if err != nil {
+		log.Error("failed to download voice audio", "error", err, "path", episode.VoiceAudio.Path)
+		return apperror.ErrInternal.WithMessage("ボイス音声のダウンロードに失敗しました").WithError(err)
+	}
+
+	// 進捗: 30%
+	s.updateProgress(ctx, job, 30, "BGM をダウンロード中...")
+
+	// キャンセルチェック
+	if err := s.checkCanceled(ctx, job); err != nil {
+		return err
+	}
+
+	// BGM データを取得（ジョブに紐づく BGM を使用）
+	var bgmPath string
+	if job.BgmID != nil {
+		bgm, err := s.bgmRepo.FindByID(ctx, *job.BgmID)
+		if err != nil {
+			return err
+		}
+		bgmPath = bgm.Audio.Path
+	} else if job.SystemBgmID != nil {
+		systemBgm, err := s.systemBgmRepo.FindByID(ctx, *job.SystemBgmID)
+		if err != nil {
+			return err
+		}
+		bgmPath = systemBgm.Audio.Path
+	}
+
+	// GCS から BGM をダウンロード
+	bgmData, err := s.downloadFromStorage(ctx, bgmPath)
+	if err != nil {
+		log.Error("failed to download BGM", "error", err, "path", bgmPath)
+		return apperror.ErrInternal.WithMessage("BGM のダウンロードに失敗しました").WithError(err)
+	}
+
+	// ボイス音声の長さを取得
+	voiceDurationMs, err := audio.GetDurationMsE(voiceAudioData)
+	if err != nil {
+		log.Error("failed to get voice audio duration", "error", err)
+		return apperror.ErrInternal.WithMessage("音声長の取得に失敗しました").WithError(err)
+	}
+
+	// 進捗: 50%
+	s.updateProgress(ctx, job, 50, "BGM をミキシング中...")
+
+	// キャンセルチェック
+	if err := s.checkCanceled(ctx, job); err != nil {
+		return err
+	}
+
+	// FFmpeg でミキシング
+	finalAudio, err := s.ffmpegService.MixAudioWithBGM(ctx, MixParams{
+		VoiceData:       voiceAudioData,
+		BGMData:         bgmData,
+		VoiceDurationMs: voiceDurationMs,
+		BGMVolumeDB:     job.BgmVolumeDB,
+		FadeOutMs:       job.FadeOutMs,
+		PaddingStartMs:  job.PaddingStartMs,
+		PaddingEndMs:    job.PaddingEndMs,
+	})
+	if err != nil {
+		log.Error("FFmpeg mixing failed", "error", err)
+		return apperror.ErrInternal.WithMessage("BGM のミキシングに失敗しました").WithError(err)
+	}
+
+	// 進捗: 85%
+	s.updateProgress(ctx, job, 85, "音声をアップロード中...")
+
+	// キャンセルチェック
+	if err := s.checkCanceled(ctx, job); err != nil {
+		return err
+	}
+
+	// 新しい Audio ID を生成してアップロード
+	audioID := uuid.New()
+	audioPath := storage.GenerateAudioPath(audioID.String())
+
+	if _, err := s.storageClient.Upload(ctx, finalAudio, audioPath, "audio/mpeg"); err != nil {
+		log.Error("failed to upload audio", "error", err)
+		return apperror.ErrInternal.WithMessage("音声のアップロードに失敗しました").WithError(err)
+	}
+
+	// 最終的な長さを取得
+	finalDurationMs, err := audio.GetDurationMsE(finalAudio)
+	if err != nil {
+		log.Warn("failed to get final audio duration, using estimate", "error", err)
+		finalDurationMs = job.PaddingStartMs + voiceDurationMs + job.PaddingEndMs
+	}
+
+	// Audio レコードを作成
+	audioRecord := &model.Audio{
+		ID:         audioID,
+		MimeType:   "audio/mpeg",
+		Path:       audioPath,
+		Filename:   audioID.String() + ".mp3",
+		FileSize:   len(finalAudio),
+		DurationMs: finalDurationMs,
+	}
+
+	if err := s.audioRepo.Create(ctx, audioRecord); err != nil {
+		log.Error("failed to create audio record", "error", err)
+		return apperror.ErrInternal.WithMessage("音声レコードの保存に失敗しました").WithError(err)
+	}
+
+	// 進捗: 95%
+	s.updateProgress(ctx, job, 95, "エピソードを更新中...")
+
+	// エピソードを更新
+	episode.FullAudioID = &audioID
+	episode.FullAudio = nil
+	episode.AudioOutdated = false
+
+	// BGM 情報をエピソードに記録
+	episode.BgmID = job.BgmID
+	episode.SystemBgmID = job.SystemBgmID
+	episode.Bgm = nil
+	episode.SystemBgm = nil
+
+	if err := s.episodeRepo.Update(ctx, episode); err != nil {
+		return err
+	}
+
+	// キャンセルチェック（完了遷移前）
+	if err := s.checkCanceled(ctx, job); err != nil {
+		return err
+	}
+
+	// ジョブを完了状態に更新
+	completedAt := time.Now()
+	job.Status = model.AudioJobStatusCompleted
+	job.Progress = 100
+	job.CompletedAt = &completedAt
+	job.ResultAudioID = &audioID
+
+	if err := s.audioJobRepo.Update(ctx, job); err != nil {
+		return err
+	}
+
+	// WebSocket で完了通知
+	s.notifyCompleted(job.ID.String(), job.UserID.String(), audioRecord)
+
+	log.Info("remix job completed successfully", "job_id", job.ID, "audio_id", audioID)
+
+	return nil
+}
+
 // toAudioJobResponse は AudioJob をレスポンス DTO に変換する
 func (s *audioJobService) toAudioJobResponse(ctx context.Context, job *model.AudioJob) (*response.AudioJobResponse, error) {
 	resp := &response.AudioJobResponse{
 		ID:             job.ID,
 		EpisodeID:      job.EpisodeID,
 		Status:         string(job.Status),
+		JobType:        string(job.JobType),
 		Progress:       job.Progress,
 		VoiceStyle:     job.VoiceStyle,
 		BgmVolumeDB:    job.BgmVolumeDB,

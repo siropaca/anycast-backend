@@ -1352,7 +1352,7 @@
                         "BearerAuth": []
                     }
                 ],
-                "description": "エピソードの音声を非同期で生成します。ジョブを作成し、完了時は WebSocket で通知されます。",
+                "description": "エピソードの音声を非同期で生成します。type で生成方式を指定します（voice: TTS のみ、full: TTS + BGM、remix: BGM 差し替え）。",
                 "consumes": [
                     "application/json"
                 ],
@@ -1379,9 +1379,10 @@
                         "required": true
                     },
                     {
-                        "description": "音声生成オプション",
+                        "description": "音声生成リクエスト",
                         "name": "body",
                         "in": "body",
+                        "required": true,
                         "schema": {
                             "$ref": "#/definitions/request.GenerateAudioAsyncRequest"
                         }
@@ -1398,237 +1399,6 @@
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/channels/{channelId}/episodes/{episodeId}/audio/remix-bgm": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "ボイス音声を再利用して BGM のみを差し替えた音声を再生成します。TTS をスキップするため高速です。",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "episodes"
-                ],
-                "summary": "BGM リミックス",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "チャンネル ID",
-                        "name": "channelId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "エピソード ID",
-                        "name": "episodeId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "ミキシングオプション",
-                        "name": "body",
-                        "in": "body",
-                        "schema": {
-                            "$ref": "#/definitions/request.RemixBgmRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "202": {
-                        "description": "Accepted",
-                        "schema": {
-                            "$ref": "#/definitions/response.AudioJobDataResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/channels/{channelId}/episodes/{episodeId}/bgm": {
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "指定したエピソードに BGM を設定します。ユーザー BGM またはシステム BGM のどちらかを指定します。",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "episodes"
-                ],
-                "summary": "エピソード BGM 設定",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "チャンネル ID",
-                        "name": "channelId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "エピソード ID",
-                        "name": "episodeId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "BGM 設定リクエスト",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.SetEpisodeBgmRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.EpisodeDataResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "指定したエピソードに設定されている BGM を削除します",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "episodes"
-                ],
-                "summary": "エピソード BGM 削除",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "チャンネル ID",
-                        "name": "channelId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "エピソード ID",
-                        "name": "episodeId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.EpisodeDataResponse"
                         }
                     },
                     "401": {
@@ -6420,7 +6190,13 @@
         },
         "request.GenerateAudioAsyncRequest": {
             "type": "object",
+            "required": [
+                "type"
+            ],
             "properties": {
+                "bgmId": {
+                    "type": "string"
+                },
                 "bgmVolumeDb": {
                     "type": "number",
                     "maximum": 0,
@@ -6440,6 +6216,17 @@
                     "type": "integer",
                     "maximum": 10000,
                     "minimum": 0
+                },
+                "systemBgmId": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "voice",
+                        "full",
+                        "remix"
+                    ]
                 },
                 "voiceStyle": {
                     "type": "string",
@@ -6582,31 +6369,6 @@
                 }
             }
         },
-        "request.RemixBgmRequest": {
-            "type": "object",
-            "properties": {
-                "bgmVolumeDb": {
-                    "type": "number",
-                    "maximum": 0,
-                    "minimum": -60
-                },
-                "fadeOutMs": {
-                    "type": "integer",
-                    "maximum": 30000,
-                    "minimum": 0
-                },
-                "paddingEndMs": {
-                    "type": "integer",
-                    "maximum": 10000,
-                    "minimum": 0
-                },
-                "paddingStartMs": {
-                    "type": "integer",
-                    "maximum": 10000,
-                    "minimum": 0
-                }
-            }
-        },
         "request.ReorderPlaylistItemsRequest": {
             "type": "object",
             "required": [
@@ -6638,17 +6400,6 @@
             }
         },
         "request.SetDefaultBgmRequest": {
-            "type": "object",
-            "properties": {
-                "bgmId": {
-                    "type": "string"
-                },
-                "systemBgmId": {
-                    "type": "string"
-                }
-            }
-        },
-        "request.SetEpisodeBgmRequest": {
             "type": "object",
             "properties": {
                 "bgmId": {
@@ -6926,6 +6677,14 @@
                 "updatedAt"
             ],
             "properties": {
+                "bgm": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.EpisodeBgmResponse"
+                        }
+                    ],
+                    "x-nullable": true
+                },
                 "bgmVolumeDb": {
                     "type": "number"
                 },

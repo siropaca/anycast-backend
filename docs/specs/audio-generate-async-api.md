@@ -50,11 +50,21 @@ POST /channels/{channelId}/episodes/{episodeId}/audio/generate-async
 
 | フィールド | 型 | 必須 | 説明 |
 |-----------|------|------|------|
-| voiceStyle | string | - | 音声のスタイル指示（最大 500 文字） |
+| type | string | ◯ | `voice` / `full` / `remix` |
+| voiceStyle | string | - | 音声のスタイル指示（最大 500 文字、type=voice/full のみ） |
+| bgmId | uuid | - | ユーザー BGM ID（type=full/remix で bgmId か systemBgmId のいずれか必須） |
+| systemBgmId | uuid | - | システム BGM ID（同上） |
 | bgmVolumeDb | number | - | BGM 音量（-60 〜 0 dB、デフォルト: -15） |
 | fadeOutMs | number | - | フェードアウト時間（0 〜 30000 ms、デフォルト: 3000） |
 | paddingStartMs | number | - | 音声開始前の余白（0 〜 10000 ms、デフォルト: 500） |
 | paddingEndMs | number | - | 音声終了後の余白（0 〜 10000 ms、デフォルト: 1000） |
+
+**バリデーションルール**:
+
+- `type` は必須（`voice` / `full` / `remix` のいずれか）
+- `type=full` / `type=remix`: `bgmId` または `systemBgmId` のいずれか必須、同時指定不可
+- `type=remix`: `episode.voiceAudioId` が存在すること
+- `type=voice` / `type=full`: 台本行が存在すること
 
 **レスポンス**: `202 Accepted`
 
@@ -64,6 +74,7 @@ POST /channels/{channelId}/episodes/{episodeId}/audio/generate-async
   "episodeId": "660e8400-e29b-41d4-a716-446655440001",
   "status": "pending",
   "progress": 0,
+  "jobType": "full",
   "voiceStyle": "",
   "bgmVolumeDb": -15,
   "fadeOutMs": 3000,
@@ -82,7 +93,7 @@ POST /channels/{channelId}/episodes/{episodeId}/audio/generate-async
 
 | コード | 説明 |
 |-------|------|
-| 400 | バリデーションエラー（台本なし、既に処理中のジョブあり等） |
+| 400 | バリデーションエラー（台本なし、既に処理中のジョブあり、BGM 未指定等） |
 | 403 | チャンネルへのアクセス権限なし |
 | 404 | エピソードが存在しない |
 
@@ -284,7 +295,21 @@ canceled      canceling ───▶ canceled
 
 ## 処理フロー
 
-### 進捗の目安
+### 進捗の目安（type=voice）
+
+| 進捗 | 処理内容 |
+|------|---------|
+| 0% | ジョブ作成 |
+| 10% | エピソード・台本の読み込み |
+| 20% | TTS 音声生成開始 |
+| 25-45% | 複数チャンクの TTS 処理（チャンク数に応じて） |
+| 45% | 音声チャンクの結合 |
+| 50% | TTS 処理完了 |
+| 85% | 音声ファイルのアップロード |
+| 95% | エピソード情報の更新 |
+| 100% | 完了 |
+
+### 進捗の目安（type=full）
 
 | 進捗 | 処理内容 |
 |------|---------|
@@ -299,16 +324,29 @@ canceled      canceling ───▶ canceled
 | 95% | エピソード情報の更新 |
 | 100% | 完了 |
 
+### 進捗の目安（type=remix）
+
+| 進捗 | 処理内容 |
+|------|---------|
+| 0% | ジョブ作成 |
+| 10% | ボイス音声のダウンロード |
+| 30% | BGM のダウンロード |
+| 50-70% | BGM ミキシング |
+| 85% | 音声ファイルのアップロード |
+| 95% | エピソード情報の更新 |
+| 100% | 完了 |
+
 ### 処理詳細
 
-1. **台本読み込み**: エピソードに紐づく台本を取得
+1. **台本読み込み**: エピソードに紐づく台本を取得（type=voice/full）
 2. **話者マッピング**: キャラクターを TTS の話者 ID にマッピング
 3. **テキスト分割**: TTS の入力制限（3500 バイト）に収まるようチャンク分割
 4. **TTS 合成**: Google Cloud TTS (Gemini TTS) で音声合成
 5. **チャンク結合**: 複数チャンクの場合、FFmpeg で結合
-6. **BGM ミキシング**: FFmpeg で BGM と音声をミックス
-7. **アップロード**: 生成した音声ファイルを GCS にアップロード
-8. **エピソード更新**: `fullAudioId` と `audioOutdated` を更新
+6. **ボイス音声保存**: ボイス音声を GCS にアップロードし `voiceAudioId` を更新
+7. **BGM ミキシング**: FFmpeg で BGM と音声をミックス（type=full/remix）
+8. **アップロード**: 生成した音声ファイルを GCS にアップロード
+9. **エピソード更新**: `fullAudioId`、`audioOutdated`、BGM 情報を更新
 
 ## 外部サービス
 
@@ -370,7 +408,12 @@ CREATE TABLE audio_jobs (
     user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     status audio_job_status NOT NULL DEFAULT 'pending',
     progress INTEGER NOT NULL DEFAULT 0,
+    job_type audio_job_type NOT NULL DEFAULT 'voice',
     voice_style TEXT NOT NULL DEFAULT '',
+
+    -- BGM 参照
+    bgm_id UUID REFERENCES bgms (id) ON DELETE SET NULL,
+    system_bgm_id UUID REFERENCES system_bgms (id) ON DELETE SET NULL,
 
     -- BGM ミキシング設定
     bgm_volume_db DECIMAL(5, 2) NOT NULL DEFAULT -15.0,
@@ -387,10 +430,14 @@ CREATE TABLE audio_jobs (
     started_at TIMESTAMP,
     completed_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    -- bgm_id と system_bgm_id は同時に設定不可
+    CONSTRAINT chk_audio_jobs_bgm_exclusive CHECK (NOT (bgm_id IS NOT NULL AND system_bgm_id IS NOT NULL))
 );
 
 CREATE TYPE audio_job_status AS ENUM ('pending', 'processing', 'canceling', 'completed', 'failed', 'canceled');
+CREATE TYPE audio_job_type AS ENUM ('voice', 'full', 'remix');
 ```
 
 ### audios テーブル

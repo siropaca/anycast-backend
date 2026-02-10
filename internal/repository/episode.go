@@ -74,6 +74,7 @@ func (r *episodeRepository) FindByChannelID(ctx context.Context, channelID uuid.
 	// ページネーションとリレーションのプリロード
 	if err := tx.
 		Preload("Artwork").
+		Preload("VoiceAudio").
 		Preload("FullAudio").
 		Preload("Bgm").
 		Preload("Bgm.Audio").
@@ -170,6 +171,7 @@ func (r *episodeRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.
 	if err := r.db.WithContext(ctx).
 		Preload("Channel").
 		Preload("Artwork").
+		Preload("VoiceAudio").
 		Preload("FullAudio").
 		Preload("Bgm").
 		Preload("Bgm.Audio").

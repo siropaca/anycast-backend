@@ -80,6 +80,7 @@ func (r *audioRepository) FindOrphaned(ctx context.Context) ([]model.Audio, erro
 		SELECT a.* FROM audios a
 		WHERE a.created_at < NOW() - INTERVAL '1 hour'
 		AND NOT EXISTS (SELECT 1 FROM episodes e WHERE e.full_audio_id = a.id)
+		AND NOT EXISTS (SELECT 1 FROM episodes e WHERE e.voice_audio_id = a.id)
 		AND NOT EXISTS (SELECT 1 FROM bgms b WHERE b.audio_id = a.id)
 		AND NOT EXISTS (SELECT 1 FROM system_bgms sb WHERE sb.audio_id = a.id)
 		AND NOT EXISTS (SELECT 1 FROM audio_jobs aj WHERE aj.result_audio_id = a.id)

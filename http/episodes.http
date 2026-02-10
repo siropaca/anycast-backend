@@ -135,28 +135,49 @@ Authorization: Bearer {{token}}
 POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/unpublish
 Authorization: Bearer {{token}}
 
-### エピソード BGM 設定（ユーザー BGM）
-PUT {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/bgm
+### 音声生成（voice: TTS のみ）
+POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/audio/generate-async
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "bgmId": "YOUR_BGM_ID_HERE"
+  "type": "voice"
 }
 
-### エピソード BGM 設定（システム BGM）
-PUT {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/bgm
+### 音声生成（full: TTS + BGM、ユーザー BGM）
+POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/audio/generate-async
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
+  "type": "full",
+  "bgmId": "YOUR_BGM_ID_HERE",
+  "bgmVolumeDb": -15,
+  "fadeOutMs": 3000,
+  "paddingStartMs": 500,
+  "paddingEndMs": 1000
+}
+
+### 音声生成（full: TTS + BGM、システム BGM）
+POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/audio/generate-async
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "type": "full",
   "systemBgmId": "YOUR_SYSTEM_BGM_ID_HERE"
 }
 
-### エピソード BGM 削除
-DELETE {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/bgm
+### 音声生成（remix: BGM 差し替え）
+POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/audio/generate-async
+Content-Type: application/json
 Authorization: Bearer {{token}}
 
-### エピソード音声生成（非同期）
-POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/audio/generate-async
-Authorization: Bearer {{token}}
+{
+  "type": "remix",
+  "bgmId": "YOUR_BGM_ID_HERE",
+  "bgmVolumeDb": -20,
+  "fadeOutMs": 3000,
+  "paddingStartMs": 1000,
+  "paddingEndMs": 3000
+}

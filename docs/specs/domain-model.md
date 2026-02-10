@@ -72,6 +72,7 @@ AIポッドキャスト作成・配信プラットフォーム。
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  Episode ─┬─ (0..N) ScriptLine ── Speaker [Character 参照]                  │
 │           ├─ (0..1) BGM [Audio]                                             │
+│           ├─ (0..1) VoiceAudio [Audio]                                      │
 │           └─ (0..1) FullAudio [Audio]                                       │
 └─────────────────────────────────────────────────────────────────────────────┘
                 │
@@ -336,6 +337,7 @@ OAuth プロバイダとの連携情報。
 | voiceStyle | String | | 音声生成のスタイル指示（音声生成時に自動保存、例: "Read aloud in a warm, welcoming tone"） |
 | script | ScriptLine[] | | 台本（順序付きの ScriptLine 配列） |
 | bgm | Audio | | BGM 音声ファイル |
+| voiceAudio | Audio | | ボイス単体の音声（BGM なし） |
 | fullAudio | Audio | | 結合済み音声（全 ScriptLine + BGM） |
 | audioOutdated | Boolean | ◯ | 音声生成後に台本が変更されたか（デフォルト: false） |
 | playCount | Int | ◯ | 再生回数（デフォルト: 0） |
@@ -365,9 +367,9 @@ OAuth プロバイダとの連携情報。
 
 #### BGM
 
-- エピソードに 1 つの BGM を設定可能
+- BGM は音声生成時に指定する（`type=full` / `type=remix`）
+- 最後に使用した BGM をエピソードに記録（次回生成時の復元表示用）
 - 音声ファイル形式: mp3
-- エピソード全体の音声出力時に BGM とミックス
 
 ### ScriptLine（台本行）
 
@@ -459,13 +461,33 @@ emotion は TTS 生成時に text の先頭にカッコで付けて表現する�
 
 エピソード単位で完成形の音声を生成する。TTS API の制約により、行単位ではなくエピソード全体を一括で生成する。
 
-### 生成フロー
+### ユースケース
+
+音声生成は統合エンドポイント（`generate-async`）の `type` パラメータで 3 種類を切り替える。
+
+| type | 説明 | TTS | BGM |
+|------|------|:---:|:---:|
+| `voice` | ボイス音声のみ生成（BGM なし） | ◯ | - |
+| `full` | TTS 音声生成 + BGM ミキシング | ◯ | ◯ |
+| `remix` | 既存ボイス音声を再利用して BGM のみ差し替え | - | ◯ |
+
+### 生成フロー（type=voice / type=full）
 
 1. 台本の全行を取得
 2. 各行のテキストを結合（emotion は `[感情]` 形式で先頭に付与）
 3. TTS API で音声を一括生成
-4. BGM が設定されている場合はミックス
-5. 結果を `Episode.fullAudio` に保存
+4. ボイス音声を `Episode.voiceAudio` に保存
+5. `type=full` の場合、リクエストで指定された BGM とミックス
+6. 結果を `Episode.fullAudio` に保存
+7. `type=full` / `type=remix` の場合、`Episode.bgmId` / `systemBgmId` を更新
+
+### 生成フロー（type=remix）
+
+1. `Episode.voiceAudio` が存在することを確認
+2. GCS から `voiceAudio` をダウンロード
+3. リクエストで指定された BGM とミキシング
+4. 結果を `Episode.fullAudio` に保存
+5. `Episode.bgmId` / `systemBgmId` を更新
 
 ### 出力形式
 

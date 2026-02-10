@@ -11,6 +11,7 @@ type AudioJobResponse struct {
 	ID             uuid.UUID                `json:"id" validate:"required"`
 	EpisodeID      uuid.UUID                `json:"episodeId" validate:"required"`
 	Status         string                   `json:"status" validate:"required"`
+	JobType        string                   `json:"jobType" validate:"required"`
 	Progress       int                      `json:"progress" validate:"required"`
 	VoiceStyle     string                   `json:"voiceStyle"`
 	BgmVolumeDB    float64                  `json:"bgmVolumeDb"`
@@ -18,6 +19,7 @@ type AudioJobResponse struct {
 	PaddingStartMs int                      `json:"paddingStartMs"`
 	PaddingEndMs   int                      `json:"paddingEndMs"`
 	Episode        *AudioJobEpisodeResponse `json:"episode" extensions:"x-nullable"`
+	Bgm            *EpisodeBgmResponse      `json:"bgm" extensions:"x-nullable"`
 	ResultAudio    *AudioResponse           `json:"resultAudio" extensions:"x-nullable"`
 	ErrorMessage   *string                  `json:"errorMessage" extensions:"x-nullable"`
 	ErrorCode      *string                  `json:"errorCode" extensions:"x-nullable"`

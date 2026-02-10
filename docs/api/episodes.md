@@ -59,6 +59,7 @@ GET /channels/:channelId/episodes/:episodeId
     "description": "エピソードの説明",
     "voiceStyle": "Read aloud in a warm, welcoming tone",
     "bgm": { "id": "uuid", "url": "..." },
+    "voiceAudio": { "id": "uuid", "url": "...", "durationMs": 120000 },
     "fullAudio": { "id": "uuid", "url": "..." },
     "script": [
       {
@@ -90,6 +91,8 @@ GET /channels/:channelId/episodes/:episodeId
 }
 ```
 
+> **Note:** `voiceAudio` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
+>
 > **Note:** `voiceStyle` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
 >
 > **Note:** `playback` は認証済みの場合のみ含まれます。未認証または再生履歴がない場合は `null` になります。
@@ -145,8 +148,6 @@ PATCH /channels/:channelId/episodes/:episodeId
 > **Note:** `voiceStyle` は音声生成時に自動で保存されます。エピソード更新 API からは編集できません。
 >
 > **Note:** 公開状態の変更は専用エンドポイント（[エピソード公開](#エピソード公開) / [エピソード非公開](#エピソード非公開)）を使用してください。
->
-> **Note:** BGM の設定・削除は専用エンドポイント（[エピソード BGM 設定](#エピソード-bgm-設定) / [エピソード BGM 削除](#エピソード-bgm-削除)）を使用してください。
 
 ---
 
@@ -209,103 +210,6 @@ POST /channels/:channelId/episodes/:episodeId/unpublish
     "title": "エピソードタイトル",
     "description": "エピソードの説明",
     "publishedAt": null,
-    "createdAt": "2025-01-01T00:00:00Z",
-    "updatedAt": "2025-01-01T00:00:00Z"
-  }
-}
-```
-
----
-
-## エピソード BGM 設定
-
-```
-PUT /channels/:channelId/episodes/:episodeId/bgm
-```
-
-エピソードに BGM を設定する。既に BGM が設定されている場合は上書きされる。ユーザー BGM またはシステム BGM のどちらかを指定する。
-
-**リクエスト（ユーザー BGM の場合）:**
-```json
-{
-  "bgmId": "uuid"
-}
-```
-
-**リクエスト（システム BGM の場合）:**
-```json
-{
-  "systemBgmId": "uuid"
-}
-```
-
-| フィールド | 型 | 必須 | 説明 |
-|------------|-----|:----:|------|
-| bgmId | uuid | - | ユーザー BGM ID（bgms.id）。systemBgmId と同時指定不可 |
-| systemBgmId | uuid | - | システム BGM ID（system_bgms.id）。bgmId と同時指定不可 |
-
-> **Note:** bgmId と systemBgmId のどちらか一方のみを指定する。
-
-**バリデーション:**
-
-| フィールド | ルール |
-|------------|--------|
-| bgmId | UUID 形式、自分の BGM のみ指定可能 |
-| systemBgmId | UUID 形式、is_active = true のシステム BGM のみ指定可能 |
-
-**レスポンス（200 OK）:**
-```json
-{
-  "data": {
-    "id": "uuid",
-    "title": "エピソードタイトル",
-    "description": "エピソードの説明",
-    "bgm": {
-      "id": "uuid",
-      "name": "明るいポップ",
-      "isSystem": true,
-      "audio": {
-        "id": "uuid",
-        "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
-        "durationMs": 180000
-      }
-    },
-    "publishedAt": "2025-01-01T00:00:00Z",
-    "createdAt": "2025-01-01T00:00:00Z",
-    "updatedAt": "2025-01-01T00:00:00Z"
-  }
-}
-```
-
-**エラー（400 Bad Request）:**
-```json
-{
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "bgmId と systemBgmId は同時に指定できません"
-  }
-}
-```
-
----
-
-## エピソード BGM 削除
-
-```
-DELETE /channels/:channelId/episodes/:episodeId/bgm
-```
-
-エピソードに設定されている BGM を削除する。
-
-**レスポンス（200 OK）:**
-```json
-{
-  "data": {
-    "id": "uuid",
-    "title": "エピソードタイトル",
-    "description": "エピソードの説明",
-    "bgm": null,
-    "publishedAt": "2025-01-01T00:00:00Z",
     "createdAt": "2025-01-01T00:00:00Z",
     "updatedAt": "2025-01-01T00:00:00Z"
   }
@@ -476,3 +380,7 @@ POST /episodes/:episodeId/play
 ```
 
 > **Note:** 公開中のエピソードのみカウント対象。同一ユーザーによる重複カウントを許容する（毎回 +1）。
+
+---
+
+> **Note:** 音声生成 API の詳細仕様は `docs/specs/audio-generate-async-api.md` を参照してください。`type` パラメータで `voice`（TTS のみ）、`full`（TTS + BGM）、`remix`（BGM 差し替え）を切り替えます。

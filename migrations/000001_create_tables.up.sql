@@ -9,6 +9,7 @@ CREATE TYPE oauth_provider AS ENUM ('google');
 CREATE TYPE gender AS ENUM ('male', 'female', 'neutral');
 CREATE TYPE user_role AS ENUM ('user', 'admin');
 CREATE TYPE audio_job_status AS ENUM ('pending', 'processing', 'canceling', 'completed', 'failed', 'canceled');
+CREATE TYPE audio_job_type AS ENUM ('voice', 'full', 'remix');
 CREATE TYPE script_job_status AS ENUM ('pending', 'processing', 'canceling', 'completed', 'failed', 'canceled');
 CREATE TYPE reaction_type AS ENUM ('like', 'bad');
 CREATE TYPE contact_category AS ENUM ('general', 'bug_report', 'feature_request', 'other');
@@ -227,6 +228,7 @@ CREATE TABLE episodes (
 	description VARCHAR(2000) NOT NULL,
 	bgm_id UUID REFERENCES bgms (id) ON DELETE SET NULL,
 	system_bgm_id UUID REFERENCES system_bgms (id) ON DELETE SET NULL,
+	voice_audio_id UUID REFERENCES audios (id) ON DELETE SET NULL,
 	full_audio_id UUID REFERENCES audios (id) ON DELETE SET NULL,
 	audio_outdated BOOLEAN NOT NULL DEFAULT false,
 	play_count INTEGER NOT NULL DEFAULT 0,
@@ -248,8 +250,12 @@ CREATE TABLE audio_jobs (
 	episode_id UUID NOT NULL REFERENCES episodes (id) ON DELETE CASCADE,
 	user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
 	status audio_job_status NOT NULL DEFAULT 'pending',
+	job_type audio_job_type NOT NULL DEFAULT 'voice',
 	progress INTEGER NOT NULL DEFAULT 0,
 	voice_style TEXT NOT NULL DEFAULT '',
+	-- BGM 参照
+	bgm_id UUID REFERENCES bgms (id) ON DELETE SET NULL,
+	system_bgm_id UUID REFERENCES system_bgms (id) ON DELETE SET NULL,
 	-- BGM ミキシング設定
 	bgm_volume_db DECIMAL(5, 2) NOT NULL DEFAULT -15.0,
 	fade_out_ms INTEGER NOT NULL DEFAULT 3000,
@@ -263,7 +269,8 @@ CREATE TABLE audio_jobs (
 	started_at TIMESTAMP,
 	completed_at TIMESTAMP,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	CONSTRAINT chk_audio_jobs_bgm_exclusive CHECK (NOT (bgm_id IS NOT NULL AND system_bgm_id IS NOT NULL))
 );
 
 CREATE INDEX idx_audio_jobs_episode_id ON audio_jobs (episode_id);

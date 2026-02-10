@@ -25,13 +25,13 @@ func NewAudioJobHandler(ajs service.AudioJobService) *AudioJobHandler {
 
 // GenerateAudioAsync godoc
 // @Summary 非同期音声生成
-// @Description エピソードの音声を非同期で生成します。ジョブを作成し、完了時は WebSocket で通知されます。
+// @Description エピソードの音声を非同期で生成します。type で生成方式を指定します（voice: TTS のみ、full: TTS + BGM、remix: BGM 差し替え）。
 // @Tags episodes
 // @Accept json
 // @Produce json
 // @Param channelId path string true "チャンネル ID"
 // @Param episodeId path string true "エピソード ID"
-// @Param body body request.GenerateAudioAsyncRequest false "音声生成オプション"
+// @Param body body request.GenerateAudioAsyncRequest true "音声生成リクエスト"
 // @Success 202 {object} response.AudioJobDataResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
@@ -61,8 +61,8 @@ func (h *AudioJobHandler) GenerateAudioAsync(c *gin.Context) {
 
 	var req request.GenerateAudioAsyncRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		// JSON が空でもエラーにしない
-		req = request.GenerateAudioAsyncRequest{}
+		Error(c, apperror.ErrValidation.WithMessage(err.Error()))
+		return
 	}
 
 	result, err := h.audioJobService.CreateJob(c.Request.Context(), userID, channelID, episodeID, req)

@@ -71,8 +71,6 @@
 | DELETE | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード削除 | Owner | ✅ | [詳細](./episodes.md#エピソード削除) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/publish` | エピソード公開 | Owner | ✅ | [詳細](./episodes.md#エピソード公開) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/unpublish` | エピソード非公開 | Owner | ✅ | [詳細](./episodes.md#エピソード非公開) |
-| PUT | `/api/v1/channels/:channelId/episodes/:episodeId/bgm` | エピソード BGM 設定 | Owner | ✅ | [詳細](./episodes.md#エピソード-bgm-設定) |
-| DELETE | `/api/v1/channels/:channelId/episodes/:episodeId/bgm` | エピソード BGM 削除 | Owner | ✅ | [詳細](./episodes.md#エピソード-bgm-削除) |
 | GET | `/api/v1/me/channels/:channelId/episodes` | 自分のチャンネルのエピソード一覧 | Owner | ✅ | [詳細](./episodes.md#自分のチャンネルのエピソード一覧取得) |
 | GET | `/api/v1/me/channels/:channelId/episodes/:episodeId` | 自分のチャンネルのエピソード取得 | Owner | ✅ | [詳細](./episodes.md#自分のチャンネルのエピソード取得) |
 | **Script（台本）** | - | - | - | - | [script.md](./script.md) |
@@ -89,7 +87,7 @@
 | DELETE | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | 行削除 | Owner | ✅ | [詳細](./script.md#行削除) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/reorder` | 行並び替え | Owner | ✅ | [詳細](./script.md#行並び替え) |
 | **Audio（音声生成）** | - | - | - | - | [media.md](./media.md) |
-| POST | `/api/v1/channels/:channelId/episodes/:episodeId/audio/generate-async` | 非同期音声生成（BGM ミキシング対応） | Owner | ✅ | [詳細](./media.md#非同期音声生成) |
+| POST | `/api/v1/channels/:channelId/episodes/:episodeId/audio/generate-async` | 非同期音声生成（voice/full/remix） | Owner | ✅ | [詳細](./media.md#非同期音声生成) |
 | GET | `/api/v1/audio-jobs/:jobId` | 音声生成ジョブ取得 | Owner | ✅ | [詳細](./media.md#音声生成ジョブ取得) |
 | POST | `/api/v1/audio-jobs/:jobId/cancel` | 音声生成ジョブキャンセル | Owner | ✅ | [詳細](./media.md#音声生成ジョブキャンセル) |
 | GET | `/api/v1/me/audio-jobs` | 自分の音声生成ジョブ一覧 | Owner | ✅ | [詳細](./media.md#自分の音声生成ジョブ一覧) |

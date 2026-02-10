@@ -37,9 +37,12 @@ erDiagram
     episodes ||--o{ playback_histories : has
     episodes ||--o{ comments : has
     episodes ||--o{ audio_jobs : has
+    audio_jobs ||--o| bgms : bgm
+    audio_jobs ||--o| system_bgms : system_bgm
     episodes ||--o| images : artwork
     episodes ||--o| bgms : user_bgm
     episodes ||--o| system_bgms : system_bgm
+    episodes ||--o| audios : voice_audio
     episodes ||--o| audios : full_audio
     playlists ||--o{ playlist_items : has
     bgms ||--|| audios : has
@@ -105,8 +108,11 @@ erDiagram
         uuid episode_id FK
         uuid user_id FK
         audio_job_status status
+        audio_job_type job_type
         integer progress
         text voice_style
+        uuid bgm_id FK
+        uuid system_bgm_id FK
         decimal bgm_volume_db
         integer fade_out_ms
         integer padding_start_ms
@@ -248,6 +254,7 @@ erDiagram
         uuid artwork_id FK
         uuid bgm_id FK
         uuid system_bgm_id FK
+        uuid voice_audio_id FK
         uuid full_audio_id FK
         boolean audio_outdated
         integer play_count
@@ -554,6 +561,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | artwork_id | UUID | ◯ | - | カバー画像（images 参照） |
 | bgm_id | UUID | ◯ | - | ユーザー BGM（bgms 参照） |
 | system_bgm_id | UUID | ◯ | - | システム BGM（system_bgms 参照） |
+| voice_audio_id | UUID | ◯ | - | ボイス単体の音声（audios 参照） |
 | full_audio_id | UUID | ◯ | - | 結合済み音声（audios 参照） |
 | audio_outdated | BOOLEAN | | false | 音声生成後に台本が変更されたか |
 | play_count | INTEGER | | 0 | 再生回数 |
@@ -571,6 +579,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 - artwork_id → images(id) ON DELETE SET NULL
 - bgm_id → bgms(id) ON DELETE SET NULL
 - system_bgm_id → system_bgms(id) ON DELETE SET NULL
+- voice_audio_id → audios(id) ON DELETE SET NULL
 - full_audio_id → audios(id) ON DELETE SET NULL
 
 **制約:**
@@ -754,8 +763,11 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | episode_id | UUID | | - | 対象エピソード（episodes 参照） |
 | user_id | UUID | | - | ジョブ作成者（users 参照） |
 | status | audio_job_status | | `pending` | ステータス |
+| job_type | audio_job_type | | `voice` | ジョブ種別（voice / full / remix） |
 | progress | INTEGER | | 0 | 進捗（0-100） |
 | voice_style | TEXT | | '' | 音声生成のスタイル指示 |
+| bgm_id | UUID | ◯ | - | ユーザー BGM（bgms 参照） |
+| system_bgm_id | UUID | ◯ | - | システム BGM（system_bgms 参照） |
 | bgm_volume_db | DECIMAL(5,2) | | -15.0 | BGM 音量（dB） |
 | fade_out_ms | INTEGER | | 3000 | フェードアウト時間（ms） |
 | padding_start_ms | INTEGER | | 500 | 音声開始前の余白（ms） |
@@ -778,7 +790,12 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 **外部キー:**
 - episode_id → episodes(id) ON DELETE CASCADE
 - user_id → users(id) ON DELETE CASCADE
+- bgm_id → bgms(id) ON DELETE SET NULL
+- system_bgm_id → system_bgms(id) ON DELETE SET NULL
 - result_audio_id → audios(id) ON DELETE SET NULL
+
+**制約:**
+- bgm_id と system_bgm_id は同時に設定不可（CHECK 制約）
 
 ---
 
@@ -1000,6 +1017,7 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 | gender | `male`, `female`, `neutral` | ボイスの性別 |
 | user_role | `user`, `admin` | ユーザーのロール |
 | audio_job_status | `pending`, `processing`, `canceling`, `completed`, `failed`, `canceled` | 音声生成ジョブのステータス |
+| audio_job_type | `voice`, `full`, `remix` | 音声生成ジョブの種別 |
 | script_job_status | `pending`, `processing`, `canceling`, `completed`, `failed`, `canceled` | 台本生成ジョブのステータス |
 | reaction_type | `like`, `bad` | エピソードへのリアクションタイプ |
 | contact_category | `general`, `bug_report`, `feature_request`, `other` | お問い合わせカテゴリ |
@@ -1018,7 +1036,7 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 - Character 削除時: channel_characters で使用中の場合は RESTRICT（削除不可）
 - BGM 削除時: Episodes で使用中の場合は SET NULL
 - System BGM 削除時: Episodes で使用中の場合は SET NULL
-- Audio 削除時: BGMs / System BGMs で使用中の場合は RESTRICT（削除不可）、Episodes からは SET NULL
+- Audio 削除時: BGMs / System BGMs で使用中の場合は RESTRICT（削除不可）、Episodes からは SET NULL（full_audio_id, voice_audio_id）
 - Image 削除時: 参照元は SET NULL（ファイルが消えても親レコードは残る）
 - Voice 削除時: 使用中の場合は RESTRICT（削除不可）
 

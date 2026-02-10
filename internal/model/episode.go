@@ -16,6 +16,7 @@ type Episode struct {
 	ArtworkID     *uuid.UUID `gorm:"type:uuid;column:artwork_id"`
 	BgmID         *uuid.UUID `gorm:"type:uuid;column:bgm_id"`
 	SystemBgmID   *uuid.UUID `gorm:"type:uuid;column:system_bgm_id"`
+	VoiceAudioID  *uuid.UUID `gorm:"type:uuid;column:voice_audio_id"`
 	FullAudioID   *uuid.UUID `gorm:"type:uuid;column:full_audio_id"`
 	AudioOutdated bool       `gorm:"not null;default:false;column:audio_outdated"`
 	PlayCount     int        `gorm:"not null;default:0;column:play_count"`
@@ -24,9 +25,10 @@ type Episode struct {
 	UpdatedAt     time.Time  `gorm:"not null;default:CURRENT_TIMESTAMP"`
 
 	// リレーション
-	Channel   Channel    `gorm:"foreignKey:ChannelID"`
-	Artwork   *Image     `gorm:"foreignKey:ArtworkID"`
-	Bgm       *Bgm       `gorm:"foreignKey:BgmID"`
-	SystemBgm *SystemBgm `gorm:"foreignKey:SystemBgmID"`
-	FullAudio *Audio     `gorm:"foreignKey:FullAudioID"`
+	Channel    Channel    `gorm:"foreignKey:ChannelID"`
+	Artwork    *Image     `gorm:"foreignKey:ArtworkID"`
+	Bgm        *Bgm       `gorm:"foreignKey:BgmID"`
+	SystemBgm  *SystemBgm `gorm:"foreignKey:SystemBgmID"`
+	VoiceAudio *Audio     `gorm:"foreignKey:VoiceAudioID"`
+	FullAudio  *Audio     `gorm:"foreignKey:FullAudioID"`
 }

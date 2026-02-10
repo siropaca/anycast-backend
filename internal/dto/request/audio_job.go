@@ -2,7 +2,10 @@ package request
 
 // 非同期音声生成リクエスト
 type GenerateAudioAsyncRequest struct {
+	Type           string   `json:"type" binding:"required,oneof=voice full remix"`
 	VoiceStyle     *string  `json:"voiceStyle" binding:"omitempty,max=500"`
+	BgmID          *string  `json:"bgmId" binding:"omitempty,uuid"`
+	SystemBgmID    *string  `json:"systemBgmId" binding:"omitempty,uuid"`
 	BgmVolumeDB    *float64 `json:"bgmVolumeDb" binding:"omitempty,min=-60,max=0"`
 	FadeOutMs      *int     `json:"fadeOutMs" binding:"omitempty,min=0,max=30000"`
 	PaddingStartMs *int     `json:"paddingStartMs" binding:"omitempty,min=0,max=10000"`
