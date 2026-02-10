@@ -36,6 +36,7 @@ type CharacterResponse struct {
 	ID        uuid.UUID              `json:"id" validate:"required"`
 	Name      string                 `json:"name" validate:"required"`
 	Persona   string                 `json:"persona" validate:"required"`
+	Avatar    *AvatarResponse        `json:"avatar" extensions:"x-nullable"`
 	Voice     CharacterVoiceResponse `json:"voice" validate:"required"`
 	CreatedAt time.Time              `json:"createdAt" validate:"required"`
 	UpdatedAt time.Time              `json:"updatedAt" validate:"required"`

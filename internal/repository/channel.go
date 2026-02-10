@@ -84,6 +84,7 @@ func (r *channelRepository) FindByUserID(ctx context.Context, userID uuid.UUID, 
 		Preload("DefaultSystemBgm.Audio").
 		Preload("ChannelCharacters").
 		Preload("ChannelCharacters.Character").
+		Preload("ChannelCharacters.Character.Avatar").
 		Preload("ChannelCharacters.Character.Voice").
 		Order("created_at DESC").
 		Limit(filter.Limit).
@@ -128,6 +129,7 @@ func (r *channelRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.
 		Preload("DefaultSystemBgm.Audio").
 		Preload("ChannelCharacters").
 		Preload("ChannelCharacters.Character").
+		Preload("ChannelCharacters.Character.Avatar").
 		Preload("ChannelCharacters.Character.Voice").
 		First(&channel, "id = ?", id).Error; err != nil {
 

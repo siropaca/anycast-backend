@@ -862,7 +862,7 @@ func (s *channelService) toChannelResponse(ctx context.Context, c *model.Channel
 			SortOrder: c.Category.SortOrder,
 			IsActive:  c.Category.IsActive,
 		},
-		Characters:  s.toCharacterResponsesFromChannelCharacters(c.ChannelCharacters),
+		Characters:  s.toCharacterResponsesFromChannelCharacters(ctx, c.ChannelCharacters),
 		Episodes:    episodeResponses,
 		PublishedAt: c.PublishedAt,
 		CreatedAt:   c.CreatedAt,
@@ -923,14 +923,33 @@ func (s *channelService) toChannelResponse(ctx context.Context, c *model.Channel
 }
 
 // toCharacterResponsesFromChannelCharacters は ChannelCharacter のスライスをレスポンス DTO のスライスに変換する
-func (s *channelService) toCharacterResponsesFromChannelCharacters(channelCharacters []model.ChannelCharacter) []response.CharacterResponse {
+func (s *channelService) toCharacterResponsesFromChannelCharacters(ctx context.Context, channelCharacters []model.ChannelCharacter) []response.CharacterResponse {
 	result := make([]response.CharacterResponse, len(channelCharacters))
 
 	for i, cc := range channelCharacters {
+		var avatar *response.AvatarResponse
+		if cc.Character.Avatar != nil && s.storageClient != nil {
+			if storage.IsExternalURL(cc.Character.Avatar.Path) {
+				avatar = &response.AvatarResponse{
+					ID:  cc.Character.Avatar.ID,
+					URL: cc.Character.Avatar.Path,
+				}
+			} else {
+				signedURL, err := s.storageClient.GenerateSignedURL(ctx, cc.Character.Avatar.Path, storage.SignedURLExpirationImage)
+				if err == nil {
+					avatar = &response.AvatarResponse{
+						ID:  cc.Character.Avatar.ID,
+						URL: signedURL,
+					}
+				}
+			}
+		}
+
 		result[i] = response.CharacterResponse{
 			ID:      cc.Character.ID,
 			Name:    cc.Character.Name,
 			Persona: cc.Character.Persona,
+			Avatar:  avatar,
 			Voice: response.CharacterVoiceResponse{
 				ID:       cc.Character.Voice.ID,
 				Name:     cc.Character.Voice.Name,

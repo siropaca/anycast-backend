@@ -374,12 +374,14 @@ func TestToCharacterResponsesFromChannelCharacters(t *testing.T) {
 
 	t.Run("複数キャラクターを正しく変換する", func(t *testing.T) {
 		svc := &channelService{}
-		result := svc.toCharacterResponsesFromChannelCharacters(channelCharacters)
+		ctx := context.Background()
+		result := svc.toCharacterResponsesFromChannelCharacters(ctx, channelCharacters)
 
 		assert.Len(t, result, 2)
 		assert.Equal(t, charID1, result[0].ID)
 		assert.Equal(t, "太郎", result[0].Name)
 		assert.Equal(t, "明るい性格", result[0].Persona)
+		assert.Nil(t, result[0].Avatar)
 		assert.Equal(t, voiceID1, result[0].Voice.ID)
 		assert.Equal(t, "ja-JP-Wavenet-C", result[0].Voice.Name)
 		assert.Equal(t, "male", result[0].Voice.Gender)
@@ -387,14 +389,92 @@ func TestToCharacterResponsesFromChannelCharacters(t *testing.T) {
 		assert.Equal(t, charID2, result[1].ID)
 		assert.Equal(t, "花子", result[1].Name)
 		assert.Equal(t, "落ち着いた性格", result[1].Persona)
+		assert.Nil(t, result[1].Avatar)
 		assert.Equal(t, voiceID2, result[1].Voice.ID)
 		assert.Equal(t, "ja-JP-Wavenet-B", result[1].Voice.Name)
 		assert.Equal(t, "female", result[1].Voice.Gender)
 	})
 
+	t.Run("アバターがある場合、署名 URL が生成される", func(t *testing.T) {
+		avatarID := uuid.New()
+		mockStorage := new(mockStorageClient)
+		mockStorage.On("GenerateSignedURL", mock.Anything, "images/avatar.png", storage.SignedURLExpirationImage).Return("https://signed-url.example.com/avatar.png", nil)
+		svc := &channelService{storageClient: mockStorage}
+		ctx := context.Background()
+
+		charsWithAvatar := []model.ChannelCharacter{
+			{
+				ChannelID:   channelID,
+				CharacterID: charID1,
+				Character: model.Character{
+					ID:       charID1,
+					Name:     "太郎",
+					Persona:  "明るい性格",
+					AvatarID: &avatarID,
+					Avatar: &model.Image{
+						ID:   avatarID,
+						Path: "images/avatar.png",
+					},
+					VoiceID: voiceID1,
+					Voice: model.Voice{
+						ID:     voiceID1,
+						Name:   "ja-JP-Wavenet-C",
+						Gender: model.GenderMale,
+					},
+				},
+			},
+		}
+
+		result := svc.toCharacterResponsesFromChannelCharacters(ctx, charsWithAvatar)
+
+		assert.Len(t, result, 1)
+		assert.NotNil(t, result[0].Avatar)
+		assert.Equal(t, avatarID, result[0].Avatar.ID)
+		assert.Equal(t, "https://signed-url.example.com/avatar.png", result[0].Avatar.URL)
+		mockStorage.AssertExpectations(t)
+	})
+
+	t.Run("アバターが外部 URL の場合、そのまま URL を返す", func(t *testing.T) {
+		avatarID := uuid.New()
+		mockStorage := new(mockStorageClient)
+		svc := &channelService{storageClient: mockStorage}
+		ctx := context.Background()
+
+		charsWithExternalAvatar := []model.ChannelCharacter{
+			{
+				ChannelID:   channelID,
+				CharacterID: charID1,
+				Character: model.Character{
+					ID:       charID1,
+					Name:     "太郎",
+					Persona:  "明るい性格",
+					AvatarID: &avatarID,
+					Avatar: &model.Image{
+						ID:   avatarID,
+						Path: "https://example.com/avatar.png",
+					},
+					VoiceID: voiceID1,
+					Voice: model.Voice{
+						ID:     voiceID1,
+						Name:   "ja-JP-Wavenet-C",
+						Gender: model.GenderMale,
+					},
+				},
+			},
+		}
+
+		result := svc.toCharacterResponsesFromChannelCharacters(ctx, charsWithExternalAvatar)
+
+		assert.Len(t, result, 1)
+		assert.NotNil(t, result[0].Avatar)
+		assert.Equal(t, avatarID, result[0].Avatar.ID)
+		assert.Equal(t, "https://example.com/avatar.png", result[0].Avatar.URL)
+	})
+
 	t.Run("空のスライスの場合、空のスライスを返す", func(t *testing.T) {
 		svc := &channelService{}
-		result := svc.toCharacterResponsesFromChannelCharacters([]model.ChannelCharacter{})
+		ctx := context.Background()
+		result := svc.toCharacterResponsesFromChannelCharacters(ctx, []model.ChannelCharacter{})
 
 		assert.Len(t, result, 0)
 		assert.NotNil(t, result)
