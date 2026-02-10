@@ -2571,6 +2571,82 @@ const docTemplate = `{
                 }
             }
         },
+        "/channels/{channelId}/user-prompt": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定したチャンネルに台本プロンプトを設定します（オーナーのみ）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "channels"
+                ],
+                "summary": "チャンネルの台本プロンプト設定",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "チャンネル ID",
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "台本プロンプト設定リクエスト",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SetUserPromptRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ChannelDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/contacts": {
             "post": {
                 "description": "お問い合わせを送信します（認証任意）",
@@ -6109,10 +6185,6 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "maxLength": 255
-                },
-                "userPrompt": {
-                    "type": "string",
-                    "maxLength": 2000
                 }
             }
         },
@@ -6486,6 +6558,15 @@ const docTemplate = `{
                 }
             }
         },
+        "request.SetUserPromptRequest": {
+            "type": "object",
+            "properties": {
+                "userPrompt": {
+                    "type": "string",
+                    "maxLength": 2000
+                }
+            }
+        },
         "request.UpdateBgmRequest": {
             "type": "object",
             "properties": {
@@ -6515,10 +6596,6 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "maxLength": 255
-                },
-                "userPrompt": {
-                    "type": "string",
-                    "maxLength": 2000
                 }
             }
         },

@@ -127,6 +127,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.DELETE("/channels/:channelId", container.ChannelHandler.DeleteChannel)
 	authenticated.POST("/channels/:channelId/publish", container.ChannelHandler.PublishChannel)
 	authenticated.POST("/channels/:channelId/unpublish", container.ChannelHandler.UnpublishChannel)
+	authenticated.PUT("/channels/:channelId/user-prompt", container.ChannelHandler.SetUserPrompt)
 	authenticated.PUT("/channels/:channelId/default-bgm", container.ChannelHandler.SetDefaultBgm)
 	authenticated.DELETE("/channels/:channelId/default-bgm", container.ChannelHandler.DeleteDefaultBgm)
 

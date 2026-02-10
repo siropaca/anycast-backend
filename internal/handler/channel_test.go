@@ -87,6 +87,14 @@ func (m *mockChannelService) UnpublishChannel(ctx context.Context, userID, chann
 	return args.Get(0).(*response.ChannelDataResponse), args.Error(1)
 }
 
+func (m *mockChannelService) SetUserPrompt(ctx context.Context, userID, channelID string, req request.SetUserPromptRequest) (*response.ChannelDataResponse, error) {
+	args := m.Called(ctx, userID, channelID, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.ChannelDataResponse), args.Error(1)
+}
+
 func (m *mockChannelService) SetDefaultBgm(ctx context.Context, userID, channelID string, req request.SetDefaultBgmRequest) (*response.ChannelDataResponse, error) {
 	args := m.Called(ctx, userID, channelID, req)
 	if args.Get(0) == nil {
@@ -373,7 +381,6 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 		reqBody := request.CreateChannelRequest{
 			Name:        "New Channel",
 			Description: "Description",
-			UserPrompt:  "User prompt",
 			CategoryID:  categoryID,
 			Characters: request.ChannelCharactersInput{
 				Create: []request.CreateCharacterInput{
@@ -426,7 +433,6 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 		reqBody := request.CreateChannelRequest{
 			Name:        "New Channel",
 			Description: "Description",
-			UserPrompt:  "User prompt",
 			CategoryID:  categoryID,
 			Characters: request.ChannelCharactersInput{
 				Create: []request.CreateCharacterInput{
@@ -453,7 +459,6 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 		reqBody := request.CreateChannelRequest{
 			Name:        "New Channel",
 			Description: "Description",
-			UserPrompt:  "User prompt",
 			CategoryID:  categoryID,
 			Characters: request.ChannelCharactersInput{
 				Create: []request.CreateCharacterInput{
@@ -548,7 +553,6 @@ func TestChannelHandler_UpdateChannel(t *testing.T) {
 		reqBody := request.UpdateChannelRequest{
 			Name:        "Updated Channel",
 			Description: "Updated Description",
-			UserPrompt:  "Updated User Prompt",
 			CategoryID:  uuid.New().String(),
 		}
 		body, _ := json.Marshal(reqBody)
@@ -596,7 +600,6 @@ func TestChannelHandler_UpdateChannel(t *testing.T) {
 		reqBody := request.UpdateChannelRequest{
 			Name:        "Updated Channel",
 			Description: "Updated Description",
-			UserPrompt:  "Updated User Prompt",
 			CategoryID:  uuid.New().String(),
 		}
 		body, _ := json.Marshal(reqBody)
@@ -620,7 +623,6 @@ func TestChannelHandler_UpdateChannel(t *testing.T) {
 		reqBody := request.UpdateChannelRequest{
 			Name:        "Updated Channel",
 			Description: "Updated Description",
-			UserPrompt:  "Updated User Prompt",
 			CategoryID:  uuid.New().String(),
 		}
 		body, _ := json.Marshal(reqBody)
@@ -642,7 +644,6 @@ func TestChannelHandler_UpdateChannel(t *testing.T) {
 		reqBody := request.UpdateChannelRequest{
 			Name:        "Updated Channel",
 			Description: "Updated Description",
-			UserPrompt:  "Updated User Prompt",
 			CategoryID:  uuid.New().String(),
 		}
 		body, _ := json.Marshal(reqBody)

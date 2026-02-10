@@ -35,6 +35,7 @@ type ChannelService interface {
 	DeleteChannel(ctx context.Context, userID, channelID string) error
 	PublishChannel(ctx context.Context, userID, channelID string, publishedAt *string) (*response.ChannelDataResponse, error)
 	UnpublishChannel(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error)
+	SetUserPrompt(ctx context.Context, userID, channelID string, req request.SetUserPromptRequest) (*response.ChannelDataResponse, error)
 	SetDefaultBgm(ctx context.Context, userID, channelID string, req request.SetDefaultBgmRequest) (*response.ChannelDataResponse, error)
 	DeleteDefaultBgm(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error)
 }
@@ -231,7 +232,6 @@ func (s *channelService) CreateChannel(ctx context.Context, userID string, req r
 			UserID:      uid,
 			Name:        req.Name,
 			Description: req.Description,
-			UserPrompt:  req.UserPrompt,
 			CategoryID:  categoryID,
 			ArtworkID:   artworkID,
 		}
@@ -294,7 +294,6 @@ func (s *channelService) UpdateChannel(ctx context.Context, userID, channelID st
 	// 各フィールドを更新
 	channel.Name = req.Name
 	channel.Description = req.Description
-	channel.UserPrompt = req.UserPrompt
 
 	// カテゴリの更新
 	categoryID, err := uuid.Parse(req.CategoryID)
@@ -489,6 +488,52 @@ func (s *channelService) UnpublishChannel(ctx context.Context, userID, channelID
 
 	// 公開日時を null に設定（非公開化）
 	channel.PublishedAt = nil
+
+	// チャンネルを更新
+	if err := s.channelRepo.Update(ctx, channel); err != nil {
+		return nil, err
+	}
+
+	// リレーションをプリロードして取得
+	updated, err := s.channelRepo.FindByID(ctx, channel.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := s.toChannelResponse(ctx, updated, true, uuid.Nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.ChannelDataResponse{
+		Data: resp,
+	}, nil
+}
+
+// SetUserPrompt は指定されたチャンネルに台本プロンプトを設定する
+func (s *channelService) SetUserPrompt(ctx context.Context, userID, channelID string, req request.SetUserPromptRequest) (*response.ChannelDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("このチャンネルの台本プロンプト設定権限がありません")
+	}
+
+	// 台本プロンプトを設定
+	channel.UserPrompt = req.UserPrompt
 
 	// チャンネルを更新
 	if err := s.channelRepo.Update(ctx, channel); err != nil {

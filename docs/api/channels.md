@@ -156,7 +156,6 @@ POST /channels
 {
   "name": "チャンネル名",
   "description": "説明",
-  "userPrompt": "明るく楽しい雰囲気で...",
   "categoryId": "uuid",
   "artworkImageId": "uuid",
   "characters": {
@@ -185,7 +184,6 @@ POST /channels
 |------------|--------|
 | name | 必須、255文字以内 |
 | description | 必須、2000文字以内 |
-| userPrompt | 必須、2000文字以内 |
 | categoryId | 必須、UUID 形式 |
 | characters | 必須、connect と create の合計が 1〜2 件 |
 | characters.connect[].id | 必須、UUID 形式、自分が所有するキャラクターのみ |
@@ -207,7 +205,6 @@ PATCH /channels/:channelId
 {
   "name": "新しいチャンネル名",
   "description": "新しい説明",
-  "userPrompt": "明るく楽しい雰囲気で...",
   "categoryId": "uuid",
   "artworkImageId": "uuid"
 }
@@ -218,10 +215,9 @@ PATCH /channels/:channelId
 |------------|--------|
 | name | 必須、255文字以内 |
 | description | 必須、2000文字以内 |
-| userPrompt | 必須、2000文字以内 |
 | categoryId | 必須、UUID 形式 |
 
-> **Note:** 公開状態の変更は専用エンドポイント（[チャンネル公開](#チャンネル公開) / [チャンネル非公開](#チャンネル非公開)）を使用してください。デフォルト BGM の設定・削除は専用エンドポイント（[デフォルト BGM 設定](#デフォルト-bgm-設定) / [デフォルト BGM 削除](#デフォルト-bgm-削除)）を使用してください。
+> **Note:** 公開状態の変更は専用エンドポイント（[チャンネル公開](#チャンネル公開) / [チャンネル非公開](#チャンネル非公開)）を使用してください。台本プロンプトの設定は専用エンドポイント（[台本プロンプト設定](#台本プロンプト設定)）を使用してください。デフォルト BGM の設定・削除は専用エンドポイント（[デフォルト BGM 設定](#デフォルト-bgm-設定) / [デフォルト BGM 削除](#デフォルト-bgm-削除)）を使用してください。
 
 ---
 
@@ -286,6 +282,55 @@ POST /channels/:channelId/unpublish
     "publishedAt": null,
     "createdAt": "2025-01-01T00:00:00Z",
     "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+---
+
+## 台本プロンプト設定
+
+```
+PUT /channels/:channelId/user-prompt
+```
+
+チャンネルに台本プロンプトを設定する。
+
+**リクエスト:**
+```json
+{
+  "userPrompt": "明るく楽しい雰囲気で..."
+}
+```
+
+**バリデーション:**
+
+| フィールド | ルール |
+|------------|--------|
+| userPrompt | 2000文字以内。空文字で削除 |
+
+> **Note:** 空文字を送信すると台本プロンプトが削除されます。
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "name": "チャンネル名",
+    "description": "説明",
+    "userPrompt": "明るく楽しい雰囲気で...",
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+**エラー（403 Forbidden）:**
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "このチャンネルの台本プロンプト設定権限がありません"
   }
 }
 ```

@@ -326,6 +326,50 @@ func (h *ChannelHandler) UnpublishChannel(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// SetUserPrompt godoc
+// @Summary チャンネルの台本プロンプト設定
+// @Description 指定したチャンネルに台本プロンプトを設定します（オーナーのみ）
+// @Tags channels
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param request body request.SetUserPromptRequest true "台本プロンプト設定リクエスト"
+// @Success 200 {object} response.ChannelDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/user-prompt [put]
+func (h *ChannelHandler) SetUserPrompt(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
+		return
+	}
+
+	var req request.SetUserPromptRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
+		return
+	}
+
+	result, err := h.channelService.SetUserPrompt(c.Request.Context(), userID, channelID, req)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
 // SetDefaultBgm godoc
 // @Summary チャンネルのデフォルト BGM 設定
 // @Description 指定したチャンネルにデフォルト BGM を設定します。ユーザー BGM またはシステム BGM のどちらかを指定します。
