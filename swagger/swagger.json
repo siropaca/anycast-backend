@@ -1427,6 +1427,88 @@
                 }
             }
         },
+        "/channels/{channelId}/episodes/{episodeId}/audio/remix-bgm": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "ボイス音声を再利用して BGM のみを差し替えた音声を再生成します。TTS をスキップするため高速です。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "episodes"
+                ],
+                "summary": "BGM リミックス",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "チャンネル ID",
+                        "name": "channelId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "エピソード ID",
+                        "name": "episodeId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "ミキシングオプション",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/request.RemixBgmRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/response.AudioJobDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/channels/{channelId}/episodes/{episodeId}/bgm": {
             "put": {
                 "security": [
@@ -6500,6 +6582,31 @@
                 }
             }
         },
+        "request.RemixBgmRequest": {
+            "type": "object",
+            "properties": {
+                "bgmVolumeDb": {
+                    "type": "number",
+                    "maximum": 0,
+                    "minimum": -60
+                },
+                "fadeOutMs": {
+                    "type": "integer",
+                    "maximum": 30000,
+                    "minimum": 0
+                },
+                "paddingEndMs": {
+                    "type": "integer",
+                    "maximum": 10000,
+                    "minimum": 0
+                },
+                "paddingStartMs": {
+                    "type": "integer",
+                    "maximum": 10000,
+                    "minimum": 0
+                }
+            }
+        },
         "request.ReorderPlaylistItemsRequest": {
             "type": "object",
             "required": [
@@ -6813,6 +6920,7 @@
                 "createdAt",
                 "episodeId",
                 "id",
+                "jobType",
                 "progress",
                 "status",
                 "updatedAt"
@@ -6851,6 +6959,9 @@
                     "type": "integer"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "jobType": {
                     "type": "string"
                 },
                 "paddingEndMs": {
@@ -7412,6 +7523,14 @@
                 "voice"
             ],
             "properties": {
+                "avatar": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.AvatarResponse"
+                        }
+                    ],
+                    "x-nullable": true
+                },
                 "createdAt": {
                     "type": "string"
                 },
@@ -7764,6 +7883,14 @@
                 },
                 "updatedAt": {
                     "type": "string"
+                },
+                "voiceAudio": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.AudioResponse"
+                        }
+                    ],
+                    "x-nullable": true
                 },
                 "voiceStyle": {
                     "type": "string"
