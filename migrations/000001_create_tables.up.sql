@@ -259,7 +259,7 @@ CREATE TABLE audio_jobs (
 	-- BGM ミキシング設定
 	bgm_volume_db DECIMAL(5, 2) NOT NULL DEFAULT -20.0,
 	fade_out_ms INTEGER NOT NULL DEFAULT 3000,
-	padding_start_ms INTEGER NOT NULL DEFAULT 500,
+	padding_start_ms INTEGER NOT NULL DEFAULT 1000,
 	padding_end_ms INTEGER NOT NULL DEFAULT 1000,
 	-- 結果
 	result_audio_id UUID REFERENCES audios (id) ON DELETE SET NULL,

@@ -770,7 +770,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | system_bgm_id | UUID | ◯ | - | システム BGM（system_bgms 参照） |
 | bgm_volume_db | DECIMAL(5,2) | | -20.0 | BGM 音量（dB） |
 | fade_out_ms | INTEGER | | 3000 | フェードアウト時間（ms） |
-| padding_start_ms | INTEGER | | 500 | 音声開始前の余白（ms） |
+| padding_start_ms | INTEGER | | 1000 | 音声開始前の余白（ms） |
 | padding_end_ms | INTEGER | | 1000 | 音声終了後の余白（ms） |
 | result_audio_id | UUID | ◯ | - | 生成された音声（audios 参照） |
 | error_message | TEXT | ◯ | - | エラーメッセージ |
