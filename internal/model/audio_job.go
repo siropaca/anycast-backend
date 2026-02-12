@@ -45,7 +45,7 @@ type AudioJob struct {
 	BgmVolumeDB    float64 `gorm:"type:decimal(5,2);not null;default:-20.0;column:bgm_volume_db"`
 	FadeOutMs      int     `gorm:"not null;default:3000;column:fade_out_ms"`
 	PaddingStartMs int     `gorm:"not null;default:1000;column:padding_start_ms"`
-	PaddingEndMs   int     `gorm:"not null;default:1000;column:padding_end_ms"`
+	PaddingEndMs   int     `gorm:"not null;default:3000;column:padding_end_ms"`
 
 	// 結果
 	ResultAudioID *uuid.UUID `gorm:"type:uuid;column:result_audio_id"`
