@@ -62,7 +62,7 @@ func (s *voiceService) ListVoices(ctx context.Context, userID string, filter rep
 }
 
 // GetVoice は指定された ID のボイスを取得する（お気に入り状態付き）
-func (s *voiceService) GetVoice(ctx context.Context, userID string, id string) (*model.Voice, bool, error) {
+func (s *voiceService) GetVoice(ctx context.Context, userID, id string) (*model.Voice, bool, error) {
 	voice, err := s.voiceRepo.FindByID(ctx, id)
 	if err != nil {
 		return nil, false, err
@@ -87,7 +87,7 @@ func (s *voiceService) GetVoice(ctx context.Context, userID string, id string) (
 }
 
 // AddFavorite はボイスをお気に入りに登録する
-func (s *voiceService) AddFavorite(ctx context.Context, userID string, voiceID string) (*model.FavoriteVoice, error) {
+func (s *voiceService) AddFavorite(ctx context.Context, userID, voiceID string) (*model.FavoriteVoice, error) {
 	// ボイスの存在チェック
 	if _, err := s.voiceRepo.FindActiveByID(ctx, voiceID); err != nil {
 		return nil, err
@@ -124,7 +124,7 @@ func (s *voiceService) AddFavorite(ctx context.Context, userID string, voiceID s
 }
 
 // RemoveFavorite はボイスのお気に入りを解除する
-func (s *voiceService) RemoveFavorite(ctx context.Context, userID string, voiceID string) error {
+func (s *voiceService) RemoveFavorite(ctx context.Context, userID, voiceID string) error {
 	uid, err := uuid.Parse(userID)
 	if err != nil {
 		return err

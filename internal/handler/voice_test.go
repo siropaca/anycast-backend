@@ -18,30 +18,54 @@ import (
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
 
+const handlerTestUserID = "8def69af-dae9-4641-a0e5-100107626933"
+
 // VoiceService のモック
 type mockVoiceService struct {
 	mock.Mock
 }
 
-func (m *mockVoiceService) ListVoices(ctx context.Context, filter repository.VoiceFilter) ([]model.Voice, error) {
-	args := m.Called(ctx, filter)
+func (m *mockVoiceService) ListVoices(ctx context.Context, userID string, filter repository.VoiceFilter) ([]model.Voice, []uuid.UUID, error) {
+	args := m.Called(ctx, userID, filter)
+	if args.Get(0) == nil {
+		return nil, nil, args.Error(2)
+	}
+	var favIDs []uuid.UUID
+	if args.Get(1) != nil {
+		favIDs = args.Get(1).([]uuid.UUID)
+	}
+	return args.Get(0).([]model.Voice), favIDs, args.Error(2)
+}
+
+func (m *mockVoiceService) GetVoice(ctx context.Context, userID, id string) (*model.Voice, bool, error) {
+	args := m.Called(ctx, userID, id)
+	if args.Get(0) == nil {
+		return nil, false, args.Error(2)
+	}
+	return args.Get(0).(*model.Voice), args.Bool(1), args.Error(2)
+}
+
+func (m *mockVoiceService) AddFavorite(ctx context.Context, userID, voiceID string) (*model.FavoriteVoice, error) {
+	args := m.Called(ctx, userID, voiceID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]model.Voice), args.Error(1)
+	return args.Get(0).(*model.FavoriteVoice), args.Error(1)
 }
 
-func (m *mockVoiceService) GetVoice(ctx context.Context, id string) (*model.Voice, error) {
-	args := m.Called(ctx, id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*model.Voice), args.Error(1)
+func (m *mockVoiceService) RemoveFavorite(ctx context.Context, userID, voiceID string) error {
+	args := m.Called(ctx, userID, voiceID)
+	return args.Error(0)
 }
 
-func setupRouter(h *VoiceHandler) *gin.Engine {
+// setupVoiceRouter はテスト用のルーターを作成する（ユーザー ID をコンテキストに設定するミドルウェア付き）
+func setupVoiceRouter(h *VoiceHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", handlerTestUserID)
+		c.Next()
+	})
 	r.GET("/voices", h.ListVoices)
 	r.GET("/voices/:voiceId", h.GetVoice)
 	return r
@@ -53,10 +77,10 @@ func TestVoiceHandler_ListVoices(t *testing.T) {
 		voices := []model.Voice{
 			{ID: uuid.New(), Provider: "google", Name: "Voice 1", Gender: "female", IsActive: true},
 		}
-		mockSvc.On("ListVoices", mock.Anything, repository.VoiceFilter{}).Return(voices, nil)
+		mockSvc.On("ListVoices", mock.Anything, handlerTestUserID, repository.VoiceFilter{}).Return(voices, []uuid.UUID{}, nil)
 
 		handler := NewVoiceHandler(mockSvc)
-		router := setupRouter(handler)
+		router := setupVoiceRouter(handler)
 
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", "/voices", http.NoBody)
@@ -79,10 +103,10 @@ func TestVoiceHandler_ListVoices(t *testing.T) {
 		voices := []model.Voice{
 			{ID: uuid.New(), Provider: "google", Gender: "female"},
 		}
-		mockSvc.On("ListVoices", mock.Anything, filter).Return(voices, nil)
+		mockSvc.On("ListVoices", mock.Anything, handlerTestUserID, filter).Return(voices, []uuid.UUID{}, nil)
 
 		handler := NewVoiceHandler(mockSvc)
-		router := setupRouter(handler)
+		router := setupVoiceRouter(handler)
 
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", "/voices?provider=google&gender=female", http.NoBody)
@@ -94,10 +118,10 @@ func TestVoiceHandler_ListVoices(t *testing.T) {
 
 	t.Run("サービスがエラーを返すとエラーレスポンスを返す", func(t *testing.T) {
 		mockSvc := new(mockVoiceService)
-		mockSvc.On("ListVoices", mock.Anything, repository.VoiceFilter{}).Return(nil, apperror.ErrInternal)
+		mockSvc.On("ListVoices", mock.Anything, handlerTestUserID, repository.VoiceFilter{}).Return(nil, nil, apperror.ErrInternal)
 
 		handler := NewVoiceHandler(mockSvc)
-		router := setupRouter(handler)
+		router := setupVoiceRouter(handler)
 
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", "/voices", http.NoBody)
@@ -113,10 +137,10 @@ func TestVoiceHandler_GetVoice(t *testing.T) {
 		mockSvc := new(mockVoiceService)
 		id := uuid.New()
 		voice := &model.Voice{ID: id, Provider: "google", Name: "Test Voice", Gender: "male", IsActive: true}
-		mockSvc.On("GetVoice", mock.Anything, id.String()).Return(voice, nil)
+		mockSvc.On("GetVoice", mock.Anything, handlerTestUserID, id.String()).Return(voice, false, nil)
 
 		handler := NewVoiceHandler(mockSvc)
-		router := setupRouter(handler)
+		router := setupVoiceRouter(handler)
 
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", "/voices/"+id.String(), http.NoBody)
@@ -135,7 +159,7 @@ func TestVoiceHandler_GetVoice(t *testing.T) {
 		mockSvc := new(mockVoiceService)
 
 		handler := NewVoiceHandler(mockSvc)
-		router := setupRouter(handler)
+		router := setupVoiceRouter(handler)
 
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", "/voices/invalid-uuid", http.NoBody)
@@ -148,10 +172,10 @@ func TestVoiceHandler_GetVoice(t *testing.T) {
 	t.Run("存在しないボイスの場合は 404 を返す", func(t *testing.T) {
 		mockSvc := new(mockVoiceService)
 		id := uuid.New()
-		mockSvc.On("GetVoice", mock.Anything, id.String()).Return(nil, apperror.ErrNotFound)
+		mockSvc.On("GetVoice", mock.Anything, handlerTestUserID, id.String()).Return(nil, false, apperror.ErrNotFound)
 
 		handler := NewVoiceHandler(mockSvc)
-		router := setupRouter(handler)
+		router := setupVoiceRouter(handler)
 
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", "/voices/"+id.String(), http.NoBody)
@@ -164,10 +188,10 @@ func TestVoiceHandler_GetVoice(t *testing.T) {
 	t.Run("サービスがエラーを返すとエラーレスポンスを返す", func(t *testing.T) {
 		mockSvc := new(mockVoiceService)
 		id := uuid.New()
-		mockSvc.On("GetVoice", mock.Anything, id.String()).Return(nil, errors.New("unexpected error"))
+		mockSvc.On("GetVoice", mock.Anything, handlerTestUserID, id.String()).Return(nil, false, errors.New("unexpected error"))
 
 		handler := NewVoiceHandler(mockSvc)
-		router := setupRouter(handler)
+		router := setupVoiceRouter(handler)
 
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", "/voices/"+id.String(), http.NoBody)
@@ -214,11 +238,11 @@ func TestToVoiceResponse(t *testing.T) {
 	})
 }
 
-func TestToVoiceResponses(t *testing.T) {
+func TestToVoiceResponsesWithFavorites(t *testing.T) {
 	t.Run("空のスライスを変換すると空のスライスを返す", func(t *testing.T) {
 		voices := []model.Voice{}
 
-		resp := toVoiceResponses(voices)
+		resp := toVoiceResponsesWithFavorites(voices, []uuid.UUID{})
 
 		assert.Empty(t, resp)
 	})
@@ -245,13 +269,15 @@ func TestToVoiceResponses(t *testing.T) {
 			},
 		}
 
-		resp := toVoiceResponses(voices)
+		resp := toVoiceResponsesWithFavorites(voices, []uuid.UUID{id1})
 
 		assert.Len(t, resp, 2)
 		assert.Equal(t, id1, resp[0].ID)
 		assert.Equal(t, "google", resp[0].Provider)
+		assert.True(t, resp[0].IsFavorite)
 		assert.Equal(t, id2, resp[1].ID)
 		assert.Equal(t, "amazon", resp[1].Provider)
+		assert.False(t, resp[1].IsFavorite)
 	})
 
 	t.Run("変換結果の長さが入力と一致する", func(t *testing.T) {
@@ -260,7 +286,7 @@ func TestToVoiceResponses(t *testing.T) {
 			voices[i] = model.Voice{ID: uuid.New()}
 		}
 
-		resp := toVoiceResponses(voices)
+		resp := toVoiceResponsesWithFavorites(voices, []uuid.UUID{})
 
 		assert.Len(t, resp, len(voices))
 	})
