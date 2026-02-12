@@ -1,6 +1,6 @@
 # Voices（ボイス）
 
-システム管理のマスタデータ。参照のみ可能。
+システム管理のマスタデータ。参照のみ可能。ユーザーごとにお気に入り登録が可能。
 
 ## ボイス一覧取得
 
@@ -15,6 +15,8 @@ GET /voices
 | provider | string | - | プロバイダでフィルタ（例: google） |
 | gender | string | - | 性別でフィルタ（male / female / neutral） |
 
+お気に入り登録済みのボイスが先頭に表示される。
+
 **レスポンス:**
 ```json
 {
@@ -26,7 +28,8 @@ GET /voices
       "name": "ja-JP-Wavenet-C",
       "gender": "male",
       "sampleAudioUrl": "https://storage.example.com/...",
-      "isActive": true
+      "isActive": true,
+      "isFavorite": true
     }
   ]
 }
@@ -38,6 +41,83 @@ GET /voices
 
 ```
 GET /voices/:voiceId
+```
+
+**レスポンス:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "provider": "google",
+    "providerVoiceId": "ja-JP-Wavenet-C",
+    "name": "ja-JP-Wavenet-C",
+    "gender": "male",
+    "sampleAudioUrl": "https://storage.example.com/...",
+    "isActive": true,
+    "isFavorite": false
+  }
+}
+```
+
+---
+
+## ボイスお気に入り登録
+
+```
+POST /voices/:voiceId/favorite
+```
+
+指定ボイスをお気に入りに登録する。既に登録済みの場合は 409 を返す。
+
+**レスポンス（201 Created）:**
+```json
+{
+  "data": {
+    "voiceId": "uuid",
+    "createdAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+**エラー（404 Not Found）:**
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "ボイスが見つかりません"
+  }
+}
+```
+
+**エラー（409 Conflict）:**
+```json
+{
+  "error": {
+    "code": "ALREADY_FAVORITED",
+    "message": "既にお気に入り登録済みです"
+  }
+}
+```
+
+---
+
+## ボイスお気に入り解除
+
+```
+DELETE /voices/:voiceId/favorite
+```
+
+**レスポンス（204 No Content）:**
+レスポンスボディなし
+
+**エラー（404 Not Found）:**
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "お気に入りが見つかりません"
+  }
+}
 ```
 
 ---

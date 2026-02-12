@@ -412,6 +412,18 @@ CREATE INDEX idx_comments_episode_id ON comments (episode_id);
 CREATE INDEX idx_comments_created_at ON comments (created_at DESC);
 CREATE INDEX idx_comments_deleted_at ON comments (deleted_at);
 
+-- ボイスお気に入り
+CREATE TABLE favorite_voices (
+	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+	user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+	voice_id UUID NOT NULL REFERENCES voices (id) ON DELETE CASCADE,
+	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	UNIQUE (user_id, voice_id)
+);
+
+CREATE INDEX idx_favorite_voices_user_id ON favorite_voices (user_id);
+CREATE INDEX idx_favorite_voices_voice_id ON favorite_voices (voice_id);
+
 -- フィードバック
 CREATE TABLE feedbacks (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

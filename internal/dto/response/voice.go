@@ -1,6 +1,10 @@
 package response
 
-import "github.com/siropaca/anycast-backend/internal/pkg/uuid"
+import (
+	"time"
+
+	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
+)
 
 // ボイスのレスポンス
 type VoiceResponse struct {
@@ -11,6 +15,7 @@ type VoiceResponse struct {
 	Gender          string    `json:"gender" validate:"required"`
 	SampleAudioURL  string    `json:"sampleAudioUrl" validate:"required"`
 	IsActive        bool      `json:"isActive" validate:"required"`
+	IsFavorite      bool      `json:"isFavorite"`
 }
 
 // ボイス一覧のレスポンス
@@ -21,4 +26,10 @@ type VoiceListResponse struct {
 // ボイス単体のレスポンス
 type VoiceDataResponse struct {
 	Data VoiceResponse `json:"data" validate:"required"`
+}
+
+// ボイスお気に入り登録のレスポンス
+type FavoriteVoiceResponse struct {
+	VoiceID   uuid.UUID `json:"voiceId" validate:"required"`
+	CreatedAt time.Time `json:"createdAt" validate:"required"`
 }

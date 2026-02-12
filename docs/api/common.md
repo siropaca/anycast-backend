@@ -74,7 +74,8 @@
 | Images（アップロード） | Owner | Owner | - | Owner |
 | Search | Public | - | - | - |
 | Recommendations | Optional | - | - | - |
-| Voices | Public | Admin | Admin | Admin |
+| Voices | Owner | Admin | Admin | Admin |
+| Favorite Voices | - | Owner | - | Owner |
 | Categories | Public | Admin | Admin | Admin |
 | Admin（孤児メディア削除） | - | Admin | - | - |
 

@@ -166,6 +166,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 
 	// Repository 層
 	voiceRepo := repository.NewVoiceRepository(db)
+	favVoiceRepo := repository.NewFavoriteVoiceRepository(db)
 	userRepo := repository.NewUserRepository(db)
 	credentialRepo := repository.NewCredentialRepository(db)
 	oauthAccountRepo := repository.NewOAuthAccountRepository(db)
@@ -190,7 +191,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	refreshTokenRepo := repository.NewRefreshTokenRepository(db)
 
 	// Service 層
-	voiceService := service.NewVoiceService(voiceRepo)
+	voiceService := service.NewVoiceService(voiceRepo, favVoiceRepo)
 	authService := service.NewAuthService(userRepo, credentialRepo, oauthAccountRepo, refreshTokenRepo, imageRepo, playlistRepo, audioJobRepo, scriptJobRepo, passwordHasher, storageClient)
 	channelService := service.NewChannelService(db, channelRepo, characterRepo, categoryRepo, imageRepo, voiceRepo, episodeRepo, bgmRepo, systemBgmRepo, playbackHistoryRepo, storageClient)
 	characterService := service.NewCharacterService(characterRepo, voiceRepo, imageRepo, storageClient)

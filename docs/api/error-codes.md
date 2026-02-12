@@ -15,6 +15,7 @@
 | ALREADY_LIKED | 409 | 既に高評価済み |
 | ALREADY_IN_PLAYLIST | 409 | 既に再生リストに追加済み |
 | ALREADY_FOLLOWED | 409 | 既にフォロー済み |
+| ALREADY_FAVORITED | 409 | 既にお気に入り登録済み |
 | DEFAULT_PLAYLIST | 409 | デフォルト再生リストは変更不可 |
 | SELF_FOLLOW_NOT_ALLOWED | 400 | 自分自身はフォロー不可 |
 | CHARACTER_IN_USE | 409 | キャラクターが使用中のため削除不可 |

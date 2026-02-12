@@ -173,6 +173,8 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	// Voices
 	authenticated.GET("/voices", container.VoiceHandler.ListVoices)
 	authenticated.GET("/voices/:voiceId", container.VoiceHandler.GetVoice)
+	authenticated.POST("/voices/:voiceId/favorite", container.VoiceHandler.AddFavorite)
+	authenticated.DELETE("/voices/:voiceId/favorite", container.VoiceHandler.RemoveFavorite)
 
 	// Images
 	authenticated.POST("/images", container.ImageHandler.UploadImage)
