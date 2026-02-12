@@ -156,13 +156,13 @@ func (h *ScriptJobHandler) ListMyScriptJobs(c *gin.Context) {
 
 // GetLatestScriptJob godoc
 // @Summary 最新の完了済み台本生成ジョブ取得
-// @Description エピソードの最新の完了済み台本生成ジョブを取得します
+// @Description エピソードの最新の完了済み台本生成ジョブを取得します。完了済みジョブが存在しない場合は data: null を返します。
 // @Tags script-jobs
 // @Accept json
 // @Produce json
 // @Param channelId path string true "チャンネル ID"
 // @Param episodeId path string true "エピソード ID"
-// @Success 200 {object} response.ScriptJobDataResponse
+// @Success 200 {object} response.ScriptJobDataNullableResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
@@ -192,6 +192,11 @@ func (h *ScriptJobHandler) GetLatestScriptJob(c *gin.Context) {
 	result, err := h.scriptJobService.GetLatestJobByEpisode(c.Request.Context(), userID, channelID, episodeID)
 	if err != nil {
 		Error(c, err)
+		return
+	}
+
+	if result == nil {
+		c.JSON(http.StatusOK, gin.H{"data": nil})
 		return
 	}
 

@@ -50,8 +50,11 @@ GET /channels/:channelId/episodes/:episodeId/script-jobs/latest
 ```
 
 エピソードの最新の完了済み台本生成ジョブを取得します。
+完了済みジョブが存在しない場合は `data: null` を返します（404 ではありません）。
 
 **レスポンス（200 OK）:**
+
+完了済みジョブがある場合:
 ```json
 {
   "data": {
@@ -79,12 +82,19 @@ GET /channels/:channelId/episodes/:episodeId/script-jobs/latest
 }
 ```
 
+完了済みジョブがない場合:
+```json
+{
+  "data": null
+}
+```
+
 **エラー:**
 
 | コード | 説明 |
 |--------|------|
 | FORBIDDEN | チャンネルへのアクセス権限なし |
-| NOT_FOUND | チャンネル・エピソードが存在しない、または完了済みジョブがない |
+| NOT_FOUND | チャンネル・エピソードが存在しない |
 
 ---
 

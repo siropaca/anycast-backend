@@ -248,7 +248,7 @@ func (s *scriptJobService) GetLatestJobByEpisode(ctx context.Context, userID, ch
 	}
 
 	if job == nil {
-		return nil, apperror.ErrNotFound.WithMessage("完了済みの台本生成ジョブが見つかりません")
+		return nil, nil //nolint:nilnil // 完了済みジョブがないのは正常な状態
 	}
 
 	return s.toScriptJobResponse(ctx, job)

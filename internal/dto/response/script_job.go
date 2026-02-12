@@ -47,3 +47,8 @@ type ScriptJobListResponse struct {
 type ScriptJobDataResponse struct {
 	Data ScriptJobResponse `json:"data" validate:"required"`
 }
+
+// 台本生成ジョブ詳細のレスポンス（data が null の場合あり）
+type ScriptJobDataNullableResponse struct {
+	Data *ScriptJobResponse `json:"data" extensions:"x-nullable"`
+}

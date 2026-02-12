@@ -1523,7 +1523,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "エピソードの最新の完了済み台本生成ジョブを取得します",
+                "description": "エピソードの最新の完了済み台本生成ジョブを取得します。完了済みジョブが存在しない場合は data: null を返します。",
                 "consumes": [
                     "application/json"
                 ],
@@ -1554,7 +1554,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.ScriptJobDataResponse"
+                            "$ref": "#/definitions/response.ScriptJobDataNullableResponse"
                         }
                     },
                     "400": {
@@ -8813,6 +8813,19 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "response.ScriptJobDataNullableResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.ScriptJobResponse"
+                        }
+                    ],
+                    "x-nullable": true
                 }
             }
         },
