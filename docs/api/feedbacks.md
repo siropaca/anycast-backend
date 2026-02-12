@@ -67,7 +67,7 @@ POST /feedbacks
 
 ## Slack 通知
 
-環境変数 `SLACK_WEBHOOK_URL` が設定されている場合、フィードバック受信時に Slack へ通知を送信します。
+環境変数 `SLACK_FEEDBACK_WEBHOOK_URL` が設定されている場合、フィードバック受信時に Slack へ通知を送信します。
 
 **通知内容:**
 

@@ -83,7 +83,7 @@ POST /contacts
 
 ## Slack 通知
 
-環境変数 `SLACK_WEBHOOK_URL` が設定されている場合、お問い合わせ受信時に Slack へ通知を送信します。
+環境変数 `SLACK_CONTACT_WEBHOOK_URL` が設定されている場合、お問い合わせ受信時に Slack へ通知を送信します。
 
 **通知内容:**
 

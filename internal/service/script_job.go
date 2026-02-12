@@ -15,6 +15,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/cloudtasks"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/llm"
+	"github.com/siropaca/anycast-backend/internal/infrastructure/slack"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/websocket"
 	"github.com/siropaca/anycast-backend/internal/model"
 	"github.com/siropaca/anycast-backend/internal/pkg/logger"
@@ -45,6 +46,7 @@ type scriptJobService struct {
 	tasksClient    cloudtasks.Client
 	wsHub          *websocket.Hub
 	traceMode      tracer.Mode
+	slackClient    slack.Client
 }
 
 // NewScriptJobService は scriptJobService を生成して ScriptJobService として返す
@@ -59,6 +61,7 @@ func NewScriptJobService(
 	tasksClient cloudtasks.Client,
 	wsHub *websocket.Hub,
 	traceMode tracer.Mode,
+	slackClient slack.Client,
 ) ScriptJobService {
 	return &scriptJobService{
 		db:             db,
@@ -71,6 +74,7 @@ func NewScriptJobService(
 		tasksClient:    tasksClient,
 		wsHub:          wsHub,
 		traceMode:      traceMode,
+		slackClient:    slackClient,
 	}
 }
 
@@ -843,6 +847,7 @@ func (s *scriptJobService) checkCanceled(ctx context.Context, job *model.ScriptJ
 
 // failJob は指定されたジョブを失敗状態に更新する
 func (s *scriptJobService) failJob(ctx context.Context, job *model.ScriptJob, err error) {
+	log := logger.FromContext(ctx)
 	completedAt := time.Now()
 	job.Status = model.ScriptJobStatusFailed
 	job.CompletedAt = &completedAt
@@ -861,6 +866,27 @@ func (s *scriptJobService) failJob(ctx context.Context, job *model.ScriptJob, er
 
 	_ = s.scriptJobRepo.Update(ctx, job) //nolint:errcheck // fail update is best effort
 	s.notifyFailed(job.ID.String(), job.UserID.String(), job.ErrorCode, job.ErrorMessage)
+
+	// Slack アラート通知（ベストエフォート）
+	if s.slackClient != nil {
+		errCode := ""
+		errMsg := ""
+		if job.ErrorCode != nil {
+			errCode = *job.ErrorCode
+		}
+		if job.ErrorMessage != nil {
+			errMsg = *job.ErrorMessage
+		}
+		if alertErr := s.slackClient.SendAlert(ctx, slack.AlertNotification{
+			JobID:        job.ID.String(),
+			JobType:      "台本生成 (Script)",
+			ErrorCode:    errCode,
+			ErrorMessage: errMsg,
+			OccurredAt:   completedAt,
+		}); alertErr != nil {
+			log.Warn("failed to send slack alert for script job", "error", alertErr, "job_id", job.ID)
+		}
+	}
 }
 
 // notifyProgress はジョブの進捗を WebSocket で通知する

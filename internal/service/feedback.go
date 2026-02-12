@@ -95,7 +95,7 @@ func (s *feedbackService) CreateFeedback(ctx context.Context, userID string, inp
 	}
 
 	// Slack 通知（非同期で実行し、エラーは無視）
-	if s.slackClient.IsEnabled() {
+	if s.slackClient.IsFeedbackEnabled() {
 		go func() {
 			notification := slack.FeedbackNotification{
 				UserEmail:     user.Email,

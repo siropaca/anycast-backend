@@ -159,7 +159,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	go wsHub.Run()
 
 	// Slack クライアント
-	slackClient := slack.NewClient(cfg.SlackWebhookURL)
+	slackClient := slack.NewClient(cfg.SlackFeedbackWebhookURL, cfg.SlackContactWebhookURL, cfg.SlackAlertWebhookURL)
 
 	// FFmpeg サービス
 	ffmpegService := service.NewFFmpegService()
@@ -215,6 +215,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		ffmpegService,
 		tasksClient,
 		wsHub,
+		slackClient,
 	)
 	scriptJobService := service.NewScriptJobService(
 		db,
@@ -227,6 +228,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		tasksClient,
 		wsHub,
 		tracer.Mode(cfg.TraceMode),
+		slackClient,
 	)
 	feedbackService := service.NewFeedbackService(feedbackRepo, imageRepo, userRepo, storageClient, slackClient)
 	contactService := service.NewContactService(contactRepo, slackClient)

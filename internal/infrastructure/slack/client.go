@@ -15,7 +15,10 @@ import (
 type Client interface {
 	SendFeedback(ctx context.Context, feedback FeedbackNotification) error
 	SendContact(ctx context.Context, contact ContactNotification) error
-	IsEnabled() bool
+	SendAlert(ctx context.Context, alert AlertNotification) error
+	IsFeedbackEnabled() bool
+	IsContactEnabled() bool
+	IsAlertEnabled() bool
 }
 
 // FeedbackNotification はフィードバック通知の内容を表す
@@ -27,6 +30,15 @@ type FeedbackNotification struct {
 	PageURL       *string
 	UserAgent     *string
 	CreatedAt     time.Time
+}
+
+// AlertNotification はジョブ失敗時のアラート通知の内容を表す
+type AlertNotification struct {
+	JobID        string
+	JobType      string
+	ErrorCode    string
+	ErrorMessage string
+	OccurredAt   time.Time
 }
 
 // ContactNotification はお問い合わせ通知の内容を表す
@@ -42,27 +54,46 @@ type ContactNotification struct {
 }
 
 type slackClient struct {
-	webhookURL string
-	httpClient *http.Client
+	feedbackWebhookURL string
+	contactWebhookURL  string
+	alertWebhookURL    string
+	httpClient         *http.Client
 }
 
 // NewClient は Slack クライアントを生成する
-// webhookURL が空の場合は通知が無効化される
-func NewClient(webhookURL string) Client {
+//
+// 各 Webhook URL が空の場合、対応する通知が無効化される
+//
+// @param feedbackWebhookURL - フィードバック通知用の Slack Webhook URL
+// @param contactWebhookURL - お問い合わせ通知用の Slack Webhook URL
+// @param alertWebhookURL - アラート通知用の Slack Webhook URL
+func NewClient(feedbackWebhookURL, contactWebhookURL, alertWebhookURL string) Client {
 	return &slackClient{
-		webhookURL: webhookURL,
-		httpClient: &http.Client{Timeout: 10 * time.Second},
+		feedbackWebhookURL: feedbackWebhookURL,
+		contactWebhookURL:  contactWebhookURL,
+		alertWebhookURL:    alertWebhookURL,
+		httpClient:         &http.Client{Timeout: 10 * time.Second},
 	}
 }
 
-// IsEnabled は Slack 通知が有効かどうかを返す
-func (c *slackClient) IsEnabled() bool {
-	return c.webhookURL != ""
+// IsFeedbackEnabled は Slack フィードバック通知が有効かどうかを返す
+func (c *slackClient) IsFeedbackEnabled() bool {
+	return c.feedbackWebhookURL != ""
+}
+
+// IsContactEnabled は Slack お問い合わせ通知が有効かどうかを返す
+func (c *slackClient) IsContactEnabled() bool {
+	return c.contactWebhookURL != ""
+}
+
+// IsAlertEnabled は Slack アラート通知が有効かどうかを返す
+func (c *slackClient) IsAlertEnabled() bool {
+	return c.alertWebhookURL != ""
 }
 
 // SendFeedback はフィードバック通知を Slack に送信する
 func (c *slackClient) SendFeedback(ctx context.Context, feedback FeedbackNotification) error {
-	if !c.IsEnabled() {
+	if !c.IsFeedbackEnabled() {
 		return nil
 	}
 
@@ -134,7 +165,7 @@ func (c *slackClient) SendFeedback(ctx context.Context, feedback FeedbackNotific
 		return fmt.Errorf("failed to marshal slack payload: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.webhookURL, bytes.NewBuffer(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.feedbackWebhookURL, bytes.NewBuffer(body))
 	if err != nil {
 		return fmt.Errorf("failed to create slack request: %w", err)
 	}
@@ -156,7 +187,7 @@ func (c *slackClient) SendFeedback(ctx context.Context, feedback FeedbackNotific
 
 // SendContact はお問い合わせ通知を Slack に送信する
 func (c *slackClient) SendContact(ctx context.Context, contact ContactNotification) error {
-	if !c.IsEnabled() {
+	if !c.IsContactEnabled() {
 		return nil
 	}
 
@@ -225,7 +256,7 @@ func (c *slackClient) SendContact(ctx context.Context, contact ContactNotificati
 		return fmt.Errorf("failed to marshal slack payload: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.webhookURL, bytes.NewBuffer(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.contactWebhookURL, bytes.NewBuffer(body))
 	if err != nil {
 		return fmt.Errorf("failed to create slack request: %w", err)
 	}
@@ -240,6 +271,78 @@ func (c *slackClient) SendContact(ctx context.Context, contact ContactNotificati
 	if resp.StatusCode != http.StatusOK {
 		logger.FromContext(ctx).Warn("slack notification failed", "status", resp.StatusCode)
 		return fmt.Errorf("slack returned status %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
+// SendAlert はジョブ失敗時のアラート通知を Slack に送信する
+func (c *slackClient) SendAlert(ctx context.Context, alert AlertNotification) error {
+	if !c.IsAlertEnabled() {
+		return nil
+	}
+
+	// エラーメッセージが長い場合は切り詰め
+	errorMessage := alert.ErrorMessage
+	if len(errorMessage) > 300 {
+		errorMessage = errorMessage[:300] + "..."
+	}
+
+	blocks := []map[string]any{
+		{
+			"type": "header",
+			"text": map[string]string{
+				"type": "plain_text",
+				"text": "🚨 Job Failed Alert",
+			},
+		},
+		{
+			"type": "section",
+			"fields": []map[string]string{
+				{"type": "mrkdwn", "text": fmt.Sprintf("*Job Type:*\n%s", alert.JobType)},
+				{"type": "mrkdwn", "text": fmt.Sprintf("*Error Code:*\n%s", alert.ErrorCode)},
+			},
+		},
+		{
+			"type": "section",
+			"fields": []map[string]string{
+				{"type": "mrkdwn", "text": fmt.Sprintf("*Job ID:*\n%s", alert.JobID)},
+				{"type": "mrkdwn", "text": fmt.Sprintf("*Date:*\n%s", alert.OccurredAt.Format(time.RFC3339))},
+			},
+		},
+		{
+			"type": "section",
+			"text": map[string]string{
+				"type": "mrkdwn",
+				"text": fmt.Sprintf("*Error:*\n%s", errorMessage),
+			},
+		},
+	}
+
+	payload := map[string]any{
+		"blocks": blocks,
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal slack alert payload: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.alertWebhookURL, bytes.NewBuffer(body))
+	if err != nil {
+		return fmt.Errorf("failed to create slack alert request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to send slack alert: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		logger.FromContext(ctx).Warn("slack alert failed", "status", resp.StatusCode)
+		return fmt.Errorf("slack alert returned status %d", resp.StatusCode)
 	}
 
 	return nil

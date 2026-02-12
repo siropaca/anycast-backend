@@ -45,8 +45,12 @@ type Config struct {
 	ClaudeAPIKey string
 	// Gemini LLM のロケーション（デフォルト: asia-northeast1）
 	GeminiLLMLocation string
-	// Slack Webhook URL（空の場合は通知無効）
-	SlackWebhookURL string
+	// Slack フィードバック通知用 Webhook URL（空の場合は通知無効）
+	SlackFeedbackWebhookURL string
+	// Slack お問い合わせ通知用 Webhook URL（空の場合は通知無効）
+	SlackContactWebhookURL string
+	// Slack アラート用 Webhook URL（空の場合はアラート通知無効）
+	SlackAlertWebhookURL string
 	// トレースモード（none, log, file）
 	TraceMode string
 }
@@ -71,7 +75,9 @@ func Load() *Config {
 		GoogleCloudTTSLocation:              getEnv("GOOGLE_CLOUD_TTS_LOCATION", "global"),
 		ClaudeAPIKey:                        getEnv("CLAUDE_API_KEY", ""),
 		GeminiLLMLocation:                   getEnv("GEMINI_LLM_LOCATION", "asia-northeast1"),
-		SlackWebhookURL:                     getEnv("SLACK_WEBHOOK_URL", ""),
+		SlackFeedbackWebhookURL:             getEnv("SLACK_FEEDBACK_WEBHOOK_URL", ""),
+		SlackContactWebhookURL:              getEnv("SLACK_CONTACT_WEBHOOK_URL", ""),
+		SlackAlertWebhookURL:                getEnv("SLACK_ALERT_WEBHOOK_URL", ""),
 		TraceMode:                           getEnv("TRACE_MODE", "none"),
 	}
 }

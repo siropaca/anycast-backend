@@ -69,7 +69,7 @@ func (s *contactService) CreateContact(ctx context.Context, input CreateContactI
 	}
 
 	// Slack 通知（非同期で実行し、エラーは無視）
-	if s.slackClient.IsEnabled() {
+	if s.slackClient.IsContactEnabled() {
 		go func() {
 			var userIDStr *string
 			if contact.UserID != nil {

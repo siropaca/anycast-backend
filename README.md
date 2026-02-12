@@ -101,7 +101,8 @@ cp .env.example .env        # 環境変数ファイルの作成
 | `GOOGLE_CLOUD_TASKS_WORKER_URL` | ワーカーエンドポイントのベース URL（末尾に `/audio` や `/script` が付与される） | - |
 | `GOOGLE_CLOUD_TTS_LOCATION` | Gemini TTS のロケーション | global |
 | `TRACE_MODE` | トレースモード（none / log / file） | none |
-| `SLACK_WEBHOOK_URL` | Slack Webhook URL（フィードバック通知用、空の場合は通知無効） | - |
+| `SLACK_FEEDBACK_WEBHOOK_URL` | Slack Webhook URL（フィードバック通知用、空の場合は通知無効） | - |
+| `SLACK_CONTACT_WEBHOOK_URL` | Slack Webhook URL（お問い合わせ通知用、空の場合は通知無効） | - |
 
 > **Note:** `GOOGLE_CLOUD_PROJECT_ID` と `GOOGLE_CLOUD_TASKS_WORKER_URL` が未設定の場合、Cloud Tasks を使わずに goroutine で直接ジョブを実行します（ローカル開発用）。
 

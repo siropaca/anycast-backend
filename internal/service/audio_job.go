@@ -10,6 +10,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/dto/request"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/cloudtasks"
+	"github.com/siropaca/anycast-backend/internal/infrastructure/slack"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/tts"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/websocket"
@@ -50,6 +51,7 @@ type audioJobService struct {
 	ffmpegService  FFmpegService
 	tasksClient    cloudtasks.Client
 	wsHub          *websocket.Hub
+	slackClient    slack.Client
 }
 
 // NewAudioJobService は audioJobService を生成して AudioJobService として返す
@@ -66,6 +68,7 @@ func NewAudioJobService(
 	ffmpegService FFmpegService,
 	tasksClient cloudtasks.Client,
 	wsHub *websocket.Hub,
+	slackClient slack.Client,
 ) AudioJobService {
 	return &audioJobService{
 		audioJobRepo:   audioJobRepo,
@@ -80,6 +83,7 @@ func NewAudioJobService(
 		ffmpegService:  ffmpegService,
 		tasksClient:    tasksClient,
 		wsHub:          wsHub,
+		slackClient:    slackClient,
 	}
 }
 
@@ -722,6 +726,7 @@ func (s *audioJobService) checkCanceled(ctx context.Context, job *model.AudioJob
 
 // failJob は指定されたジョブを失敗状態に更新する
 func (s *audioJobService) failJob(ctx context.Context, job *model.AudioJob, err error) {
+	log := logger.FromContext(ctx)
 	completedAt := time.Now()
 	job.Status = model.AudioJobStatusFailed
 	job.CompletedAt = &completedAt
@@ -740,6 +745,27 @@ func (s *audioJobService) failJob(ctx context.Context, job *model.AudioJob, err 
 
 	_ = s.audioJobRepo.Update(ctx, job) //nolint:errcheck // fail update is best effort
 	s.notifyFailed(job.ID.String(), job.UserID.String(), job.ErrorCode, job.ErrorMessage)
+
+	// Slack アラート通知（ベストエフォート）
+	if s.slackClient != nil {
+		errCode := ""
+		errMsg := ""
+		if job.ErrorCode != nil {
+			errCode = *job.ErrorCode
+		}
+		if job.ErrorMessage != nil {
+			errMsg = *job.ErrorMessage
+		}
+		if alertErr := s.slackClient.SendAlert(ctx, slack.AlertNotification{
+			JobID:        job.ID.String(),
+			JobType:      "音声生成 (Audio)",
+			ErrorCode:    errCode,
+			ErrorMessage: errMsg,
+			OccurredAt:   completedAt,
+		}); alertErr != nil {
+			log.Warn("failed to send slack alert for audio job", "error", alertErr, "job_id", job.ID)
+		}
+	}
 }
 
 // notifyProgress はジョブの進捗を WebSocket で通知する
