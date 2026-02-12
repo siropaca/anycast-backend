@@ -416,7 +416,7 @@ CREATE TABLE audio_jobs (
     system_bgm_id UUID REFERENCES system_bgms (id) ON DELETE SET NULL,
 
     -- BGM ミキシング設定
-    bgm_volume_db DECIMAL(5, 2) NOT NULL DEFAULT -15.0,
+    bgm_volume_db DECIMAL(5, 2) NOT NULL DEFAULT -20.0,
     fade_out_ms INTEGER NOT NULL DEFAULT 3000,
     padding_start_ms INTEGER NOT NULL DEFAULT 500,
     padding_end_ms INTEGER NOT NULL DEFAULT 1000,

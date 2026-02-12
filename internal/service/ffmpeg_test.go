@@ -77,7 +77,7 @@ func TestFFmpegService_MixAudioWithBGM(t *testing.T) {
 			VoiceData:       []byte{},
 			BGMData:         []byte{},
 			VoiceDurationMs: 1000,
-			BGMVolumeDB:     -15.0,
+			BGMVolumeDB:     -20.0,
 			FadeOutMs:       3000,
 			PaddingStartMs:  500,
 			PaddingEndMs:    1000,
@@ -93,7 +93,7 @@ func TestFFmpegService_MixAudioWithBGM(t *testing.T) {
 			VoiceData:       []byte("invalid audio data"),
 			BGMData:         []byte("invalid bgm data"),
 			VoiceDurationMs: 1000,
-			BGMVolumeDB:     -15.0,
+			BGMVolumeDB:     -20.0,
 			FadeOutMs:       3000,
 			PaddingStartMs:  500,
 			PaddingEndMs:    1000,
@@ -111,14 +111,14 @@ func TestMixParams(t *testing.T) {
 			VoiceData:       []byte("voice"),
 			BGMData:         []byte("bgm"),
 			VoiceDurationMs: 5000,
-			BGMVolumeDB:     -15.0,
+			BGMVolumeDB:     -20.0,
 			FadeOutMs:       3000,
 			PaddingStartMs:  500,
 			PaddingEndMs:    1000,
 		}
 
 		assert.Equal(t, 5000, params.VoiceDurationMs)
-		assert.Equal(t, -15.0, params.BGMVolumeDB)
+		assert.Equal(t, -20.0, params.BGMVolumeDB)
 		assert.Equal(t, 3000, params.FadeOutMs)
 		assert.Equal(t, 500, params.PaddingStartMs)
 		assert.Equal(t, 1000, params.PaddingEndMs)

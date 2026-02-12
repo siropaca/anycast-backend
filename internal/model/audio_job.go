@@ -42,7 +42,7 @@ type AudioJob struct {
 	SystemBgmID *uuid.UUID `gorm:"type:uuid;column:system_bgm_id"`
 
 	// BGM ミキシング設定
-	BgmVolumeDB    float64 `gorm:"type:decimal(5,2);not null;default:-15.0;column:bgm_volume_db"`
+	BgmVolumeDB    float64 `gorm:"type:decimal(5,2);not null;default:-20.0;column:bgm_volume_db"`
 	FadeOutMs      int     `gorm:"not null;default:3000;column:fade_out_ms"`
 	PaddingStartMs int     `gorm:"not null;default:500;column:padding_start_ms"`
 	PaddingEndMs   int     `gorm:"not null;default:1000;column:padding_end_ms"`

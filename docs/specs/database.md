@@ -768,7 +768,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | voice_style | TEXT | | '' | 音声生成のスタイル指示 |
 | bgm_id | UUID | ◯ | - | ユーザー BGM（bgms 参照） |
 | system_bgm_id | UUID | ◯ | - | システム BGM（system_bgms 参照） |
-| bgm_volume_db | DECIMAL(5,2) | | -15.0 | BGM 音量（dB） |
+| bgm_volume_db | DECIMAL(5,2) | | -20.0 | BGM 音量（dB） |
 | fade_out_ms | INTEGER | | 3000 | フェードアウト時間（ms） |
 | padding_start_ms | INTEGER | | 500 | 音声開始前の余白（ms） |
 | padding_end_ms | INTEGER | | 1000 | 音声終了後の余白（ms） |
