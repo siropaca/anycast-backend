@@ -137,8 +137,8 @@
 | **Voices（ボイス）** | - | - | - | - | [master.md](./master.md) |
 | GET | `/api/v1/voices` | ボイス一覧取得 | Owner | ✅ | [詳細](./master.md#ボイス一覧取得) |
 | GET | `/api/v1/voices/:voiceId` | ボイス取得 | Owner | ✅ | [詳細](./master.md#ボイス取得) |
-| POST | `/api/v1/voices/:voiceId/favorite` | ボイスお気に入り登録 | Owner | | [詳細](./master.md#ボイスお気に入り登録) |
-| DELETE | `/api/v1/voices/:voiceId/favorite` | ボイスお気に入り解除 | Owner | | [詳細](./master.md#ボイスお気に入り解除) |
+| POST | `/api/v1/voices/:voiceId/favorite` | ボイスお気に入り登録 | Owner | ✅ | [詳細](./master.md#ボイスお気に入り登録) |
+| DELETE | `/api/v1/voices/:voiceId/favorite` | ボイスお気に入り解除 | Owner | ✅ | [詳細](./master.md#ボイスお気に入り解除) |
 | **Categories（カテゴリ）** | - | - | - | - | [master.md](./master.md#categoriesカテゴリ) |
 | GET | `/api/v1/categories` | カテゴリ一覧取得 | Optional | ✅ | [詳細](./master.md#カテゴリ一覧取得) |
 | GET | `/api/v1/categories/:slug` | カテゴリ取得（スラッグ指定） | Owner | ✅ | [詳細](./master.md#カテゴリ取得スラッグ指定) |

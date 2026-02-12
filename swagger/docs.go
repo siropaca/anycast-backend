@@ -5799,7 +5799,12 @@ const docTemplate = `{
         },
         "/voices": {
             "get": {
-                "description": "利用可能なボイスの一覧を取得します",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "利用可能なボイスの一覧を取得します（お気に入りが先頭に表示されます）",
                 "consumes": [
                     "application/json"
                 ],
@@ -5837,6 +5842,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/response.ErrorResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -5848,6 +5859,11 @@ const docTemplate = `{
         },
         "/voices/{voiceId}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "指定された ID のボイスを取得します",
                 "consumes": [
                     "application/json"
@@ -5877,6 +5893,129 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/voices/{voiceId}/favorite": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定されたボイスをお気に入りに登録します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "voices"
+                ],
+                "summary": "ボイスお気に入り登録",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ボイス ID（UUID 形式）",
+                        "name": "voiceId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.FavoriteVoiceResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "指定されたボイスのお気に入りを解除します",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "voices"
+                ],
+                "summary": "ボイスお気に入り解除",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ボイス ID（UUID 形式）",
+                        "name": "voiceId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.ErrorResponse"
                         }
@@ -7691,6 +7830,21 @@ const docTemplate = `{
                 }
             }
         },
+        "response.FavoriteVoiceResponse": {
+            "type": "object",
+            "required": [
+                "createdAt",
+                "voiceId"
+            ],
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "voiceId": {
+                    "type": "string"
+                }
+            }
+        },
         "response.FeedbackDataResponse": {
             "type": "object",
             "required": [
@@ -9333,6 +9487,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "isActive": {
+                    "type": "boolean"
+                },
+                "isFavorite": {
                     "type": "boolean"
                 },
                 "name": {

@@ -64,9 +64,9 @@ type slackClient struct {
 //
 // 各 Webhook URL が空の場合、対応する通知が無効化される
 //
-// @param feedbackWebhookURL - フィードバック通知用の Slack Webhook URL
-// @param contactWebhookURL - お問い合わせ通知用の Slack Webhook URL
-// @param alertWebhookURL - アラート通知用の Slack Webhook URL
+// feedbackWebhookURL: フィードバック通知用の Slack Webhook URL
+// contactWebhookURL: お問い合わせ通知用の Slack Webhook URL
+// alertWebhookURL: アラート通知用の Slack Webhook URL
 func NewClient(feedbackWebhookURL, contactWebhookURL, alertWebhookURL string) Client {
 	return &slackClient{
 		feedbackWebhookURL: feedbackWebhookURL,

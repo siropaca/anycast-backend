@@ -66,6 +66,7 @@
 - `interface{}` ではなく `any` を使用する
 - エラーの型チェックには型アサーションではなく `errors.As` を使用する
 - 標準ライブラリの新しいパッケージ（`slices`, `maps`, `cmp` など）を積極的に活用する
+- Go のコメントに `@param` / `@returns` などの JSDoc スタイルのタグを使わない（swag が Swagger アノテーションとして誤解釈しビルドエラーになる）
 - エラーコードやエラーメッセージは日本語で記載する
 - バリデーションエラーは `internal/handler/validation.go` の `formatValidationError` 関数で日本語化する
   - 新しいフィールドを追加した場合は `fieldNameMap` にマッピングを追加する
