@@ -239,6 +239,19 @@ curl -s "http://localhost:8081/api/v1/me/script-jobs?status=completed" \
   repo.Update(ctx, channel)  // 正しく更新される
   ```
 
+- **DB に保存するタイムスタンプには `time.Now().UTC()` を使用する**
+  - `time.Now()` はローカルタイムゾーン（例: JST）の時刻を返すが、PostgreSQL の `TIMESTAMP` 型（タイムゾーンなし）にそのまま保存すると、読み出し時に UTC として解釈されてタイムゾーン分ずれる
+  - GORM の自動設定（`CreatedAt` / `UpdatedAt`）は内部的に UTC を使うため問題ないが、アプリケーションコードで手動設定する `StartedAt` / `CompletedAt` 等は明示的に `.UTC()` を付ける
+  ```go
+  // 悪い例
+  now := time.Now()
+  job.StartedAt = &now  // JST がそのまま UTC として保存される
+
+  // 良い例
+  now := time.Now().UTC()
+  job.StartedAt = &now  // 正しい UTC が保存される
+  ```
+
 ### ログ
 
 | レベル | 用途 | 自動追加 |

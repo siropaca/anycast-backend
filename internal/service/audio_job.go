@@ -270,12 +270,7 @@ func (s *audioJobService) CreateJob(ctx context.Context, userID, channelID, epis
 		}()
 	}
 
-	return &response.AudioJobResponse{
-		ID:       job.ID,
-		Status:   string(job.Status),
-		JobType:  string(job.JobType),
-		Progress: job.Progress,
-	}, nil
+	return s.toAudioJobResponse(ctx, job)
 }
 
 // GetJob は指定されたジョブの詳細を取得する
@@ -356,7 +351,7 @@ func (s *audioJobService) ExecuteJob(ctx context.Context, jobID string) error {
 	if job.Status == model.AudioJobStatusCanceling {
 		log.Info("completing cancellation for job", "job_id", jobID)
 		job.Status = model.AudioJobStatusCanceled
-		now := time.Now()
+		now := time.Now().UTC()
 		job.CompletedAt = &now
 		if err := s.audioJobRepo.Update(ctx, job); err != nil {
 			return err
@@ -366,7 +361,7 @@ func (s *audioJobService) ExecuteJob(ctx context.Context, jobID string) error {
 	}
 
 	// 処理開始
-	now := time.Now()
+	now := time.Now().UTC()
 	job.Status = model.AudioJobStatusProcessing
 	job.StartedAt = &now
 	if err := s.audioJobRepo.Update(ctx, job); err != nil {
@@ -658,7 +653,7 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 	}
 
 	// ジョブを完了状態に更新
-	completedAt := time.Now()
+	completedAt := time.Now().UTC()
 	job.Status = model.AudioJobStatusCompleted
 	job.Progress = 100
 	job.CompletedAt = &completedAt
@@ -712,7 +707,7 @@ func (s *audioJobService) checkCanceled(ctx context.Context, job *model.AudioJob
 	if latestJob.Status == model.AudioJobStatusCanceling {
 		// canceled に遷移
 		latestJob.Status = model.AudioJobStatusCanceled
-		now := time.Now()
+		now := time.Now().UTC()
 		latestJob.CompletedAt = &now
 		if err := s.audioJobRepo.Update(ctx, latestJob); err != nil {
 			return err
@@ -727,7 +722,7 @@ func (s *audioJobService) checkCanceled(ctx context.Context, job *model.AudioJob
 // failJob は指定されたジョブを失敗状態に更新する
 func (s *audioJobService) failJob(ctx context.Context, job *model.AudioJob, err error) {
 	log := logger.FromContext(ctx)
-	completedAt := time.Now()
+	completedAt := time.Now().UTC()
 	job.Status = model.AudioJobStatusFailed
 	job.CompletedAt = &completedAt
 
@@ -833,7 +828,7 @@ func (s *audioJobService) CancelJob(ctx context.Context, userID, jobID string) e
 	case model.AudioJobStatusPending:
 		// pending → canceled に遷移
 		job.Status = model.AudioJobStatusCanceled
-		now := time.Now()
+		now := time.Now().UTC()
 		job.CompletedAt = &now
 		if err := s.audioJobRepo.Update(ctx, job); err != nil {
 			return err
@@ -1079,7 +1074,7 @@ func (s *audioJobService) executeRemixInternal(ctx context.Context, job *model.A
 	}
 
 	// ジョブを完了状態に更新
-	completedAt := time.Now()
+	completedAt := time.Now().UTC()
 	job.Status = model.AudioJobStatusCompleted
 	job.Progress = 100
 	job.CompletedAt = &completedAt

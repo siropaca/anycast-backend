@@ -176,11 +176,7 @@ func (s *scriptJobService) CreateJob(ctx context.Context, userID, channelID, epi
 		}()
 	}
 
-	return &response.ScriptJobResponse{
-		ID:       job.ID,
-		Status:   string(job.Status),
-		Progress: job.Progress,
-	}, nil
+	return s.toScriptJobResponse(ctx, job)
 }
 
 // GetJob は指定されたジョブの詳細を取得する
@@ -311,7 +307,7 @@ func (s *scriptJobService) ExecuteJob(ctx context.Context, jobID string) error {
 	if job.Status == model.ScriptJobStatusCanceling {
 		log.Info("completing cancellation for script job", "job_id", jobID)
 		job.Status = model.ScriptJobStatusCanceled
-		now := time.Now()
+		now := time.Now().UTC()
 		job.CompletedAt = &now
 		if err := s.scriptJobRepo.Update(ctx, job); err != nil {
 			return err
@@ -321,7 +317,7 @@ func (s *scriptJobService) ExecuteJob(ctx context.Context, jobID string) error {
 	}
 
 	// 処理開始
-	now := time.Now()
+	now := time.Now().UTC()
 	job.Status = model.ScriptJobStatusProcessing
 	job.StartedAt = &now
 	if err := s.scriptJobRepo.Update(ctx, job); err != nil {
@@ -546,7 +542,7 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 	}
 
 	// ジョブを完了状態に更新
-	completedAt := time.Now()
+	completedAt := time.Now().UTC()
 	job.Status = model.ScriptJobStatusCompleted
 	job.Progress = 100
 	job.CompletedAt = &completedAt
@@ -833,7 +829,7 @@ func (s *scriptJobService) checkCanceled(ctx context.Context, job *model.ScriptJ
 	if latestJob.Status == model.ScriptJobStatusCanceling {
 		// canceled に遷移
 		latestJob.Status = model.ScriptJobStatusCanceled
-		now := time.Now()
+		now := time.Now().UTC()
 		latestJob.CompletedAt = &now
 		if err := s.scriptJobRepo.Update(ctx, latestJob); err != nil {
 			return err
@@ -848,7 +844,7 @@ func (s *scriptJobService) checkCanceled(ctx context.Context, job *model.ScriptJ
 // failJob は指定されたジョブを失敗状態に更新する
 func (s *scriptJobService) failJob(ctx context.Context, job *model.ScriptJob, err error) {
 	log := logger.FromContext(ctx)
-	completedAt := time.Now()
+	completedAt := time.Now().UTC()
 	job.Status = model.ScriptJobStatusFailed
 	job.CompletedAt = &completedAt
 
@@ -948,7 +944,7 @@ func (s *scriptJobService) CancelJob(ctx context.Context, userID, jobID string) 
 	case model.ScriptJobStatusPending:
 		// pending → canceled に遷移
 		job.Status = model.ScriptJobStatusCanceled
-		now := time.Now()
+		now := time.Now().UTC()
 		job.CompletedAt = &now
 		if err := s.scriptJobRepo.Update(ctx, job); err != nil {
 			return err
