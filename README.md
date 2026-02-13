@@ -17,6 +17,7 @@ AIポッドキャスト作成・配信プラットフォーム「Anycast」の�
 - **DB**: PostgreSQL
 - **ストレージ**: GCS（Google Cloud Storage）
 - **TTS**: Gemini TTS (Vertex AI)
+- **画像生成**: Gemini / OpenAI（プロバイダ切替可能）
 - **LLM**: OpenAI / Claude / Gemini（Phase ごとにプロバイダ切替可能）
 - **ジョブキュー**: Google Cloud Tasks
 - **WebSocket**: gorilla/websocket
@@ -91,6 +92,8 @@ cp .env.example .env        # 環境変数ファイルの作成
 | `CORS_ALLOWED_ORIGINS` | CORS 許可オリジン（カンマ区切りで複数指定可能） | http://localhost:3210 |
 | `OPENAI_API_KEY` | OpenAI API キー（設定すると OpenAI プロバイダが有効化される） | - |
 | `CLAUDE_API_KEY` | Claude API キー（設定すると Claude プロバイダが有効化される） | - |
+| `IMAGE_GEN_PROVIDER` | 画像生成プロバイダ（`gemini` / `openai`） | gemini |
+| `OPENAI_IMAGE_GEN_MODEL` | OpenAI 画像生成モデル | gpt-image-1 |
 | `GEMINI_LLM_LOCATION` | Gemini LLM のロケーション | asia-northeast1 |
 | `GOOGLE_CLOUD_PROJECT_ID` | GCP プロジェクト ID | - |
 | `GOOGLE_CLOUD_CREDENTIALS_JSON` | サービスアカウントの JSON キー | - |
@@ -214,6 +217,7 @@ make swagger
 │   ├── handler/         # ハンドラー
 │   ├── infrastructure/  # 外部サービス連携
 │   │   ├── cloudtasks/  # Cloud Tasks クライアント
+│   │   ├── imagegen/    # 画像生成クライアント（Gemini / OpenAI）
 │   │   ├── llm/         # LLM クライアント（OpenAI / Claude / Gemini）
 │   │   ├── slack/       # Slack 通知クライアント
 │   │   ├── storage/     # GCS クライアント

@@ -47,6 +47,10 @@ type Config struct {
 	GeminiLLMLocation string
 	// Gemini 画像生成のロケーション（デフォルト: us-central1）
 	GeminiImageGenLocation string
+	// 画像生成プロバイダ（gemini / openai、デフォルト: gemini）
+	ImageGenProvider string
+	// OpenAI 画像生成モデル（デフォルト: gpt-image-1）
+	OpenAIImageGenModel string
 	// Slack フィードバック通知用 Webhook URL（空の場合は通知無効）
 	SlackFeedbackWebhookURL string
 	// Slack お問い合わせ通知用 Webhook URL（空の場合は通知無効）
@@ -78,6 +82,8 @@ func Load() *Config {
 		ClaudeAPIKey:                        getEnv("CLAUDE_API_KEY", ""),
 		GeminiLLMLocation:                   getEnv("GEMINI_LLM_LOCATION", "asia-northeast1"),
 		GeminiImageGenLocation:              getEnv("GEMINI_IMAGE_GEN_LOCATION", "us-central1"),
+		ImageGenProvider:                    getEnv("IMAGE_GEN_PROVIDER", "gemini"),
+		OpenAIImageGenModel:                 getEnv("OPENAI_IMAGE_GEN_MODEL", "gpt-image-1"),
 		SlackFeedbackWebhookURL:             getEnv("SLACK_FEEDBACK_WEBHOOK_URL", ""),
 		SlackContactWebhookURL:              getEnv("SLACK_CONTACT_WEBHOOK_URL", ""),
 		SlackAlertWebhookURL:                getEnv("SLACK_ALERT_WEBHOOK_URL", ""),

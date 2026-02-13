@@ -138,14 +138,35 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	}
 	log.Debug("using Gemini TTS client (32k token support)")
 
-	// 画像生成クライアント（Gemini Image Gen）
-	log.Debug("ImageGen config", "project_id", cfg.GoogleCloudProjectID, "location", cfg.GeminiImageGenLocation)
-	imagegenClient, err := imagegen.NewGeminiClient(ctx, cfg.GoogleCloudProjectID, cfg.GeminiImageGenLocation, cfg.GoogleCloudCredentialsJSON)
+	// 画像生成クライアント（レジストリパターン）
+	imagegenRegistry := imagegen.NewRegistry()
+
+	// Gemini（プロジェクト ID があれば登録）
+	if cfg.GoogleCloudProjectID != "" {
+		geminiImagegenClient, err := imagegen.NewGeminiClient(ctx, cfg.GoogleCloudProjectID, cfg.GeminiImageGenLocation, cfg.GoogleCloudCredentialsJSON)
+		if err != nil {
+			log.Error("failed to create Gemini image gen client", "error", err)
+			os.Exit(1)
+		}
+		imagegenRegistry.Register(imagegen.ProviderGemini, geminiImagegenClient)
+		log.Info("ImageGen provider registered", "provider", "gemini")
+	}
+
+	// OpenAI（API キーがあれば登録）
+	if cfg.OpenAIAPIKey != "" {
+		openaiImagegenClient := imagegen.NewOpenAIClient(cfg.OpenAIAPIKey, cfg.OpenAIImageGenModel)
+		imagegenRegistry.Register(imagegen.ProviderOpenAI, openaiImagegenClient)
+		log.Info("ImageGen provider registered", "provider", "openai")
+	}
+
+	// 指定プロバイダのクライアントを取得
+	imagegenProvider := imagegen.Provider(cfg.ImageGenProvider)
+	imagegenClient, err := imagegenRegistry.Get(imagegenProvider)
 	if err != nil {
-		log.Error("failed to create Gemini image gen client", "error", err)
+		log.Error("image gen provider is not configured", "provider", cfg.ImageGenProvider)
 		os.Exit(1)
 	}
-	log.Debug("using Gemini image gen client")
+	log.Info("ImageGen provider selected", "provider", cfg.ImageGenProvider)
 
 	// Cloud Tasks クライアント
 	var tasksClient cloudtasks.Client
