@@ -135,6 +135,28 @@ Authorization: Bearer {{token}}
 POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/unpublish
 Authorization: Bearer {{token}}
 
+### エピソード BGM 設定（ユーザー BGM）
+PUT {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/bgm
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "bgmId": "YOUR_BGM_ID_HERE"
+}
+
+### エピソード BGM 設定（システム BGM）
+PUT {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/bgm
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "systemBgmId": "YOUR_SYSTEM_BGM_ID_HERE"
+}
+
+### エピソード BGM 削除
+DELETE {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/bgm
+Authorization: Bearer {{token}}
+
 ### 音声生成（voice: TTS のみ）
 POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/audio/generate-async
 Content-Type: application/json

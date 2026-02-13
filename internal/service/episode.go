@@ -27,6 +27,8 @@ type EpisodeService interface {
 	PublishEpisode(ctx context.Context, userID, channelID, episodeID string, publishedAt *string) (*response.EpisodeDataResponse, error)
 	UnpublishEpisode(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error)
 	IncrementPlayCount(ctx context.Context, episodeID string) error
+	SetBgm(ctx context.Context, userID, channelID, episodeID string, req request.SetEpisodeBgmRequest) (*response.EpisodeDataResponse, error)
+	DeleteBgm(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error)
 }
 
 type episodeService struct {
@@ -674,6 +676,190 @@ func (s *episodeService) IncrementPlayCount(ctx context.Context, episodeID strin
 	}
 
 	return s.episodeRepo.IncrementPlayCount(ctx, eid)
+}
+
+// SetBgm は指定されたエピソードに BGM を設定する
+func (s *episodeService) SetBgm(ctx context.Context, userID, channelID, episodeID string, req request.SetEpisodeBgmRequest) (*response.EpisodeDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	// bgmId と systemBgmId の同時指定チェック
+	if req.BgmID != nil && req.SystemBgmID != nil {
+		return nil, apperror.ErrValidation.WithMessage("bgmId と systemBgmId は同時に指定できません")
+	}
+
+	// どちらも指定されていない場合
+	if req.BgmID == nil && req.SystemBgmID == nil {
+		return nil, apperror.ErrValidation.WithMessage("bgmId または systemBgmId のいずれかを指定してください")
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("このエピソードの BGM 設定権限がありません")
+	}
+
+	// エピソードの存在確認とチャンネルの一致チェック
+	episode, err := s.episodeRepo.FindByID(ctx, eid)
+	if err != nil {
+		return nil, err
+	}
+
+	if episode.ChannelID != cid {
+		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
+	}
+
+	// 前の BGM 設定をクリア
+	episode.BgmID = nil
+	episode.SystemBgmID = nil
+	episode.Bgm = nil
+	episode.SystemBgm = nil
+
+	// ユーザー BGM を設定
+	if req.BgmID != nil {
+		bgmID, err := uuid.Parse(*req.BgmID)
+		if err != nil {
+			return nil, apperror.ErrValidation.WithMessage("無効な bgmId です")
+		}
+
+		// BGM の存在確認とオーナーチェック
+		bgm, err := s.bgmRepo.FindByID(ctx, bgmID)
+		if err != nil {
+			return nil, err
+		}
+
+		if bgm.UserID != uid {
+			return nil, apperror.ErrForbidden.WithMessage("この BGM へのアクセス権限がありません")
+		}
+
+		episode.BgmID = &bgmID
+	}
+
+	// システム BGM を設定
+	if req.SystemBgmID != nil {
+		systemBgmID, err := uuid.Parse(*req.SystemBgmID)
+		if err != nil {
+			return nil, apperror.ErrValidation.WithMessage("無効な systemBgmId です")
+		}
+
+		// システム BGM の存在確認とアクティブチェック
+		systemBgm, err := s.systemBgmRepo.FindByID(ctx, systemBgmID)
+		if err != nil {
+			return nil, err
+		}
+
+		if !systemBgm.IsActive {
+			return nil, apperror.ErrNotFound.WithMessage("このシステム BGM は利用できません")
+		}
+
+		episode.SystemBgmID = &systemBgmID
+	}
+
+	// 音声を再生成が必要な状態にする
+	episode.AudioOutdated = true
+
+	// エピソードを更新
+	if err := s.episodeRepo.Update(ctx, episode); err != nil {
+		return nil, err
+	}
+
+	// リレーションをプリロードして取得
+	updated, err := s.episodeRepo.FindByID(ctx, episode.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := s.toEpisodeResponse(ctx, updated, &channel.User, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.EpisodeDataResponse{
+		Data: resp,
+	}, nil
+}
+
+// DeleteBgm は指定されたエピソードの BGM を削除する
+func (s *episodeService) DeleteBgm(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("このエピソードの BGM 削除権限がありません")
+	}
+
+	// エピソードの存在確認とチャンネルの一致チェック
+	episode, err := s.episodeRepo.FindByID(ctx, eid)
+	if err != nil {
+		return nil, err
+	}
+
+	if episode.ChannelID != cid {
+		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
+	}
+
+	// BGM をクリア
+	episode.BgmID = nil
+	episode.SystemBgmID = nil
+	episode.Bgm = nil
+	episode.SystemBgm = nil
+
+	// 音声を再生成が必要な状態にする
+	episode.AudioOutdated = true
+
+	// エピソードを更新
+	if err := s.episodeRepo.Update(ctx, episode); err != nil {
+		return nil, err
+	}
+
+	// リレーションをプリロードして取得
+	updated, err := s.episodeRepo.FindByID(ctx, episode.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := s.toEpisodeResponse(ctx, updated, &channel.User, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.EpisodeDataResponse{
+		Data: resp,
+	}, nil
 }
 
 // toChannelOwnerResponse は User からチャンネルオーナーレスポンスを生成する

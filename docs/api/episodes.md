@@ -98,6 +98,8 @@ GET /channels/:channelId/episodes/:episodeId
 > **Note:** `playback` は認証済みの場合のみ含まれます。未認証または再生履歴がない場合は `null` になります。
 >
 > **Note:** `playlistIds` は認証済みの場合のみ含まれます。未認証の場合は `null` になります。エピソードがどの再生リストにも含まれていない場合は空配列 `[]` になります。
+>
+> **Note:** BGM の設定・削除は専用エンドポイント（[エピソード BGM 設定](#エピソード-bgm-設定) / [エピソード BGM 削除](#エピソード-bgm-削除)）を使用してください。
 
 ---
 
@@ -148,6 +150,8 @@ PATCH /channels/:channelId/episodes/:episodeId
 > **Note:** `voiceStyle` は音声生成時に自動で保存されます。エピソード更新 API からは編集できません。
 >
 > **Note:** 公開状態の変更は専用エンドポイント（[エピソード公開](#エピソード公開) / [エピソード非公開](#エピソード非公開)）を使用してください。
+>
+> **Note:** BGM の変更は専用エンドポイント（[エピソード BGM 設定](#エピソード-bgm-設定) / [エピソード BGM 削除](#エピソード-bgm-削除)）を使用してください。
 
 ---
 
@@ -212,6 +216,112 @@ POST /channels/:channelId/episodes/:episodeId/unpublish
     "publishedAt": null,
     "createdAt": "2025-01-01T00:00:00Z",
     "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+---
+
+## エピソード BGM 設定
+
+```
+PUT /channels/:channelId/episodes/:episodeId/bgm
+```
+
+エピソードに BGM を設定する。ユーザー BGM またはシステム BGM のどちらかを指定する。BGM を変更すると `audioOutdated` が `true` になる。
+
+**リクエスト:**
+```json
+{
+  "bgmId": "uuid",
+  "systemBgmId": "uuid"
+}
+```
+
+**バリデーション:**
+
+| フィールド | ルール |
+|------------|--------|
+| bgmId | UUID 形式、自分が所有する BGM のみ |
+| systemBgmId | UUID 形式、is_active = true のシステム BGM のみ |
+
+> **Note:** `bgmId` と `systemBgmId` は同時に指定できません。いずれか一方を必ず指定してください。
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "title": "エピソードタイトル",
+    "description": "エピソードの説明",
+    "bgm": {
+      "id": "uuid",
+      "name": "Chill BGM",
+      "isSystem": false,
+      "audio": {
+        "id": "uuid",
+        "url": "https://storage.example.com/audios/xxx.mp3?signature=...",
+        "durationMs": 180000
+      }
+    },
+    "audioOutdated": true,
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+**エラー（400 Bad Request）:**
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "bgmId と systemBgmId は同時に指定できません"
+  }
+}
+```
+
+**エラー（403 Forbidden）:**
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "このエピソードの BGM 設定権限がありません"
+  }
+}
+```
+
+---
+
+## エピソード BGM 削除
+
+```
+DELETE /channels/:channelId/episodes/:episodeId/bgm
+```
+
+エピソードの BGM 設定を削除する。BGM を削除すると `audioOutdated` が `true` になる。
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "title": "エピソードタイトル",
+    "description": "エピソードの説明",
+    "bgm": null,
+    "audioOutdated": true,
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+**エラー（403 Forbidden）:**
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "このエピソードの BGM 削除権限がありません"
   }
 }
 ```

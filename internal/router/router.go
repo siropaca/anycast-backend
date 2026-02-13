@@ -136,6 +136,8 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.DELETE("/channels/:channelId/episodes/:episodeId", container.EpisodeHandler.DeleteEpisode)
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/publish", container.EpisodeHandler.PublishEpisode)
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/unpublish", container.EpisodeHandler.UnpublishEpisode)
+	authenticated.PUT("/channels/:channelId/episodes/:episodeId/bgm", container.EpisodeHandler.SetBgm)
+	authenticated.DELETE("/channels/:channelId/episodes/:episodeId/bgm", container.EpisodeHandler.DeleteBgm)
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/audio/generate-async", container.AudioJobHandler.GenerateAudioAsync)
 	authenticated.POST("/episodes/:episodeId/play", container.EpisodeHandler.IncrementPlayCount)
 	authenticated.PUT("/episodes/:episodeId/playlists", container.PlaylistHandler.UpdateEpisodePlaylists)
