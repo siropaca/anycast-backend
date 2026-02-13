@@ -52,6 +52,18 @@ Gemini 2.5 Pro TTS（Vertex AI バックエンド）を使用した音声合成�
 
 - 設定箇所: `internal/infrastructure/tts/`
 
+### Google Cloud 画像生成（Gemini Image Gen）
+
+Gemini 2.5 Flash Image（Vertex AI バックエンド）を使用した AI 画像生成。チャンネル・エピソードのアートワークをテキストプロンプトから生成する。
+
+| 設定 | 値 | 説明 |
+|------|------|------|
+| モデル | gemini-2.5-flash-image | Gemini 画像生成モデル |
+| ロケーション | 環境変数 `GEMINI_IMAGE_GEN_LOCATION`（デフォルト: us-central1） | Vertex AI エンドポイントのリージョン |
+| 出力形式 | ResponseModalities: TEXT, IMAGE | テキストと画像の両方を生成可能 |
+
+- 設定箇所: `internal/infrastructure/imagegen/`
+
 ### Google Cloud Storage（GCS）
 
 メディアファイル（音声・画像）の保存先。署名付き URL による安全なアクセスを提供。

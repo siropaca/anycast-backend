@@ -42,6 +42,7 @@
 | PUT | `/api/v1/channels/:channelId/user-prompt` | 台本プロンプト設定 | Owner | ✅ | [詳細](./channels.md#台本プロンプト設定) |
 | PUT | `/api/v1/channels/:channelId/default-bgm` | デフォルト BGM 設定 | Owner | ✅ | [詳細](./channels.md#デフォルト-bgm-設定) |
 | DELETE | `/api/v1/channels/:channelId/default-bgm` | デフォルト BGM 削除 | Owner | ✅ | [詳細](./channels.md#デフォルト-bgm-削除) |
+| POST | `/api/v1/channels/:channelId/artwork/generate` | アートワーク AI 生成 | Owner | ✅ | [詳細](./channels.md#アートワーク-ai-生成) |
 | GET | `/api/v1/me/channels` | 自分のチャンネル一覧 | Owner | ✅ | [詳細](./channels.md#自分のチャンネル一覧取得) |
 | GET | `/api/v1/me/channels/:channelId` | 自分のチャンネル取得 | Owner | ✅ | [詳細](./channels.md#自分のチャンネル取得) |
 | **Characters** | - | - | - | - | [characters.md](./characters.md) |
@@ -71,6 +72,7 @@
 | DELETE | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード削除 | Owner | ✅ | [詳細](./episodes.md#エピソード削除) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/publish` | エピソード公開 | Owner | ✅ | [詳細](./episodes.md#エピソード公開) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/unpublish` | エピソード非公開 | Owner | ✅ | [詳細](./episodes.md#エピソード非公開) |
+| POST | `/api/v1/channels/:channelId/episodes/:episodeId/artwork/generate` | エピソードアートワーク AI 生成 | Owner | ✅ | [詳細](./episodes.md#アートワーク-ai-生成) |
 | GET | `/api/v1/me/channels/:channelId/episodes` | 自分のチャンネルのエピソード一覧 | Owner | ✅ | [詳細](./episodes.md#自分のチャンネルのエピソード一覧取得) |
 | GET | `/api/v1/me/channels/:channelId/episodes/:episodeId` | 自分のチャンネルのエピソード取得 | Owner | ✅ | [詳細](./episodes.md#自分のチャンネルのエピソード取得) |
 | POST | `/api/v1/episodes/:episodeId/play` | 再生回数カウント | Owner | ✅ | [詳細](./episodes.md#再生回数カウント) |

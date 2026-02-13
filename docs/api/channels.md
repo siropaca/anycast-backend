@@ -441,6 +441,66 @@ DELETE /channels/:channelId/default-bgm
 
 ---
 
+## アートワーク AI 生成
+
+```
+POST /channels/:channelId/artwork/generate
+```
+
+チャンネルのアートワークを AI（Gemini）で生成する。プロンプトを省略するとチャンネルのメタデータ（名前・カテゴリ・説明）から自動構築する。
+
+**リクエスト（省略可）:**
+```json
+{
+  "prompt": "モダンでミニマルなポッドキャストアイコン。テキストは含めない。",
+  "setArtwork": true
+}
+```
+
+| フィールド | 型 | 必須 | デフォルト | 説明 |
+|------------|-----|:----:|------------|------|
+| prompt | string | | 自動生成 | 画像生成用のテキストプロンプト（1000文字以内） |
+| setArtwork | bool | | true | true: 生成画像をチャンネルのアートワークに自動設定 |
+
+> **Note:** リクエストボディ全体を省略可能です。空リクエストの場合、チャンネル名・カテゴリ・説明文からプロンプトを自動構築し、アートワークを自動設定します。
+
+**レスポンス（201 Created）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "mimeType": "image/png",
+    "url": "https://storage.example.com/images/xxx.png?signature=...",
+    "filename": "artwork_550e8400.png",
+    "fileSize": 1234567
+  }
+}
+```
+
+> **Note:** レスポンスは画像アップロード API（`POST /images`）と同じ形式です。`setArtwork: true` の場合、チャンネルの `artwork` が自動更新されます。
+
+**エラー（403 Forbidden）:**
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "このチャンネルのアートワーク生成権限がありません"
+  }
+}
+```
+
+**エラー（500 Internal Server Error）:**
+```json
+{
+  "error": {
+    "code": "GENERATION_FAILED",
+    "message": "画像生成に失敗しました"
+  }
+}
+```
+
+---
+
 ## 自分のチャンネル一覧取得
 
 ```

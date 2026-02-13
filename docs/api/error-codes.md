@@ -22,5 +22,5 @@
 | BGM_IN_USE | 409 | BGM が使用中のため削除不可 |
 | CANCELED | 499 | ジョブがキャンセルされた |
 | INTERNAL_ERROR | 500 | サーバー内部エラー |
-| GENERATION_FAILED | 500 | 音声/台本の生成に失敗 |
+| GENERATION_FAILED | 500 | 音声/台本/画像の生成に失敗 |
 | MEDIA_UPLOAD_FAILED | 500 | メディアアップロードに失敗 |

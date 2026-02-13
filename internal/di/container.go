@@ -9,6 +9,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/config"
 	"github.com/siropaca/anycast-backend/internal/handler"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/cloudtasks"
+	"github.com/siropaca/anycast-backend/internal/infrastructure/imagegen"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/llm"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/slack"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
@@ -49,6 +50,7 @@ type Container struct {
 	RecommendationHandler  *handler.RecommendationHandler
 	SearchHandler          *handler.SearchHandler
 	UserHandler            *handler.UserHandler
+	ArtworkHandler         *handler.ArtworkHandler
 	TokenManager           jwt.TokenManager
 	UserRepository         repository.UserRepository
 	WebSocketHub           *websocket.Hub
@@ -136,6 +138,15 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		os.Exit(1)
 	}
 	log.Debug("using Gemini TTS client (32k token support)")
+
+	// 画像生成クライアント（Gemini Image Gen）
+	log.Debug("ImageGen config", "project_id", cfg.GoogleCloudProjectID, "location", cfg.GeminiImageGenLocation)
+	imagegenClient, err := imagegen.NewGeminiClient(ctx, cfg.GoogleCloudProjectID, cfg.GeminiImageGenLocation, cfg.GoogleCloudCredentialsJSON)
+	if err != nil {
+		log.Error("failed to create Gemini image gen client", "error", err)
+		os.Exit(1)
+	}
+	log.Debug("using Gemini image gen client")
 
 	// Cloud Tasks クライアント
 	var tasksClient cloudtasks.Client
@@ -240,6 +251,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	recommendationService := service.NewRecommendationService(recommendationRepo, categoryRepo, storageClient)
 	searchService := service.NewSearchService(channelRepo, episodeRepo, userRepo, storageClient)
 	userService := service.NewUserService(userRepo, channelRepo, episodeRepo, storageClient)
+	artworkService := service.NewArtworkService(channelRepo, episodeRepo, imageRepo, storageClient, imagegenClient)
 
 	// Handler 層
 	voiceHandler := handler.NewVoiceHandler(voiceService)
@@ -267,6 +279,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	recommendationHandler := handler.NewRecommendationHandler(recommendationService)
 	searchHandler := handler.NewSearchHandler(searchService)
 	userHandler := handler.NewUserHandler(userService)
+	artworkHandler := handler.NewArtworkHandler(artworkService)
 
 	return &Container{
 		VoiceHandler:           voiceHandler,
@@ -294,6 +307,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		RecommendationHandler:  recommendationHandler,
 		SearchHandler:          searchHandler,
 		UserHandler:            userHandler,
+		ArtworkHandler:         artworkHandler,
 		TokenManager:           tokenManager,
 		UserRepository:         userRepo,
 		WebSocketHub:           wsHub,
