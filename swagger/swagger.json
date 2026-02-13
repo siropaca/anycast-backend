@@ -8916,6 +8916,8 @@
                 "channels",
                 "createdAt",
                 "displayName",
+                "followerCount",
+                "followingCount",
                 "id",
                 "username"
             ],
@@ -8942,6 +8944,12 @@
                 },
                 "displayName": {
                     "type": "string"
+                },
+                "followerCount": {
+                    "type": "integer"
+                },
+                "followingCount": {
+                    "type": "integer"
                 },
                 "headerImage": {
                     "allOf": [

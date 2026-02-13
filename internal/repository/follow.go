@@ -16,6 +16,8 @@ type FollowRepository interface {
 	Create(ctx context.Context, follow *model.Follow) error
 	DeleteByUserIDAndTargetUserID(ctx context.Context, userID, targetUserID uuid.UUID) error
 	ExistsByUserIDAndTargetUserID(ctx context.Context, userID, targetUserID uuid.UUID) (bool, error)
+	CountByUserID(ctx context.Context, userID uuid.UUID) (int64, error)
+	CountByTargetUserID(ctx context.Context, targetUserID uuid.UUID) (int64, error)
 }
 
 type followRepository struct {
@@ -80,4 +82,28 @@ func (r *followRepository) ExistsByUserIDAndTargetUserID(ctx context.Context, us
 		return false, err
 	}
 	return count > 0, nil
+}
+
+// CountByUserID は指定ユーザーのフォロー数を返す
+func (r *followRepository) CountByUserID(ctx context.Context, userID uuid.UUID) (int64, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&model.Follow{}).
+		Where("user_id = ?", userID).
+		Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// CountByTargetUserID は指定ユーザーのフォロワー数を返す
+func (r *followRepository) CountByTargetUserID(ctx context.Context, targetUserID uuid.UUID) (int64, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&model.Follow{}).
+		Where("target_user_id = ?", targetUserID).
+		Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }

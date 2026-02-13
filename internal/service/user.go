@@ -19,6 +19,7 @@ type userService struct {
 	userRepo      repository.UserRepository
 	channelRepo   repository.ChannelRepository
 	episodeRepo   repository.EpisodeRepository
+	followRepo    repository.FollowRepository
 	storageClient storage.Client
 }
 
@@ -27,12 +28,14 @@ func NewUserService(
 	userRepo repository.UserRepository,
 	channelRepo repository.ChannelRepository,
 	episodeRepo repository.EpisodeRepository,
+	followRepo repository.FollowRepository,
 	storageClient storage.Client,
 ) UserService {
 	return &userService{
 		userRepo:      userRepo,
 		channelRepo:   channelRepo,
 		episodeRepo:   episodeRepo,
+		followRepo:    followRepo,
 		storageClient: storageClient,
 	}
 }
@@ -91,16 +94,28 @@ func (s *userService) GetUser(ctx context.Context, username string) (*response.P
 		return nil, err
 	}
 
+	// フォロー数・フォロワー数を取得
+	followingCount, err := s.followRepo.CountByUserID(ctx, user.ID)
+	if err != nil {
+		return nil, err
+	}
+	followerCount, err := s.followRepo.CountByTargetUserID(ctx, user.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	return &response.PublicUserDataResponse{
 		Data: response.PublicUserResponse{
-			ID:          user.ID,
-			Username:    user.Username,
-			DisplayName: user.DisplayName,
-			Bio:         user.Bio,
-			Avatar:      avatar,
-			HeaderImage: headerImage,
-			Channels:    channelResponses,
-			CreatedAt:   user.CreatedAt,
+			ID:             user.ID,
+			Username:       user.Username,
+			DisplayName:    user.DisplayName,
+			Bio:            user.Bio,
+			Avatar:         avatar,
+			HeaderImage:    headerImage,
+			FollowingCount: int(followingCount),
+			FollowerCount:  int(followerCount),
+			Channels:       channelResponses,
+			CreatedAt:      user.CreatedAt,
 		},
 	}, nil
 }

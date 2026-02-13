@@ -29,14 +29,16 @@ type ChannelOwnerResponse struct {
 
 // 公開ユーザー情報のレスポンス
 type PublicUserResponse struct {
-	ID          uuid.UUID                   `json:"id" validate:"required"`
-	Username    string                      `json:"username" validate:"required"`
-	DisplayName string                      `json:"displayName" validate:"required"`
-	Bio         string                      `json:"bio" validate:"required"`
-	Avatar      *AvatarResponse             `json:"avatar" extensions:"x-nullable"`
-	HeaderImage *AvatarResponse             `json:"headerImage" extensions:"x-nullable"`
-	Channels    []PublicUserChannelResponse `json:"channels" validate:"required"`
-	CreatedAt   time.Time                   `json:"createdAt" validate:"required"`
+	ID             uuid.UUID                   `json:"id" validate:"required"`
+	Username       string                      `json:"username" validate:"required"`
+	DisplayName    string                      `json:"displayName" validate:"required"`
+	Bio            string                      `json:"bio" validate:"required"`
+	Avatar         *AvatarResponse             `json:"avatar" extensions:"x-nullable"`
+	HeaderImage    *AvatarResponse             `json:"headerImage" extensions:"x-nullable"`
+	FollowingCount int                         `json:"followingCount" validate:"required"`
+	FollowerCount  int                         `json:"followerCount" validate:"required"`
+	Channels       []PublicUserChannelResponse `json:"channels" validate:"required"`
+	CreatedAt      time.Time                   `json:"createdAt" validate:"required"`
 }
 
 // 公開ユーザー情報のレスポンス（data ラッパー）

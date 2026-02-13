@@ -16,6 +16,8 @@ GET /users/:username
     "bio": "自己紹介文",
     "avatar": { "id": "uuid", "url": "..." },
     "headerImage": { "id": "uuid", "url": "..." },
+    "followingCount": 10,
+    "followerCount": 25,
     "channels": [
       {
         "id": "uuid",

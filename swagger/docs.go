@@ -8922,6 +8922,8 @@ const docTemplate = `{
                 "channels",
                 "createdAt",
                 "displayName",
+                "followerCount",
+                "followingCount",
                 "id",
                 "username"
             ],
@@ -8948,6 +8950,12 @@ const docTemplate = `{
                 },
                 "displayName": {
                     "type": "string"
+                },
+                "followerCount": {
+                    "type": "integer"
+                },
+                "followingCount": {
+                    "type": "integer"
                 },
                 "headerImage": {
                     "allOf": [

@@ -42,6 +42,16 @@ func (m *mockFollowRepository) ExistsByUserIDAndTargetUserID(ctx context.Context
 	return args.Bool(0), args.Error(1)
 }
 
+func (m *mockFollowRepository) CountByUserID(ctx context.Context, userID uuid.UUID) (int64, error) {
+	args := m.Called(ctx, userID)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *mockFollowRepository) CountByTargetUserID(ctx context.Context, targetUserID uuid.UUID) (int64, error) {
+	args := m.Called(ctx, targetUserID)
+	return args.Get(0).(int64), args.Error(1)
+}
+
 // UserRepository のモック
 type mockUserRepository struct {
 	mock.Mock
