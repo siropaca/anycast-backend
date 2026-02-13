@@ -340,3 +340,59 @@ POST /images
   }
 }
 ```
+
+---
+
+## AI 画像生成
+
+```
+POST /images/generate
+```
+
+テキストプロンプトから AI（Gemini）で画像を生成する。
+
+**リクエスト:**
+```json
+{
+  "prompt": "ポッドキャストのカバーアート。テクノロジーをテーマに、モダンなデザイン。"
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| prompt | string | Yes | 画像生成用のテキストプロンプト（1〜1000 文字） |
+
+**レスポンス（201 Created）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "mimeType": "image/png",
+    "url": "https://storage.example.com/images/xxx.png?signature=...",
+    "filename": "generated_550e8400.png",
+    "fileSize": 1234567
+  }
+}
+```
+
+> **Note:** レスポンスは画像アップロード API（`POST /images`）と同じ形式です。
+
+**エラー（400 Bad Request）:**
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "プロンプト は必須です"
+  }
+}
+```
+
+**エラー（500 Internal Server Error）:**
+```json
+{
+  "error": {
+    "code": "GENERATION_FAILED",
+    "message": "画像生成に失敗しました"
+  }
+}
+```

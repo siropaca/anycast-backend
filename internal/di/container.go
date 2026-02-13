@@ -50,7 +50,6 @@ type Container struct {
 	RecommendationHandler  *handler.RecommendationHandler
 	SearchHandler          *handler.SearchHandler
 	UserHandler            *handler.UserHandler
-	ArtworkHandler         *handler.ArtworkHandler
 	TokenManager           jwt.TokenManager
 	UserRepository         repository.UserRepository
 	WebSocketHub           *websocket.Hub
@@ -211,7 +210,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	scriptLineService := service.NewScriptLineService(db, scriptLineRepo, episodeRepo, channelRepo)
 	scriptService := service.NewScriptService(db, channelRepo, episodeRepo, scriptLineRepo, storageClient)
 	cleanupService := service.NewCleanupService(audioRepo, imageRepo, storageClient)
-	imageService := service.NewImageService(imageRepo, storageClient)
+	imageService := service.NewImageService(imageRepo, storageClient, imagegenClient)
 	audioService := service.NewAudioService(audioRepo, storageClient)
 	bgmService := service.NewBgmService(bgmRepo, systemBgmRepo, audioRepo, storageClient)
 	audioJobService := service.NewAudioJobService(
@@ -251,8 +250,6 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	recommendationService := service.NewRecommendationService(recommendationRepo, categoryRepo, storageClient)
 	searchService := service.NewSearchService(channelRepo, episodeRepo, userRepo, storageClient)
 	userService := service.NewUserService(userRepo, channelRepo, episodeRepo, storageClient)
-	artworkService := service.NewArtworkService(channelRepo, episodeRepo, imageRepo, storageClient, imagegenClient)
-
 	// Handler 層
 	voiceHandler := handler.NewVoiceHandler(voiceService)
 	authHandler := handler.NewAuthHandler(authService, tokenManager)
@@ -279,8 +276,6 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	recommendationHandler := handler.NewRecommendationHandler(recommendationService)
 	searchHandler := handler.NewSearchHandler(searchService)
 	userHandler := handler.NewUserHandler(userService)
-	artworkHandler := handler.NewArtworkHandler(artworkService)
-
 	return &Container{
 		VoiceHandler:           voiceHandler,
 		AuthHandler:            authHandler,
@@ -307,7 +302,6 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		RecommendationHandler:  recommendationHandler,
 		SearchHandler:          searchHandler,
 		UserHandler:            userHandler,
-		ArtworkHandler:         artworkHandler,
 		TokenManager:           tokenManager,
 		UserRepository:         userRepo,
 		WebSocketHub:           wsHub,

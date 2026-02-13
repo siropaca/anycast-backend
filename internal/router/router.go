@@ -130,15 +130,12 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.PUT("/channels/:channelId/user-prompt", container.ChannelHandler.SetUserPrompt)
 	authenticated.PUT("/channels/:channelId/default-bgm", container.ChannelHandler.SetDefaultBgm)
 	authenticated.DELETE("/channels/:channelId/default-bgm", container.ChannelHandler.DeleteDefaultBgm)
-	authenticated.POST("/channels/:channelId/artwork/generate", container.ArtworkHandler.GenerateChannelArtwork)
-
 	// Episodes
 	authenticated.POST("/channels/:channelId/episodes", container.EpisodeHandler.CreateEpisode)
 	authenticated.PATCH("/channels/:channelId/episodes/:episodeId", container.EpisodeHandler.UpdateEpisode)
 	authenticated.DELETE("/channels/:channelId/episodes/:episodeId", container.EpisodeHandler.DeleteEpisode)
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/publish", container.EpisodeHandler.PublishEpisode)
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/unpublish", container.EpisodeHandler.UnpublishEpisode)
-	authenticated.POST("/channels/:channelId/episodes/:episodeId/artwork/generate", container.ArtworkHandler.GenerateEpisodeArtwork)
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/audio/generate-async", container.AudioJobHandler.GenerateAudioAsync)
 	authenticated.POST("/episodes/:episodeId/play", container.EpisodeHandler.IncrementPlayCount)
 	authenticated.PUT("/episodes/:episodeId/playlists", container.PlaylistHandler.UpdateEpisodePlaylists)
@@ -180,6 +177,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 
 	// Images
 	authenticated.POST("/images", container.ImageHandler.UploadImage)
+	authenticated.POST("/images/generate", container.ImageHandler.GenerateImage)
 
 	// Audios
 	authenticated.POST("/audios", container.AudioHandler.UploadAudio)

@@ -73,9 +73,6 @@ var fieldNameMap = map[string]string{
 	// 検索
 	"Q": "検索キーワード",
 
-	// アートワーク生成
-	"SetArtwork": "アートワーク設定",
-
 	// その他
 	"Status": "ステータス",
 }

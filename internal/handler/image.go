@@ -6,6 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
+	"github.com/siropaca/anycast-backend/internal/dto/request"
+	"github.com/siropaca/anycast-backend/internal/middleware"
 	"github.com/siropaca/anycast-backend/internal/service"
 )
 
@@ -57,6 +59,41 @@ func (h *ImageHandler) UploadImage(c *gin.Context) {
 	}
 
 	result, err := h.imageService.UploadImage(c.Request.Context(), input)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, result)
+}
+
+// GenerateImage godoc
+// @Summary AI 画像生成
+// @Description テキストプロンプトから AI で画像を生成します
+// @Tags images
+// @Accept json
+// @Produce json
+// @Param body body request.GenerateImageRequest true "画像生成リクエスト"
+// @Success 201 {object} response.ImageUploadDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /images/generate [post]
+func (h *ImageHandler) GenerateImage(c *gin.Context) {
+	_, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	var req request.GenerateImageRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
+		return
+	}
+
+	result, err := h.imageService.GenerateImage(c.Request.Context(), req.Prompt)
 	if err != nil {
 		Error(c, err)
 		return

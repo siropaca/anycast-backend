@@ -51,7 +51,7 @@ func TestUploadImage(t *testing.T) {
 		mockRepo := new(mockImageRepository)
 		mockStorage := new(mockStorageClient)
 
-		svc := NewImageService(mockRepo, mockStorage)
+		svc := NewImageService(mockRepo, mockStorage, nil)
 
 		input := UploadImageInput{
 			File:        bytes.NewReader([]byte("fake image data")),
@@ -80,7 +80,7 @@ func TestUploadImage(t *testing.T) {
 		mockRepo := new(mockImageRepository)
 		mockStorage := new(mockStorageClient)
 
-		svc := NewImageService(mockRepo, mockStorage)
+		svc := NewImageService(mockRepo, mockStorage, nil)
 
 		input := UploadImageInput{
 			File:        bytes.NewReader([]byte("fake jpeg data")),
@@ -104,7 +104,7 @@ func TestUploadImage(t *testing.T) {
 		mockRepo := new(mockImageRepository)
 		mockStorage := new(mockStorageClient)
 
-		svc := NewImageService(mockRepo, mockStorage)
+		svc := NewImageService(mockRepo, mockStorage, nil)
 
 		input := UploadImageInput{
 			File:        bytes.NewReader([]byte("fake gif data")),
@@ -128,7 +128,7 @@ func TestUploadImage(t *testing.T) {
 		mockRepo := new(mockImageRepository)
 		mockStorage := new(mockStorageClient)
 
-		svc := NewImageService(mockRepo, mockStorage)
+		svc := NewImageService(mockRepo, mockStorage, nil)
 
 		input := UploadImageInput{
 			File:        bytes.NewReader([]byte("fake webp data")),
@@ -152,7 +152,7 @@ func TestUploadImage(t *testing.T) {
 		mockRepo := new(mockImageRepository)
 		mockStorage := new(mockStorageClient)
 
-		svc := NewImageService(mockRepo, mockStorage)
+		svc := NewImageService(mockRepo, mockStorage, nil)
 
 		input := UploadImageInput{
 			File:        bytes.NewReader([]byte("invalid data")),
@@ -172,7 +172,7 @@ func TestUploadImage(t *testing.T) {
 		mockRepo := new(mockImageRepository)
 		mockStorage := new(mockStorageClient)
 
-		svc := NewImageService(mockRepo, mockStorage)
+		svc := NewImageService(mockRepo, mockStorage, nil)
 
 		input := UploadImageInput{
 			File:        bytes.NewReader([]byte("fake image data")),
@@ -194,7 +194,7 @@ func TestUploadImage(t *testing.T) {
 		mockRepo := new(mockImageRepository)
 		mockStorage := new(mockStorageClient)
 
-		svc := NewImageService(mockRepo, mockStorage)
+		svc := NewImageService(mockRepo, mockStorage, nil)
 
 		input := UploadImageInput{
 			File:        bytes.NewReader([]byte("fake image data")),
@@ -218,7 +218,7 @@ func TestUploadImage(t *testing.T) {
 		mockRepo := new(mockImageRepository)
 		mockStorage := new(mockStorageClient)
 
-		svc := NewImageService(mockRepo, mockStorage)
+		svc := NewImageService(mockRepo, mockStorage, nil)
 
 		input := UploadImageInput{
 			File:        bytes.NewReader([]byte("fake image data")),

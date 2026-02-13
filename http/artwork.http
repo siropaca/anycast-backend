@@ -3,45 +3,20 @@
 # トークン生成: make token
 @token = YOUR_TOKEN_HERE
 
-@channelId = YOUR_CHANNEL_ID_HERE
-@episodeId = YOUR_EPISODE_ID_HERE
-
-### チャンネルアートワーク生成（自動プロンプト）
-POST {{baseUrl}}/channels/{{channelId}}/artwork/generate
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-### チャンネルアートワーク生成（プロンプト指定）
-POST {{baseUrl}}/channels/{{channelId}}/artwork/generate
+### AI 画像生成
+POST {{baseUrl}}/images/generate
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "prompt": "ポッドキャストのカバーアート。テクノロジーとイノベーションをテーマに、モダンでミニマルなデザイン。テキストや文字は含めない。",
-  "setArtwork": true
+  "prompt": "ポッドキャストのカバーアート。テクノロジーとイノベーションをテーマに、モダンでミニマルなデザイン。テキストや文字は含めない。"
 }
 
-### チャンネルアートワーク生成（画像のみ、アートワーク設定なし）
-POST {{baseUrl}}/channels/{{channelId}}/artwork/generate
+### AI 画像生成（シンプルなプロンプト）
+POST {{baseUrl}}/images/generate
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "prompt": "抽象的なポッドキャストアイコン",
-  "setArtwork": false
-}
-
-### エピソードアートワーク生成（自動プロンプト）
-POST {{baseUrl}}/channels/{{channelId}}/episodes/{{episodeId}}/artwork/generate
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-### エピソードアートワーク生成（プロンプト指定）
-POST {{baseUrl}}/channels/{{channelId}}/episodes/{{episodeId}}/artwork/generate
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "prompt": "エピソードのカバーアート。宇宙と星をテーマにした神秘的なデザイン。テキストや文字は含めない。",
-  "setArtwork": true
+  "prompt": "抽象的なポッドキャストアイコン"
 }
