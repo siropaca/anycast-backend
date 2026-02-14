@@ -140,7 +140,7 @@ func (h *ChannelHandler) CreateChannel(c *gin.Context) {
 
 // GetChannel godoc
 // @Summary チャンネル取得
-// @Description チャンネルを取得します。認証なしでは公開中のチャンネルのみ、認証ありでは自分のチャンネルも取得可能です。
+// @Description チャンネルを取得します。認証なしでは公開中のチャンネルのみ、認証ありでは自分のチャンネルも取得可能です。episodes には公開済みのエピソードのみが含まれます。
 // @Tags channels
 // @Accept json
 // @Produce json

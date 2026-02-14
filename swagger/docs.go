@@ -707,7 +707,7 @@ const docTemplate = `{
         },
         "/channels/{channelId}": {
             "get": {
-                "description": "チャンネルを取得します。認証なしでは公開中のチャンネルのみ、認証ありでは自分のチャンネルも取得可能です。",
+                "description": "チャンネルを取得します。認証なしでは公開中のチャンネルのみ、認証ありでは自分のチャンネルも取得可能です。episodes には公開済みのエピソードのみが含まれます。",
                 "consumes": [
                     "application/json"
                 ],

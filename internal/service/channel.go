@@ -113,7 +113,7 @@ func (s *channelService) GetChannel(ctx context.Context, userID, channelID strin
 		return nil, apperror.ErrNotFound.WithMessage("チャンネルが見つかりません")
 	}
 
-	resp, err := s.toChannelResponse(ctx, channel, isOwner, uid)
+	resp, err := s.toChannelResponse(ctx, channel, false, uid)
 	if err != nil {
 		return nil, err
 	}
@@ -838,8 +838,13 @@ func (s *channelService) toChannelResponse(ctx context.Context, c *model.Channel
 		return response.ChannelResponse{}, err
 	}
 
-	// エピソード一覧を取得
-	episodes, _, err := s.episodeRepo.FindByChannelID(ctx, c.ID, repository.EpisodeFilter{Limit: 10000})
+	// エピソード一覧を取得（公開ページではオーナーでない場合、公開済みのみ）
+	episodeFilter := repository.EpisodeFilter{Limit: 10000}
+	if !isOwner {
+		published := "published"
+		episodeFilter.Status = &published
+	}
+	episodes, _, err := s.episodeRepo.FindByChannelID(ctx, c.ID, episodeFilter)
 	if err != nil {
 		return response.ChannelResponse{}, err
 	}
