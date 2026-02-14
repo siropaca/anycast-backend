@@ -95,17 +95,25 @@ func (m *mockEpisodeService) UnpublishEpisode(ctx context.Context, userID, chann
 	return args.Get(0).(*response.EpisodeDataResponse), args.Error(1)
 }
 
-func (m *mockEpisodeService) GenerateAudio(ctx context.Context, userID, channelID, episodeID string, voiceStyle *string) (*response.GenerateAudioResponse, error) {
-	args := m.Called(ctx, userID, channelID, episodeID, voiceStyle)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*response.GenerateAudioResponse), args.Error(1)
-}
-
 func (m *mockEpisodeService) IncrementPlayCount(ctx context.Context, episodeID string) error {
 	args := m.Called(ctx, episodeID)
 	return args.Error(0)
+}
+
+func (m *mockEpisodeService) SetBgm(ctx context.Context, userID, channelID, episodeID string, req request.SetEpisodeBgmRequest) (*response.EpisodeDataResponse, error) {
+	args := m.Called(ctx, userID, channelID, episodeID, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.EpisodeDataResponse), args.Error(1)
+}
+
+func (m *mockEpisodeService) DeleteBgm(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error) {
+	args := m.Called(ctx, userID, channelID, episodeID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.EpisodeDataResponse), args.Error(1)
 }
 
 // テスト用のルーターをセットアップする

@@ -324,27 +324,102 @@ func TestValidate_SpeakerConsistency(t *testing.T) {
 	})
 }
 
+func TestValidate_TotalCharacterCount(t *testing.T) {
+	// ヘルパー: 指定文字数のセリフを生成する（20〜80文字の範囲で分散）
+	buildLines := func(totalChars int) []ParsedLine {
+		var lines []ParsedLine
+		remaining := totalChars
+		speakers := []string{"太郎", "花子"}
+		i := 0
+		for remaining > 0 {
+			// 40文字ずつ追加（最後は残り全部）
+			charCount := 40
+			if remaining < charCount {
+				charCount = remaining
+			}
+			if charCount < 10 {
+				// 最低10文字を保証するため、足りない場合はスキップ
+				break
+			}
+			text := strings.Repeat("あ", charCount)
+			lines = append(lines, ParsedLine{
+				SpeakerName: speakers[i%2],
+				Text:        text,
+			})
+			remaining -= charCount
+			i++
+		}
+		return lines
+	}
+
+	t.Run("目標範囲内の文字数は合格", func(t *testing.T) {
+		// 5分 × 300文字 = 1500文字が目標
+		lines := buildLines(1500)
+		result := checkTotalCharacterCount(lines, 5)
+		assert.Empty(t, result)
+	})
+
+	t.Run("目標の80%ちょうどは合格", func(t *testing.T) {
+		// 5分 × 300 × 0.8 = 1200文字
+		lines := buildLines(1200)
+		result := checkTotalCharacterCount(lines, 5)
+		assert.Empty(t, result)
+	})
+
+	t.Run("目標の120%ちょうどは合格", func(t *testing.T) {
+		// 5分 × 300 × 1.2 = 1800文字
+		lines := buildLines(1800)
+		result := checkTotalCharacterCount(lines, 5)
+		assert.Empty(t, result)
+	})
+
+	t.Run("文字数不足は不合格", func(t *testing.T) {
+		// 5分 × 300 × 0.8 = 1200 → 1100は不足
+		lines := buildLines(1100)
+		result := checkTotalCharacterCount(lines, 5)
+		assert.Len(t, result, 1)
+		assert.Equal(t, "total_character_count", result[0].Check)
+		assert.Contains(t, result[0].Message, "不足")
+	})
+
+	t.Run("文字数過多は不合格", func(t *testing.T) {
+		// 5分 × 300 × 1.2 = 1800 → 1900は過多
+		lines := buildLines(1900)
+		result := checkTotalCharacterCount(lines, 5)
+		assert.Len(t, result, 1)
+		assert.Equal(t, "total_character_count", result[0].Check)
+		assert.Contains(t, result[0].Message, "多すぎ")
+	})
+
+	t.Run("durationMinutes が 0 の場合はスキップ", func(t *testing.T) {
+		lines := buildLines(100)
+		result := checkTotalCharacterCount(lines, 0)
+		assert.Empty(t, result)
+	})
+}
+
 func TestValidate_AllPass(t *testing.T) {
 	t.Run("全チェック合格で Passed が true", func(t *testing.T) {
 		// 5分 × 4行 = 20行以上必要
+		// 5分 × 300文字 = 1500文字、±20% = 1200〜1800文字
 		// 文長にゆらぎを持たせる（標準偏差5文字以上）
-		lines := make([]ParsedLine, 0, 24)
+		lines := make([]ParsedLine, 0, 30)
 		texts := []string{
-			"これは最初のセリフですね",
-			"はい、そうですよ、今日もよろしくお願いしますね、頑張っていきましょう",
-			"今日のテーマについて話しましょうか",
-			"えーと、具体的にはどういうことなんでしょう、もう少し詳しく教えてもらえるとありがたいです",
-			"まあ、簡単に言うとこういうことなんです",
-			"なるほどね、それはすごく面白い話ですね、初めて知りましたよ",
-			"そうなんです、意外でしょう",
-			"ちょっと驚きましたね、それは初めて聞きましたし本当にびっくりしています",
-			"もう少し教えてくれますか",
-			"もちろん、具体例を出すとこんな感じですね、分かりやすいでしょう",
-			"なんか、すごいですね",
-			"ありがとう、頑張って説明してみましたけどどうでしたか、伝わりましたかね",
+			"こんにちは、今日もポッドキャストを始めていきましょう、よろしくお願いします",
+			"はい、よろしくお願いします、今日のテーマはすごく興味深いので楽しみにしていました",
+			"今日は人工知能について話していこうと思います、最近本当に進歩がすごいですよね",
+			"えーと、具体的にはどういうところが進歩しているんでしょうか、もう少し詳しく教えてもらえるとありがたいです",
+			"まあ簡単に言うと、画像認識や自然言語処理の精度が格段に上がってきているんですよ",
+			"なるほどね、それは実際に使ってみると本当に実感できますよね、私も驚きました",
+			"そうなんです、意外と身近なところで活用されているんですよ",
+			"ちょっと驚きましたね、スマートフォンのカメラ機能にも使われているとは思いませんでした",
+			"具体的な例を挙げると、医療分野では画像診断の精度が人間の医師と同等レベルに達しています",
+			"もちろん課題もたくさんあって、倫理的な問題や雇用への影響なども考えなければいけません",
+			"確かにそれは大事なポイントですよね、技術の進歩だけではなく社会的な影響も見ないといけない",
+			"ありがとうございます、とても分かりやすい説明でした、リスナーの皆さんにも伝わったと思います",
 		}
 
-		for i := 0; i < 24; i++ {
+		for i := 0; i < 30; i++ {
 			speaker := "太郎"
 			if i%2 == 1 {
 				speaker = "花子"

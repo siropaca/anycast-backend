@@ -409,7 +409,8 @@ func TestScriptJobService_executePhase5(t *testing.T) {
 		mockRepo := new(mockScriptJobRepository)
 		svc := &scriptJobService{scriptJobRepo: mockRepo}
 
-		// 合格するデータ（十分な行数、ゆらぎあり、句点なし）
+		// 合格するデータ（十分な行数、ゆらぎあり、句点なし、文字数範囲内）
+		// 44行 × 平均約20文字 ≈ 904文字 → DurationMinutes: 3（目標900文字、±20%=720〜1080）
 		lines := make([]script.ParsedLine, 0, 44)
 		speakers := []string{"太郎", "花子"}
 		texts := []string{
@@ -433,7 +434,7 @@ func TestScriptJobService_executePhase5(t *testing.T) {
 		}
 
 		brief := script.Brief{
-			Episode:     script.BriefEpisode{DurationMinutes: 10},
+			Episode:     script.BriefEpisode{DurationMinutes: 3},
 			Constraints: script.BriefConstraints{TalkMode: script.TalkModeDialogue},
 		}
 

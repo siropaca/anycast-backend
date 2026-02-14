@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"gorm.io/gorm"
 
@@ -460,7 +461,9 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 		return 0, apperror.ErrGenerationFailed.WithMessage("生成された台本のパースに失敗しました")
 	}
 
-	log.Info("script parsed", "lines", len(parseResult.Lines), "errors", len(parseResult.Errors))
+	phase3CharCount := countTotalChars(parseResult.Lines)
+	log.Info("script parsed", "lines", len(parseResult.Lines), "errors", len(parseResult.Errors),
+		"total_chars", phase3CharCount, "target_chars", job.DurationMinutes*script.CharsPerMinute)
 
 	// ===== Phase 4: リライト =====
 	s.updateProgress(ctx, job, 68, "台本をリライト中...")
@@ -479,7 +482,9 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 		rewriteResult := script.Parse(rewrittenText, allowedSpeakers)
 		if len(rewriteResult.Lines) > 0 {
 			parseResult = rewriteResult
-			log.Info("Phase 4 rewrite applied", "lines", len(parseResult.Lines))
+			phase4CharCount := countTotalChars(parseResult.Lines)
+			log.Info("Phase 4 rewrite applied", "lines", len(parseResult.Lines),
+				"total_chars", phase4CharCount, "target_chars", job.DurationMinutes*script.CharsPerMinute)
 		} else {
 			log.Warn("Phase 4 rewrite parse failed, using original draft")
 			rewrittenText = generatedText
@@ -614,7 +619,7 @@ func (s *scriptJobService) executePhase3(ctx context.Context, brief script.Brief
 		return "", fmt.Errorf("phase 3 LLM client: %w", err)
 	}
 
-	sysPrompt := getPhase3SystemPrompt(brief.Constraints.TalkMode, brief.Constraints.WithEmotion)
+	sysPrompt := getPhase3SystemPrompt(brief.Constraints.TalkMode, brief.Constraints.WithEmotion, brief.Episode.DurationMinutes)
 	userPrompt := buildPhase3UserPrompt(brief, phase2)
 
 	t.Trace("phase3", "model_info", s.llmRegistry.GetModelInfo(phase3Config.Provider))
@@ -1027,6 +1032,15 @@ func (s *scriptJobService) notifyFailed(jobID, userID string, errorCode, errorMe
 			"errorMessage": msg,
 		},
 	})
+}
+
+// countTotalChars は台本全行の合計文字数を返す
+func countTotalChars(lines []script.ParsedLine) int {
+	var total int
+	for _, line := range lines {
+		total += utf8.RuneCountInString(line.Text)
+	}
+	return total
 }
 
 // toScriptJobResponse は ScriptJob をレスポンス DTO に変換する

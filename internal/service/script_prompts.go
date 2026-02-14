@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/siropaca/anycast-backend/internal/infrastructure/llm"
@@ -124,6 +125,7 @@ const phase4SystemPrompt = `あなたはポッドキャスト台本のリライ�
 - 話者名は変更しない
 - 全体の構成（オープニング→本題3ブロック→クロージング）は維持する
 - 元の台本の情報量を大幅に減らさない
+- 元の台本の合計文字数を維持する（リライトで文字数が大幅に減らないよう注意する）
 - 元の台本に感情タグがある場合は必ず保持する。リライトでセリフを変更・追加する際も適切な感情タグを付ける
 - 感情タグは以下の10種類のみ使用可能: 考えながら / ため息 / 笑いながら / 大声で / ささやいて / 早口で / 嬉しそうに / 悲しそうに / 驚いて / 真剣に
 
@@ -163,14 +165,22 @@ const phase5SystemPrompt = `あなたはポッドキャスト台本の品質管�
   - 悪い例：「なるほど」→ 次の行に分割
   - 良い例：「なるほど、それは納得できるね」→ 1行にまとめる
 
+## 文字数不足（total_character_count）の修正
+- 合計文字数が目標に対して不足している場合、以下の方法で文字数を増やす:
+  - 既存のセリフに具体例や補足説明を追加する
+  - 話題の掘り下げや聞き手のリアクションを追加する
+  - 新しい視点やエピソードを自然に挿入する
+- 無意味な繰り返しや冗長な表現で水増ししない
+- 追加するセリフも20〜80文字の範囲に収める
+
 ## 出力形式
 話者名: セリフ
 （元の台本と同じ形式で全文を出力）`
 
 // getPhase3SystemPrompt は Phase 3 用のシステムプロンプトを返す
 //
-// talkMode と withEmotion の組み合わせで4パターンのプロンプトを生成
-func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool) string {
+// talkMode, withEmotion, durationMinutes の組み合わせでプロンプトを生成
+func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool, durationMinutes int) string {
 	var sb strings.Builder
 
 	sb.WriteString("あなたはポッドキャスト台本を作成する専門家です。\n")
@@ -264,8 +274,18 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool) string {
 	}
 
 	// 分量
-	sb.WriteString("\n## 分量\n")
-	sb.WriteString("- 1分あたり約300文字を目安に、指定されたエピソード長に合わせる\n")
+	targetChars := durationMinutes * script.CharsPerMinute
+	sb.WriteString("\n## 分量（重要）\n")
+	sb.WriteString(fmt.Sprintf("- このエピソードは %d分 の音声になります\n", durationMinutes))
+	sb.WriteString(fmt.Sprintf("- TTS で読み上げた際に %d分 になるよう、合計文字数を **約%d文字** にしてください\n", durationMinutes, targetChars))
+	sb.WriteString(fmt.Sprintf("- 1分あたり約%d文字が目安です（TTS の読み上げ速度基準）\n", script.CharsPerMinute))
+	sb.WriteString("- 台本が短くなりがちなので、目標文字数を下回らないよう注意してください\n")
+	sb.WriteString("- 文字数配分の目安:\n")
+	sb.WriteString(fmt.Sprintf("  - オープニング: 約%d文字\n", targetChars*15/100))
+	sb.WriteString(fmt.Sprintf("  - 本題ブロック1: 約%d文字\n", targetChars*25/100))
+	sb.WriteString(fmt.Sprintf("  - 本題ブロック2: 約%d文字\n", targetChars*25/100))
+	sb.WriteString(fmt.Sprintf("  - 本題ブロック3: 約%d文字\n", targetChars*25/100))
+	sb.WriteString(fmt.Sprintf("  - クロージング: 約%d文字\n", targetChars*10/100))
 
 	// 出力形式
 	sb.WriteString("\n## 出力形式\n")

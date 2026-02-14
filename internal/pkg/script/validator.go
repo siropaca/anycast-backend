@@ -7,6 +7,9 @@ import (
 	"unicode/utf8"
 )
 
+// CharsPerMinute は1分あたりの目標文字数（TTS 基準）
+const CharsPerMinute = 300
+
 // ValidationIssue はバリデーションの問題点
 type ValidationIssue struct {
 	Check   string `json:"check"`
@@ -40,6 +43,7 @@ func Validate(lines []ParsedLine, config ValidatorConfig) ValidationResult {
 	issues = append(issues, checkNoPeriodInText(lines)...)
 	issues = append(issues, checkMinimumLines(lines, config.DurationMinutes)...)
 	issues = append(issues, checkLengthVariance(lines)...)
+	issues = append(issues, checkTotalCharacterCount(lines, config.DurationMinutes)...)
 
 	// talk_mode 別チェック
 	switch config.TalkMode {
@@ -214,6 +218,38 @@ func checkSpeakerConsistency(lines []ParsedLine) []ValidationIssue {
 				Message: fmt.Sprintf("monologue モードで複数の話者が検出されました（%s と %s）", firstSpeaker, line.SpeakerName),
 			}}
 		}
+	}
+	return nil
+}
+
+// checkTotalCharacterCount は合計文字数が目標範囲（±20%）以内かチェックする
+func checkTotalCharacterCount(lines []ParsedLine, durationMinutes int) []ValidationIssue {
+	if durationMinutes <= 0 {
+		return nil
+	}
+
+	var totalChars int
+	for _, line := range lines {
+		totalChars += utf8.RuneCountInString(line.Text)
+	}
+
+	target := durationMinutes * CharsPerMinute
+	lower := int(float64(target) * 0.8)
+	upper := int(float64(target) * 1.2)
+
+	if totalChars < lower {
+		return []ValidationIssue{{
+			Check:   "total_character_count",
+			Line:    0,
+			Message: fmt.Sprintf("合計文字数が不足しています（%d文字、目標%d文字の80%%=%d文字以上必要）", totalChars, target, lower),
+		}}
+	}
+	if totalChars > upper {
+		return []ValidationIssue{{
+			Check:   "total_character_count",
+			Line:    0,
+			Message: fmt.Sprintf("合計文字数が多すぎます（%d文字、目標%d文字の120%%=%d文字以下にしてください）", totalChars, target, upper),
+		}}
 	}
 	return nil
 }
