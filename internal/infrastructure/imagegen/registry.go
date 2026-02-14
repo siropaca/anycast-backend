@@ -20,11 +20,10 @@ func (r *Registry) Register(provider Provider, client Client) {
 }
 
 // Get は指定されたプロバイダのクライアントを返す
-//
-// 未登録の場合はエラーを返す
 func (r *Registry) Get(provider Provider) (Client, error) {
 	client, ok := r.clients[provider]
 	if !ok {
+		// 未登録の場合はエラーを返す
 		return nil, fmt.Errorf("image gen provider %q is not registered", provider)
 	}
 	return client, nil

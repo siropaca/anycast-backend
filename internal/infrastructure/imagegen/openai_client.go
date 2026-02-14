@@ -26,10 +26,9 @@ type openAIImageGenClient struct {
 }
 
 // NewOpenAIClient は OpenAI Images API を使った画像生成クライアントを作成する
-//
-// apiKey - OpenAI API キー
-// model - 使用するモデル名（空文字の場合はデフォルト: gpt-image-1）
 func NewOpenAIClient(apiKey, model string) Client {
+	// apiKey - OpenAI API キー
+	// model - 使用するモデル名（空文字の場合はデフォルト: gpt-image-1）
 	client := openai.NewClient(
 		option.WithAPIKey(apiKey),
 		option.WithRequestTimeout(openAIImageGenTimeout),
