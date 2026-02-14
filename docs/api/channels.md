@@ -1,46 +1,5 @@
 # Channels（チャンネル）
 
-## チャンネル一覧取得
-
-```
-GET /channels
-```
-
-公開中のチャンネルのみ取得可能。自分のチャンネル（非公開含む）は `GET /me/channels` を使用。
-
-**クエリパラメータ:**
-
-| パラメータ | 型 | デフォルト | 説明 |
-|------------|-----|------------|------|
-| categorySlug | string | - | カテゴリスラッグでフィルタ |
-| limit | int | 20 | 取得件数（最大 100） |
-| offset | int | 0 | オフセット |
-
-**レスポンス:**
-```json
-{
-  "data": [
-    {
-      "id": "uuid",
-      "owner": { "id": "uuid", "username": "testuser", "displayName": "テストユーザー", "avatar": null },
-      "name": "チャンネル名",
-      "description": "説明",
-      "category": { "id": "uuid", "slug": "technology", "name": "テクノロジー" },
-      "artwork": { "id": "uuid", "url": "..." },
-      "characters": [...],
-      "episodes": [...],
-      "publishedAt": "2025-01-01T00:00:00Z",
-      "createdAt": "2025-01-01T00:00:00Z",
-      "updatedAt": "2025-01-01T00:00:00Z"
-    }
-  ]
-}
-```
-
-> **Note:** `characters` と `episodes` の詳細な構造は [チャンネル取得](#チャンネル取得) を参照。
-
----
-
 ## チャンネル取得
 
 ```

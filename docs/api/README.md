@@ -32,7 +32,6 @@
 | PATCH | `/api/v1/me/prompt` | ユーザープロンプト更新 | Owner | ✅ | [詳細](./users.md#ユーザープロンプト更新) |
 | DELETE | `/api/v1/me` | アカウント削除 | Owner | ✅ | [詳細](./users.md#アカウント削除) |
 | **Channels** | - | - | - | - | [channels.md](./channels.md) |
-| GET | `/api/v1/channels` | チャンネル一覧取得 | Public | | [詳細](./channels.md#チャンネル一覧取得) |
 | GET | `/api/v1/channels/:channelId` | チャンネル取得 | Optional | ✅ | [詳細](./channels.md#チャンネル取得) |
 | POST | `/api/v1/channels` | チャンネル作成 | Owner | ✅ | [詳細](./channels.md#チャンネル作成) |
 | PATCH | `/api/v1/channels/:channelId` | チャンネル更新 | Owner | ✅ | [詳細](./channels.md#チャンネル更新) |
@@ -57,12 +56,6 @@
 | POST | `/api/v1/me/bgms` | BGM 作成 | Owner | ✅ | [詳細](./bgms.md#bgm-作成) |
 | PATCH | `/api/v1/me/bgms/:bgmId` | BGM 更新 | Owner | ✅ | [詳細](./bgms.md#bgm-更新) |
 | DELETE | `/api/v1/me/bgms/:bgmId` | BGM 削除 | Owner | ✅ | [詳細](./bgms.md#bgm-削除) |
-| **System BGMs（システム BGM）** | - | - | - | - | [bgms.md](./bgms.md#default-bgmsデフォルト-bgm) |
-| GET | `/api/v1/system-bgms` | システム BGM 一覧取得 | Public | | [詳細](./bgms.md#デフォルト-bgm-一覧取得) |
-| GET | `/api/v1/system-bgms/:bgmId` | システム BGM 取得 | Public | | [詳細](./bgms.md#デフォルト-bgm-取得) |
-| POST | `/api/v1/system-bgms` | システム BGM 作成 | Admin | | [詳細](./bgms.md#デフォルト-bgm-作成) |
-| PATCH | `/api/v1/system-bgms/:bgmId` | システム BGM 更新 | Admin | | [詳細](./bgms.md#デフォルト-bgm-更新) |
-| DELETE | `/api/v1/system-bgms/:bgmId` | システム BGM 削除 | Admin | | [詳細](./bgms.md#デフォルト-bgm-削除) |
 | **Episodes** | - | - | - | - | [episodes.md](./episodes.md) |
 | GET | `/api/v1/channels/:channelId/episodes` | エピソード一覧取得 | Optional | ✅ | [詳細](./episodes.md#エピソード一覧取得公開用) |
 | GET | `/api/v1/channels/:channelId/episodes/:episodeId` | エピソード取得 | Optional | ✅ | [詳細](./episodes.md#エピソード取得) |
