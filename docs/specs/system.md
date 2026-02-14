@@ -26,6 +26,7 @@
 | OpenAI モデル | GPT-5.2 | OpenAI のデフォルトモデル |
 | Claude モデル | Claude Sonnet 4 | Claude のデフォルトモデル |
 | Gemini モデル | Gemini 2.5 Flash | Gemini のデフォルトモデル |
+| Gemini ロケーション | 環境変数 `GEMINI_LLM_LOCATION`（デフォルト: asia-northeast1） | Gemini LLM のリージョン |
 | タイムアウト | 120秒 | API リクエストのタイムアウト |
 | リトライ回数 | 3回 | エラー時の最大リトライ回数 |
 | リトライ間隔 | 1秒, 2秒, 3秒 | 指数バックオフ（attempt × 1秒） |
@@ -52,15 +53,31 @@ Gemini 2.5 Pro TTS（Vertex AI バックエンド）を使用した音声合成�
 
 - 設定箇所: `internal/infrastructure/tts/`
 
-### Google Cloud 画像生成（Gemini Image Gen）
+### AI 画像生成（マルチプロバイダ）
 
-Gemini 2.5 Flash Image（Vertex AI バックエンド）を使用した AI 画像生成。チャンネル・エピソードのアートワークをテキストプロンプトから生成する。
+チャンネル・エピソードのアートワークをテキストプロンプトから生成する。環境変数 `IMAGE_GEN_PROVIDER` でプロバイダを切り替え可能。
+
+| 設定 | 値 | 説明 |
+|------|------|------|
+| プロバイダ | 環境変数 `IMAGE_GEN_PROVIDER`（デフォルト: gemini） | 画像生成プロバイダ（`gemini` / `openai`） |
+
+#### Gemini（デフォルト）
+
+Gemini 2.5 Flash Image（Vertex AI バックエンド）を使用。
 
 | 設定 | 値 | 説明 |
 |------|------|------|
 | モデル | gemini-2.5-flash-image | Gemini 画像生成モデル |
 | ロケーション | 環境変数 `GEMINI_IMAGE_GEN_LOCATION`（デフォルト: us-central1） | Vertex AI エンドポイントのリージョン |
 | 出力形式 | ResponseModalities: TEXT, IMAGE | テキストと画像の両方を生成可能 |
+
+#### OpenAI
+
+OpenAI の画像生成 API を使用。
+
+| 設定 | 値 | 説明 |
+|------|------|------|
+| モデル | 環境変数 `OPENAI_IMAGE_GEN_MODEL`（デフォルト: gpt-image-1） | OpenAI 画像生成モデル |
 
 - 設定箇所: `internal/infrastructure/imagegen/`
 
@@ -75,6 +92,18 @@ Gemini 2.5 Flash Image（Vertex AI バックエンド）を使用した AI 画�
 | 画像パス形式 | `images/{imageID}{ext}` | 拡張子は元ファイルに準拠 |
 
 - 設定箇所: `internal/infrastructure/storage/`
+
+### Slack 通知
+
+各種イベントを Slack に Webhook で通知する。対応する環境変数が空の場合、その通知は無効化される。
+
+| 設定 | 環境変数 | 説明 |
+|------|------|------|
+| フィードバック通知 | `SLACK_FEEDBACK_WEBHOOK_URL` | ユーザーからのフィードバック送信時に通知 |
+| お問い合わせ通知 | `SLACK_CONTACT_WEBHOOK_URL` | お問い合わせ送信時に通知 |
+| アラート通知 | `SLACK_ALERT_WEBHOOK_URL` | ジョブ失敗時にアラート通知 |
+
+- 設定箇所: `internal/infrastructure/slack/`
 
 ### トレーサー
 

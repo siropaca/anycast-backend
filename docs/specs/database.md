@@ -16,6 +16,7 @@ erDiagram
     users ||--o{ follows : "has (follower)"
     users ||--o{ follows : "has (target)"
     users ||--o{ comments : has
+    users ||--o{ favorite_voices : has
     users ||--o{ audio_jobs : has
     users ||--o{ feedbacks : has
     users ||--o{ contacts : has
@@ -30,6 +31,7 @@ erDiagram
     channels ||--o| system_bgms : default_system_bgm
     characters ||--o{ channel_characters : assigned_to
     characters ||--|| voices : uses
+    voices ||--o{ favorite_voices : has
     characters ||--o| images : avatar
     episodes ||--o{ script_lines : has
     episodes ||--o{ reactions : has
@@ -101,6 +103,13 @@ erDiagram
         timestamp deleted_at
         timestamp created_at
         timestamp updated_at
+    }
+
+    favorite_voices {
+        uuid id PK
+        uuid user_id FK
+        uuid voice_id FK
+        timestamp created_at
     }
 
     audio_jobs {
@@ -722,6 +731,29 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 
 ---
 
+#### favorite_voices
+
+ユーザーのボイスお気に入り登録を管理する。
+
+| カラム名 | 型 | NULLABLE | デフォルト | 説明 |
+|----------|-----|:--------:|------------|------|
+| id | UUID | | gen_random_uuid() | 主キー |
+| user_id | UUID | | - | ユーザー（users 参照） |
+| voice_id | UUID | | - | ボイス（voices 参照） |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 登録日時 |
+
+**インデックス:**
+- PRIMARY KEY (id)
+- UNIQUE (user_id, voice_id)
+- INDEX (user_id)
+- INDEX (voice_id)
+
+**外部キー:**
+- user_id → users(id) ON DELETE CASCADE
+- voice_id → voices(id) ON DELETE CASCADE
+
+---
+
 #### comments
 
 エピソードへのコメントを管理する。
@@ -1030,7 +1062,7 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 
 ### カスケード削除
 
-- User 削除時: 関連する RefreshTokens, Characters, BGMs, Channels, Episodes, ScriptLines が削除
+- User 削除時: 関連する RefreshTokens, Characters, BGMs, Channels, Episodes, ScriptLines, FavoriteVoices が削除
 - Channel 削除時: 関連する channel_characters, Episodes, ScriptLines が削除
 - Episode 削除時: 関連する ScriptLines が削除
 - Character 削除時: channel_characters で使用中の場合は RESTRICT（削除不可）
@@ -1038,7 +1070,7 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 - System BGM 削除時: Episodes で使用中の場合は SET NULL
 - Audio 削除時: BGMs / System BGMs で使用中の場合は RESTRICT（削除不可）、Episodes からは SET NULL（full_audio_id, voice_audio_id）
 - Image 削除時: 参照元は SET NULL（ファイルが消えても親レコードは残る）
-- Voice 削除時: 使用中の場合は RESTRICT（削除不可）
+- Voice 削除時: Characters で使用中の場合は RESTRICT（削除不可）、FavoriteVoices は CASCADE 削除
 
 ### メディアファイルの管理
 

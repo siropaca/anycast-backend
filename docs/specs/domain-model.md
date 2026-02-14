@@ -91,6 +91,7 @@ AIポッドキャスト作成・配信プラットフォーム。
 │  PlaybackHistory : User ─── Episode + 再生状態                              │
 │  Follow          : User ─── User（自分以外のユーザーのみ）                  │
 │  Comment         : User ─── Episode + コメント内容                          │
+│  FavoriteVoice   : User ─── Voice（ボイスのお気に入り）                     │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -129,7 +130,7 @@ AIポッドキャスト作成・配信プラットフォーム。
 |------|------|------|
 | エンティティ | User, Channel, Character, Episode, ScriptLine | 一意の識別子を持ち、ライフサイクルを通じて追跡される |
 | エンティティ | Playlist, PlaylistItem | ユーザー所有の再生リストとアイテム |
-| エンティティ | Reaction, PlaybackHistory, Follow, Comment | ユーザーとエピソード/ユーザーの関連を表す |
+| エンティティ | Reaction, PlaybackHistory, Follow, Comment, FavoriteVoice | ユーザーとエピソード/ユーザー/ボイスの関連を表す |
 | エンティティ | Voice, Category | システム管理のマスタデータ |
 | エンティティ | Audio, Image | メディアファイル（外部ストレージへの参照） |
 | 値オブジェクト | Email, Username, OAuthProvider, Gender, MimeType | ドメイン固有のルール・制約を持つ値 |
@@ -629,6 +630,21 @@ emotion は TTS 生成時に text の先頭にカッコで付けて表現する�
 - 公開されているエピソードのみコメント可能
 - コメント編集・削除は投稿者本人または Admin のみ
 - 削除されたコメントは一覧に表示されない（論理削除）
+
+### FavoriteVoice（ボイスお気に入り）
+
+ユーザーがボイスをお気に入り登録したことを記録する。
+
+| 属性 | 型 | 必須 | 説明 |
+|------|-----|:----:|------|
+| id | UUID | ◯ | 識別子 |
+| userId | UUID | ◯ | ユーザー |
+| voiceId | UUID | ◯ | お気に入りのボイス |
+| createdAt | DateTime | ◯ | 登録日時 |
+
+#### 制約
+
+- user + voice の組み合わせは一意（同じボイスを複数回お気に入り登録できない）
 
 ---
 

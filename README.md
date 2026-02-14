@@ -106,6 +106,7 @@ cp .env.example .env        # 環境変数ファイルの作成
 | `TRACE_MODE` | トレースモード（none / log / file） | none |
 | `SLACK_FEEDBACK_WEBHOOK_URL` | Slack Webhook URL（フィードバック通知用、空の場合は通知無効） | - |
 | `SLACK_CONTACT_WEBHOOK_URL` | Slack Webhook URL（お問い合わせ通知用、空の場合は通知無効） | - |
+| `SLACK_ALERT_WEBHOOK_URL` | Slack Webhook URL（ジョブ失敗アラート通知用、空の場合はアラート無効） | - |
 
 > **Note:** `GOOGLE_CLOUD_PROJECT_ID` と `GOOGLE_CLOUD_TASKS_WORKER_URL` が未設定の場合、Cloud Tasks を使わずに goroutine で直接ジョブを実行します（ローカル開発用）。
 
