@@ -12,8 +12,6 @@
 | DUPLICATE_EMAIL | 409 | メールアドレスが既に登録済み |
 | DUPLICATE_USERNAME | 409 | ユーザー名が既に使用されている |
 | DUPLICATE_NAME | 409 | 名前が重複している |
-| ALREADY_LIKED | 409 | 既に高評価済み |
-| ALREADY_IN_PLAYLIST | 409 | 既に再生リストに追加済み |
 | ALREADY_FOLLOWED | 409 | 既にフォロー済み |
 | ALREADY_FAVORITED | 409 | 既にお気に入り登録済み |
 | DEFAULT_PLAYLIST | 409 | デフォルト再生リストは変更不可 |

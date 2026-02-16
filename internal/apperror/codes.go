@@ -19,8 +19,6 @@ const (
 	CodeDuplicateEmail       ErrorCode = "DUPLICATE_EMAIL"         // 409
 	CodeDuplicateUsername    ErrorCode = "DUPLICATE_USERNAME"      // 409
 	CodeDuplicateName        ErrorCode = "DUPLICATE_NAME"          // 409
-	CodeAlreadyLiked         ErrorCode = "ALREADY_LIKED"           // 409
-	CodeAlreadyInPlaylist    ErrorCode = "ALREADY_IN_PLAYLIST"     // 409
 	CodeAlreadyFollowed      ErrorCode = "ALREADY_FOLLOWED"        // 409
 	CodeAlreadyFavorited     ErrorCode = "ALREADY_FAVORITED"       // 409
 	CodeDefaultPlaylist      ErrorCode = "DEFAULT_PLAYLIST"        // 409
