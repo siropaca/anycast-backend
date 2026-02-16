@@ -1,5 +1,7 @@
 package request
 
+import "github.com/siropaca/anycast-backend/internal/pkg/optional"
+
 // 自分のチャンネル一覧取得リクエスト
 type ListMyChannelsRequest struct {
 	PaginationRequest
@@ -41,10 +43,10 @@ type CreateCharacterInput struct {
 
 // チャンネル更新リクエスト
 type UpdateChannelRequest struct {
-	Name           string  `json:"name" binding:"required,max=255"`
-	Description    string  `json:"description" binding:"omitempty,max=2000"`
-	CategoryID     string  `json:"categoryId" binding:"required,uuid"`
-	ArtworkImageID *string `json:"artworkImageId" binding:"omitempty,uuid"`
+	Name           string                 `json:"name" binding:"required,max=255"`
+	Description    string                 `json:"description" binding:"omitempty,max=2000"`
+	CategoryID     string                 `json:"categoryId" binding:"required,uuid"`
+	ArtworkImageID optional.Field[string] `json:"artworkImageId"`
 }
 
 // 台本プロンプト設定リクエスト

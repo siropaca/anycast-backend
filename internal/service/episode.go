@@ -418,14 +418,14 @@ func (s *episodeService) UpdateEpisode(ctx context.Context, userID, channelID, e
 	episode.Description = req.Description
 
 	// アートワークの更新
-	if req.ArtworkImageID != nil {
-		if *req.ArtworkImageID == "" {
-			// 空文字の場合は null に設定
+	if req.ArtworkImageID.IsSet {
+		if req.ArtworkImageID.Value == nil {
+			// null の場合は削除
 			episode.ArtworkID = nil
 		} else {
-			artworkID, err := uuid.Parse(*req.ArtworkImageID)
+			artworkID, err := uuid.Parse(*req.ArtworkImageID.Value)
 			if err != nil {
-				return nil, err
+				return nil, apperror.ErrValidation.WithMessage("artworkImageId は有効な UUID である必要があります")
 			}
 			// 画像の存在確認
 			if _, err := s.imageRepo.FindByID(ctx, artworkID); err != nil {

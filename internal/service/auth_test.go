@@ -14,6 +14,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/dto/request"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/model"
+	"github.com/siropaca/anycast-backend/internal/pkg/optional"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 	"github.com/siropaca/anycast-backend/internal/repository"
 )
@@ -507,7 +508,7 @@ func TestUpdateMe(t *testing.T) {
 		avatarIDStr := avatarImageID.String()
 		req := request.UpdateMeRequest{
 			DisplayName:   "Test User",
-			AvatarImageID: &avatarIDStr,
+			AvatarImageID: optional.Field[string]{Value: &avatarIDStr, IsSet: true},
 		}
 
 		result, err := svc.UpdateMe(ctx, userID.String(), req)
@@ -518,7 +519,7 @@ func TestUpdateMe(t *testing.T) {
 		imageRepo.AssertExpectations(t)
 	})
 
-	t.Run("avatarImageId を空文字でクリアできる", func(t *testing.T) {
+	t.Run("avatarImageId を null でクリアできる", func(t *testing.T) {
 		userRepo := new(mockUserRepositoryForAuth)
 		credentialRepo := new(mockCredentialRepository)
 		oauthAccountRepo := new(mockOAuthAccountRepository)
@@ -535,10 +536,9 @@ func TestUpdateMe(t *testing.T) {
 		credentialRepo.On("FindByUserID", ctx, userID).Return(nil, apperror.ErrNotFound)
 		oauthAccountRepo.On("FindByUserID", ctx, userID).Return([]model.OAuthAccount{}, nil)
 
-		emptyStr := ""
 		req := request.UpdateMeRequest{
 			DisplayName:   "Test User",
-			AvatarImageID: &emptyStr,
+			AvatarImageID: optional.Field[string]{Value: nil, IsSet: true},
 		}
 
 		result, err := svc.UpdateMe(ctx, userID.String(), req)
@@ -572,7 +572,7 @@ func TestUpdateMe(t *testing.T) {
 		headerIDStr := headerImageID.String()
 		req := request.UpdateMeRequest{
 			DisplayName:   "Test User",
-			HeaderImageID: &headerIDStr,
+			HeaderImageID: optional.Field[string]{Value: &headerIDStr, IsSet: true},
 		}
 
 		result, err := svc.UpdateMe(ctx, userID.String(), req)
@@ -598,7 +598,7 @@ func TestUpdateMe(t *testing.T) {
 		avatarIDStr := avatarImageID.String()
 		req := request.UpdateMeRequest{
 			DisplayName:   "Test User",
-			AvatarImageID: &avatarIDStr,
+			AvatarImageID: optional.Field[string]{Value: &avatarIDStr, IsSet: true},
 		}
 
 		result, err := svc.UpdateMe(ctx, userID.String(), req)
@@ -630,7 +630,7 @@ func TestUpdateMe(t *testing.T) {
 		credentialRepo.On("FindByUserID", ctx, userID).Return(nil, apperror.ErrNotFound)
 		oauthAccountRepo.On("FindByUserID", ctx, userID).Return([]model.OAuthAccount{}, nil)
 
-		// AvatarImageID を nil にして送信
+		// AvatarImageID を未送信（IsSet: false）にして送信
 		req := request.UpdateMeRequest{
 			DisplayName: "Test User",
 		}

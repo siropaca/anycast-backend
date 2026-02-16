@@ -275,15 +275,15 @@ func (s *characterService) UpdateCharacter(ctx context.Context, userID, characte
 	}
 
 	// アバター画像の更新
-	if req.AvatarID != nil {
-		if *req.AvatarID == "" {
-			// 空文字の場合はアバターを削除
+	if req.AvatarID.IsSet {
+		if req.AvatarID.Value == nil {
+			// null の場合はアバターを削除
 			character.AvatarID = nil
 			character.Avatar = nil
 		} else {
-			aid, err := uuid.Parse(*req.AvatarID)
+			aid, err := uuid.Parse(*req.AvatarID.Value)
 			if err != nil {
-				return nil, err
+				return nil, apperror.ErrValidation.WithMessage("avatarId は有効な UUID である必要があります")
 			}
 			avatar, err := s.imageRepo.FindByID(ctx, aid)
 			if err != nil {

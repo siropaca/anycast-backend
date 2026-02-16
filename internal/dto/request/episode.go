@@ -1,5 +1,7 @@
 package request
 
+import "github.com/siropaca/anycast-backend/internal/pkg/optional"
+
 // 自分のチャンネルのエピソード一覧取得リクエスト
 type ListMyChannelEpisodesRequest struct {
 	PaginationRequest
@@ -20,9 +22,9 @@ type CreateEpisodeRequest struct {
 
 // エピソード更新リクエスト
 type UpdateEpisodeRequest struct {
-	Title          string  `json:"title" binding:"required,max=255"`
-	Description    string  `json:"description" binding:"required,max=2000"`
-	ArtworkImageID *string `json:"artworkImageId" binding:"omitempty,uuid"`
+	Title          string                 `json:"title" binding:"required,max=255"`
+	Description    string                 `json:"description" binding:"required,max=2000"`
+	ArtworkImageID optional.Field[string] `json:"artworkImageId"`
 }
 
 // エピソード公開リクエスト

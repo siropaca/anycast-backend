@@ -546,13 +546,13 @@ func (s *authService) UpdateMe(ctx context.Context, userID string, req request.U
 	user.Bio = req.Bio
 
 	// avatarImageId の処理
-	if req.AvatarImageID != nil {
-		if *req.AvatarImageID == "" {
+	if req.AvatarImageID.IsSet {
+		if req.AvatarImageID.Value == nil {
 			user.AvatarID = nil
 		} else {
-			avatarID, err := uuid.Parse(*req.AvatarImageID)
+			avatarID, err := uuid.Parse(*req.AvatarImageID.Value)
 			if err != nil {
-				return nil, err
+				return nil, apperror.ErrValidation.WithMessage("avatarImageId は有効な UUID である必要があります")
 			}
 			if _, err := s.imageRepo.FindByID(ctx, avatarID); err != nil {
 				return nil, err
@@ -563,13 +563,13 @@ func (s *authService) UpdateMe(ctx context.Context, userID string, req request.U
 	}
 
 	// headerImageId の処理
-	if req.HeaderImageID != nil {
-		if *req.HeaderImageID == "" {
+	if req.HeaderImageID.IsSet {
+		if req.HeaderImageID.Value == nil {
 			user.HeaderImageID = nil
 		} else {
-			headerID, err := uuid.Parse(*req.HeaderImageID)
+			headerID, err := uuid.Parse(*req.HeaderImageID.Value)
 			if err != nil {
-				return nil, err
+				return nil, apperror.ErrValidation.WithMessage("headerImageId は有効な UUID である必要があります")
 			}
 			if _, err := s.imageRepo.FindByID(ctx, headerID); err != nil {
 				return nil, err
