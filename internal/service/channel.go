@@ -51,6 +51,7 @@ type channelService struct {
 	imageRepo           repository.ImageRepository
 	voiceRepo           repository.VoiceRepository
 	episodeRepo         repository.EpisodeRepository
+	scriptLineRepo      repository.ScriptLineRepository
 	bgmRepo             repository.BgmRepository
 	systemBgmRepo       repository.SystemBgmRepository
 	playbackHistoryRepo repository.PlaybackHistoryRepository
@@ -66,6 +67,7 @@ func NewChannelService(
 	imageRepo repository.ImageRepository,
 	voiceRepo repository.VoiceRepository,
 	episodeRepo repository.EpisodeRepository,
+	scriptLineRepo repository.ScriptLineRepository,
 	bgmRepo repository.BgmRepository,
 	systemBgmRepo repository.SystemBgmRepository,
 	playbackHistoryRepo repository.PlaybackHistoryRepository,
@@ -79,6 +81,7 @@ func NewChannelService(
 		imageRepo:           imageRepo,
 		voiceRepo:           voiceRepo,
 		episodeRepo:         episodeRepo,
+		scriptLineRepo:      scriptLineRepo,
 		bgmRepo:             bgmRepo,
 		systemBgmRepo:       systemBgmRepo,
 		playbackHistoryRepo: playbackHistoryRepo,
@@ -309,14 +312,14 @@ func (s *channelService) UpdateChannel(ctx context.Context, userID, channelID st
 	channel.CategoryID = categoryID
 
 	// アートワークの更新
-	if req.ArtworkImageID != nil {
-		if *req.ArtworkImageID == "" {
-			// 空文字の場合は null に設定
+	if req.ArtworkImageID.IsSet {
+		if req.ArtworkImageID.Value == nil {
+			// null の場合は削除
 			channel.ArtworkID = nil
 		} else {
-			artworkID, err := uuid.Parse(*req.ArtworkImageID)
+			artworkID, err := uuid.Parse(*req.ArtworkImageID.Value)
 			if err != nil {
-				return nil, err
+				return nil, apperror.ErrValidation.WithMessage("artworkImageId は有効な UUID である必要があります")
 			}
 			if _, err := s.imageRepo.FindByID(ctx, artworkID); err != nil {
 				return nil, err
@@ -841,6 +844,11 @@ func (s *channelService) ReplaceChannelCharacter(ctx context.Context, userID, ch
 		return nil, err
 	}
 
+	// 既存台本の speaker_id を新キャラクターに一括更新
+	if err := s.scriptLineRepo.UpdateSpeakerIDByChannelID(ctx, cid, oldCharacterID, newCharacterID); err != nil {
+		return nil, err
+	}
+
 	// リレーションをプリロードして取得
 	updated, err := s.channelRepo.FindByID(ctx, cid)
 	if err != nil {
@@ -892,6 +900,15 @@ func (s *channelService) RemoveChannelCharacter(ctx context.Context, userID, cha
 
 	if count <= MinCharactersPerChannel {
 		return nil, apperror.ErrValidation.WithMessage(fmt.Sprintf("キャラクターは最低 %d 人必要です", MinCharactersPerChannel))
+	}
+
+	// 台本で使用中のキャラクターは削除不可
+	used, err := s.scriptLineRepo.ExistsBySpeakerIDAndChannelID(ctx, targetCharacterID, cid)
+	if err != nil {
+		return nil, err
+	}
+	if used {
+		return nil, apperror.ErrValidation.WithMessage("このキャラクターは台本で使用されているため削除できません")
 	}
 
 	// キャラクターを削除

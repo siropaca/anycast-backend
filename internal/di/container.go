@@ -224,7 +224,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	// Service 層
 	voiceService := service.NewVoiceService(voiceRepo, favVoiceRepo)
 	authService := service.NewAuthService(userRepo, credentialRepo, oauthAccountRepo, refreshTokenRepo, imageRepo, playlistRepo, audioJobRepo, scriptJobRepo, passwordHasher, storageClient)
-	channelService := service.NewChannelService(db, channelRepo, characterRepo, categoryRepo, imageRepo, voiceRepo, episodeRepo, bgmRepo, systemBgmRepo, playbackHistoryRepo, storageClient)
+	channelService := service.NewChannelService(db, channelRepo, characterRepo, categoryRepo, imageRepo, voiceRepo, episodeRepo, scriptLineRepo, bgmRepo, systemBgmRepo, playbackHistoryRepo, storageClient)
 	characterService := service.NewCharacterService(characterRepo, voiceRepo, imageRepo, storageClient)
 	categoryService := service.NewCategoryService(categoryRepo, storageClient)
 	episodeService := service.NewEpisodeService(episodeRepo, channelRepo, scriptLineRepo, audioRepo, imageRepo, bgmRepo, systemBgmRepo, playbackHistoryRepo, playlistRepo, storageClient, ttsClient)

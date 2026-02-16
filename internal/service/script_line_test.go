@@ -82,6 +82,16 @@ func (m *mockScriptLineRepository) UpdateLineOrders(ctx context.Context, lineOrd
 	return args.Error(0)
 }
 
+func (m *mockScriptLineRepository) ExistsBySpeakerIDAndChannelID(ctx context.Context, speakerID, channelID uuid.UUID) (bool, error) {
+	args := m.Called(ctx, speakerID, channelID)
+	return args.Bool(0), args.Error(1)
+}
+
+func (m *mockScriptLineRepository) UpdateSpeakerIDByChannelID(ctx context.Context, channelID, oldSpeakerID, newSpeakerID uuid.UUID) error {
+	args := m.Called(ctx, channelID, oldSpeakerID, newSpeakerID)
+	return args.Error(0)
+}
+
 func TestToScriptLineResponse(t *testing.T) {
 	now := time.Now()
 	lineID := uuid.New()

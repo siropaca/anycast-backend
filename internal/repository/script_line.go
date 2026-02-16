@@ -24,6 +24,8 @@ type ScriptLineRepository interface {
 	Update(ctx context.Context, scriptLine *model.ScriptLine) error
 	IncrementLineOrderFrom(ctx context.Context, episodeID uuid.UUID, fromLineOrder int) error
 	UpdateLineOrders(ctx context.Context, lineOrders map[uuid.UUID]int) error
+	ExistsBySpeakerIDAndChannelID(ctx context.Context, speakerID, channelID uuid.UUID) (bool, error)
+	UpdateSpeakerIDByChannelID(ctx context.Context, channelID, oldSpeakerID, newSpeakerID uuid.UUID) error
 }
 
 type scriptLineRepository struct {
@@ -191,6 +193,39 @@ func (r *scriptLineRepository) FindByIDs(ctx context.Context, ids []uuid.UUID) (
 	}
 
 	return scriptLines, nil
+}
+
+// ExistsBySpeakerIDAndChannelID はチャンネル配下のエピソードの台本行にそのキャラクターが使われているかを返す
+func (r *scriptLineRepository) ExistsBySpeakerIDAndChannelID(ctx context.Context, speakerID, channelID uuid.UUID) (bool, error) {
+	var count int64
+
+	if err := r.db.WithContext(ctx).
+		Model(&model.ScriptLine{}).
+		Joins("JOIN episodes ON episodes.id = script_lines.episode_id").
+		Where("episodes.channel_id = ? AND script_lines.speaker_id = ?", channelID, speakerID).
+		Limit(1).
+		Count(&count).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to check script line speaker existence", "error", err, "speaker_id", speakerID, "channel_id", channelID)
+		return false, apperror.ErrInternal.WithMessage("台本行の話者チェックに失敗しました").WithError(err)
+	}
+
+	return count > 0, nil
+}
+
+// UpdateSpeakerIDByChannelID はチャンネル配下の全エピソードの台本行で旧 speakerID を新 speakerID に一括更新する
+func (r *scriptLineRepository) UpdateSpeakerIDByChannelID(ctx context.Context, channelID, oldSpeakerID, newSpeakerID uuid.UUID) error {
+	if err := r.db.WithContext(ctx).
+		Model(&model.ScriptLine{}).
+		Where("speaker_id = ? AND episode_id IN (?)",
+			oldSpeakerID,
+			r.db.Model(&model.Episode{}).Select("id").Where("channel_id = ?", channelID),
+		).
+		UpdateColumn("speaker_id", newSpeakerID).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to update speaker_id in script lines", "error", err, "channel_id", channelID, "old_speaker_id", oldSpeakerID, "new_speaker_id", newSpeakerID)
+		return apperror.ErrInternal.WithMessage("台本行の話者更新に失敗しました").WithError(err)
+	}
+
+	return nil
 }
 
 // UpdateLineOrders は複数の台本行の lineOrder を一括更新する
