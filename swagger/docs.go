@@ -6528,6 +6528,17 @@ const docTemplate = `{
                 }
             }
         },
+        "optional.Field-string": {
+            "type": "object",
+            "properties": {
+                "isSet": {
+                    "type": "boolean"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
         "request.AddChannelCharacterRequest": {
             "type": "object",
             "properties": {
@@ -7063,7 +7074,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "artworkImageId": {
-                    "type": "string"
+                    "$ref": "#/definitions/optional.Field-string"
                 },
                 "categoryId": {
                     "type": "string"
@@ -7082,7 +7093,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "avatarId": {
-                    "type": "string"
+                    "$ref": "#/definitions/optional.Field-string"
                 },
                 "name": {
                     "type": "string",
@@ -7116,7 +7127,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "artworkImageId": {
-                    "type": "string"
+                    "$ref": "#/definitions/optional.Field-string"
                 },
                 "description": {
                     "type": "string",
@@ -7135,7 +7146,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "avatarImageId": {
-                    "type": "string"
+                    "$ref": "#/definitions/optional.Field-string"
                 },
                 "bio": {
                     "type": "string",
@@ -7146,7 +7157,7 @@ const docTemplate = `{
                     "maxLength": 20
                 },
                 "headerImageId": {
-                    "type": "string"
+                    "$ref": "#/definitions/optional.Field-string"
                 }
             }
         },

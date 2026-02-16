@@ -6522,6 +6522,17 @@
                 }
             }
         },
+        "optional.Field-string": {
+            "type": "object",
+            "properties": {
+                "isSet": {
+                    "type": "boolean"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
         "request.AddChannelCharacterRequest": {
             "type": "object",
             "properties": {
@@ -7057,7 +7068,7 @@
             ],
             "properties": {
                 "artworkImageId": {
-                    "type": "string"
+                    "$ref": "#/definitions/optional.Field-string"
                 },
                 "categoryId": {
                     "type": "string"
@@ -7076,7 +7087,7 @@
             "type": "object",
             "properties": {
                 "avatarId": {
-                    "type": "string"
+                    "$ref": "#/definitions/optional.Field-string"
                 },
                 "name": {
                     "type": "string",
@@ -7110,7 +7121,7 @@
             ],
             "properties": {
                 "artworkImageId": {
-                    "type": "string"
+                    "$ref": "#/definitions/optional.Field-string"
                 },
                 "description": {
                     "type": "string",
@@ -7129,7 +7140,7 @@
             ],
             "properties": {
                 "avatarImageId": {
-                    "type": "string"
+                    "$ref": "#/definitions/optional.Field-string"
                 },
                 "bio": {
                     "type": "string",
@@ -7140,7 +7151,7 @@
                     "maxLength": 20
                 },
                 "headerImageId": {
-                    "type": "string"
+                    "$ref": "#/definitions/optional.Field-string"
                 }
             }
         },
