@@ -358,7 +358,7 @@ canceled      canceling ───▶ canceled
 6. **ボイス音声保存**: ボイス音声を GCS にアップロードし `voiceAudioId` を更新
 7. **BGM ミキシング**: FFmpeg で BGM と音声をミックス（type=full/remix）
 8. **アップロード**: 生成した音声ファイルを GCS にアップロード
-9. **エピソード更新**: `fullAudioId`、`audioOutdated`、BGM 情報を更新
+9. **エピソード更新**: `fullAudioId`、BGM 情報を更新
 
 ## 外部サービス
 

@@ -81,7 +81,6 @@ GET /channels/:channelId
           "completed": false,
           "playedAt": "2025-01-01T00:00:00Z"
         },
-        "audioOutdated": false,
         "playCount": 100,
         "publishedAt": "2025-01-01T00:00:00Z",
         "createdAt": "2025-01-01T00:00:00Z",
@@ -533,7 +532,6 @@ GET /me/channels/:channelId
           "completed": false,
           "playedAt": "2025-01-01T00:00:00Z"
         },
-        "audioOutdated": false,
         "playCount": 100,
         "publishedAt": "2025-01-01T00:00:00Z",
         "createdAt": "2025-01-01T00:00:00Z",

@@ -230,7 +230,6 @@ CREATE TABLE episodes (
 	system_bgm_id UUID REFERENCES system_bgms (id) ON DELETE SET NULL,
 	voice_audio_id UUID REFERENCES audios (id) ON DELETE SET NULL,
 	full_audio_id UUID REFERENCES audios (id) ON DELETE SET NULL,
-	audio_outdated BOOLEAN NOT NULL DEFAULT false,
 	play_count INTEGER NOT NULL DEFAULT 0,
 	published_at TIMESTAMP,
 	voice_style TEXT NOT NULL DEFAULT '',

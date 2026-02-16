@@ -340,16 +340,8 @@ OAuth プロバイダとの連携情報。
 | bgm | Audio | | BGM 音声ファイル |
 | voiceAudio | Audio | | ボイス単体の音声（BGM なし） |
 | fullAudio | Audio | | 結合済み音声（全 ScriptLine + BGM） |
-| audioOutdated | Boolean | ◯ | 音声生成後に台本が変更されたか（デフォルト: false） |
 | playCount | Int | ◯ | 再生回数（デフォルト: 0） |
 | publishedAt | DateTime | | 公開日時（NULL = 下書き） |
-
-#### audioOutdated の更新ルール
-
-- 音声生成時（GenerateAudio）: `false` にリセット
-- 台本変更時（ScriptLine の追加/更新/削除/並び替え）:
-  - `fullAudio` が存在する場合のみ `true` に設定
-  - `fullAudio` が存在しない場合は変更なし
 
 #### playCount の更新ルール
 

@@ -771,9 +771,6 @@ func (s *episodeService) SetBgm(ctx context.Context, userID, channelID, episodeI
 		episode.SystemBgmID = &systemBgmID
 	}
 
-	// 音声を再生成が必要な状態にする
-	episode.AudioOutdated = true
-
 	// エピソードを更新
 	if err := s.episodeRepo.Update(ctx, episode); err != nil {
 		return nil, err
@@ -837,9 +834,6 @@ func (s *episodeService) DeleteBgm(ctx context.Context, userID, channelID, episo
 	episode.SystemBgmID = nil
 	episode.Bgm = nil
 	episode.SystemBgm = nil
-
-	// 音声を再生成が必要な状態にする
-	episode.AudioOutdated = true
 
 	// エピソードを更新
 	if err := s.episodeRepo.Update(ctx, episode); err != nil {
@@ -918,7 +912,6 @@ func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode
 		Title:         e.Title,
 		Description:   e.Description,
 		VoiceStyle:    e.VoiceStyle,
-		AudioOutdated: e.AudioOutdated,
 		PlayCount:     e.PlayCount,
 		PublishedAt:   e.PublishedAt,
 		CreatedAt:     e.CreatedAt,

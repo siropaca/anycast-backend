@@ -228,7 +228,7 @@ POST /channels/:channelId/episodes/:episodeId/unpublish
 PUT /channels/:channelId/episodes/:episodeId/bgm
 ```
 
-エピソードに BGM を設定する。ユーザー BGM またはシステム BGM のどちらかを指定する。BGM を変更すると `audioOutdated` が `true` になる。
+エピソードに BGM を設定する。ユーザー BGM またはシステム BGM のどちらかを指定する。
 
 **リクエスト:**
 ```json
@@ -264,7 +264,6 @@ PUT /channels/:channelId/episodes/:episodeId/bgm
         "durationMs": 180000
       }
     },
-    "audioOutdated": true,
     "createdAt": "2025-01-01T00:00:00Z",
     "updatedAt": "2025-01-01T00:00:00Z"
   }
@@ -299,7 +298,7 @@ PUT /channels/:channelId/episodes/:episodeId/bgm
 DELETE /channels/:channelId/episodes/:episodeId/bgm
 ```
 
-エピソードの BGM 設定を削除する。BGM を削除すると `audioOutdated` が `true` になる。
+エピソードの BGM 設定を削除する。
 
 **レスポンス（200 OK）:**
 ```json
@@ -309,7 +308,6 @@ DELETE /channels/:channelId/episodes/:episodeId/bgm
     "title": "エピソードタイトル",
     "description": "エピソードの説明",
     "bgm": null,
-    "audioOutdated": true,
     "createdAt": "2025-01-01T00:00:00Z",
     "updatedAt": "2025-01-01T00:00:00Z"
   }

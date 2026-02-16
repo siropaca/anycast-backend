@@ -7939,7 +7939,6 @@ const docTemplate = `{
         "response.EpisodeResponse": {
             "type": "object",
             "required": [
-                "audioOutdated",
                 "createdAt",
                 "description",
                 "id",
@@ -7957,9 +7956,6 @@ const docTemplate = `{
                         }
                     ],
                     "x-nullable": true
-                },
-                "audioOutdated": {
-                    "type": "boolean"
                 },
                 "bgm": {
                     "allOf": [

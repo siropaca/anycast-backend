@@ -1011,7 +1011,6 @@ func (s *channelService) toEpisodeResponse(ctx context.Context, e *model.Episode
 		Title:         e.Title,
 		Description:   e.Description,
 		VoiceStyle:    e.VoiceStyle,
-		AudioOutdated: e.AudioOutdated,
 		PlayCount:     e.PlayCount,
 		PublishedAt:   e.PublishedAt,
 		CreatedAt:     e.CreatedAt,

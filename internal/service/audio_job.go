@@ -632,7 +632,6 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 	// エピソードを更新
 	episode.FullAudioID = &audioID
 	episode.FullAudio = nil
-	episode.AudioOutdated = false
 	if job.VoiceStyle != "" {
 		episode.VoiceStyle = job.VoiceStyle
 	}
@@ -1062,8 +1061,6 @@ func (s *audioJobService) executeRemixInternal(ctx context.Context, job *model.A
 	// エピソードを更新
 	episode.FullAudioID = &audioID
 	episode.FullAudio = nil
-	episode.AudioOutdated = false
-
 	// BGM 情報をエピソードに記録
 	episode.BgmID = job.BgmID
 	episode.SystemBgmID = job.SystemBgmID
