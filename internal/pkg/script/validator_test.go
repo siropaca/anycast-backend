@@ -59,40 +59,6 @@ func TestValidate_LineLengths(t *testing.T) {
 	})
 }
 
-func TestValidate_PeriodInText(t *testing.T) {
-	t.Run("セリフ中に句点なしは合格", func(t *testing.T) {
-		lines := []ParsedLine{
-			{SpeakerName: "太郎", Text: "これはセリフ中に句点がないテストです"},
-		}
-		config := ValidatorConfig{TalkMode: TalkModeMonologue, DurationMinutes: 1}
-		result := Validate(lines, config)
-
-		hasPeriodInText := false
-		for _, issue := range result.Issues {
-			if issue.Check == "period_in_text" {
-				hasPeriodInText = true
-			}
-		}
-		assert.False(t, hasPeriodInText)
-	})
-
-	t.Run("セリフ中に句点ありは不合格", func(t *testing.T) {
-		lines := []ParsedLine{
-			{SpeakerName: "太郎", Text: "これは前半です。これは後半です"},
-		}
-		config := ValidatorConfig{TalkMode: TalkModeMonologue, DurationMinutes: 1}
-		result := Validate(lines, config)
-
-		hasPeriodInText := false
-		for _, issue := range result.Issues {
-			if issue.Check == "period_in_text" {
-				hasPeriodInText = true
-			}
-		}
-		assert.True(t, hasPeriodInText)
-	})
-}
-
 func TestValidate_MinimumLines(t *testing.T) {
 	t.Run("十分な行数は合格", func(t *testing.T) {
 		lines := make([]ParsedLine, 40)

@@ -3,7 +3,6 @@ package script
 import (
 	"fmt"
 	"math"
-	"strings"
 	"unicode/utf8"
 )
 
@@ -32,7 +31,7 @@ type ValidatorConfig struct {
 // Validate は台本の品質を定量チェックする
 //
 // チェック項目:
-//   - 共通: セリフ長、セリフ中句点なし、最低行数、文長のゆらぎ
+//   - 共通: セリフ長、最低行数、文長のゆらぎ、合計文字数
 //   - dialogue: 同一話者連続、話者バランス
 //   - monologue: 話者一貫性
 func Validate(lines []ParsedLine, config ValidatorConfig) ValidationResult {
@@ -40,7 +39,6 @@ func Validate(lines []ParsedLine, config ValidatorConfig) ValidationResult {
 
 	// 共通チェック
 	issues = append(issues, checkLineLengths(lines)...)
-	issues = append(issues, checkNoPeriodInText(lines)...)
 	issues = append(issues, checkMinimumLines(lines, config.DurationMinutes)...)
 	issues = append(issues, checkLengthVariance(lines)...)
 	issues = append(issues, checkTotalCharacterCount(lines, config.DurationMinutes)...)
@@ -77,24 +75,6 @@ func checkLineLengths(lines []ParsedLine) []ValidationIssue {
 				Check:   "line_length",
 				Line:    i + 1,
 				Message: fmt.Sprintf("セリフが長すぎます（%d文字、最大120文字）", length),
-			})
-		}
-	}
-	return issues
-}
-
-// checkNoPeriodInText はセリフ中に句点が含まれていないかチェックする
-func checkNoPeriodInText(lines []ParsedLine) []ValidationIssue {
-	var issues []ValidationIssue
-	for i, line := range lines {
-		// 末尾の句点は許容するため、末尾以外を検査
-		text := line.Text
-		text = strings.TrimSuffix(text, "。")
-		if strings.Contains(text, "。") {
-			issues = append(issues, ValidationIssue{
-				Check:   "period_in_text",
-				Line:    i + 1,
-				Message: "セリフ中に句点（。）が含まれています（1行に1文にしてください）",
 			})
 		}
 	}

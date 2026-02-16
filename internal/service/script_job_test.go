@@ -409,7 +409,7 @@ func TestScriptJobService_executePhase5(t *testing.T) {
 		mockRepo := new(mockScriptJobRepository)
 		svc := &scriptJobService{scriptJobRepo: mockRepo}
 
-		// 合格するデータ（十分な行数、ゆらぎあり、句点なし、文字数範囲内）
+		// 合格するデータ（十分な行数、ゆらぎあり、文字数範囲内）
 		// 44行 × 平均約20文字 ≈ 904文字 → DurationMinutes: 3（目標900文字、±20%=720〜1080）
 		lines := make([]script.ParsedLine, 0, 44)
 		speakers := []string{"太郎", "花子"}
@@ -461,7 +461,7 @@ func TestScriptJobService_executePhase5(t *testing.T) {
 		// updateProgress 用
 		mockRepo.On("UpdateProgress", mock.Anything, jobID, 85).Return(nil)
 
-		// 修正されたテキストを返す（句点なし版）
+		// 修正されたテキストを返す
 		patchedText := ""
 		for i := 0; i < 44; i++ {
 			speaker := "太郎"
@@ -494,7 +494,7 @@ func TestScriptJobService_executePhase5(t *testing.T) {
 			llmRegistry:   registry,
 		}
 
-		// 不合格データ（句点あり）
+		// 不合格データ（行数・文字数不足）
 		lines := []script.ParsedLine{
 			{SpeakerName: "太郎", Text: "これはセリフです。"},
 		}
@@ -527,7 +527,7 @@ func TestScriptJobService_executePhase5(t *testing.T) {
 		}, nil)
 		mockRepo.On("UpdateProgress", mock.Anything, jobID, 85).Return(nil)
 
-		// パッチ修正でも不合格な結果を返す（まだ句点あり）
+		// パッチ修正でも不合格な結果を返す
 		mockLLM.On("ChatWithOptions", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return("太郎: まだ句点がある。", nil)
 
