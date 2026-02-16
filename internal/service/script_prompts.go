@@ -119,8 +119,8 @@ const phase4SystemPrompt = `あなたはポッドキャスト台本のリライ�
 - 「です/ます」一辺倒の丁寧語になっていたら、キャラクターのペルソナに合ったカジュアルな口調に書き換える
 
 ## リライトの方針
+- 情報が連続している箇所に、雑談・感想・軽い脱線を挟んでポッドキャストらしい空気感を出す
 - 話題の転換が唐突な箇所にブリッジ（つなぎ）のセリフを追加する
-- 情報を詰め込みすぎている箇所は、間を取るセリフで緩急をつける
 - オープニングでリスナーの興味を引く工夫を加える
 - クロージングで「聞いてよかった」と思える余韻を残す締めにする
 - メタ発言（時間への言及、構成への言及、「まとめに入ります」等）が含まれている箇所は自然な会話に書き換える
@@ -231,12 +231,9 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool, durationM
 		sb.WriteString("- 「先生と生徒」の構図にしない。聞き手も対等な会話参加者として描く\n")
 		sb.WriteString("- 聞き手は全ブロックで対等な会話参加者であること。以下を必ず含める:\n")
 		sb.WriteString("  - 自分の体験・他分野の知識を持ち出す: 最低3回（各ブロック1回以上）\n")
-		sb.WriteString("    例:「あ、それワインでいうテロワールみたいな話だよね」「先週友達と居酒屋行ったとき、まさにそれで迷った」\n")
 		sb.WriteString("  - 間違った推測をして訂正される展開: 最低1回\n")
-		sb.WriteString("    例:「え、じゃあ大吟醸の方が絶対おいしいってこと？」→「いや、実はそうとも限らなくて…」\n")
 		sb.WriteString("  - 話し手の説明に対して軽い反論や意外な視点を出す: 最低1回\n")
-		sb.WriteString("    例:「いやでもさ、それって逆に言うと…」「えー、私はむしろ…だと思うけどな」\n")
-		sb.WriteString("- 相手の説明を完璧にまとめない。理解が追いつかない場面や「ちょっと待って」と割り込む場面も自然\n")
+		sb.WriteString("- 相手の説明を完璧にまとめない。理解が追いつかない場面や割り込む場面も自然\n")
 		sb.WriteString("- 各キャラクターのペルソナ（性格・経験・専門分野）を会話の中で具体的に活かすこと。アウトラインの character_hook を参考にする\n")
 	} else {
 		sb.WriteString("\n## 語りの作り方\n")
@@ -250,26 +247,26 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool, durationM
 	sb.WriteString("- TTS 前提: 記号連打（！！！、…… 等）/ 過度なスラング / 笑い声表記は避ける\n")
 	sb.WriteString("- セリフの長さにメリハリをつけること（重要）:\n")
 	sb.WriteString("  - 短めのリアクション（8〜15文字）: 全体の15〜20%程度\n")
-	sb.WriteString("    例: 「え、そうなの？」「あー、それ分かる」「ちょっと待って」\n")
 	sb.WriteString("  - 標準的な発言（20〜50文字）: 全体の60〜70%程度\n")
 	sb.WriteString("  - 長めの説明・エピソード（50〜80文字）: 全体の15〜20%程度\n")
 	sb.WriteString("  - 全行が同じような長さにならないよう意識する\n")
 
 	sb.WriteString("\n## 口調（重要）\n")
 	sb.WriteString("- 「です/ます」一辺倒の丁寧語にしない。キャラクターのペルソナに合った自然な口調で話す\n")
-	sb.WriteString("- 友人同士の会話のようなカジュアルさを基本とする\n")
-	sb.WriteString("  - 自然な例: 「それってさ」「だよね」「ってかさ」「マジで？」「〜じゃん」\n")
-	sb.WriteString("  - 不自然な例: 「それはですね」「〜なんです」「ございます」の多用\n")
-	sb.WriteString("- フィラーや割り込みを自然に含める:\n")
-	sb.WriteString("  - フィラー: 「えーと」「まあ」「なんか」「あのさ」\n")
-	sb.WriteString("  - 割り込み: 「あ、ちょっと待って」「いや関係ないけどさ」\n")
-	sb.WriteString("  - つなぎ: 「で、話戻すと」「ところでさ」\n")
+	sb.WriteString("- 友人同士の雑談のようなカジュアルさを基本とする。タメ口混じりの自然な話し方\n")
+	sb.WriteString("- フィラー（えーと、まあ 等）や割り込み、話題の脱線を自然に含める\n")
+
+	sb.WriteString("\n## 会話の余白（ポッドキャストらしさ）\n")
+	sb.WriteString("- 全ての行が情報伝達である必要はない。雑談・感想の共有・軽い脱線を入れて「聞いていて楽しい」空気を作る\n")
+	sb.WriteString("- 各ブロックの合間や中盤に、本題から少し外れた個人的な感想・エピソード・冗談を挟む\n")
+	sb.WriteString("- 情報を伝えた直後に、すぐ次の情報に移らない。リアクションや感想で「間」を作る\n")
+	sb.WriteString("- 教科書的な説明の羅列にならないよう、情報と雑談のバランスを意識する\n")
 
 	sb.WriteString("\n## 感情のアーク\n")
 	sb.WriteString("- 台本全体で感情の流れを意識する:\n")
 	sb.WriteString("  - 序盤: 軽い好奇心や疑問\n")
-	sb.WriteString("  - 中盤: 驚きや「それ分かる」の共感\n")
-	sb.WriteString("  - 終盤: 納得感や「やってみよう」の前向きさ\n")
+	sb.WriteString("  - 中盤: 驚きや共感\n")
+	sb.WriteString("  - 終盤: 納得感や前向きさ\n")
 
 	// 話者の扱い
 	sb.WriteString("\n## 話者の扱い\n")
@@ -306,18 +303,8 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool, durationM
 	sb.WriteString("- 空行は入れない\n")
 	sb.WriteString("- 台本テキスト以外の説明文・コメント・見出し・メタ発言は出力しない\n")
 
-	if talkMode == script.TalkModeDialogue {
-		sb.WriteString("\n例（口調やテンポの参考）:\n")
-		sb.WriteString("太郎: ねえ、昨日さ、駅前の新しい店行った？\n")
-		sb.WriteString("花子: あー、行った行った。\n")
-		sb.WriteString("太郎: あそこのランチ、見た目の割にコスパよくない？\n")
-		sb.WriteString("花子: え、マジで？\n")
-		sb.WriteString("花子: 私ちょっと微妙だなと思ったんだけど、量が少なくて。\n")
-		sb.WriteString("太郎: あー、たしかに女性にはちょっと物足りないかもね。\n")
-	} else {
-		sb.WriteString("\n例：\n")
-		sb.WriteString("太郎: こんにちは、今日もよろしくお願いします。\n")
-		sb.WriteString("太郎: 今日はちょっと面白いテーマを持ってきました。\n")
+	if talkMode == script.TalkModeMonologue {
+		sb.WriteString("- ひとり語りの場合は「話者名: セリフ」を連続で記述する\n")
 	}
 
 	// 感情あり版
@@ -330,19 +317,6 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool, durationM
 		sb.WriteString("- 上記以外の感情タグは使用しない\n")
 		sb.WriteString("- 同じ感情タグが3回以上連続しないようにする\n")
 		sb.WriteString("- 10種類をバランスよく使い分ける。特に「呆れて」「興奮して」「こっそりと」「焦って」も積極的に使う\n")
-
-		if talkMode == script.TalkModeDialogue {
-			sb.WriteString("\n例:\n")
-			sb.WriteString("太郎: ねえ、昨日さ、駅前の新しい店行った？\n")
-			sb.WriteString("花子: [嬉しそうに] あー、行った行った。\n")
-			sb.WriteString("太郎: あそこのランチ、見た目の割にコスパよくない？\n")
-			sb.WriteString("花子: [驚いて] え、マジで？\n")
-			sb.WriteString("花子: [呆れて] 私ちょっと微妙だなと思ったんだけど、量が少なくて。\n")
-		} else {
-			sb.WriteString("\n例：\n")
-			sb.WriteString("太郎: こんにちは、今日もよろしくお願いします。\n")
-			sb.WriteString("太郎: [驚いて] 今日はちょっと面白いテーマを持ってきました。\n")
-		}
 	}
 
 	// 制約
