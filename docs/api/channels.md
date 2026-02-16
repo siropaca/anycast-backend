@@ -573,91 +573,107 @@ GET /me/channels/:channelId
 
 チャンネルに登場させるキャラクターを管理する。キャラクター自体の CRUD は [Characters API](./characters.md) を参照。
 
-## チャンネルのキャラクター紐づけ更新
+## チャンネルにキャラクター追加
 
 ```
-PUT /channels/:channelId/characters
+POST /channels/:channelId/characters
 ```
 
-チャンネルに紐づけるキャラクターを設定する。既存の紐づけは全て置き換えられる。
+チャンネルにキャラクターを1人追加する。既存キャラクターの紐づけ（connect）または新規作成（create）のどちらか一方を指定する。最大2人まで。
 
 **リクエスト:**
 ```json
+// 既存キャラクターを紐づける場合
+{ "connect": { "id": "uuid" } }
+
+// 新規キャラクターを作成する場合
 {
-  "characters": {
-    "connect": [
-      { "id": "uuid" }
-    ],
-    "create": [
-      {
-        "name": "新しいキャラ",
-        "persona": "明るく元気な性格",
-        "avatarId": "uuid",
-        "voiceId": "uuid"
-      }
-    ]
+  "create": {
+    "name": "新しいキャラ",
+    "persona": "明るく元気な性格",
+    "avatarId": "uuid",
+    "voiceId": "uuid"
   }
 }
 ```
-
-`characters` オブジェクトの各フィールド:
-- **connect**: 既存キャラクターを紐づける（自分が所有するキャラクターの ID を指定）
-- **create**: 新規キャラクターを作成して紐づける
 
 **バリデーション:**
 
-| フィールド | ルール |
-|------------|--------|
-| characters | 必須、connect と create の合計が 1〜2 件 |
-| characters.connect[].id | 必須、UUID 形式、自分が所有するキャラクターのみ |
-| characters.create[].name | 必須、255文字以内、同一ユーザー内で一意、`__` 始まり禁止 |
-| characters.create[].persona | 2000文字以内 |
-| characters.create[].avatarId | UUID 形式 |
-| characters.create[].voiceId | 必須、UUID 形式、is_active = true のボイスのみ |
+| チェック内容 |
+|------------|
+| connect または create のいずれか一方を指定 |
+| 現在のキャラクター数が2人未満であること |
+| connect 時は自分が所有するキャラクターのみ |
+| 追加するキャラクターがチャンネルに未登録であること |
 
-**レスポンス（200 OK）:**
+**レスポンス（201 Created）:** `ChannelDataResponse`
+
+**エラー:**
+- `400` — キャラクターが既に2人登録済み / 既にチャンネルに追加済み
+- `403` — オーナーでない / キャラクターの所有権がない
+- `404` — チャンネルまたはキャラクターが見つからない
+
+---
+
+## チャンネルのキャラクター置換
+
+```
+PUT /channels/:channelId/characters/:characterId
+```
+
+チャンネル内の既存キャラクターを別のキャラクターに差し替える（人数変動なし）。
+
+**リクエスト:**
 ```json
+// 既存キャラクターで置換する場合
+{ "connect": { "id": "uuid" } }
+
+// 新規キャラクターを作成して置換する場合
 {
-  "data": {
-    "id": "uuid",
-    "name": "チャンネル名",
-    "characters": [
-      {
-        "id": "uuid",
-        "name": "太郎",
-        "persona": "明るい性格",
-        "avatar": {
-          "id": "uuid",
-          "url": "https://storage.example.com/images/xxx.png?signature=..."
-        },
-        "voice": {
-          "id": "uuid",
-          "name": "ja-JP-Wavenet-C",
-          "provider": "google",
-          "gender": "male"
-        }
-      }
-    ]
+  "create": {
+    "name": "新しいキャラ",
+    "persona": "明るく元気な性格",
+    "avatarId": "uuid",
+    "voiceId": "uuid"
   }
 }
 ```
 
-**エラー（400 Bad Request）:**
-```json
-{
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "キャラクターは1〜2人必要です"
-  }
-}
+**バリデーション:**
+
+| チェック内容 |
+|------------|
+| connect または create のいずれか一方を指定 |
+| 置換元 characterId がチャンネルに紐づいていること |
+| connect 時は自分が所有するキャラクターのみ |
+| 置換先のキャラクターがチャンネルに未登録であること |
+
+**レスポンス（200 OK）:** `ChannelDataResponse`
+
+**エラー:**
+- `400` — 置換先キャラクターが既にチャンネルに追加済み
+- `403` — オーナーでない / キャラクターの所有権がない
+- `404` — チャンネル、置換元キャラクター、または指定キャラクターが見つからない
+
+---
+
+## チャンネルからキャラクター削除
+
+```
+DELETE /channels/:channelId/characters/:characterId
 ```
 
-**エラー（404 Not Found）:**
-```json
-{
-  "error": {
-    "code": "NOT_FOUND",
-    "message": "指定されたキャラクターが見つかりません"
-  }
-}
-```
+チャンネルからキャラクターの紐づけを解除する。最小1人の制約をチェック。キャラクター自体は削除されない。
+
+**バリデーション:**
+
+| チェック内容 |
+|------------|
+| 現在のキャラクター数が1人より多いこと |
+
+**レスポンス（200 OK）:** `ChannelDataResponse`
+
+**エラー:**
+- `400` — キャラクターが1人しかいない
+- `403` — オーナーでない
+- `404` — チャンネルまたはキャラクターの紐づけが見つからない

@@ -130,6 +130,10 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.PUT("/channels/:channelId/user-prompt", container.ChannelHandler.SetUserPrompt)
 	authenticated.PUT("/channels/:channelId/default-bgm", container.ChannelHandler.SetDefaultBgm)
 	authenticated.DELETE("/channels/:channelId/default-bgm", container.ChannelHandler.DeleteDefaultBgm)
+	// Channel Characters
+	authenticated.POST("/channels/:channelId/characters", container.ChannelHandler.AddChannelCharacter)
+	authenticated.PUT("/channels/:channelId/characters/:characterId", container.ChannelHandler.ReplaceChannelCharacter)
+	authenticated.DELETE("/channels/:channelId/characters/:characterId", container.ChannelHandler.RemoveChannelCharacter)
 	// Episodes
 	authenticated.POST("/channels/:channelId/episodes", container.EpisodeHandler.CreateEpisode)
 	authenticated.PATCH("/channels/:channelId/episodes/:episodeId", container.EpisodeHandler.UpdateEpisode)

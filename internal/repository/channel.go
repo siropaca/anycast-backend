@@ -23,6 +23,11 @@ type ChannelRepository interface {
 	Update(ctx context.Context, channel *model.Channel) error
 	Delete(ctx context.Context, id uuid.UUID) error
 	ReplaceChannelCharacters(ctx context.Context, channelID uuid.UUID, characterIDs []uuid.UUID) error
+	AddChannelCharacter(ctx context.Context, channelID, characterID uuid.UUID) error
+	RemoveChannelCharacter(ctx context.Context, channelID, characterID uuid.UUID) error
+	ReplaceChannelCharacter(ctx context.Context, channelID, oldCharacterID, newCharacterID uuid.UUID) error
+	CountChannelCharacters(ctx context.Context, channelID uuid.UUID) (int, error)
+	HasChannelCharacter(ctx context.Context, channelID, characterID uuid.UUID) (bool, error)
 }
 
 // ChannelFilter はチャンネル検索のフィルタ条件を表す
@@ -239,4 +244,66 @@ func (r *channelRepository) ReplaceChannelCharacters(ctx context.Context, channe
 
 		return nil
 	})
+}
+
+// AddChannelCharacter はチャンネルにキャラクターを追加する
+func (r *channelRepository) AddChannelCharacter(ctx context.Context, channelID, characterID uuid.UUID) error {
+	cc := model.ChannelCharacter{
+		ChannelID:   channelID,
+		CharacterID: characterID,
+	}
+	if err := r.db.WithContext(ctx).Create(&cc).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to add channel character", "error", err, "channel_id", channelID, "character_id", characterID)
+		return apperror.ErrInternal.WithMessage("チャンネルへのキャラクター追加に失敗しました").WithError(err)
+	}
+	return nil
+}
+
+// RemoveChannelCharacter はチャンネルからキャラクターの紐づけを解除する
+func (r *channelRepository) RemoveChannelCharacter(ctx context.Context, channelID, characterID uuid.UUID) error {
+	result := r.db.WithContext(ctx).Where("channel_id = ? AND character_id = ?", channelID, characterID).Delete(&model.ChannelCharacter{})
+	if result.Error != nil {
+		logger.FromContext(ctx).Error("failed to remove channel character", "error", result.Error, "channel_id", channelID, "character_id", characterID)
+		return apperror.ErrInternal.WithMessage("チャンネルからのキャラクター削除に失敗しました").WithError(result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return apperror.ErrNotFound.WithMessage("チャンネルに紐づくキャラクターが見つかりません")
+	}
+	return nil
+}
+
+// ReplaceChannelCharacter はチャンネル内の既存キャラクターを別のキャラクターに差し替える
+func (r *channelRepository) ReplaceChannelCharacter(ctx context.Context, channelID, oldCharacterID, newCharacterID uuid.UUID) error {
+	result := r.db.WithContext(ctx).
+		Model(&model.ChannelCharacter{}).
+		Where("channel_id = ? AND character_id = ?", channelID, oldCharacterID).
+		Update("character_id", newCharacterID)
+	if result.Error != nil {
+		logger.FromContext(ctx).Error("failed to replace channel character", "error", result.Error, "channel_id", channelID)
+		return apperror.ErrInternal.WithMessage("チャンネルのキャラクター置換に失敗しました").WithError(result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return apperror.ErrNotFound.WithMessage("チャンネルに紐づくキャラクターが見つかりません")
+	}
+	return nil
+}
+
+// CountChannelCharacters はチャンネルに紐づくキャラクターの数を返す
+func (r *channelRepository) CountChannelCharacters(ctx context.Context, channelID uuid.UUID) (int, error) {
+	var count int64
+	if err := r.db.WithContext(ctx).Model(&model.ChannelCharacter{}).Where("channel_id = ?", channelID).Count(&count).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to count channel characters", "error", err, "channel_id", channelID)
+		return 0, apperror.ErrInternal.WithMessage("チャンネルのキャラクター数取得に失敗しました").WithError(err)
+	}
+	return int(count), nil
+}
+
+// HasChannelCharacter はチャンネルに指定キャラクターが紐づいているかを返す
+func (r *channelRepository) HasChannelCharacter(ctx context.Context, channelID, characterID uuid.UUID) (bool, error) {
+	var count int64
+	if err := r.db.WithContext(ctx).Model(&model.ChannelCharacter{}).Where("channel_id = ? AND character_id = ?", channelID, characterID).Count(&count).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to check channel character", "error", err, "channel_id", channelID, "character_id", characterID)
+		return false, apperror.ErrInternal.WithMessage("チャンネルのキャラクター確認に失敗しました").WithError(err)
+	}
+	return count > 0, nil
 }

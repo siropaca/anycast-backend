@@ -58,6 +58,20 @@ type SetDefaultBgmRequest struct {
 	SystemBgmID *string `json:"systemBgmId" binding:"omitempty,uuid"`
 }
 
+// チャンネルキャラクター追加リクエスト
+// connect（既存キャラクター紐づけ）または create（新規作成）のどちらか一方を指定
+type AddChannelCharacterRequest struct {
+	Connect *ConnectCharacterInput `json:"connect" binding:"omitempty"`
+	Create  *CreateCharacterInput  `json:"create" binding:"omitempty"`
+}
+
+// チャンネルキャラクター置換リクエスト
+// connect（既存キャラクター紐づけ）または create（新規作成）のどちらか一方を指定
+type ReplaceChannelCharacterRequest struct {
+	Connect *ConnectCharacterInput `json:"connect" binding:"omitempty"`
+	Create  *CreateCharacterInput  `json:"create" binding:"omitempty"`
+}
+
 // チャンネル公開リクエスト
 type PublishChannelRequest struct {
 	PublishedAt *string `json:"publishedAt"` // RFC3339 形式。省略時は現在時刻

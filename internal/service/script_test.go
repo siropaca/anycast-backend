@@ -63,6 +63,31 @@ func (m *mockChannelRepository) ReplaceChannelCharacters(ctx context.Context, ch
 	return args.Error(0)
 }
 
+func (m *mockChannelRepository) AddChannelCharacter(ctx context.Context, channelID, characterID uuid.UUID) error {
+	args := m.Called(ctx, channelID, characterID)
+	return args.Error(0)
+}
+
+func (m *mockChannelRepository) RemoveChannelCharacter(ctx context.Context, channelID, characterID uuid.UUID) error {
+	args := m.Called(ctx, channelID, characterID)
+	return args.Error(0)
+}
+
+func (m *mockChannelRepository) ReplaceChannelCharacter(ctx context.Context, channelID, oldCharacterID, newCharacterID uuid.UUID) error {
+	args := m.Called(ctx, channelID, oldCharacterID, newCharacterID)
+	return args.Error(0)
+}
+
+func (m *mockChannelRepository) CountChannelCharacters(ctx context.Context, channelID uuid.UUID) (int, error) {
+	args := m.Called(ctx, channelID)
+	return args.Int(0), args.Error(1)
+}
+
+func (m *mockChannelRepository) HasChannelCharacter(ctx context.Context, channelID, characterID uuid.UUID) (bool, error) {
+	args := m.Called(ctx, channelID, characterID)
+	return args.Bool(0), args.Error(1)
+}
+
 type mockEpisodeRepository struct {
 	mock.Mock
 }

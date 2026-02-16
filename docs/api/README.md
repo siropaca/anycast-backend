@@ -49,7 +49,9 @@
 | POST | `/api/v1/me/characters` | キャラクター作成 | Owner | ✅ | [詳細](./characters.md#キャラクター作成) |
 | PATCH | `/api/v1/me/characters/:characterId` | キャラクター更新 | Owner | ✅ | [詳細](./characters.md#キャラクター更新) |
 | DELETE | `/api/v1/me/characters/:characterId` | キャラクター削除 | Owner | ✅ | [詳細](./characters.md#キャラクター削除) |
-| PUT | `/api/v1/channels/:channelId/characters` | チャンネルのキャラクター紐づけ更新 | Owner | | [詳細](./channels.md#チャンネルのキャラクター紐づけ更新) |
+| POST | `/api/v1/channels/:channelId/characters` | チャンネルにキャラクター追加 | Owner | ✅ | [詳細](./channels.md#チャンネルにキャラクター追加) |
+| PUT | `/api/v1/channels/:channelId/characters/:characterId` | チャンネルのキャラクター置換 | Owner | ✅ | [詳細](./channels.md#チャンネルのキャラクター置換) |
+| DELETE | `/api/v1/channels/:channelId/characters/:characterId` | チャンネルからキャラクター削除 | Owner | ✅ | [詳細](./channels.md#チャンネルからキャラクター削除) |
 | **BGMs（BGM）** | - | - | - | - | [bgms.md](./bgms.md) |
 | GET | `/api/v1/me/bgms` | BGM 一覧取得 | Owner | ✅ | [詳細](./bgms.md#bgm-一覧取得) |
 | GET | `/api/v1/me/bgms/:bgmId` | BGM 取得 | Owner | ✅ | [詳細](./bgms.md#bgm-取得) |

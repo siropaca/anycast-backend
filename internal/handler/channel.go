@@ -414,6 +414,145 @@ func (h *ChannelHandler) SetDefaultBgm(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// AddChannelCharacter godoc
+// @Summary チャンネルにキャラクター追加
+// @Description チャンネルにキャラクターを1人追加します（オーナーのみ）
+// @Tags channels
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param request body request.AddChannelCharacterRequest true "キャラクター追加リクエスト"
+// @Success 201 {object} response.ChannelDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/characters [post]
+func (h *ChannelHandler) AddChannelCharacter(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
+		return
+	}
+
+	var req request.AddChannelCharacterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
+		return
+	}
+
+	result, err := h.channelService.AddChannelCharacter(c.Request.Context(), userID, channelID, req)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, result)
+}
+
+// ReplaceChannelCharacter godoc
+// @Summary チャンネルのキャラクター置換
+// @Description チャンネル内の既存キャラクターを別のキャラクターに差し替えます（オーナーのみ）
+// @Tags channels
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param characterId path string true "置換元キャラクター ID"
+// @Param request body request.ReplaceChannelCharacterRequest true "キャラクター置換リクエスト"
+// @Success 200 {object} response.ChannelDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/characters/{characterId} [put]
+func (h *ChannelHandler) ReplaceChannelCharacter(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
+		return
+	}
+
+	characterID := c.Param("characterId")
+	if characterID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("characterId は必須です"))
+		return
+	}
+
+	var req request.ReplaceChannelCharacterRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
+		return
+	}
+
+	result, err := h.channelService.ReplaceChannelCharacter(c.Request.Context(), userID, channelID, characterID, req)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+// RemoveChannelCharacter godoc
+// @Summary チャンネルからキャラクター削除
+// @Description チャンネルからキャラクターの紐づけを解除します（オーナーのみ）
+// @Tags channels
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param characterId path string true "キャラクター ID"
+// @Success 200 {object} response.ChannelDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/characters/{characterId} [delete]
+func (h *ChannelHandler) RemoveChannelCharacter(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
+		return
+	}
+
+	characterID := c.Param("characterId")
+	if characterID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("characterId は必須です"))
+		return
+	}
+
+	result, err := h.channelService.RemoveChannelCharacter(c.Request.Context(), userID, channelID, characterID)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
 // DeleteDefaultBgm godoc
 // @Summary チャンネルのデフォルト BGM 削除
 // @Description 指定したチャンネルのデフォルト BGM 設定を削除します

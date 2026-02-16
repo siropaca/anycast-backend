@@ -38,6 +38,9 @@ type ChannelService interface {
 	SetUserPrompt(ctx context.Context, userID, channelID string, req request.SetUserPromptRequest) (*response.ChannelDataResponse, error)
 	SetDefaultBgm(ctx context.Context, userID, channelID string, req request.SetDefaultBgmRequest) (*response.ChannelDataResponse, error)
 	DeleteDefaultBgm(ctx context.Context, userID, channelID string) (*response.ChannelDataResponse, error)
+	AddChannelCharacter(ctx context.Context, userID, channelID string, req request.AddChannelCharacterRequest) (*response.ChannelDataResponse, error)
+	ReplaceChannelCharacter(ctx context.Context, userID, channelID, characterID string, req request.ReplaceChannelCharacterRequest) (*response.ChannelDataResponse, error)
+	RemoveChannelCharacter(ctx context.Context, userID, channelID, characterID string) (*response.ChannelDataResponse, error)
 }
 
 type channelService struct {
@@ -702,6 +705,282 @@ func (s *channelService) DeleteDefaultBgm(ctx context.Context, userID, channelID
 	return &response.ChannelDataResponse{
 		Data: resp,
 	}, nil
+}
+
+// AddChannelCharacter はチャンネルにキャラクターを1人追加する
+func (s *channelService) AddChannelCharacter(ctx context.Context, userID, channelID string, req request.AddChannelCharacterRequest) (*response.ChannelDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	// connect / create のどちらか一方のみ指定可能
+	if (req.Connect == nil) == (req.Create == nil) {
+		return nil, apperror.ErrValidation.WithMessage("connect または create のいずれか一方を指定してください")
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("このチャンネルのキャラクター変更権限がありません")
+	}
+
+	// キャラクター数の上限チェック
+	count, err := s.channelRepo.CountChannelCharacters(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	if count >= MaxCharactersPerChannel {
+		return nil, apperror.ErrValidation.WithMessage(fmt.Sprintf("キャラクターは最大 %d 人までです", MaxCharactersPerChannel))
+	}
+
+	// キャラクター ID を解決
+	characterID, err := s.resolveCharacterID(ctx, uid, req.Connect, req.Create)
+	if err != nil {
+		return nil, err
+	}
+
+	// 既にチャンネルに紐づいていないことを確認
+	exists, err := s.channelRepo.HasChannelCharacter(ctx, cid, characterID)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, apperror.ErrValidation.WithMessage("このキャラクターは既にチャンネルに追加されています")
+	}
+
+	// キャラクターを追加
+	if err := s.channelRepo.AddChannelCharacter(ctx, cid, characterID); err != nil {
+		return nil, err
+	}
+
+	// リレーションをプリロードして取得
+	updated, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := s.toChannelResponse(ctx, updated, true, uuid.Nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.ChannelDataResponse{
+		Data: resp,
+	}, nil
+}
+
+// ReplaceChannelCharacter はチャンネル内の既存キャラクターを別のキャラクターに差し替える
+func (s *channelService) ReplaceChannelCharacter(ctx context.Context, userID, channelID, characterID string, req request.ReplaceChannelCharacterRequest) (*response.ChannelDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	oldCharacterID, err := uuid.Parse(characterID)
+	if err != nil {
+		return nil, err
+	}
+
+	// connect / create のどちらか一方のみ指定可能
+	if (req.Connect == nil) == (req.Create == nil) {
+		return nil, apperror.ErrValidation.WithMessage("connect または create のいずれか一方を指定してください")
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("このチャンネルのキャラクター変更権限がありません")
+	}
+
+	// 置換元キャラクターがチャンネルに紐づいていることを確認
+	exists, err := s.channelRepo.HasChannelCharacter(ctx, cid, oldCharacterID)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, apperror.ErrNotFound.WithMessage("置換元のキャラクターがチャンネルに紐づいていません")
+	}
+
+	// 新しいキャラクター ID を解決
+	newCharacterID, err := s.resolveCharacterID(ctx, uid, req.Connect, req.Create)
+	if err != nil {
+		return nil, err
+	}
+
+	// 置換先が既にチャンネルに紐づいていないことを確認
+	exists, err = s.channelRepo.HasChannelCharacter(ctx, cid, newCharacterID)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, apperror.ErrValidation.WithMessage("置換先のキャラクターは既にチャンネルに追加されています")
+	}
+
+	// キャラクターを置換
+	if err := s.channelRepo.ReplaceChannelCharacter(ctx, cid, oldCharacterID, newCharacterID); err != nil {
+		return nil, err
+	}
+
+	// リレーションをプリロードして取得
+	updated, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := s.toChannelResponse(ctx, updated, true, uuid.Nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.ChannelDataResponse{
+		Data: resp,
+	}, nil
+}
+
+// RemoveChannelCharacter はチャンネルからキャラクターの紐づけを解除する
+func (s *channelService) RemoveChannelCharacter(ctx context.Context, userID, channelID, characterID string) (*response.ChannelDataResponse, error) {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	targetCharacterID, err := uuid.Parse(characterID)
+	if err != nil {
+		return nil, err
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("このチャンネルのキャラクター変更権限がありません")
+	}
+
+	// キャラクター数の下限チェック
+	count, err := s.channelRepo.CountChannelCharacters(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	if count <= MinCharactersPerChannel {
+		return nil, apperror.ErrValidation.WithMessage(fmt.Sprintf("キャラクターは最低 %d 人必要です", MinCharactersPerChannel))
+	}
+
+	// キャラクターを削除
+	if err := s.channelRepo.RemoveChannelCharacter(ctx, cid, targetCharacterID); err != nil {
+		return nil, err
+	}
+
+	// リレーションをプリロードして取得
+	updated, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := s.toChannelResponse(ctx, updated, true, uuid.Nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.ChannelDataResponse{
+		Data: resp,
+	}, nil
+}
+
+// resolveCharacterID は connect/create の入力を処理して characterID を返す
+func (s *channelService) resolveCharacterID(ctx context.Context, userID uuid.UUID, connect *request.ConnectCharacterInput, create *request.CreateCharacterInput) (uuid.UUID, error) {
+	if connect != nil {
+		cid, err := uuid.Parse(connect.ID)
+		if err != nil {
+			return uuid.Nil, err
+		}
+
+		// キャラクターの存在確認とオーナーチェック
+		character, err := s.characterRepo.FindByID(ctx, cid)
+		if err != nil {
+			return uuid.Nil, err
+		}
+		if character.UserID != userID {
+			return uuid.Nil, apperror.ErrForbidden.WithMessage("指定されたキャラクターの所有権がありません")
+		}
+
+		return cid, nil
+	}
+
+	// create の場合
+	// 同一ユーザー内での名前重複チェック
+	exists, err := s.characterRepo.ExistsByUserIDAndName(ctx, userID, create.Name, nil)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	if exists {
+		return uuid.Nil, apperror.ErrDuplicateName.WithMessage("同じ名前のキャラクターが既に存在します")
+	}
+
+	voiceID, err := uuid.Parse(create.VoiceID)
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	// ボイスの存在確認（アクティブなもののみ）
+	if _, err := s.voiceRepo.FindActiveByID(ctx, create.VoiceID); err != nil {
+		return uuid.Nil, err
+	}
+
+	// アバター画像の存在確認（指定時のみ）
+	var avatarID *uuid.UUID
+	if create.AvatarID != nil {
+		aid, err := uuid.Parse(*create.AvatarID)
+		if err != nil {
+			return uuid.Nil, err
+		}
+		if _, err := s.imageRepo.FindByID(ctx, aid); err != nil {
+			return uuid.Nil, err
+		}
+		avatarID = &aid
+	}
+
+	character := &model.Character{
+		UserID:   userID,
+		Name:     create.Name,
+		Persona:  create.Persona,
+		AvatarID: avatarID,
+		VoiceID:  voiceID,
+	}
+
+	if err := s.characterRepo.Create(ctx, character); err != nil {
+		return uuid.Nil, err
+	}
+
+	return character.ID, nil
 }
 
 // processCharacterInputs はキャラクター入力を処理してキャラクター ID のスライスを返す
