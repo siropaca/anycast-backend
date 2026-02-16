@@ -52,7 +52,7 @@ POST /channels/{channelId}/episodes/{episodeId}/audio/generate-async
 |-----------|------|------|------|
 | type | string | ◯ | `voice` / `full` / `remix` |
 | voiceStyle | string | - | 音声のスタイル指示（最大 500 文字、type=voice/full のみ） |
-| bgmId | uuid | - | ユーザー BGM ID（type=full/remix で bgmId か systemBgmId のいずれか必須） |
+| bgmId | uuid | - | ユーザー BGM ID（type=full では bgmId か systemBgmId のいずれか必須、type=remix では任意） |
 | systemBgmId | uuid | - | システム BGM ID（同上） |
 | bgmVolumeDb | number | - | BGM 音量（-60 〜 0 dB、デフォルト: -15） |
 | fadeOutMs | number | - | フェードアウト時間（0 〜 30000 ms、デフォルト: 3000） |
@@ -62,7 +62,8 @@ POST /channels/{channelId}/episodes/{episodeId}/audio/generate-async
 **バリデーションルール**:
 
 - `type` は必須（`voice` / `full` / `remix` のいずれか）
-- `type=full` / `type=remix`: `bgmId` または `systemBgmId` のいずれか必須、同時指定不可
+- `type=full`: `bgmId` または `systemBgmId` のいずれか必須、同時指定不可
+- `type=remix`: `bgmId` と `systemBgmId` の同時指定不可、両方省略時は BGM なし（ボイス音声をそのまま FullAudio として採用）
 - `type=remix`: `episode.voiceAudioId` が存在すること
 - `type=voice` / `type=full`: 台本行が存在すること
 
@@ -324,7 +325,7 @@ canceled      canceling ───▶ canceled
 | 95% | エピソード情報の更新 |
 | 100% | 完了 |
 
-### 進捗の目安（type=remix）
+### 進捗の目安（type=remix、BGM あり）
 
 | 進捗 | 処理内容 |
 |------|---------|
@@ -332,6 +333,17 @@ canceled      canceling ───▶ canceled
 | 10% | ボイス音声のダウンロード |
 | 30% | BGM のダウンロード |
 | 50-70% | BGM ミキシング |
+| 85% | 音声ファイルのアップロード |
+| 95% | エピソード情報の更新 |
+| 100% | 完了 |
+
+### 進捗の目安（type=remix、BGM なし）
+
+| 進捗 | 処理内容 |
+|------|---------|
+| 0% | ジョブ作成 |
+| 10% | ボイス音声のダウンロード |
+| 50% | 音声を処理中 |
 | 85% | 音声ファイルのアップロード |
 | 95% | エピソード情報の更新 |
 | 100% | 完了 |

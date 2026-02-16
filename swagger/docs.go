@@ -1358,7 +1358,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "エピソードの音声を非同期で生成します。type で生成方式を指定します（voice: TTS のみ、full: TTS + BGM、remix: BGM 差し替え）。",
+                "description": "エピソードの音声を非同期で生成します。type で生成方式を指定します（voice: TTS のみ、full: TTS + BGM、remix: BGM 差し替えまたは BGM 削除）。",
                 "consumes": [
                     "application/json"
                 ],

@@ -164,9 +164,11 @@ func (s *audioJobService) CreateJob(ctx context.Context, userID, channelID, epis
 		if req.BgmID != nil && req.SystemBgmID != nil {
 			return nil, apperror.ErrValidation.WithMessage("bgmId と systemBgmId は同時に指定できません")
 		}
-		// どちらも指定されていない場合
+		// どちらも指定されていない場合（full は必須、remix は BGM なしを許可）
 		if req.BgmID == nil && req.SystemBgmID == nil {
-			return nil, apperror.ErrValidation.WithMessage("bgmId または systemBgmId のいずれかを指定してください")
+			if jobType == model.AudioJobTypeFull {
+				return nil, apperror.ErrValidation.WithMessage("bgmId または systemBgmId のいずれかを指定してください")
+			}
 		}
 
 		if req.BgmID != nil {
@@ -935,11 +937,6 @@ func (s *audioJobService) executeRemixInternal(ctx context.Context, job *model.A
 		return apperror.ErrInternal.WithMessage("ボイス音声の読み込みに失敗しました")
 	}
 
-	// BGM の設定確認（ジョブに紐づく BGM を使用）
-	if job.BgmID == nil && job.SystemBgmID == nil {
-		return apperror.ErrValidation.WithMessage("BGM が設定されていません")
-	}
-
 	// 進捗: 10%
 	s.updateProgress(ctx, job, 10, "ボイス音声をダウンロード中...")
 
@@ -950,37 +947,6 @@ func (s *audioJobService) executeRemixInternal(ctx context.Context, job *model.A
 		return apperror.ErrInternal.WithMessage("ボイス音声のダウンロードに失敗しました").WithError(err)
 	}
 
-	// 進捗: 30%
-	s.updateProgress(ctx, job, 30, "BGM をダウンロード中...")
-
-	// キャンセルチェック
-	if err := s.checkCanceled(ctx, job); err != nil {
-		return err
-	}
-
-	// BGM データを取得（ジョブに紐づく BGM を使用）
-	var bgmPath string
-	if job.BgmID != nil {
-		bgm, err := s.bgmRepo.FindByID(ctx, *job.BgmID)
-		if err != nil {
-			return err
-		}
-		bgmPath = bgm.Audio.Path
-	} else if job.SystemBgmID != nil {
-		systemBgm, err := s.systemBgmRepo.FindByID(ctx, *job.SystemBgmID)
-		if err != nil {
-			return err
-		}
-		bgmPath = systemBgm.Audio.Path
-	}
-
-	// GCS から BGM をダウンロード
-	bgmData, err := s.downloadFromStorage(ctx, bgmPath)
-	if err != nil {
-		log.Error("failed to download BGM", "error", err, "path", bgmPath)
-		return apperror.ErrInternal.WithMessage("BGM のダウンロードに失敗しました").WithError(err)
-	}
-
 	// ボイス音声の長さを取得
 	voiceDurationMs, err := audio.GetDurationMsE(voiceAudioData)
 	if err != nil {
@@ -988,27 +954,67 @@ func (s *audioJobService) executeRemixInternal(ctx context.Context, job *model.A
 		return apperror.ErrInternal.WithMessage("音声長の取得に失敗しました").WithError(err)
 	}
 
-	// 進捗: 50%
-	s.updateProgress(ctx, job, 50, "BGM をミキシング中...")
+	var finalAudio []byte
 
-	// キャンセルチェック
-	if err := s.checkCanceled(ctx, job); err != nil {
-		return err
-	}
+	if job.BgmID == nil && job.SystemBgmID == nil {
+		// BGM なし: ボイス音声をそのまま使用
+		s.updateProgress(ctx, job, 50, "音声を処理中...")
+		finalAudio = voiceAudioData
+	} else {
+		// BGM あり: ダウンロードしてミキシング
+		// 進捗: 30%
+		s.updateProgress(ctx, job, 30, "BGM をダウンロード中...")
 
-	// FFmpeg でミキシング
-	finalAudio, err := s.ffmpegService.MixAudioWithBGM(ctx, MixParams{
-		VoiceData:       voiceAudioData,
-		BGMData:         bgmData,
-		VoiceDurationMs: voiceDurationMs,
-		BGMVolumeDB:     job.BgmVolumeDB,
-		FadeOutMs:       job.FadeOutMs,
-		PaddingStartMs:  job.PaddingStartMs,
-		PaddingEndMs:    job.PaddingEndMs,
-	})
-	if err != nil {
-		log.Error("FFmpeg mixing failed", "error", err)
-		return apperror.ErrInternal.WithMessage("BGM のミキシングに失敗しました").WithError(err)
+		// キャンセルチェック
+		if err := s.checkCanceled(ctx, job); err != nil {
+			return err
+		}
+
+		// BGM データを取得（ジョブに紐づく BGM を使用）
+		var bgmPath string
+		if job.BgmID != nil {
+			bgm, err := s.bgmRepo.FindByID(ctx, *job.BgmID)
+			if err != nil {
+				return err
+			}
+			bgmPath = bgm.Audio.Path
+		} else if job.SystemBgmID != nil {
+			systemBgm, err := s.systemBgmRepo.FindByID(ctx, *job.SystemBgmID)
+			if err != nil {
+				return err
+			}
+			bgmPath = systemBgm.Audio.Path
+		}
+
+		// GCS から BGM をダウンロード
+		bgmData, err := s.downloadFromStorage(ctx, bgmPath)
+		if err != nil {
+			log.Error("failed to download BGM", "error", err, "path", bgmPath)
+			return apperror.ErrInternal.WithMessage("BGM のダウンロードに失敗しました").WithError(err)
+		}
+
+		// 進捗: 50%
+		s.updateProgress(ctx, job, 50, "BGM をミキシング中...")
+
+		// キャンセルチェック
+		if err := s.checkCanceled(ctx, job); err != nil {
+			return err
+		}
+
+		// FFmpeg でミキシング
+		finalAudio, err = s.ffmpegService.MixAudioWithBGM(ctx, MixParams{
+			VoiceData:       voiceAudioData,
+			BGMData:         bgmData,
+			VoiceDurationMs: voiceDurationMs,
+			BGMVolumeDB:     job.BgmVolumeDB,
+			FadeOutMs:       job.FadeOutMs,
+			PaddingStartMs:  job.PaddingStartMs,
+			PaddingEndMs:    job.PaddingEndMs,
+		})
+		if err != nil {
+			log.Error("FFmpeg mixing failed", "error", err)
+			return apperror.ErrInternal.WithMessage("BGM のミキシングに失敗しました").WithError(err)
+		}
 	}
 
 	// 進捗: 85%

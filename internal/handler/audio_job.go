@@ -25,7 +25,7 @@ func NewAudioJobHandler(ajs service.AudioJobService) *AudioJobHandler {
 
 // GenerateAudioAsync godoc
 // @Summary 非同期音声生成
-// @Description エピソードの音声を非同期で生成します。type で生成方式を指定します（voice: TTS のみ、full: TTS + BGM、remix: BGM 差し替え）。
+// @Description エピソードの音声を非同期で生成します。type で生成方式を指定します（voice: TTS のみ、full: TTS + BGM、remix: BGM 差し替えまたは BGM 削除）。
 // @Tags episodes
 // @Accept json
 // @Produce json
