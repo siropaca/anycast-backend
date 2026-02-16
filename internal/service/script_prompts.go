@@ -47,6 +47,7 @@ const phase2SystemPrompt = `あなたはポッドキャスト台本の構成作�
 - 使用する落とし穴（grounding.pitfalls から選択）
 - 使用するアクションステップ（grounding.action_steps から選択）
 - 投げかける疑問（grounding.questions から選択）
+- キャラクター活用（character_hook）: そのブロックで各キャラクターのペルソナ（経験・専門性・性格）をどう活かすかを1文で指定する
 
 ### ブロックの並び順
 リスナーの関心を引きつける流れを意識して並べる:
@@ -85,7 +86,8 @@ const phase2SystemPrompt = `あなたはポッドキャスト台本の構成作�
         "example_ids": ["ex1"],
         "pitfall_ids": ["pf1"],
         "action_step_ids": ["a1"],
-        "question_ids": ["q1"]
+        "question_ids": ["q1"],
+        "character_hook": "キャラクターのペルソナをこのブロックでどう活かすか（1文）"
       }
     ],
     "closing": {"summary": "全体のまとめ", "takeaway": "リスナーへの持ち帰りメッセージ"}
@@ -107,19 +109,25 @@ const phase2SystemPrompt = `あなたはポッドキャスト台本の構成作�
 
 // Phase 4: リライト（会話の流れ・自然さ・面白さの改善）のシステムプロンプト
 const phase4SystemPrompt = `あなたはポッドキャスト台本のリライト担当です。
-ドラフト台本を受け取り、会話の流れ・自然さ・面白さを改善してください。
+ドラフト台本を受け取り、会話の自然さを最優先で改善してください。
+
+## リライトの最優先事項
+- 「先生と生徒」の構図になっていたら、聞き手が主体的に発言する展開に書き換える
+- 「いい質問ですね」「なるほど」「そうなんですか」のような空虚な相槌が繰り返されていたら、具体的なリアクションに差し替える
+- 「です/ます」一辺倒の丁寧語になっていたら、キャラクターのペルソナに合ったカジュアルな口調に書き換える
+- 聞き手が質問ばかりしている箇所は、自分の体験談・他分野の知識・軽い反論に置き換える
 
 ## リライトの方針
 - 話題の転換が唐突な箇所にブリッジ（つなぎ）のセリフを追加する
-- 説明が一方通行になっている箇所に相槌・リアクション・質問を挟む
-- 聞き手が「次はどうなるの？」と思える引きや伏線を意識する
 - 情報を詰め込みすぎている箇所は、間を取るセリフで緩急をつける
 - オープニングでリスナーの興味を引く工夫を加える
-- クロージングで「聞いてよかった」と思える締めにする
+- クロージングで「聞いてよかった」と思える余韻を残す締めにする
 - メタ発言（時間への言及、構成への言及、「まとめに入ります」等）が含まれている箇所は自然な会話に書き換える
-- 3ブロックの展開パターンが同じ順序（話題→例→落とし穴→まとめ等）になっていたら、ブロックごとに入り口や展開を変える
-- 聞き手（掛け合いの場合）が質問ばかりしている箇所は、自分の感想・体験・軽い反論に置き換える
-- 感情のトーンが一本調子な箇所に変化をつける（驚き→納得→ちょっと不安→前向き等）
+- 3ブロックの展開パターンが同じになっていたら、ブロックごとに入り口や展開を変える
+
+## 感情タグの改善
+- 同じ感情タグが3回以上連続していたら、異なるタグに差し替える
+- 使用できる10種類をバランスよく活用する: 考えながら / ため息 / 笑いながら / 大声で / ささやいて / 早口で / 嬉しそうに / 悲しそうに / 驚いて / 真剣に
 
 ## 保持すべき要素
 - 具体例・落とし穴・実務の一歩（素材情報）は削除しない
@@ -127,16 +135,12 @@ const phase4SystemPrompt = `あなたはポッドキャスト台本のリライ�
 - 全体の構成（オープニング→本題3ブロック→クロージング）は維持する
 - 元の台本の情報量を大幅に減らさない
 - 元の台本の合計文字数を維持する（リライトで文字数が大幅に減らないよう注意する）
-- 元の台本に感情タグがある場合は必ず保持する。リライトでセリフを変更・追加する際も適切な感情タグを付ける
-- 感情タグは以下の10種類のみ使用可能: 考えながら / ため息 / 笑いながら / 大声で / ささやいて / 早口で / 嬉しそうに / 悲しそうに / 驚いて / 真剣に
 
 ## 台詞ルール
-- 1つのセリフは20〜80文字程度
-- セリフは文として完結させる（体言止めや中途半端な切れ方にしない）
 - セリフの末尾には句点（。）を付ける
 - 1行に1文とする（セリフ中に句点を入れない）
 - TTS 前提: 記号連打 / 過度なスラング / 笑い声表記は避ける
-- 短すぎるセリフ（単語だけ・相槌だけ）は避け、必ず文章として成立させる
+- セリフの長さにメリハリをつける（8〜15文字の短いリアクションも自然に含める）
 
 ## 出力形式
 話者名: セリフ
@@ -196,7 +200,7 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool, durationM
 	sb.WriteString(fmt.Sprintf("- このエピソードはチャンネルの第%d話です\n", episodeNumber))
 	if episodeNumber == 1 {
 		sb.WriteString("- 初回エピソードなので、オープニングでは初めての挨拶にする（「今日もよろしく」等の継続を前提とした表現は使わない）\n")
-		sb.WriteString("- 初回らしく、チャンネルの趣旨やどんな内容を届けるかを軽く紹介する導入にする\n")
+		sb.WriteString("- チャンネルの趣旨紹介は会話の流れの中で自然に行う（形式的な説明にしない）\n")
 	} else {
 		sb.WriteString("- 継続エピソードなので、オープニングでは自然な挨拶にする（「今回もよろしくお願いします」等）\n")
 	}
@@ -204,8 +208,13 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool, durationM
 	// 構造ルール
 	sb.WriteString("\n## 構造ルール（必須）\n")
 	sb.WriteString("- 冒頭（オープニング） → 本題3ブロック → 締め（クロージング）の構成に従う\n")
+	sb.WriteString("- オープニングは最初の2行以内にリスナーの注意を引く具体的な問いかけ・シチュエーション・体験談から始める。自己紹介は後回しにする\n")
+	sb.WriteString("- クロージングは「聞いてよかった」と思える余韻を残す。次回の予告や「試してみたい」と思わせるアクションで締める\n")
 	sb.WriteString("- 3ブロック全体で、素材の具体例・落とし穴・実務の一歩を漏れなく使い切ること\n")
-	sb.WriteString("- ただし各ブロックの展開パターンは変えること（例: ブロック1は具体例から入る、ブロック2は誤解の指摘から入る、ブロック3はリスナーの疑問から入る）\n")
+	sb.WriteString("- 各ブロックの展開パターンは必ず変えること。以下を参考に:\n")
+	sb.WriteString("  - パターン A: 聞き手の体験談から入り、話し手が背景を解説\n")
+	sb.WriteString("  - パターン B: 話し手が誤解を提示し、聞き手が引っかかって訂正される\n")
+	sb.WriteString("  - パターン C: 聞き手が他分野の知識で推測し、話し手がその類推を活かして説明\n")
 	sb.WriteString("- 同じ「話題→例→落とし穴→まとめ」の繰り返しにならないよう意識する\n")
 
 	if talkMode == script.TalkModeDialogue {
@@ -222,11 +231,14 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool, durationM
 
 	// 掛け合い / 語りの作り方
 	if talkMode == script.TalkModeDialogue {
-		sb.WriteString("\n## 掛け合いの作り方\n")
-		sb.WriteString("- 聞き手は単なる質問役ではない。自分の体験・感想・軽い反論を交えて会話に参加する\n")
-		sb.WriteString("- 「へえ、それ私も経験あるんですけど」「いや、それはちょっと言いすぎじゃないですか」のように主体的に発言する\n")
-		sb.WriteString("- 相手の説明を完璧にまとめない。理解が追いつかない場面や、少しズレた解釈をして訂正される展開も自然\n")
-		sb.WriteString("- 3ブロックのうち最低1回は、聞き手が話題を広げたり自分のエピソードを話す場面を作る\n")
+		sb.WriteString("\n## 掛け合いの作り方（最重要）\n")
+		sb.WriteString("- 「先生と生徒」の構図にしない。聞き手も対等な会話参加者として描く\n")
+		sb.WriteString("- 聞き手は3ブロックのうち最低2回、自分の体験・他分野の知識・個人的なエピソードを持ち出して話を広げること\n")
+		sb.WriteString("  - 例:「あ、それワインでいうテロワールみたいな話だよね」「先週友達と居酒屋行ったとき、まさにそれで迷ったんだよ」\n")
+		sb.WriteString("- 聞き手が間違った推測をして訂正される展開を最低1回入れる\n")
+		sb.WriteString("  - 例:「え、じゃあ大吟醸の方が絶対おいしいってこと？」「いや、実はそうとも限らなくて…」\n")
+		sb.WriteString("- 相手の説明を完璧にまとめない。理解が追いつかない場面や「ちょっと待って」と割り込む場面も自然\n")
+		sb.WriteString("- 各キャラクターのペルソナ（性格・経験・専門分野）を会話の中で具体的に活かすこと。アウトラインの character_hook を参考にする\n")
 	} else {
 		sb.WriteString("\n## 語りの作り方\n")
 		sb.WriteString("- 情報を並べるだけでなく、自分の失敗談や発見の瞬間を織り交ぜる\n")
@@ -236,40 +248,31 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool, durationM
 
 	// 台詞ルール
 	sb.WriteString("\n## 台詞ルール\n")
-	sb.WriteString("- 1つのセリフは20〜80文字程度\n")
-	sb.WriteString("- セリフは文として完結させる（体言止めや中途半端な切れ方にしない）\n")
 	sb.WriteString("- セリフの末尾には句点（。）を付ける\n")
-
-	if talkMode == script.TalkModeDialogue {
-		sb.WriteString("- 1行に1文とする（同一話者の連続発言は複数行に分ける。セリフ中に句点を入れない）\n")
-	} else {
-		sb.WriteString("- 1行に1文とする（続けて話す場合は複数行に分ける。セリフ中に句点を入れない）\n")
-	}
-
+	sb.WriteString("- 1行に1文とする（セリフ中に句点を入れない）\n")
 	sb.WriteString("- TTS 前提: 記号連打（！！！、…… 等）/ 過度なスラング / 笑い声表記は避ける\n")
-	sb.WriteString("- 人間らしさ:\n")
+	sb.WriteString("- セリフの長さにメリハリをつけること（重要）:\n")
+	sb.WriteString("  - 短めのリアクション（8〜15文字）: 全体の15〜20%程度\n")
+	sb.WriteString("    例: 「え、そうなの？」「あー、それ分かる」「ちょっと待って」\n")
+	sb.WriteString("  - 標準的な発言（20〜50文字）: 全体の60〜70%程度\n")
+	sb.WriteString("  - 長めの説明・エピソード（50〜80文字）: 全体の15〜20%程度\n")
+	sb.WriteString("  - 全行が同じような長さにならないよう意識する\n")
 
-	if talkMode == script.TalkModeDialogue {
-		sb.WriteString("  - 相槌やフィラー（「えーと」「まあ」「なんか」等）を適度に含める\n")
-		sb.WriteString("  - 各ブロックに最低1回: 相槌、言い換え、軽いツッコミ or あるあるネタ\n")
-		sb.WriteString("  - 文長にゆらぎを持たせる（全部同じ長さにしない）\n")
-	} else {
-		sb.WriteString("  - フィラー（「えーと」「まあ」「なんか」等）を適度に含める\n")
-		sb.WriteString("  - 各ブロックに最低1回: 問いかけ、例え話、体験談風の語り\n")
-		sb.WriteString("  - 文長にゆらぎを持たせる（全部同じ長さにしない）\n")
-		sb.WriteString("  - 語り口に緩急をつける（説明→問いかけ→エピソード→まとめ等のリズム変化）\n")
-	}
+	sb.WriteString("\n## 口調（重要）\n")
+	sb.WriteString("- 「です/ます」一辺倒の丁寧語にしない。キャラクターのペルソナに合った自然な口調で話す\n")
+	sb.WriteString("- 友人同士の会話のようなカジュアルさを基本とする\n")
+	sb.WriteString("  - 自然な例: 「それってさ」「だよね」「ってかさ」「マジで？」「〜じゃん」\n")
+	sb.WriteString("  - 不自然な例: 「それはですね」「〜なんです」「ございます」の多用\n")
+	sb.WriteString("- フィラーや割り込みを自然に含める:\n")
+	sb.WriteString("  - フィラー: 「えーと」「まあ」「なんか」「あのさ」\n")
+	sb.WriteString("  - 割り込み: 「あ、ちょっと待って」「いや関係ないけどさ」\n")
+	sb.WriteString("  - つなぎ: 「で、話戻すと」「ところでさ」\n")
 
-	sb.WriteString("- 台本全体で感情のアーク（流れ）を意識する:\n")
+	sb.WriteString("\n## 感情のアーク\n")
+	sb.WriteString("- 台本全体で感情の流れを意識する:\n")
 	sb.WriteString("  - 序盤: 軽い好奇心や疑問\n")
 	sb.WriteString("  - 中盤: 驚きや「それ分かる」の共感\n")
 	sb.WriteString("  - 終盤: 納得感や「やってみよう」の前向きさ\n")
-	sb.WriteString("- 短すぎるセリフ（単語だけ・相槌だけ）は避け、必ず文章として成立させる\n")
-
-	if talkMode == script.TalkModeDialogue {
-		sb.WriteString("  - 悪い例：「そうそう」「うん」「なるほど」だけの行\n")
-		sb.WriteString("  - 良い例：「そうそう、まさにそういうことなんだよね」\n")
-	}
 
 	// 話者の扱い
 	sb.WriteString("\n## 話者の扱い\n")
@@ -306,10 +309,13 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool, durationM
 	sb.WriteString("- 台本テキスト以外の説明文・コメント・見出し・メタ発言は出力しない\n")
 
 	if talkMode == script.TalkModeDialogue {
-		sb.WriteString("\n例：\n")
-		sb.WriteString("太郎: こんにちは、今日もよろしくお願いします。\n")
-		sb.WriteString("太郎: 今日はいい天気だから気分がいいね。\n")
-		sb.WriteString("花子: やあ、元気そうで何よりだね。\n")
+		sb.WriteString("\n例（口調やテンポの参考）:\n")
+		sb.WriteString("太郎: ねえ、昨日さ、駅前の新しい店行った？\n")
+		sb.WriteString("花子: あー、行った行った。\n")
+		sb.WriteString("太郎: あそこのランチ、見た目の割にコスパよくない？\n")
+		sb.WriteString("花子: え、マジで？\n")
+		sb.WriteString("花子: 私ちょっと微妙だなと思ったんだけど、量が少なくて。\n")
+		sb.WriteString("太郎: あー、たしかに女性にはちょっと物足りないかもね。\n")
 	} else {
 		sb.WriteString("\n例：\n")
 		sb.WriteString("太郎: こんにちは、今日もよろしくお願いします。\n")
@@ -324,11 +330,16 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool, durationM
 		sb.WriteString("- 使用できる感情タグは以下の10種類のみ:\n")
 		sb.WriteString("  考えながら / ため息 / 笑いながら / 大声で / ささやいて / 早口で / 嬉しそうに / 悲しそうに / 驚いて / 真剣に\n")
 		sb.WriteString("- 上記以外の感情タグは使用しない\n")
+		sb.WriteString("- 同じ感情タグが3回以上連続しないようにする\n")
+		sb.WriteString("- 10種類をバランスよく使い分ける。特に「ため息」「大声で」「ささやいて」「早口で」も積極的に使う\n")
 
 		if talkMode == script.TalkModeDialogue {
-			sb.WriteString("\n例：\n")
-			sb.WriteString("太郎: こんにちは、今日もよろしくお願いします。\n")
-			sb.WriteString("花子: [嬉しそうに] やあ、元気そうで何よりだね。\n")
+			sb.WriteString("\n例:\n")
+			sb.WriteString("太郎: ねえ、昨日さ、駅前の新しい店行った？\n")
+			sb.WriteString("花子: [嬉しそうに] あー、行った行った。\n")
+			sb.WriteString("太郎: あそこのランチ、見た目の割にコスパよくない？\n")
+			sb.WriteString("花子: [驚いて] え、マジで？\n")
+			sb.WriteString("花子: [ため息] 私ちょっと微妙だなと思ったんだけど、量が少なくて。\n")
 		} else {
 			sb.WriteString("\n例：\n")
 			sb.WriteString("太郎: こんにちは、今日もよろしくお願いします。\n")
@@ -339,11 +350,13 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool, durationM
 	// 制約
 	sb.WriteString("\n## 制約\n")
 	sb.WriteString("- アウトラインの素材（具体例・落とし穴・実務の一歩）は必ず台詞に組み込む。省略・要約しない\n")
+	sb.WriteString("- アウトラインの character_hook を参考にして、各ブロックでキャラクターのペルソナを活かした会話を展開する\n")
 	sb.WriteString("- 制作側のメタ発言はしない（以下のような発言は絶対に含めない）:\n")
 	sb.WriteString("  - 時間・分量に言及するセリフ（「○分で整理しましょう」「短い時間ですが」「残り時間で」等）\n")
 	sb.WriteString("  - 番組の構成に言及するセリフ（「ブロック1では」「次のコーナーは」「まとめに入ります」等）\n")
 	sb.WriteString("  - 台本であることを意識させるセリフ（「今日のテーマは以上です」「ここからは本題です」等）\n")
-	sb.WriteString("  - リスナーに時間配分を伝えるセリフ（「ここからサクッと」「駆け足で紹介します」等）")
+	sb.WriteString("  - リスナーに時間配分を伝えるセリフ（「ここからサクッと」「駆け足で紹介します」等）\n")
+	sb.WriteString("- 「いい質問ですね」「なるほど」「そうなんですか」のような空虚な相槌を繰り返さない")
 
 	return sb.String()
 }

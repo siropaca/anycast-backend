@@ -60,16 +60,16 @@ func Validate(lines []ParsedLine, config ValidatorConfig) ValidationResult {
 	}
 }
 
-// checkLineLengths は全セリフが10〜120文字以内かチェックする
+// checkLineLengths は全セリフが6〜120文字以内かチェックする
 func checkLineLengths(lines []ParsedLine) []ValidationIssue {
 	var issues []ValidationIssue
 	for i, line := range lines {
 		length := utf8.RuneCountInString(line.Text)
-		if length < 10 {
+		if length < 6 {
 			issues = append(issues, ValidationIssue{
 				Check:   "line_length",
 				Line:    i + 1,
-				Message: fmt.Sprintf("セリフが短すぎます（%d文字、最低10文字）", length),
+				Message: fmt.Sprintf("セリフが短すぎます（%d文字、最低6文字）", length),
 			})
 		}
 		if length > 120 {
