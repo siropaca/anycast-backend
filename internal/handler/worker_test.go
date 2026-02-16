@@ -66,6 +66,14 @@ func (m *mockScriptJobService) CancelJob(ctx context.Context, userID, jobID stri
 	return args.Error(0)
 }
 
+func (m *mockScriptJobService) GenerateScriptDirect(ctx context.Context, req request.GenerateScriptDirectRequest) (*response.GenerateScriptDirectResponse, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.GenerateScriptDirectResponse), args.Error(1)
+}
+
 // テスト用のルーターをセットアップする
 func setupWorkerRouter(h *WorkerHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)

@@ -1,0 +1,19 @@
+@devUrl = http://localhost:8081/dev
+
+### 台本直接生成（開発用、認証不要）
+POST {{devUrl}}/script/generate
+Content-Type: application/json
+
+{
+  "episodeTitle": "テスト回",
+  "durationMinutes": 5,
+  "episodeNumber": 1,
+  "channelName": "テストチャンネル",
+  "channelCategory": "テクノロジー",
+  "characters": [
+    {"name": "太郎", "gender": "male", "persona": "テック好きの大学生"},
+    {"name": "花子", "gender": "female", "persona": "AI研究者"}
+  ],
+  "theme": "最近のAI技術について",
+  "withEmotion": true
+}

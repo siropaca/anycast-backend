@@ -160,6 +160,44 @@ POST /script-jobs/{jobId}/cancel
 | 403 | ジョブへのアクセス権限なし |
 | 404 | ジョブが存在しない |
 
+### 開発用: 台本直接生成
+
+DB を使わずにリクエストパラメータのみで台本を同期生成する。開発環境（`APP_ENV=development`）でのみ有効。
+
+```
+POST /dev/script/generate
+```
+
+**認証**: 不要
+
+**リクエストボディ**:
+
+| フィールド | 型 | 必須 | 説明 |
+|-----------|------|------|------|
+| episodeTitle | string | ○ | エピソードタイトル |
+| episodeDescription | string | - | エピソード説明 |
+| durationMinutes | number | ○ | エピソードの長さ（3〜30 分） |
+| episodeNumber | number | ○ | エピソード番号（1 以上） |
+| channelName | string | ○ | チャンネル名 |
+| channelDescription | string | - | チャンネル説明 |
+| channelCategory | string | ○ | チャンネルカテゴリ |
+| channelStyleGuide | string | - | チャンネルのスタイルガイド |
+| characters | array | ○ | キャラクター配列（1 名以上） |
+| characters[].name | string | ○ | キャラクター名 |
+| characters[].gender | string | ○ | 性別（male / female） |
+| characters[].persona | string | - | ペルソナ説明 |
+| masterGuide | string | - | ユーザーのマスターガイド |
+| theme | string | ○ | テーマ（最大 2000 文字） |
+| withEmotion | boolean | - | 感情タグを付与するか（デフォルト: false） |
+
+**レスポンス**: `200 OK`
+
+```json
+{
+  "script": "太郎: [明るく] 今日はAIについて話そう\n花子: [興味深そうに] いいね、最近すごく進化してるよね"
+}
+```
+
 ### 内部ワーカーエンドポイント
 
 Cloud Tasks から呼び出される。

@@ -203,6 +203,33 @@ func (h *ScriptJobHandler) GetLatestScriptJob(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": result})
 }
 
+// GenerateScriptDirect godoc
+// @Summary 開発用: 台本直接生成
+// @Description DB を使わずにリクエストパラメータのみで台本を生成します（開発・検証用）
+// @Tags dev
+// @Accept json
+// @Produce json
+// @Param body body request.GenerateScriptDirectRequest true "台本生成パラメータ"
+// @Success 200 {object} response.GenerateScriptDirectResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /dev/script/generate [post]
+func (h *ScriptJobHandler) GenerateScriptDirect(c *gin.Context) {
+	var req request.GenerateScriptDirectRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, apperror.ErrValidation.WithMessage(formatValidationError(err)))
+		return
+	}
+
+	result, err := h.scriptJobService.GenerateScriptDirect(c.Request.Context(), req)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
 // CancelScriptJob godoc
 // @Summary 台本生成ジョブキャンセル
 // @Description 台本生成ジョブをキャンセルします。pending 状態のジョブは即座に canceled に、processing 状態のジョブは canceling に遷移します。

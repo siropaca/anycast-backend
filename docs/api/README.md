@@ -146,6 +146,8 @@
 | POST | `/api/v1/contacts` | お問い合わせ送信 | Optional | ✅ | [詳細](./contacts.md#お問い合わせ送信) |
 | **Admin（管理者）** | - | - | - | - | [admin.md](./admin.md) |
 | POST | `/admin/cleanup/orphaned-media` | 孤児メディアファイル削除 | Admin | ✅ | [詳細](./admin.md#孤児メディアファイル削除) |
+| **Dev（開発用）** | - | - | - | - | - |
+| POST | `/dev/script/generate` | 台本直接生成（DB 不要） | - | ✅ | 開発環境のみ有効 |
 
 ---
 

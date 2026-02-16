@@ -34,6 +34,7 @@ type ScriptJobService interface {
 	ListMyJobs(ctx context.Context, userID string, filter repository.ScriptJobFilter) (*response.ScriptJobListResponse, error)
 	ExecuteJob(ctx context.Context, jobID string) error
 	CancelJob(ctx context.Context, userID, jobID string) error
+	GenerateScriptDirect(ctx context.Context, req request.GenerateScriptDirectRequest) (*response.GenerateScriptDirectResponse, error)
 }
 
 type scriptJobService struct {
@@ -720,15 +721,17 @@ func (s *scriptJobService) executePhase5(ctx context.Context, job *model.ScriptJ
 	issuesJSON, _ := json.Marshal(result.Issues) //nolint:errcheck // trace data
 	t.Trace("phase5", "qa_result", string(issuesJSON))
 
-	// キャンセルチェック（パッチ修正前）
-	if err := s.checkCanceled(ctx, job); err != nil {
-		log.Info("Phase 5: canceled before patch")
-		t.Flush("phase5")
-		return lines
-	}
+	// キャンセルチェック（パッチ修正前）— job が nil の場合はスキップ
+	if job != nil {
+		if err := s.checkCanceled(ctx, job); err != nil {
+			log.Info("Phase 5: canceled before patch")
+			t.Flush("phase5")
+			return lines
+		}
 
-	// 進捗: 85% - パッチ修正
-	s.updateProgress(ctx, job, 85, "品質パッチを適用中...")
+		// 進捗: 85% - パッチ修正
+		s.updateProgress(ctx, job, 85, "品質パッチを適用中...")
+	}
 
 	// LLM パッチ修正
 	client, err := s.llmRegistry.Get(phase5Config.Provider)
@@ -1040,6 +1043,103 @@ func (s *scriptJobService) notifyFailed(jobID, userID string, errorCode, errorMe
 			"errorMessage": msg,
 		},
 	})
+}
+
+// GenerateScriptDirect は DB を使わずにリクエストパラメータのみで台本を生成する（開発用）
+func (s *scriptJobService) GenerateScriptDirect(ctx context.Context, req request.GenerateScriptDirectRequest) (*response.GenerateScriptDirectResponse, error) {
+	log := logger.FromContext(ctx)
+
+	// リクエスト → BriefInput に変換
+	briefInput := script.BriefInput{
+		EpisodeTitle:       req.EpisodeTitle,
+		EpisodeDescription: req.EpisodeDescription,
+		DurationMinutes:    req.DurationMinutes,
+		EpisodeNumber:      req.EpisodeNumber,
+		ChannelName:        req.ChannelName,
+		ChannelDescription: req.ChannelDescription,
+		ChannelCategory:    req.ChannelCategory,
+		ChannelStyleGuide:  req.ChannelStyleGuide,
+		MasterGuide:        req.MasterGuide,
+		Theme:              req.Theme,
+		WithEmotion:        req.WithEmotion,
+	}
+
+	for _, c := range req.Characters {
+		briefInput.Characters = append(briefInput.Characters, script.BriefInputCharacter{
+			Name:    c.Name,
+			Gender:  c.Gender,
+			Persona: c.Persona,
+		})
+	}
+
+	// 許可された話者名のリストを作成
+	allowedSpeakers := make([]string, len(req.Characters))
+	for i, c := range req.Characters {
+		allowedSpeakers[i] = c.Name
+	}
+
+	// ===== Phase 1: ブリーフ正規化 =====
+	brief := script.NormalizeBrief(briefInput)
+
+	briefJSON, err := brief.ToJSON()
+	if err != nil {
+		return nil, fmt.Errorf("ブリーフの JSON 変換に失敗: %w", err)
+	}
+
+	t := tracer.New(s.traceMode, req.EpisodeTitle)
+
+	log.Info("brief normalized", "talk_mode", brief.Constraints.TalkMode, "characters", len(brief.Characters))
+	t.Trace("phase1", "brief", briefJSON)
+	t.Flush("phase1")
+
+	// ===== Phase 2: 素材+アウトライン生成 =====
+	phase2Output, err := s.executePhase2(ctx, briefJSON, t)
+	if err != nil {
+		return nil, err
+	}
+
+	// ===== Phase 3: 台本ドラフト生成 =====
+	generatedText, err := s.executePhase3(ctx, brief, phase2Output, t)
+	if err != nil {
+		return nil, err
+	}
+
+	parseResult := script.Parse(generatedText, allowedSpeakers)
+
+	if len(parseResult.Lines) == 0 && parseResult.HasErrors() {
+		return nil, apperror.ErrGenerationFailed.WithMessage("生成された台本のパースに失敗しました")
+	}
+
+	log.Info("script parsed", "lines", len(parseResult.Lines), "errors", len(parseResult.Errors),
+		"total_chars", countTotalChars(parseResult.Lines), "target_chars", req.DurationMinutes*script.CharsPerMinute)
+
+	// ===== Phase 4: リライト =====
+	rewrittenText, err := s.executePhase4(ctx, generatedText, brief, t)
+	if err != nil {
+		log.Warn("Phase 4 rewrite failed, using original draft", "error", err)
+		rewrittenText = generatedText
+	} else {
+		rewriteResult := script.Parse(rewrittenText, allowedSpeakers)
+		if len(rewriteResult.Lines) > 0 {
+			parseResult = rewriteResult
+		} else {
+			log.Warn("Phase 4 rewrite parse failed, using original draft")
+			rewrittenText = generatedText
+		}
+	}
+
+	// ===== Phase 5: QA 検証+パッチ修正 =====
+	parsedLines := s.executePhase5(ctx, nil, parseResult.Lines, brief, allowedSpeakers, rewrittenText, t)
+
+	// ParsedLine → FormatLine に変換してテキスト化
+	formatLines := make([]script.FormatLine, len(parsedLines))
+	for i, line := range parsedLines {
+		formatLines[i] = script.FormatLine(line)
+	}
+
+	return &response.GenerateScriptDirectResponse{
+		Script: script.Format(formatLines),
+	}, nil
 }
 
 // countTotalChars は台本全行の合計文字数を返す

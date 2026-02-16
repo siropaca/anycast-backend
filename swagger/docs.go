@@ -2925,6 +2925,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/dev/script/generate": {
+            "post": {
+                "description": "DB を使わずにリクエストパラメータのみで台本を生成します（開発・検証用）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "dev"
+                ],
+                "summary": "開発用: 台本直接生成",
+                "parameters": [
+                    {
+                        "description": "台本生成パラメータ",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.GenerateScriptDirectRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.GenerateScriptDirectResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/episodes/{episodeId}/play": {
             "post": {
                 "security": [
@@ -6867,6 +6913,87 @@ const docTemplate = `{
                 }
             }
         },
+        "request.GenerateScriptDirectCharacter": {
+            "type": "object",
+            "required": [
+                "gender",
+                "name"
+            ],
+            "properties": {
+                "gender": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "persona": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.GenerateScriptDirectRequest": {
+            "type": "object",
+            "required": [
+                "channelCategory",
+                "channelName",
+                "characters",
+                "durationMinutes",
+                "episodeNumber",
+                "episodeTitle",
+                "theme"
+            ],
+            "properties": {
+                "channelCategory": {
+                    "type": "string"
+                },
+                "channelDescription": {
+                    "type": "string"
+                },
+                "channelName": {
+                    "description": "Channel",
+                    "type": "string"
+                },
+                "channelStyleGuide": {
+                    "type": "string"
+                },
+                "characters": {
+                    "description": "Characters",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/request.GenerateScriptDirectCharacter"
+                    }
+                },
+                "durationMinutes": {
+                    "type": "integer",
+                    "maximum": 30,
+                    "minimum": 3
+                },
+                "episodeDescription": {
+                    "type": "string"
+                },
+                "episodeNumber": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "episodeTitle": {
+                    "description": "Episode",
+                    "type": "string"
+                },
+                "masterGuide": {
+                    "description": "User",
+                    "type": "string"
+                },
+                "theme": {
+                    "description": "Theme / Options",
+                    "type": "string",
+                    "maxLength": 2000
+                },
+                "withEmotion": {
+                    "type": "boolean"
+                }
+            }
+        },
         "request.ImportScriptRequest": {
             "type": "object",
             "required": [
@@ -8488,6 +8615,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.GenerateScriptDirectResponse": {
+            "type": "object",
+            "properties": {
+                "script": {
                     "type": "string"
                 }
             }

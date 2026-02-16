@@ -217,6 +217,12 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	internal.POST("/worker/audio", container.WorkerHandler.ProcessAudioJob)
 	internal.POST("/worker/script", container.WorkerHandler.ProcessScriptJob)
 
+	// Dev（開発環境のみ有効、認証不要）
+	if cfg.AppEnv == config.EnvDevelopment {
+		dev := r.Group("/dev")
+		dev.POST("/script/generate", container.ScriptJobHandler.GenerateScriptDirect)
+	}
+
 	// WebSocket
 	r.GET("/ws/jobs", container.WebSocketHandler.HandleJobs)
 

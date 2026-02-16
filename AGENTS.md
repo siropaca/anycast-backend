@@ -130,6 +130,31 @@ curl -s "http://localhost:8081/api/v1/me/script-jobs?status=completed" \
   -H "Authorization: Bearer $TOKEN" | jq .
 ```
 
+### 開発用エンドポイント（認証不要）
+
+DB やシードデータ不要で台本生成を直接テストできる。`APP_ENV=development` のときのみ有効。
+
+```bash
+curl -s -X POST "http://localhost:8081/dev/script/generate" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "episodeTitle": "テスト回",
+    "durationMinutes": 3,
+    "episodeNumber": 1,
+    "channelName": "テストチャンネル",
+    "channelCategory": "テクノロジー",
+    "characters": [
+      {"name": "太郎", "gender": "male", "persona": "テック好きの大学生"},
+      {"name": "花子", "gender": "female", "persona": "AI研究者"}
+    ],
+    "theme": "最近のAI技術について",
+    "withEmotion": true
+  }' | jq .
+```
+
+- 同期処理のためレスポンスまで数十秒かかる
+- `tmp/traces/{episodeTitle}/` 以下に phase1〜phase5 のトレースが出力される
+
 ### 注意事項
 
 - `make token` の出力には stderr の情報が混ざる場合があるため、`TOKEN=$(make token 2>&1)` で取得する

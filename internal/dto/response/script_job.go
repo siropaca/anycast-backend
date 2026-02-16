@@ -52,3 +52,8 @@ type ScriptJobDataResponse struct {
 type ScriptJobDataNullableResponse struct {
 	Data *ScriptJobResponse `json:"data" extensions:"x-nullable"`
 }
+
+// 開発用: 台本直接生成のレスポンス
+type GenerateScriptDirectResponse struct {
+	Script string `json:"script"`
+}
