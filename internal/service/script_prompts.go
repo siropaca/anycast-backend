@@ -181,7 +181,7 @@ const phase5SystemPrompt = `あなたはポッドキャスト台本の品質管�
 // getPhase3SystemPrompt は Phase 3 用のシステムプロンプトを返す
 //
 // talkMode, withEmotion, durationMinutes, episodeNumber の組み合わせでプロンプトを生成
-func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool, durationMinutes int, episodeNumber int) string {
+func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool, durationMinutes, episodeNumber int) string {
 	var sb strings.Builder
 
 	sb.WriteString("あなたはポッドキャスト台本を作成する専門家です。\n")
@@ -192,7 +192,7 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool, durationM
 	}
 
 	// エピソード番号
-	sb.WriteString(fmt.Sprintf("\n## エピソード情報\n"))
+	sb.WriteString("\n## エピソード情報\n")
 	sb.WriteString(fmt.Sprintf("- このエピソードはチャンネルの第%d話です\n", episodeNumber))
 	if episodeNumber == 1 {
 		sb.WriteString("- 初回エピソードなので、オープニングでは初めての挨拶にする（「今日もよろしく」等の継続を前提とした表現は使わない）\n")

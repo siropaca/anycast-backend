@@ -8,21 +8,21 @@ import (
 
 // エピソード情報のレスポンス
 type EpisodeResponse struct {
-	ID            uuid.UUID                `json:"id" validate:"required"`
-	Owner         ChannelOwnerResponse     `json:"owner" validate:"required"`
-	Title         string                   `json:"title" validate:"required"`
-	Description   string                   `json:"description" validate:"required"`
-	VoiceStyle    string                   `json:"voiceStyle" validate:"required"`
-	Artwork       *ArtworkResponse         `json:"artwork" extensions:"x-nullable"`
-	VoiceAudio    *AudioResponse           `json:"voiceAudio,omitempty" extensions:"x-nullable"`
-	FullAudio     *AudioResponse           `json:"fullAudio" extensions:"x-nullable"`
-	Bgm           *EpisodeBgmResponse      `json:"bgm" extensions:"x-nullable"`
-	Playback      *EpisodePlaybackResponse `json:"playback" extensions:"x-nullable"`
-	PlaylistIDs   []uuid.UUID              `json:"playlistIds" extensions:"x-nullable"`
-	PlayCount     int                      `json:"playCount" validate:"required"`
-	PublishedAt   *time.Time               `json:"publishedAt" extensions:"x-nullable"`
-	CreatedAt     time.Time                `json:"createdAt" validate:"required"`
-	UpdatedAt     time.Time                `json:"updatedAt" validate:"required"`
+	ID          uuid.UUID                `json:"id" validate:"required"`
+	Owner       ChannelOwnerResponse     `json:"owner" validate:"required"`
+	Title       string                   `json:"title" validate:"required"`
+	Description string                   `json:"description" validate:"required"`
+	VoiceStyle  string                   `json:"voiceStyle" validate:"required"`
+	Artwork     *ArtworkResponse         `json:"artwork" extensions:"x-nullable"`
+	VoiceAudio  *AudioResponse           `json:"voiceAudio,omitempty" extensions:"x-nullable"`
+	FullAudio   *AudioResponse           `json:"fullAudio" extensions:"x-nullable"`
+	Bgm         *EpisodeBgmResponse      `json:"bgm" extensions:"x-nullable"`
+	Playback    *EpisodePlaybackResponse `json:"playback" extensions:"x-nullable"`
+	PlaylistIDs []uuid.UUID              `json:"playlistIds" extensions:"x-nullable"`
+	PlayCount   int                      `json:"playCount" validate:"required"`
+	PublishedAt *time.Time               `json:"publishedAt" extensions:"x-nullable"`
+	CreatedAt   time.Time                `json:"createdAt" validate:"required"`
+	UpdatedAt   time.Time                `json:"updatedAt" validate:"required"`
 }
 
 // エピソードの再生位置情報のレスポンス

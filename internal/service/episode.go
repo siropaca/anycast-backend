@@ -907,15 +907,15 @@ func (s *episodeService) toEpisodeResponse(ctx context.Context, e *model.Episode
 	}
 
 	resp := response.EpisodeResponse{
-		ID:            e.ID,
-		Owner:         ownerResp,
-		Title:         e.Title,
-		Description:   e.Description,
-		VoiceStyle:    e.VoiceStyle,
-		PlayCount:     e.PlayCount,
-		PublishedAt:   e.PublishedAt,
-		CreatedAt:     e.CreatedAt,
-		UpdatedAt:     e.UpdatedAt,
+		ID:          e.ID,
+		Owner:       ownerResp,
+		Title:       e.Title,
+		Description: e.Description,
+		VoiceStyle:  e.VoiceStyle,
+		PlayCount:   e.PlayCount,
+		PublishedAt: e.PublishedAt,
+		CreatedAt:   e.CreatedAt,
+		UpdatedAt:   e.UpdatedAt,
 	}
 
 	if e.Artwork != nil {
