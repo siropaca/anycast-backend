@@ -137,6 +137,15 @@ func (s *scriptService) ImportScript(ctx context.Context, userID, channelID, epi
 		speakerMap[cc.Character.Name] = &channel.ChannelCharacters[i].Character
 	}
 
+	// 行数チェック
+	lineCount := script.CountNonEmptyLines(text)
+	if lineCount > script.MaxImportLines {
+		return nil, apperror.ErrScriptTooManyLines.WithDetails(map[string]any{
+			"maxLines":    script.MaxImportLines,
+			"actualLines": lineCount,
+		})
+	}
+
 	// テキストをパース
 	parseResult := script.Parse(text, allowedSpeakers)
 

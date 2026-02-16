@@ -24,6 +24,9 @@ type ParseResult struct {
 	Errors []ParseError // パースエラー
 }
 
+// MaxImportLines はインポート時に受け付ける最大行数（空行を除く）
+const MaxImportLines = 200
+
 // 感情を抽出する正規表現: [感情] パターン
 var emotionRegex = regexp.MustCompile(`^\[([^\]]+)\]\s*`)
 
@@ -128,4 +131,15 @@ func Parse(text string, allowedSpeakers []string) ParseResult {
 // HasErrors はパース結果にエラーがあるかどうかを返す
 func (r *ParseResult) HasErrors() bool {
 	return len(r.Errors) > 0
+}
+
+// CountNonEmptyLines はテキスト中の空行を除いた行数を返す
+func CountNonEmptyLines(text string) int {
+	count := 0
+	for _, line := range strings.Split(text, "\n") {
+		if strings.TrimSpace(line) != "" {
+			count++
+		}
+	}
+	return count
 }

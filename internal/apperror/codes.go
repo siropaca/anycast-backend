@@ -9,6 +9,7 @@ type ErrorCode string
 const (
 	CodeValidation           ErrorCode = "VALIDATION_ERROR"        // 400
 	CodeScriptParse          ErrorCode = "SCRIPT_PARSE_ERROR"      // 400
+	CodeScriptTooManyLines   ErrorCode = "SCRIPT_TOO_MANY_LINES"   // 400
 	CodeSelfFollowNotAllowed ErrorCode = "SELF_FOLLOW_NOT_ALLOWED" // 400
 	CodeUnauthorized         ErrorCode = "UNAUTHORIZED"            // 401
 	CodeInvalidCredentials   ErrorCode = "INVALID_CREDENTIALS"     // 401
@@ -41,6 +42,7 @@ var (
 	// 400 Bad Request
 	ErrValidation           = newError(CodeValidation, "入力内容に誤りがあります", http.StatusBadRequest)
 	ErrScriptParse          = newError(CodeScriptParse, "台本の解析に失敗しました", http.StatusBadRequest)
+	ErrScriptTooManyLines   = newError(CodeScriptTooManyLines, "台本の行数が上限を超えています", http.StatusBadRequest)
 	ErrSelfFollowNotAllowed = newError(CodeSelfFollowNotAllowed, "自分自身はフォローできません", http.StatusBadRequest)
 
 	// 401 Unauthorized
@@ -58,8 +60,6 @@ var (
 	ErrDuplicateEmail    = newError(CodeDuplicateEmail, "このメールアドレスは既に使用されています", http.StatusConflict)
 	ErrDuplicateUsername = newError(CodeDuplicateUsername, "このユーザー名は既に使用されています", http.StatusConflict)
 	ErrDuplicateName     = newError(CodeDuplicateName, "この名前は既に使用されています", http.StatusConflict)
-	ErrAlreadyLiked      = newError(CodeAlreadyLiked, "既に高評価に追加されています", http.StatusConflict)
-	ErrAlreadyInPlaylist = newError(CodeAlreadyInPlaylist, "既に再生リストに追加されています", http.StatusConflict)
 	ErrAlreadyFollowed   = newError(CodeAlreadyFollowed, "既にフォローしています", http.StatusConflict)
 	ErrAlreadyFavorited  = newError(CodeAlreadyFavorited, "既にお気に入り登録済みです", http.StatusConflict)
 	ErrDefaultPlaylist   = newError(CodeDefaultPlaylist, "デフォルト再生リストは変更できません", http.StatusConflict)

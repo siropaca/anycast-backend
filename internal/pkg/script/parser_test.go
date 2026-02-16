@@ -138,6 +138,43 @@ func TestParse_SpeakerExtraction(t *testing.T) {
 	}
 }
 
+func TestCountNonEmptyLines(t *testing.T) {
+	tests := []struct {
+		name string
+		text string
+		want int
+	}{
+		{
+			name: "通常の行",
+			text: "太郎: こんにちは\n花子: やあ",
+			want: 2,
+		},
+		{
+			name: "空行を含む",
+			text: "太郎: こんにちは\n\n\n花子: やあ",
+			want: 2,
+		},
+		{
+			name: "空文字列",
+			text: "",
+			want: 0,
+		},
+		{
+			name: "空白のみの行を含む",
+			text: "太郎: こんにちは\n   \n花子: やあ",
+			want: 2,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := CountNonEmptyLines(tt.text); got != tt.want {
+				t.Errorf("CountNonEmptyLines() = %d, want %d", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestParseResult_HasErrors(t *testing.T) {
 	tests := []struct {
 		name       string
