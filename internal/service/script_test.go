@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"github.com/stretchr/testify/mock"
 
@@ -105,6 +106,11 @@ func (m *mockEpisodeRepository) Delete(ctx context.Context, id uuid.UUID) error 
 func (m *mockEpisodeRepository) CountPublishedByChannelIDs(ctx context.Context, channelIDs []uuid.UUID) (map[uuid.UUID]int, error) {
 	args := m.Called(ctx, channelIDs)
 	return args.Get(0).(map[uuid.UUID]int), args.Error(1)
+}
+
+func (m *mockEpisodeRepository) CountByChannelIDBeforeCreatedAt(ctx context.Context, channelID uuid.UUID, createdAt time.Time) (int64, error) {
+	args := m.Called(ctx, channelID, createdAt)
+	return args.Get(0).(int64), args.Error(1)
 }
 
 func (m *mockEpisodeRepository) IncrementPlayCount(ctx context.Context, id uuid.UUID) error {

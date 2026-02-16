@@ -376,6 +376,13 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 		return 0, err
 	}
 
+	// エピソード番号を算出（同チャンネル内で何話目か）
+	countBefore, err := s.episodeRepo.CountByChannelIDBeforeCreatedAt(ctx, episode.ChannelID, episode.CreatedAt)
+	if err != nil {
+		return 0, fmt.Errorf("エピソード番号の算出に失敗: %w", err)
+	}
+	episodeNumber := int(countBefore) + 1
+
 	// 許可された話者名のリストを作成
 	allowedSpeakers := make([]string, len(channel.ChannelCharacters))
 	speakerMap := make(map[string]*model.Character, len(channel.ChannelCharacters))
@@ -391,6 +398,7 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 		EpisodeTitle:       episode.Title,
 		EpisodeDescription: episode.Description,
 		DurationMinutes:    job.DurationMinutes,
+		EpisodeNumber:      episodeNumber,
 		ChannelName:        channel.Name,
 		ChannelDescription: channel.Description,
 		ChannelCategory:    channel.Category.Name,
@@ -619,7 +627,7 @@ func (s *scriptJobService) executePhase3(ctx context.Context, brief script.Brief
 		return "", fmt.Errorf("phase 3 LLM client: %w", err)
 	}
 
-	sysPrompt := getPhase3SystemPrompt(brief.Constraints.TalkMode, brief.Constraints.WithEmotion, brief.Episode.DurationMinutes)
+	sysPrompt := getPhase3SystemPrompt(brief.Constraints.TalkMode, brief.Constraints.WithEmotion, brief.Episode.DurationMinutes, brief.Episode.EpisodeNumber)
 	userPrompt := buildPhase3UserPrompt(brief, phase2)
 
 	t.Trace("phase3", "model_info", s.llmRegistry.GetModelInfo(phase3Config.Provider))

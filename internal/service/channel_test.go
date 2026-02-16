@@ -81,6 +81,11 @@ func (m *mockEpisodeRepositoryForChannel) CountPublishedByChannelIDs(ctx context
 	return args.Get(0).(map[uuid.UUID]int), args.Error(1)
 }
 
+func (m *mockEpisodeRepositoryForChannel) CountByChannelIDBeforeCreatedAt(ctx context.Context, channelID uuid.UUID, createdAt time.Time) (int64, error) {
+	args := m.Called(ctx, channelID, createdAt)
+	return args.Get(0).(int64), args.Error(1)
+}
+
 func (m *mockEpisodeRepositoryForChannel) IncrementPlayCount(ctx context.Context, id uuid.UUID) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)

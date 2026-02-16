@@ -27,6 +27,7 @@ type BriefEpisode struct {
 	Title           string `json:"title"`
 	Description     string `json:"description,omitempty"`
 	DurationMinutes int    `json:"duration_minutes"`
+	EpisodeNumber   int    `json:"episode_number"`
 }
 
 // BriefChannel はチャンネル情報のスロット
@@ -60,6 +61,7 @@ type BriefInput struct {
 	EpisodeTitle       string
 	EpisodeDescription string
 	DurationMinutes    int
+	EpisodeNumber      int
 
 	// Channel 情報
 	ChannelName        string
@@ -101,6 +103,7 @@ func NormalizeBrief(input BriefInput) Brief {
 			Title:           input.EpisodeTitle,
 			Description:     input.EpisodeDescription,
 			DurationMinutes: input.DurationMinutes,
+			EpisodeNumber:   input.EpisodeNumber,
 		},
 		Channel: BriefChannel{
 			Name:        input.ChannelName,

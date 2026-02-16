@@ -19,6 +19,7 @@ type EpisodeRepository interface {
 	FindByChannelID(ctx context.Context, channelID uuid.UUID, filter EpisodeFilter) ([]model.Episode, int64, error)
 	Search(ctx context.Context, filter SearchEpisodeFilter) ([]model.Episode, int64, error)
 	CountPublishedByChannelIDs(ctx context.Context, channelIDs []uuid.UUID) (map[uuid.UUID]int, error)
+	CountByChannelIDBeforeCreatedAt(ctx context.Context, channelID uuid.UUID, createdAt time.Time) (int64, error)
 	Create(ctx context.Context, episode *model.Episode) error
 	Update(ctx context.Context, episode *model.Episode) error
 	Delete(ctx context.Context, id uuid.UUID) error
@@ -152,6 +153,20 @@ func (r *episodeRepository) CountPublishedByChannelIDs(ctx context.Context, chan
 	}
 
 	return result, nil
+}
+
+// CountByChannelIDBeforeCreatedAt は指定チャンネル内で指定日時より前に作成されたエピソード数を返す
+func (r *episodeRepository) CountByChannelIDBeforeCreatedAt(ctx context.Context, channelID uuid.UUID, createdAt time.Time) (int64, error) {
+	var count int64
+	if err := r.db.WithContext(ctx).
+		Model(&model.Episode{}).
+		Where("channel_id = ? AND created_at < ?", channelID, createdAt).
+		Count(&count).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to count episodes before created_at", "error", err, "channel_id", channelID)
+		return 0, apperror.ErrInternal.WithMessage("エピソード数の取得に失敗しました").WithError(err)
+	}
+
+	return count, nil
 }
 
 // Create はエピソードを作成する

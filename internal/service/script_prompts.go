@@ -116,6 +116,7 @@ const phase4SystemPrompt = `あなたはポッドキャスト台本のリライ�
 - 情報を詰め込みすぎている箇所は、間を取るセリフで緩急をつける
 - オープニングでリスナーの興味を引く工夫を加える
 - クロージングで「聞いてよかった」と思える締めにする
+- メタ発言（時間への言及、構成への言及、「まとめに入ります」等）が含まれている箇所は自然な会話に書き換える
 - 3ブロックの展開パターンが同じ順序（話題→例→落とし穴→まとめ等）になっていたら、ブロックごとに入り口や展開を変える
 - 聞き手（掛け合いの場合）が質問ばかりしている箇所は、自分の感想・体験・軽い反論に置き換える
 - 感情のトーンが一本調子な箇所に変化をつける（驚き→納得→ちょっと不安→前向き等）
@@ -179,8 +180,8 @@ const phase5SystemPrompt = `あなたはポッドキャスト台本の品質管�
 
 // getPhase3SystemPrompt は Phase 3 用のシステムプロンプトを返す
 //
-// talkMode, withEmotion, durationMinutes の組み合わせでプロンプトを生成
-func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool, durationMinutes int) string {
+// talkMode, withEmotion, durationMinutes, episodeNumber の組み合わせでプロンプトを生成
+func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool, durationMinutes int, episodeNumber int) string {
 	var sb strings.Builder
 
 	sb.WriteString("あなたはポッドキャスト台本を作成する専門家です。\n")
@@ -188,6 +189,16 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool, durationM
 		sb.WriteString("与えられたアウトラインと素材を元に、掛け合い形式の台本を作成してください。\n")
 	} else {
 		sb.WriteString("与えられたアウトラインと素材を元に、ひとり語り形式の台本を作成してください。\n")
+	}
+
+	// エピソード番号
+	sb.WriteString(fmt.Sprintf("\n## エピソード情報\n"))
+	sb.WriteString(fmt.Sprintf("- このエピソードはチャンネルの第%d話です\n", episodeNumber))
+	if episodeNumber == 1 {
+		sb.WriteString("- 初回エピソードなので、オープニングでは初めての挨拶にする（「今日もよろしく」等の継続を前提とした表現は使わない）\n")
+		sb.WriteString("- 初回らしく、チャンネルの趣旨やどんな内容を届けるかを軽く紹介する導入にする\n")
+	} else {
+		sb.WriteString("- 継続エピソードなので、オープニングでは自然な挨拶にする（「今回もよろしくお願いします」等）\n")
 	}
 
 	// 構造ルール
@@ -276,7 +287,7 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool, durationM
 	// 分量
 	targetChars := durationMinutes * script.CharsPerMinute
 	sb.WriteString("\n## 分量（重要）\n")
-	sb.WriteString(fmt.Sprintf("- このエピソードは %d分 の音声になります\n", durationMinutes))
+	sb.WriteString(fmt.Sprintf("- このエピソードは %d分 の音声になります（※この情報は文字数計算用であり、台本のセリフ中で時間・分数に言及してはいけない）\n", durationMinutes))
 	sb.WriteString(fmt.Sprintf("- TTS で読み上げた際に %d分 になるよう、合計文字数を **約%d文字** にしてください\n", durationMinutes, targetChars))
 	sb.WriteString(fmt.Sprintf("- 1分あたり約%d文字が目安です（TTS の読み上げ速度基準）\n", script.CharsPerMinute))
 	sb.WriteString("- 台本が短くなりがちなので、目標文字数を下回らないよう注意してください\n")
@@ -328,7 +339,11 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool, durationM
 	// 制約
 	sb.WriteString("\n## 制約\n")
 	sb.WriteString("- アウトラインの素材（具体例・落とし穴・実務の一歩）は必ず台詞に組み込む。省略・要約しない\n")
-	sb.WriteString("- 制作側のメタ発言はしない")
+	sb.WriteString("- 制作側のメタ発言はしない（以下のような発言は絶対に含めない）:\n")
+	sb.WriteString("  - 時間・分量に言及するセリフ（「○分で整理しましょう」「短い時間ですが」「残り時間で」等）\n")
+	sb.WriteString("  - 番組の構成に言及するセリフ（「ブロック1では」「次のコーナーは」「まとめに入ります」等）\n")
+	sb.WriteString("  - 台本であることを意識させるセリフ（「今日のテーマは以上です」「ここからは本題です」等）\n")
+	sb.WriteString("  - リスナーに時間配分を伝えるセリフ（「ここからサクッと」「駆け足で紹介します」等）")
 
 	return sb.String()
 }
