@@ -59,9 +59,9 @@ type Config struct {
 	SlackAlertWebhookURL string
 	// トレースモード（none, log, file）
 	TraceMode string
-	// TTS プロバイダ（gemini / elevenlabs、デフォルト: gemini）
+	// TTS プロバイダ（gemini / ElevenLabs、デフォルト: gemini）
 	TTSProvider string
-	// ElevenLabs API キー（TTS_PROVIDER=elevenlabs の場合に必要）
+	// ElevenLabs API キー（TTS_PROVIDER=ElevenLabs の場合に必要）
 	ElevenLabsAPIKey string
 }
 
