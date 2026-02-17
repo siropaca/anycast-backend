@@ -125,18 +125,35 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		os.Exit(1)
 	}
 
-	// TTS クライアント（Gemini TTS - 32k token の長い台本をサポート）
-	log.Debug("TTS config", "project_id", cfg.GoogleCloudProjectID, "location", cfg.GoogleCloudTTSLocation)
-	if cfg.GoogleCloudProjectID == "" {
-		log.Error("GOOGLE_CLOUD_PROJECT_ID is required for Gemini TTS")
-		os.Exit(1)
+	// TTS クライアント（レジストリパターン）
+	ttsRegistry := tts.NewRegistry()
+
+	// Gemini（プロジェクト ID があれば登録）
+	if cfg.GoogleCloudProjectID != "" {
+		geminiTTSClient, err := tts.NewGeminiTTSClient(ctx, cfg.GoogleCloudProjectID, cfg.GoogleCloudTTSLocation, cfg.GoogleCloudCredentialsJSON)
+		if err != nil {
+			log.Error("failed to create Gemini TTS client", "error", err)
+			os.Exit(1)
+		}
+		ttsRegistry.Register(tts.ProviderGemini, geminiTTSClient)
+		log.Info("TTS provider registered", "provider", "gemini")
 	}
-	ttsClient, err := tts.NewGeminiTTSClient(ctx, cfg.GoogleCloudProjectID, cfg.GoogleCloudTTSLocation, cfg.GoogleCloudCredentialsJSON)
+
+	// ElevenLabs（API キーがあれば登録）
+	if cfg.ElevenLabsAPIKey != "" {
+		elevenLabsTTSClient := tts.NewElevenLabsTTSClient(cfg.ElevenLabsAPIKey)
+		ttsRegistry.Register(tts.ProviderElevenLabs, elevenLabsTTSClient)
+		log.Info("TTS provider registered", "provider", "elevenlabs")
+	}
+
+	// 指定プロバイダのクライアントを取得
+	ttsProvider := tts.Provider(cfg.TTSProvider)
+	ttsClient, err := ttsRegistry.Get(ttsProvider)
 	if err != nil {
-		log.Error("failed to create Gemini TTS client", "error", err)
+		log.Error("TTS provider is not configured", "provider", cfg.TTSProvider)
 		os.Exit(1)
 	}
-	log.Debug("using Gemini TTS client (32k token support)")
+	log.Info("TTS provider selected", "provider", cfg.TTSProvider)
 
 	// 画像生成クライアント（レジストリパターン）
 	imagegenRegistry := imagegen.NewRegistry()

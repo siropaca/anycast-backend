@@ -61,6 +61,11 @@ Gemini TTS（gemini-2.5-pro-tts）は SSML ではなく、角括弧形式のマ�
 - タグは自然な位置に配置しないと無視される場合があります
 - 複数のポーズタグを組み合わせて長い休止を作ることができます
 
+## ElevenLabs との互換性
+
+ElevenLabs の Text-to-Dialogue API も同じ角括弧形式（`[cheerfully]`, `[laughing]` 等）をサポートしている。そのため、台本生成で付与された感情タグはプロバイダを問わずそのまま使用できる。
+
 ## 参考
 
 - [Gemini-TTS | Cloud Text-to-Speech | Google Cloud Documentation](https://docs.cloud.google.com/text-to-speech/docs/gemini-tts)
+- [ElevenLabs Text to Dialogue](https://elevenlabs.io/docs/eleven-api/guides/cookbooks/text-to-dialogue)

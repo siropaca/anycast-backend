@@ -30,6 +30,7 @@
 | サービス | リンク |
 |----------|--------|
 | Gemini TTS (Vertex AI) | https://ai.google.dev/gemini-api/docs/audio |
+| ElevenLabs API | https://elevenlabs.io/docs/api-reference |
 | OpenAI API | https://platform.openai.com/docs |
 
 ## ドキュメント管理ルール

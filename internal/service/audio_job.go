@@ -475,20 +475,26 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 
 	log.Info("generating audio", "total_turns", len(turns))
 
-	// TTS で音声を生成（PCM 16bit 24kHz で返却される）
-	rawAudio, err := s.ttsClient.SynthesizeMultiSpeaker(ctx, turns, voiceConfigs, voiceStyle)
+	// TTS で音声を生成
+	result, err := s.ttsClient.SynthesizeMultiSpeaker(ctx, turns, voiceConfigs, voiceStyle)
 	if err != nil {
 		log.Error("TTS failed", "error", err)
 		return apperror.ErrGenerationFailed.WithMessage("音声の生成に失敗しました").WithError(err)
 	}
 
-	// PCM から MP3 に変換
+	// フォーマットに応じて MP3 に変換
 	s.updateProgress(ctx, job, 45, "音声を変換中...")
-	log.Info("audio synthesis succeeded, converting PCM to MP3", "pcm_size", len(rawAudio))
-	voiceAudio, err := s.ffmpegService.ConvertToMP3(ctx, rawAudio, "pcm", 24000)
-	if err != nil {
-		log.Error("PCM to MP3 conversion failed", "error", err)
-		return apperror.ErrInternal.WithMessage("音声フォーマットの変換に失敗しました").WithError(err)
+	var voiceAudio []byte
+	if result.Format == "pcm" {
+		log.Info("audio synthesis succeeded, converting PCM to MP3", "pcm_size", len(result.Data))
+		voiceAudio, err = s.ffmpegService.ConvertToMP3(ctx, result.Data, "pcm", result.SampleRate)
+		if err != nil {
+			log.Error("PCM to MP3 conversion failed", "error", err)
+			return apperror.ErrInternal.WithMessage("音声フォーマットの変換に失敗しました").WithError(err)
+		}
+	} else {
+		log.Info("audio synthesis succeeded", "format", result.Format, "size", len(result.Data))
+		voiceAudio = result.Data
 	}
 
 	// 進捗: 50%

@@ -23,8 +23,9 @@
       │                   │                      │
       │                   ▼                      ▼
       │             ┌─────────────┐     ┌──────────────────┐
-      │             │  PostgreSQL │     │  Google Cloud    │
-      │             │             │     │  TTS / Storage   │
+      │             │  PostgreSQL │     │  TTS / Storage   │
+      │             │             │     │(Gemini/ElevenLabs│
+      │             │             │     │  / GCS)          │
       │             └─────────────┘     └──────────────────┘
       │                   │
       ▼                   │
@@ -353,8 +354,8 @@ canceled      canceling ───▶ canceled
 1. **台本読み込み**: エピソードに紐づく台本を取得（type=voice/full）
 2. **話者マッピング**: キャラクターを TTS の話者 ID にマッピング
 3. **テキスト分割**: TTS の入力制限（3500 バイト）に収まるようチャンク分割
-4. **TTS 合成**: Google Cloud TTS (Gemini TTS) で音声合成
-5. **チャンク結合**: 複数チャンクの場合、FFmpeg で結合
+4. **TTS 合成**: TTS プロバイダ（Gemini TTS / ElevenLabs）で音声合成
+5. **フォーマット変換**: PCM の場合は FFmpeg で MP3 に変換（Gemini）、MP3 の場合はそのまま使用（ElevenLabs）
 6. **ボイス音声保存**: ボイス音声を GCS にアップロードし `voiceAudioId` を更新
 7. **BGM ミキシング**: FFmpeg で BGM と音声をミックス（type=full/remix）
 8. **アップロード**: 生成した音声ファイルを GCS にアップロード
@@ -362,18 +363,31 @@ canceled      canceling ───▶ canceled
 
 ## 外部サービス
 
-### Google Cloud Text-to-Speech
+### TTS（マルチプロバイダ）
+
+環境変数 `TTS_PROVIDER` で切り替え可能。詳細は [system.md](./system.md) を参照。
+
+#### Gemini TTS（デフォルト）
 
 | 設定 | 値 | 説明 |
 |------|------|------|
 | モデル | gemini-2.5-pro-tts | Gemini TTS モデル |
 | 言語 | ja-JP | 日本語 |
-| 出力形式 | MP3 | libmp3lame エンコーダー |
-| テキスト上限 | 3500 バイト | Google TTS の 4000 バイト制限に対する安全マージン |
-| リトライ回数 | 3 回 | エラー時の最大リトライ |
-| リトライ間隔 | 1秒, 2秒, 3秒 | 指数バックオフ |
+| 出力形式 | PCM 16bit 24kHz → MP3 | FFmpeg で変換 |
 
-- 設定箇所: `internal/infrastructure/tts/google_tts_client.go`
+- 設定箇所: `internal/infrastructure/tts/gemini_client.go`
+
+#### ElevenLabs
+
+| 設定 | 値 | 説明 |
+|------|------|------|
+| マルチスピーカー API | `/v1/text-to-dialogue` | Text-to-Dialogue API |
+| シングルスピーカー API | `/v1/text-to-speech/{voice_id}` | Text-to-Speech API |
+| モデル | eleven_v3 / eleven_multilingual_v2 | マルチ / シングルスピーカー |
+| 言語 | ja | 日本語 |
+| 出力形式 | MP3 44.1kHz 128kbps | 変換不要 |
+
+- 設定箇所: `internal/infrastructure/tts/elevenlabs_client.go`
 
 ### Google Cloud Tasks
 
@@ -477,7 +491,10 @@ CREATE TABLE audios (
 | `internal/service/ffmpeg.go` | FFmpeg 処理 |
 | `internal/repository/audio_job.go` | データベースアクセス |
 | `internal/model/audio_job.go` | データモデル |
-| `internal/infrastructure/tts/google_tts_client.go` | TTS クライアント |
+| `internal/infrastructure/tts/client.go` | TTS クライアントインターフェース |
+| `internal/infrastructure/tts/gemini_client.go` | Gemini TTS クライアント |
+| `internal/infrastructure/tts/elevenlabs_client.go` | ElevenLabs TTS クライアント |
+| `internal/infrastructure/tts/registry.go` | TTS プロバイダレジストリ |
 | `internal/infrastructure/cloudtasks/client.go` | Cloud Tasks クライアント |
 | `internal/infrastructure/storage/gcs_client.go` | GCS クライアント |
 | `internal/infrastructure/websocket/hub.go` | WebSocket ハブ |

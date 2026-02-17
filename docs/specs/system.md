@@ -41,7 +41,15 @@ Phase 別設定（`internal/service/script_prompts.go`）:
 
 - 設定箇所: `internal/infrastructure/llm/`、`internal/service/script_prompts.go`
 
-### Google Cloud Text-to-Speech（Gemini TTS）
+### TTS（マルチプロバイダ）
+
+`tts.Registry` で複数プロバイダ（Gemini / ElevenLabs）のクライアントを管理する。環境変数 `TTS_PROVIDER` でプロバイダを切り替え可能。
+
+| 設定 | 値 | 説明 |
+|------|------|------|
+| プロバイダ | 環境変数 `TTS_PROVIDER`（デフォルト: gemini） | TTS プロバイダ（`gemini` / `elevenlabs`） |
+
+#### Gemini（デフォルト）
 
 Gemini 2.5 Pro TTS（Vertex AI バックエンド）を使用した音声合成。マルチスピーカー合成に対応し、32k token の長い台本をサポート。
 
@@ -50,6 +58,19 @@ Gemini 2.5 Pro TTS（Vertex AI バックエンド）を使用した音声合成�
 | モデル | gemini-2.5-pro-tts | Gemini TTS モデル |
 | 言語コード | ja-JP | 日本語固定 |
 | ロケーション | 環境変数 `GOOGLE_CLOUD_TTS_LOCATION`（デフォルト: global） | Vertex AI エンドポイントのリージョン |
+| 出力形式 | PCM 16bit 24kHz | FFmpeg で MP3 に変換 |
+
+#### ElevenLabs
+
+ElevenLabs の Text-to-Dialogue API を使用した音声合成。マルチスピーカー合成に対応。
+
+| 設定 | 値 | 説明 |
+|------|------|------|
+| API キー | 環境変数 `ELEVENLABS_API_KEY` | ElevenLabs API キー |
+| マルチスピーカーモデル | eleven_v3 | Text-to-Dialogue API で使用 |
+| シングルスピーカーモデル | eleven_multilingual_v2 | Text-to-Speech API で使用 |
+| 言語コード | ja | 日本語 |
+| 出力形式 | MP3 44.1kHz 128kbps | 変換不要でそのまま使用 |
 
 - 設定箇所: `internal/infrastructure/tts/`
 

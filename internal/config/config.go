@@ -59,6 +59,10 @@ type Config struct {
 	SlackAlertWebhookURL string
 	// トレースモード（none, log, file）
 	TraceMode string
+	// TTS プロバイダ（gemini / elevenlabs、デフォルト: gemini）
+	TTSProvider string
+	// ElevenLabs API キー（TTS_PROVIDER=elevenlabs の場合に必要）
+	ElevenLabsAPIKey string
 }
 
 // Load は環境変数から設定を読み込む
@@ -88,6 +92,8 @@ func Load() *Config {
 		SlackContactWebhookURL:              getEnv("SLACK_CONTACT_WEBHOOK_URL", ""),
 		SlackAlertWebhookURL:                getEnv("SLACK_ALERT_WEBHOOK_URL", ""),
 		TraceMode:                           getEnv("TRACE_MODE", "none"),
+		TTSProvider:                         getEnv("TTS_PROVIDER", "gemini"),
+		ElevenLabsAPIKey:                    getEnv("ELEVENLABS_API_KEY", ""),
 	}
 }
 
