@@ -133,6 +133,90 @@ func (r *ParseResult) HasErrors() bool {
 	return len(r.Errors) > 0
 }
 
+// StripEmotionTags は台本テキストから全ての感情タグを除去する
+//
+// Phase 3 → Phase 4 のハンドオフ時に使用し、Phase 4 が新たに感情タグを追加できるようにする。
+//
+// @param text - 台本テキスト
+// @returns 感情タグを除去した台本テキスト
+func StripEmotionTags(text string) string {
+	lines := strings.Split(text, "\n")
+	result := make([]string, 0, len(lines))
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+		colonIdx := strings.Index(trimmed, ":")
+		if colonIdx == -1 {
+			result = append(result, trimmed)
+			continue
+		}
+		speaker := strings.TrimSpace(trimmed[:colonIdx])
+		content := strings.TrimSpace(trimmed[colonIdx+1:])
+		// 感情タグを除去
+		content = emotionRegex.ReplaceAllString(content, "")
+		content = strings.TrimSpace(content)
+		if content == "" {
+			continue
+		}
+		result = append(result, speaker+": "+content)
+	}
+	return strings.Join(result, "\n")
+}
+
+// CapEmotionTags は台本テキスト内の感情タグ数を上限に収める
+//
+// 上限を超える場合、後方の感情タグから順に除去する。
+//
+// @param text - 台本テキスト
+// @param maxTags - 感情タグの上限数
+// @returns 感情タグ数を上限に収めた台本テキスト
+func CapEmotionTags(text string, maxTags int) string {
+	lines := strings.Split(text, "\n")
+
+	// 感情タグ付きの行インデックスを収集
+	taggedIndices := []int{}
+	for i, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		colonIdx := strings.Index(trimmed, ":")
+		if colonIdx == -1 {
+			continue
+		}
+		content := strings.TrimSpace(trimmed[colonIdx+1:])
+		if emotionRegex.MatchString(content) {
+			taggedIndices = append(taggedIndices, i)
+		}
+	}
+
+	if len(taggedIndices) <= maxTags {
+		return text
+	}
+
+	// 後方から削除（前方の感情タグを優先的に残す）
+	toRemove := len(taggedIndices) - maxTags
+	removeSet := make(map[int]bool, toRemove)
+	for i := len(taggedIndices) - 1; i >= 0 && len(removeSet) < toRemove; i-- {
+		removeSet[taggedIndices[i]] = true
+	}
+
+	result := make([]string, len(lines))
+	for i, line := range lines {
+		if removeSet[i] {
+			trimmed := strings.TrimSpace(line)
+			colonIdx := strings.Index(trimmed, ":")
+			speaker := strings.TrimSpace(trimmed[:colonIdx])
+			content := strings.TrimSpace(trimmed[colonIdx+1:])
+			content = emotionRegex.ReplaceAllString(content, "")
+			content = strings.TrimSpace(content)
+			result[i] = speaker + ": " + content
+		} else {
+			result[i] = line
+		}
+	}
+	return strings.Join(result, "\n")
+}
+
 // CountNonEmptyLines はテキスト中の空行を除いた行数を返す
 func CountNonEmptyLines(text string) int {
 	count := 0

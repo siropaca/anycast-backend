@@ -482,11 +482,24 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 		return 0, err
 	}
 
-	rewrittenText, err := s.executePhase4(ctx, generatedText, brief, t)
+	// 感情ありの場合、Phase 3 出力から感情タグを除去してから Phase 4 に渡す
+	// （Phase 4 がリライト時に新たに適切な箇所だけ感情タグを追加する）
+	phase4Input := generatedText
+	if brief.Constraints.WithEmotion {
+		phase4Input = script.StripEmotionTags(generatedText)
+		log.Info("stripped emotion tags from Phase 3 output for Phase 4 input")
+	}
+
+	rewrittenText, err := s.executePhase4(ctx, phase4Input, brief, t)
 	if err != nil {
 		log.Warn("Phase 4 rewrite failed, using original draft", "error", err)
 		rewrittenText = generatedText
 	} else {
+		// 感情ありの場合、感情タグ数を上限に収める
+		if brief.Constraints.WithEmotion {
+			rewrittenText = script.CapEmotionTags(rewrittenText, 15)
+		}
+
 		// リライト後のテキストを再パース
 		rewriteResult := script.Parse(rewrittenText, allowedSpeakers)
 		if len(rewriteResult.Lines) > 0 {
@@ -775,7 +788,17 @@ func (s *scriptJobService) executePhase5(ctx context.Context, job *model.ScriptJ
 
 	t.Flush("phase5")
 
-	// パッチ後の結果をそのまま採用（合格/不合格に関わらず）
+	// 感情ありの場合、パッチ後の感情タグ数を上限に収める
+	if brief.Constraints.WithEmotion {
+		cappedText := script.CapEmotionTags(patchedText, 15)
+		cappedResult := script.Parse(cappedText, allowedSpeakers)
+		log.Info("Phase 5: capped emotion tags",
+			"before", countEmotionTags(patchedResult.Lines), "after", countEmotionTags(cappedResult.Lines))
+		if len(cappedResult.Lines) > 0 {
+			return cappedResult.Lines
+		}
+	}
+
 	return patchedResult.Lines
 }
 
@@ -1114,11 +1137,20 @@ func (s *scriptJobService) GenerateScriptDirect(ctx context.Context, req request
 		"total_chars", countTotalChars(parseResult.Lines), "target_chars", req.DurationMinutes*script.CharsPerMinute)
 
 	// ===== Phase 4: リライト =====
-	rewrittenText, err := s.executePhase4(ctx, generatedText, brief, t)
+	phase4Input := generatedText
+	if brief.Constraints.WithEmotion {
+		phase4Input = script.StripEmotionTags(generatedText)
+		log.Info("stripped emotion tags from Phase 3 output for Phase 4 input")
+	}
+
+	rewrittenText, err := s.executePhase4(ctx, phase4Input, brief, t)
 	if err != nil {
 		log.Warn("Phase 4 rewrite failed, using original draft", "error", err)
 		rewrittenText = generatedText
 	} else {
+		if brief.Constraints.WithEmotion {
+			rewrittenText = script.CapEmotionTags(rewrittenText, 15)
+		}
 		rewriteResult := script.Parse(rewrittenText, allowedSpeakers)
 		if len(rewriteResult.Lines) > 0 {
 			parseResult = rewriteResult
@@ -1140,6 +1172,17 @@ func (s *scriptJobService) GenerateScriptDirect(ctx context.Context, req request
 	return &response.GenerateScriptDirectResponse{
 		Script: script.Format(formatLines),
 	}, nil
+}
+
+// countEmotionTags は感情タグの数を返す
+func countEmotionTags(lines []script.ParsedLine) int {
+	count := 0
+	for _, line := range lines {
+		if line.Emotion != nil {
+			count++
+		}
+	}
+	return count
 }
 
 // countTotalChars は台本全行の合計文字数を返す

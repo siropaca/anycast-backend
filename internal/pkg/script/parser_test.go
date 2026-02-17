@@ -1,6 +1,7 @@
 package script
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -200,4 +201,47 @@ func TestParseResult_HasErrors(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestStripEmotionTags(t *testing.T) {
+	text := "ケンタ: [嬉しそうに] こんにちは\nミホ: [笑いながら] よろしく\nケンタ: 普通のセリフ"
+	result := StripEmotionTags(text)
+	expected := "ケンタ: こんにちは\nミホ: よろしく\nケンタ: 普通のセリフ"
+	if result != expected {
+		t.Errorf("StripEmotionTags:\ngot:  %q\nwant: %q", result, expected)
+	}
+}
+
+func TestCapEmotionTags(t *testing.T) {
+	text := "ケンタ: [嬉しそうに] こんにちは\nミホ: [笑いながら] よろしく\nケンタ: [興奮して] テスト\nミホ: [呆れて] もう一つ\nケンタ: 普通のセリフ"
+	result := CapEmotionTags(text, 2)
+	// Count emotion tags in result
+	lines := splitLines(result)
+	count := 0
+	for _, l := range lines {
+		if emotionRegex.MatchString(afterColon(l)) {
+			count++
+		}
+	}
+	if count != 2 {
+		t.Errorf("CapEmotionTags(maxTags=2): got %d emotion tags, want 2\nresult: %s", count, result)
+	}
+}
+
+func splitLines(s string) []string {
+	result := []string{}
+	for _, l := range strings.Split(s, "\n") {
+		if strings.TrimSpace(l) != "" {
+			result = append(result, l)
+		}
+	}
+	return result
+}
+
+func afterColon(s string) string {
+	idx := strings.Index(s, ":")
+	if idx == -1 {
+		return ""
+	}
+	return strings.TrimSpace(s[idx+1:])
 }
