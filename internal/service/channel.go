@@ -748,9 +748,15 @@ func (s *channelService) AddChannelCharacter(ctx context.Context, userID, channe
 	}
 
 	// キャラクター ID を解決
-	characterID, err := s.resolveCharacterID(ctx, uid, req.Connect, req.Create)
+	characterID, newProvider, err := s.resolveCharacterID(ctx, uid, req.Connect, req.Create)
 	if err != nil {
 		return nil, err
+	}
+
+	// プロバイダーの整合性チェック
+	existingProvider := getChannelProvider(channel.ChannelCharacters, nil)
+	if existingProvider != "" && existingProvider != newProvider {
+		return nil, apperror.ErrValidation.WithMessage("同一チャンネルのキャラクターは同じボイスプロバイダーを使用してください")
 	}
 
 	// 既にチャンネルに紐づいていないことを確認
@@ -825,9 +831,15 @@ func (s *channelService) ReplaceChannelCharacter(ctx context.Context, userID, ch
 	}
 
 	// 新しいキャラクター ID を解決
-	newCharacterID, err := s.resolveCharacterID(ctx, uid, req.Connect, req.Create)
+	newCharacterID, newProvider, err := s.resolveCharacterID(ctx, uid, req.Connect, req.Create)
 	if err != nil {
 		return nil, err
+	}
+
+	// プロバイダーの整合性チェック（置換元を除外して残りのキャラクターで判定）
+	remainingProvider := getChannelProvider(channel.ChannelCharacters, &oldCharacterID)
+	if remainingProvider != "" && remainingProvider != newProvider {
+		return nil, apperror.ErrValidation.WithMessage("同一チャンネルのキャラクターは同じボイスプロバイダーを使用してください")
 	}
 
 	// 置換先が既にチャンネルに紐づいていないことを確認
@@ -932,44 +944,45 @@ func (s *channelService) RemoveChannelCharacter(ctx context.Context, userID, cha
 	}, nil
 }
 
-// resolveCharacterID は connect/create の入力を処理して characterID を返す
-func (s *channelService) resolveCharacterID(ctx context.Context, userID uuid.UUID, connect *request.ConnectCharacterInput, create *request.CreateCharacterInput) (uuid.UUID, error) {
+// resolveCharacterID は connect/create の入力を処理して characterID とボイスプロバイダーを返す
+func (s *channelService) resolveCharacterID(ctx context.Context, userID uuid.UUID, connect *request.ConnectCharacterInput, create *request.CreateCharacterInput) (characterID uuid.UUID, voiceProvider string, err error) {
 	if connect != nil {
 		cid, err := uuid.Parse(connect.ID)
 		if err != nil {
-			return uuid.Nil, err
+			return uuid.Nil, "", err
 		}
 
 		// キャラクターの存在確認とオーナーチェック
 		character, err := s.characterRepo.FindByID(ctx, cid)
 		if err != nil {
-			return uuid.Nil, err
+			return uuid.Nil, "", err
 		}
 		if character.UserID != userID {
-			return uuid.Nil, apperror.ErrForbidden.WithMessage("指定されたキャラクターの所有権がありません")
+			return uuid.Nil, "", apperror.ErrForbidden.WithMessage("指定されたキャラクターの所有権がありません")
 		}
 
-		return cid, nil
+		return cid, character.Voice.Provider, nil
 	}
 
 	// create の場合
 	// 同一ユーザー内での名前重複チェック
 	exists, err := s.characterRepo.ExistsByUserIDAndName(ctx, userID, create.Name, nil)
 	if err != nil {
-		return uuid.Nil, err
+		return uuid.Nil, "", err
 	}
 	if exists {
-		return uuid.Nil, apperror.ErrDuplicateName.WithMessage("同じ名前のキャラクターが既に存在します")
+		return uuid.Nil, "", apperror.ErrDuplicateName.WithMessage("同じ名前のキャラクターが既に存在します")
 	}
 
 	voiceID, err := uuid.Parse(create.VoiceID)
 	if err != nil {
-		return uuid.Nil, err
+		return uuid.Nil, "", err
 	}
 
 	// ボイスの存在確認（アクティブなもののみ）
-	if _, err := s.voiceRepo.FindActiveByID(ctx, create.VoiceID); err != nil {
-		return uuid.Nil, err
+	voice, err := s.voiceRepo.FindActiveByID(ctx, create.VoiceID)
+	if err != nil {
+		return uuid.Nil, "", err
 	}
 
 	// アバター画像の存在確認（指定時のみ）
@@ -977,10 +990,10 @@ func (s *channelService) resolveCharacterID(ctx context.Context, userID uuid.UUI
 	if create.AvatarID != nil {
 		aid, err := uuid.Parse(*create.AvatarID)
 		if err != nil {
-			return uuid.Nil, err
+			return uuid.Nil, "", err
 		}
 		if _, err := s.imageRepo.FindByID(ctx, aid); err != nil {
-			return uuid.Nil, err
+			return uuid.Nil, "", err
 		}
 		avatarID = &aid
 	}
@@ -994,16 +1007,31 @@ func (s *channelService) resolveCharacterID(ctx context.Context, userID uuid.UUI
 	}
 
 	if err := s.characterRepo.Create(ctx, character); err != nil {
-		return uuid.Nil, err
+		return uuid.Nil, "", err
 	}
 
-	return character.ID, nil
+	return character.ID, voice.Provider, nil
+}
+
+// getChannelProvider はチャンネルに紐づくキャラクターのボイスプロバイダーを返す
+// excludeCharacterID が指定された場合、そのキャラクターを除外して判定する（Replace用）
+// キャラクターが0人の場合は空文字を返す
+func getChannelProvider(channelCharacters []model.ChannelCharacter, excludeCharacterID *uuid.UUID) string {
+	for _, cc := range channelCharacters {
+		if excludeCharacterID != nil && cc.CharacterID == *excludeCharacterID {
+			continue
+		}
+		return cc.Character.Voice.Provider
+	}
+	return ""
 }
 
 // processCharacterInputs はキャラクター入力を処理してキャラクター ID のスライスを返す
 // connect は既存キャラクターの紐づけ、create は新規キャラクターの作成
+// 全キャラクターのボイスプロバイダーが統一されていることも検証する
 func (s *channelService) processCharacterInputs(ctx context.Context, userID uuid.UUID, input request.ChannelCharactersInput, characterRepo repository.CharacterRepository) ([]uuid.UUID, error) {
 	characterIDs := make([]uuid.UUID, 0, input.Total())
+	providers := make([]string, 0, input.Total())
 
 	// 既存キャラクターの紐づけ処理
 	for _, connect := range input.Connect {
@@ -1022,6 +1050,7 @@ func (s *channelService) processCharacterInputs(ctx context.Context, userID uuid
 		}
 
 		characterIDs = append(characterIDs, cid)
+		providers = append(providers, character.Voice.Provider)
 	}
 
 	// 新規キャラクターの作成処理
@@ -1041,7 +1070,8 @@ func (s *channelService) processCharacterInputs(ctx context.Context, userID uuid
 		}
 
 		// ボイスの存在確認（アクティブなもののみ）
-		if _, err := s.voiceRepo.FindActiveByID(ctx, create.VoiceID); err != nil {
+		voice, err := s.voiceRepo.FindActiveByID(ctx, create.VoiceID)
+		if err != nil {
 			return nil, err
 		}
 
@@ -1071,6 +1101,17 @@ func (s *channelService) processCharacterInputs(ctx context.Context, userID uuid
 		}
 
 		characterIDs = append(characterIDs, character.ID)
+		providers = append(providers, voice.Provider)
+	}
+
+	// プロバイダーの整合性チェック
+	if len(providers) > 1 {
+		first := providers[0]
+		for _, p := range providers[1:] {
+			if p != first {
+				return nil, apperror.ErrValidation.WithMessage("同一チャンネルのキャラクターは同じボイスプロバイダーを使用してください")
+			}
+		}
 	}
 
 	return characterIDs, nil

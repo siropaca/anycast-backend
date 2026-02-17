@@ -486,3 +486,98 @@ func TestToCharacterResponsesFromChannelCharacters(t *testing.T) {
 		assert.Equal(t, []response.CharacterResponse{}, result)
 	})
 }
+
+func TestGetChannelProvider(t *testing.T) {
+	channelID := uuid.New()
+	charID1 := uuid.New()
+	charID2 := uuid.New()
+	voiceID1 := uuid.New()
+	voiceID2 := uuid.New()
+
+	t.Run("キャラクターが0人の場合は空文字を返す", func(t *testing.T) {
+		result := getChannelProvider([]model.ChannelCharacter{}, nil)
+		assert.Equal(t, "", result)
+	})
+
+	t.Run("キャラクターが1人の場合はそのプロバイダーを返す", func(t *testing.T) {
+		characters := []model.ChannelCharacter{
+			{
+				ChannelID:   channelID,
+				CharacterID: charID1,
+				Character: model.Character{
+					ID:      charID1,
+					VoiceID: voiceID1,
+					Voice:   model.Voice{ID: voiceID1, Provider: "google"},
+				},
+			},
+		}
+		result := getChannelProvider(characters, nil)
+		assert.Equal(t, "google", result)
+	})
+
+	t.Run("複数キャラクターの場合は最初のプロバイダーを返す", func(t *testing.T) {
+		characters := []model.ChannelCharacter{
+			{
+				ChannelID:   channelID,
+				CharacterID: charID1,
+				Character: model.Character{
+					ID:      charID1,
+					VoiceID: voiceID1,
+					Voice:   model.Voice{ID: voiceID1, Provider: "elevenlabs"},
+				},
+			},
+			{
+				ChannelID:   channelID,
+				CharacterID: charID2,
+				Character: model.Character{
+					ID:      charID2,
+					VoiceID: voiceID2,
+					Voice:   model.Voice{ID: voiceID2, Provider: "elevenlabs"},
+				},
+			},
+		}
+		result := getChannelProvider(characters, nil)
+		assert.Equal(t, "elevenlabs", result)
+	})
+
+	t.Run("excludeCharacterID を指定すると該当キャラクターを除外する", func(t *testing.T) {
+		characters := []model.ChannelCharacter{
+			{
+				ChannelID:   channelID,
+				CharacterID: charID1,
+				Character: model.Character{
+					ID:      charID1,
+					VoiceID: voiceID1,
+					Voice:   model.Voice{ID: voiceID1, Provider: "google"},
+				},
+			},
+			{
+				ChannelID:   channelID,
+				CharacterID: charID2,
+				Character: model.Character{
+					ID:      charID2,
+					VoiceID: voiceID2,
+					Voice:   model.Voice{ID: voiceID2, Provider: "elevenlabs"},
+				},
+			},
+		}
+		result := getChannelProvider(characters, &charID1)
+		assert.Equal(t, "elevenlabs", result)
+	})
+
+	t.Run("全員を除外した場合は空文字を返す", func(t *testing.T) {
+		characters := []model.ChannelCharacter{
+			{
+				ChannelID:   channelID,
+				CharacterID: charID1,
+				Character: model.Character{
+					ID:      charID1,
+					VoiceID: voiceID1,
+					Voice:   model.Voice{ID: voiceID1, Provider: "google"},
+				},
+			},
+		}
+		result := getChannelProvider(characters, &charID1)
+		assert.Equal(t, "", result)
+	})
+}
