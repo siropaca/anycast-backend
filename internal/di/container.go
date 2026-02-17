@@ -143,7 +143,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	if cfg.ElevenLabsAPIKey != "" {
 		elevenLabsTTSClient := tts.NewElevenLabsTTSClient(cfg.ElevenLabsAPIKey)
 		ttsRegistry.Register(tts.ProviderElevenLabs, elevenLabsTTSClient)
-		log.Info("TTS provider registered", "provider", "ElevenLabs")
+		log.Info("TTS provider registered", "provider", "elevenlabs")
 	}
 
 	// 指定プロバイダのクライアントを取得

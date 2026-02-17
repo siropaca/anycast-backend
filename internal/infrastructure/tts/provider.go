@@ -5,5 +5,5 @@ type Provider string
 
 const (
 	ProviderGemini     Provider = "gemini"
-	ProviderElevenLabs Provider = "ElevenLabs"
+	ProviderElevenLabs Provider = "elevenlabs"
 )

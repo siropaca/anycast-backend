@@ -136,9 +136,7 @@ func (r *ParseResult) HasErrors() bool {
 // StripEmotionTags は台本テキストから全ての感情タグを除去する
 //
 // Phase 3 → Phase 4 のハンドオフ時に使用し、Phase 4 が新たに感情タグを追加できるようにする。
-//
-// @param text - 台本テキスト
-// @returns 感情タグを除去した台本テキスト
+// text には台本テキストを渡す。感情タグを除去した台本テキストを返す。
 func StripEmotionTags(text string) string {
 	lines := strings.Split(text, "\n")
 	result := make([]string, 0, len(lines))
@@ -168,10 +166,8 @@ func StripEmotionTags(text string) string {
 // CapEmotionTags は台本テキスト内の感情タグ数を上限に収める
 //
 // 上限を超える場合、後方の感情タグから順に除去する。
-//
-// @param text - 台本テキスト
-// @param maxTags - 感情タグの上限数
-// @returns 感情タグ数を上限に収めた台本テキスト
+// text には台本テキスト、maxTags には感情タグの上限数を渡す。
+// 感情タグ数を上限に収めた台本テキストを返す。
 func CapEmotionTags(text string, maxTags int) string {
 	lines := strings.Split(text, "\n")
 

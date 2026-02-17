@@ -47,7 +47,7 @@ Phase 別設定（`internal/service/script_prompts.go`）:
 
 | 設定 | 値 | 説明 |
 |------|------|------|
-| プロバイダ | 環境変数 `TTS_PROVIDER`（デフォルト: gemini） | TTS プロバイダ（`gemini` / `ElevenLabs`） |
+| プロバイダ | 環境変数 `TTS_PROVIDER`（デフォルト: gemini） | TTS プロバイダ（`gemini` / `elevenlabs`） |
 
 #### Gemini（デフォルト）
 
