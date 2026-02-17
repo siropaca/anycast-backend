@@ -43,11 +43,7 @@ Phase 別設定（`internal/service/script_prompts.go`）:
 
 ### TTS（マルチプロバイダ）
 
-`tts.Registry` で複数プロバイダ（Gemini / ElevenLabs）のクライアントを管理する。環境変数 `TTS_PROVIDER` でプロバイダを切り替え可能。
-
-| 設定 | 値 | 説明 |
-|------|------|------|
-| プロバイダ | 環境変数 `TTS_PROVIDER`（デフォルト: gemini） | TTS プロバイダ（`gemini` / `elevenlabs`） |
+`tts.Registry` で複数プロバイダ（Gemini / ElevenLabs）のクライアントを管理する。API キーが設定されたプロバイダが起動時に自動登録され、音声生成時にはキャラクターの Voice に紐づく Provider から動的にプロバイダを選択する。
 
 #### Gemini（デフォルト）
 

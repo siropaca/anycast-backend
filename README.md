@@ -103,8 +103,7 @@ cp .env.example .env        # 環境変数ファイルの作成
 | `GOOGLE_CLOUD_TASKS_SERVICE_ACCOUNT_EMAIL` | Cloud Tasks サービスアカウントメール | - |
 | `GOOGLE_CLOUD_TASKS_WORKER_URL` | ワーカーエンドポイントのベース URL（末尾に `/audio` や `/script` が付与される） | - |
 | `GOOGLE_CLOUD_TTS_LOCATION` | Gemini TTS のロケーション | global |
-| `TTS_PROVIDER` | TTS プロバイダ（`gemini` / `elevenlabs`） | gemini |
-| `ELEVENLABS_API_KEY` | ElevenLabs API キー（`TTS_PROVIDER=elevenlabs` の場合に必要） | - |
+| `ELEVENLABS_API_KEY` | ElevenLabs API キー（設定すると ElevenLabs プロバイダが有効化される） | - |
 | `TRACE_MODE` | トレースモード（none / log / file） | none |
 | `SLACK_FEEDBACK_WEBHOOK_URL` | Slack Webhook URL（フィードバック通知用、空の場合は通知無効） | - |
 | `SLACK_CONTACT_WEBHOOK_URL` | Slack Webhook URL（お問い合わせ通知用、空の場合は通知無効） | - |

@@ -33,3 +33,12 @@ func (r *Registry) Has(provider Provider) bool {
 	_, ok := r.clients[provider]
 	return ok
 }
+
+// Providers は登録済みのプロバイダ一覧を返す
+func (r *Registry) Providers() []Provider {
+	providers := make([]Provider, 0, len(r.clients))
+	for p := range r.clients {
+		providers = append(providers, p)
+	}
+	return providers
+}

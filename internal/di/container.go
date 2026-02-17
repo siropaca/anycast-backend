@@ -135,7 +135,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 			log.Error("failed to create Gemini TTS client", "error", err)
 			os.Exit(1)
 		}
-		ttsRegistry.Register(tts.ProviderGemini, geminiTTSClient)
+		ttsRegistry.Register(tts.ProviderGoogle, geminiTTSClient)
 		log.Info("TTS provider registered", "provider", "gemini")
 	}
 
@@ -146,14 +146,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		log.Info("TTS provider registered", "provider", "elevenlabs")
 	}
 
-	// 指定プロバイダのクライアントを取得
-	ttsProvider := tts.Provider(cfg.TTSProvider)
-	ttsClient, err := ttsRegistry.Get(ttsProvider)
-	if err != nil {
-		log.Error("TTS provider is not configured", "provider", cfg.TTSProvider)
-		os.Exit(1)
-	}
-	log.Info("TTS provider selected", "provider", cfg.TTSProvider)
+	log.Info("TTS providers registered", "providers", ttsRegistry.Providers())
 
 	// 画像生成クライアント（レジストリパターン）
 	imagegenRegistry := imagegen.NewRegistry()
@@ -244,7 +237,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	channelService := service.NewChannelService(db, channelRepo, characterRepo, categoryRepo, imageRepo, voiceRepo, episodeRepo, scriptLineRepo, bgmRepo, systemBgmRepo, playbackHistoryRepo, storageClient)
 	characterService := service.NewCharacterService(characterRepo, voiceRepo, imageRepo, storageClient)
 	categoryService := service.NewCategoryService(categoryRepo, storageClient)
-	episodeService := service.NewEpisodeService(episodeRepo, channelRepo, scriptLineRepo, audioRepo, imageRepo, bgmRepo, systemBgmRepo, playbackHistoryRepo, playlistRepo, storageClient, ttsClient)
+	episodeService := service.NewEpisodeService(episodeRepo, channelRepo, scriptLineRepo, audioRepo, imageRepo, bgmRepo, systemBgmRepo, playbackHistoryRepo, playlistRepo, storageClient, ttsRegistry)
 	scriptLineService := service.NewScriptLineService(db, scriptLineRepo, episodeRepo, channelRepo)
 	scriptService := service.NewScriptService(db, channelRepo, episodeRepo, scriptLineRepo, storageClient)
 	cleanupService := service.NewCleanupService(audioRepo, imageRepo, storageClient)
@@ -260,7 +253,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		bgmRepo,
 		systemBgmRepo,
 		storageClient,
-		ttsClient,
+		ttsRegistry,
 		ffmpegService,
 		tasksClient,
 		wsHub,

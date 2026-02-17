@@ -4,6 +4,6 @@ package tts
 type Provider string
 
 const (
-	ProviderGemini     Provider = "gemini"
+	ProviderGoogle     Provider = "google"
 	ProviderElevenLabs Provider = "elevenlabs"
 )

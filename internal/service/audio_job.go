@@ -47,7 +47,7 @@ type audioJobService struct {
 	bgmRepo        repository.BgmRepository
 	systemBgmRepo  repository.SystemBgmRepository
 	storageClient  storage.Client
-	ttsClient      tts.Client
+	ttsRegistry    *tts.Registry
 	ffmpegService  FFmpegService
 	tasksClient    cloudtasks.Client
 	wsHub          *websocket.Hub
@@ -64,7 +64,7 @@ func NewAudioJobService(
 	bgmRepo repository.BgmRepository,
 	systemBgmRepo repository.SystemBgmRepository,
 	storageClient storage.Client,
-	ttsClient tts.Client,
+	ttsRegistry *tts.Registry,
 	ffmpegService FFmpegService,
 	tasksClient cloudtasks.Client,
 	wsHub *websocket.Hub,
@@ -79,7 +79,7 @@ func NewAudioJobService(
 		bgmRepo:        bgmRepo,
 		systemBgmRepo:  systemBgmRepo,
 		storageClient:  storageClient,
-		ttsClient:      ttsClient,
+		ttsRegistry:    ttsRegistry,
 		ffmpegService:  ffmpegService,
 		tasksClient:    tasksClient,
 		wsHub:          wsHub,
@@ -467,16 +467,24 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 		return err
 	}
 
+	// scriptLines の最初の行の Voice.Provider から TTS クライアントを取得
+	provider := tts.Provider(scriptLines[0].Speaker.Voice.Provider)
+	ttsClient, err := s.ttsRegistry.Get(provider)
+	if err != nil {
+		log.Error("TTS provider not available", "provider", provider)
+		return apperror.ErrValidation.WithMessage(fmt.Sprintf("TTS プロバイダ %q が利用できません", provider)).WithError(err)
+	}
+
 	// TTS で音声を生成
 	var voiceStyle *string
 	if job.VoiceStyle != "" {
 		voiceStyle = &job.VoiceStyle
 	}
 
-	log.Info("generating audio", "total_turns", len(turns))
+	log.Info("generating audio", "total_turns", len(turns), "provider", provider)
 
 	// TTS で音声を生成
-	result, err := s.ttsClient.SynthesizeMultiSpeaker(ctx, turns, voiceConfigs, voiceStyle)
+	result, err := ttsClient.SynthesizeMultiSpeaker(ctx, turns, voiceConfigs, voiceStyle)
 	if err != nil {
 		log.Error("TTS failed", "error", err)
 		return apperror.ErrGenerationFailed.WithMessage("音声の生成に失敗しました").WithError(err)

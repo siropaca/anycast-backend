@@ -365,7 +365,7 @@ canceled      canceling ───▶ canceled
 
 ### TTS（マルチプロバイダ）
 
-環境変数 `TTS_PROVIDER` で切り替え可能。詳細は [system.md](./system.md) を参照。
+キャラクターの Voice に紐づく Provider から動的にプロバイダを選択する。詳細は [system.md](./system.md) を参照。
 
 #### Gemini TTS（デフォルト）
 

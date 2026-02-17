@@ -42,7 +42,7 @@ type episodeService struct {
 	playbackHistoryRepo repository.PlaybackHistoryRepository
 	playlistRepo        repository.PlaylistRepository
 	storageClient       storage.Client
-	ttsClient           tts.Client
+	ttsRegistry         *tts.Registry
 }
 
 // NewEpisodeService は episodeService を生成して EpisodeService として返す
@@ -57,7 +57,7 @@ func NewEpisodeService(
 	playbackHistoryRepo repository.PlaybackHistoryRepository,
 	playlistRepo repository.PlaylistRepository,
 	storageClient storage.Client,
-	ttsClient tts.Client,
+	ttsRegistry *tts.Registry,
 ) EpisodeService {
 	return &episodeService{
 		episodeRepo:         episodeRepo,
@@ -70,7 +70,7 @@ func NewEpisodeService(
 		playbackHistoryRepo: playbackHistoryRepo,
 		playlistRepo:        playlistRepo,
 		storageClient:       storageClient,
-		ttsClient:           ttsClient,
+		ttsRegistry:         ttsRegistry,
 	}
 }
 
