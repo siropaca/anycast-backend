@@ -23,6 +23,7 @@ const (
 	elevenLabsTTSModelID        = "eleven_multilingual_v2"
 	elevenLabsTTSOutputFmt      = "mp3_44100_128"
 	elevenLabsAPITimeout        = 5 * 60 // 5 分（秒）
+	elevenLabsDefaultSpeed      = 1.2    // デフォルトの読み上げ速度（0.7〜1.2、1.0が標準）
 )
 
 // elevenLabsTTSClient は ElevenLabs API を使った TTS クライアント
@@ -54,11 +55,17 @@ type dialogueRequest struct {
 	LanguageCode string          `json:"language_code"`
 }
 
+// voiceSettings は Text-to-Speech API のボイス設定
+type voiceSettings struct {
+	Speed float64 `json:"speed"`
+}
+
 // ttsRequest は Text-to-Speech API のリクエストボディ
 type ttsRequest struct {
-	Text         string `json:"text"`
-	ModelID      string `json:"model_id"`
-	LanguageCode string `json:"language_code"`
+	Text          string        `json:"text"`
+	ModelID       string        `json:"model_id"`
+	LanguageCode  string        `json:"language_code"`
+	VoiceSettings voiceSettings `json:"voice_settings"`
 }
 
 // Synthesize はテキストから音声を合成する（シングルスピーカー）
@@ -77,6 +84,9 @@ func (c *elevenLabsTTSClient) Synthesize(ctx context.Context, text string, emoti
 		Text:         synthesisText,
 		ModelID:      elevenLabsTTSModelID,
 		LanguageCode: elevenLabsDialogueLanguage,
+		VoiceSettings: voiceSettings{
+			Speed: elevenLabsDefaultSpeed,
+		},
 	}
 
 	body, err := json.Marshal(reqBody)
