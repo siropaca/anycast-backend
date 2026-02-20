@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
@@ -484,7 +485,21 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 	log.Info("generating audio", "total_turns", len(turns), "provider", provider)
 
 	// TTS で音声を生成
-	result, err := ttsClient.SynthesizeMultiSpeaker(ctx, turns, voiceConfigs, voiceStyle)
+	var result *tts.SynthesisResult
+	if len(voiceConfigs) == 1 {
+		// シングルスピーカー: 全ターンのテキストを連結して単一話者で合成
+		var textBuilder strings.Builder
+		for _, turn := range turns {
+			text := turn.Text
+			if turn.Emotion != nil && *turn.Emotion != "" {
+				text = fmt.Sprintf("[%s] %s", *turn.Emotion, turn.Text)
+			}
+			textBuilder.WriteString(text + "\n")
+		}
+		result, err = ttsClient.Synthesize(ctx, textBuilder.String(), nil, voiceConfigs[0].VoiceID, scriptLines[0].Speaker.Voice.Gender)
+	} else {
+		result, err = ttsClient.SynthesizeMultiSpeaker(ctx, turns, voiceConfigs, voiceStyle)
+	}
 	if err != nil {
 		log.Error("TTS failed", "error", err)
 		return apperror.ErrGenerationFailed.WithMessage("音声の生成に失敗しました").WithError(err)

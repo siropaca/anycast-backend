@@ -145,10 +145,11 @@ func (c *geminiTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 		promptBuilder.WriteString(fmt.Sprintf("%s: %s\n", turn.Speaker, text))
 	}
 
-	prompt := promptBuilder.String()
 	if voiceStyle != nil && *voiceStyle != "" {
 		log.Debug("Gemini TTS voice style", "voice_style", *voiceStyle)
 	}
+
+	prompt := promptBuilder.String()
 	log.Debug("Gemini TTS script", "prompt", prompt)
 	log.Debug("starting Gemini TTS multi-speaker processing", "prompt_length", len(prompt), "turns_count", len(turns))
 
