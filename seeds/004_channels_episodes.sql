@@ -9,6 +9,10 @@ INSERT INTO channels (id, user_id, name, description, user_prompt, category_id, 
 	('ea9a266e-f532-417c-8916-709d0233941c', '8def69af-dae9-4641-a0e5-100107626933', 'テックトーク', '最新のテクノロジーニュースを2人のパーソナリティが楽しく解説するポッドキャスト', '最新のテクノロジーニュースについて、分かりやすく楽しく解説してください。専門用語は避け、具体例を交えて説明してください。', (SELECT id FROM categories WHERE slug = 'technology'), '6852eda5-db2e-42f0-9870-c00a396e6bf8'),
 	('efa53d40-2f7b-4abe-a1b0-ba4f7905dbad', '8def69af-dae9-4641-a0e5-100107626933', 'ゆるふわ雑談ラジオ', '日常のあれこれをゆるく語る雑談番組', 'ゆるい雰囲気で日常の話題について雑談してください。リラックスした会話を心がけてください。', (SELECT id FROM categories WHERE slug = 'society-culture'), 'a28d9fb9-1c8f-4835-a0ad-96afdb6e3279');
 
+-- test_user のソロチャンネル（キャラクター1人）
+INSERT INTO channels (id, user_id, name, description, user_prompt, category_id, artwork_id) VALUES
+	('50100001-0001-4000-a000-000000000001', '8def69af-dae9-4641-a0e5-100107626933', 'ひとり語りラジオ', '一人のパーソナリティが日々の気づきや考えをじっくり語るソロポッドキャスト', '日常の出来事や気づきについて、一人でじっくりと語ってください。リスナーに話しかけるような親しみやすい口調で、自分の考えや経験を共有してください。', (SELECT id FROM categories WHERE slug = 'society-culture'), '50100001-0005-4000-a000-000000000001');
+
 -- test_user2 のチャンネル
 INSERT INTO channels (id, user_id, name, description, user_prompt, category_id, artwork_id) VALUES
 	('e5a50bd3-8990-4344-b470-56fa7329d75c', '8eada3a5-f413-4eeb-9cd5-12def60d4596', 'ビジネス最前線', '起業やキャリアについて実践的なアドバイスを届けるビジネス番組', '起業やキャリアについて、実践的で具体的なアドバイスを提供してください。成功事例や失敗談を交えて説明してください。', (SELECT id FROM categories WHERE slug = 'business'), 'ef89720a-9e2e-4021-8c28-f4e42d1c3d93');
@@ -59,6 +63,10 @@ INSERT INTO characters (id, user_id, name, persona, voice_id) VALUES
 	('4cee85f3-adec-4333-84e6-d6aaefb63408', '8def69af-dae9-4641-a0e5-100107626933', 'ミサキ', '好奇心旺盛なライター。素朴な疑問を投げかけてくれる。', (SELECT id FROM voices WHERE name = 'Zephyr')),
 	('b0b67254-ff3b-4b5e-96fa-073ce5c8a6a4', '8def69af-dae9-4641-a0e5-100107626933', 'ハルカ', 'のんびり屋でマイペース。ゆるい雰囲気で話を進める。', (SELECT id FROM voices WHERE name = 'Zephyr')),
 	('41977119-13d8-4d26-bfe4-694eb2cf2167', '8def69af-dae9-4641-a0e5-100107626933', 'ソウタ', 'ツッコミ担当。ハルカのボケに的確に反応する。', (SELECT id FROM voices WHERE name = 'Puck'));
+
+-- test_user のソロキャラクター
+INSERT INTO characters (id, user_id, name, persona, voice_id) VALUES
+	('50100001-0002-4000-a000-000000000001', '8def69af-dae9-4641-a0e5-100107626933', 'ナツメ', '落ち着いた語り口の自由人。旅や読書が好きで、日常の小さな発見を大切にする。', (SELECT id FROM voices WHERE name = 'Kore'));
 
 -- test_user2 のキャラクター
 INSERT INTO characters (id, user_id, name, persona, voice_id) VALUES
@@ -118,6 +126,10 @@ INSERT INTO channel_characters (channel_id, character_id) VALUES
 INSERT INTO channel_characters (channel_id, character_id) VALUES
 	('efa53d40-2f7b-4abe-a1b0-ba4f7905dbad', 'b0b67254-ff3b-4b5e-96fa-073ce5c8a6a4'),
 	('efa53d40-2f7b-4abe-a1b0-ba4f7905dbad', '41977119-13d8-4d26-bfe4-694eb2cf2167');
+
+-- ひとり語りラジオ（ナツメ）
+INSERT INTO channel_characters (channel_id, character_id) VALUES
+	('50100001-0001-4000-a000-000000000001', '50100001-0002-4000-a000-000000000001');
 
 -- ビジネス最前線（ケンジ、アヤカ）
 INSERT INTO channel_characters (channel_id, character_id) VALUES
@@ -193,6 +205,10 @@ INSERT INTO episodes (id, channel_id, title, description, published_at, artwork_
 	('eb960304-f86e-4364-be5d-d3d5126c9601', 'ea9a266e-f532-417c-8916-709d0233941c', 'AI の未来を語る', 'ChatGPT から始まった AI ブームの今後について', NOW(), '209e8d96-dbc1-4dcf-a747-a0ac4ec37a0c'),
 	('67e8e26d-20c8-492a-ac2c-5c79d8050aa3', 'ea9a266e-f532-417c-8916-709d0233941c', 'スマートホームのすすめ', '自宅を便利にするガジェット紹介', NOW(), 'e463cd78-0e09-4d6b-ac83-ec01fb25d5a9'),
 	('198d7e19-7d40-4299-95bf-a641f5c83911', 'efa53d40-2f7b-4abe-a1b0-ba4f7905dbad', '最近ハマってること', 'お互いの趣味について語り合う回', NULL, '783ac817-5deb-4711-a8d1-b3e9721b891c');
+
+-- test_user のソロエピソード
+INSERT INTO episodes (id, channel_id, title, description, published_at, artwork_id) VALUES
+	('50100001-0003-4000-a000-000000000001', '50100001-0001-4000-a000-000000000001', '朝の散歩で見つけたこと', '毎朝の散歩で気づいた季節の移ろいと、日常の小さな幸せについて', NOW(), '50100001-0006-4000-a000-000000000001');
 
 -- test_user2 のエピソード
 INSERT INTO episodes (id, channel_id, title, description, published_at, artwork_id) VALUES
@@ -278,6 +294,13 @@ INSERT INTO script_lines (id, episode_id, line_order, speaker_id, text, emotion)
 	('8b7f30af-1662-413d-84b6-2b27033435f7', '198d7e19-7d40-4299-95bf-a641f5c83911', 1, '41977119-13d8-4d26-bfe4-694eb2cf2167', '最近はコーヒーにハマってるかな。豆から挽いて淹れてるよ。', NULL),
 	('fd9ce404-74c8-456e-8f1b-eda25e22ccce', '198d7e19-7d40-4299-95bf-a641f5c83911', 2, 'b0b67254-ff3b-4b5e-96fa-073ce5c8a6a4', 'すごい凝ってるね！私なんてインスタントで十分だよ。', '笑いながら'),
 	('18641a58-561f-466a-a670-cf3a569c6669', '198d7e19-7d40-4299-95bf-a641f5c83911', 3, '41977119-13d8-4d26-bfe4-694eb2cf2167', 'インスタントも美味しいよね。手軽さって大事。', NULL);
+
+-- Episode: 朝の散歩で見つけたこと（test_user / ひとり語りラジオ / ソロ）
+INSERT INTO script_lines (id, episode_id, line_order, speaker_id, text, emotion) VALUES
+	('50100001-0004-4000-a000-000000000001', '50100001-0003-4000-a000-000000000001', 0, '50100001-0002-4000-a000-000000000001', 'おはようございます、ひとり語りラジオのナツメです。今日もゆるっとお話ししていきますね。', NULL),
+	('50100001-0004-4000-a000-000000000002', '50100001-0003-4000-a000-000000000001', 1, '50100001-0002-4000-a000-000000000001', '最近ね、毎朝の散歩を始めたんですよ。朝6時くらいに起きて、近所の公園をぐるっと一周するんです。', NULL),
+	('50100001-0004-4000-a000-000000000003', '50100001-0003-4000-a000-000000000001', 2, '50100001-0002-4000-a000-000000000001', 'そしたらね、毎日同じ道を歩いてるのに、少しずつ景色が変わっていくのに気づいて。', NULL),
+	('50100001-0004-4000-a000-000000000004', '50100001-0003-4000-a000-000000000001', 3, '50100001-0002-4000-a000-000000000001', 'こういう小さな変化に気づけるようになったのが、なんだかすごく嬉しくて。皆さんもぜひ試してみてくださいね。', '穏やかに');
 
 -- Episode 4: 副業から始める起業入門（test_user2）
 INSERT INTO script_lines (id, episode_id, line_order, speaker_id, text, emotion) VALUES
@@ -577,7 +600,8 @@ INSERT INTO audios (id, mime_type, path, filename, file_size, duration_ms) VALUE
 	('b0a00001-0001-4000-b000-000000000021', 'audio/mpeg', 'system/sample_audio.mp3', 'sample_audio.mp3', 153600, 8000),
 	('b0a00001-0001-4000-b000-000000000022', 'audio/mpeg', 'system/sample_audio.mp3', 'sample_audio.mp3', 153600, 8000),
 	('b0a00001-0001-4000-b000-000000000023', 'audio/mpeg', 'system/sample_audio.mp3', 'sample_audio.mp3', 153600, 8000),
-	('b0a00001-0001-4000-b000-000000000024', 'audio/mpeg', 'system/sample_audio.mp3', 'sample_audio.mp3', 153600, 8000);
+	('b0a00001-0001-4000-b000-000000000024', 'audio/mpeg', 'system/sample_audio.mp3', 'sample_audio.mp3', 153600, 8000),
+	('b0a00001-0001-4000-b000-000000000025', 'audio/mpeg', 'system/sample_audio.mp3', 'sample_audio.mp3', 153600, 8000);
 
 -- voice_audio（TTS のみの音声）
 INSERT INTO audios (id, mime_type, path, filename, file_size, duration_ms) VALUES
@@ -616,7 +640,8 @@ INSERT INTO audios (id, mime_type, path, filename, file_size, duration_ms) VALUE
 	('b0a00002-0001-4000-b000-000000000021', 'audio/mpeg', 'system/sample_audio.mp3', 'sample_audio.mp3', 153600, 8000),
 	('b0a00002-0001-4000-b000-000000000022', 'audio/mpeg', 'system/sample_audio.mp3', 'sample_audio.mp3', 153600, 8000),
 	('b0a00002-0001-4000-b000-000000000023', 'audio/mpeg', 'system/sample_audio.mp3', 'sample_audio.mp3', 153600, 8000),
-	('b0a00002-0001-4000-b000-000000000024', 'audio/mpeg', 'system/sample_audio.mp3', 'sample_audio.mp3', 153600, 8000);
+	('b0a00002-0001-4000-b000-000000000024', 'audio/mpeg', 'system/sample_audio.mp3', 'sample_audio.mp3', 153600, 8000),
+	('b0a00002-0001-4000-b000-000000000025', 'audio/mpeg', 'system/sample_audio.mp3', 'sample_audio.mp3', 153600, 8000);
 
 -- エピソードに音声を紐づけ
 UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000001', voice_audio_id = 'b0a00002-0001-4000-b000-000000000001' WHERE id = 'eb960304-f86e-4364-be5d-d3d5126c9601'; -- AI の未来を語る
@@ -655,3 +680,4 @@ UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000021', voic
 UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000022', voice_audio_id = 'b0a00002-0001-4000-b000-000000000022' WHERE id = '3c8a7f95-0007-4437-a1ec-138009cd0007'; -- 数学を好きになる方法
 UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000023', voice_audio_id = 'b0a00002-0001-4000-b000-000000000023' WHERE id = '3c8a7f95-0008-4437-a1ec-138009cd0008'; -- 星降る夜の物語
 UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000024', voice_audio_id = 'b0a00002-0001-4000-b000-000000000024' WHERE id = '3c8a7f95-0009-4437-a1ec-138009cd0009'; -- 猫と魔法使い
+UPDATE episodes SET full_audio_id = 'b0a00001-0001-4000-b000-000000000025', voice_audio_id = 'b0a00002-0001-4000-b000-000000000025' WHERE id = '50100001-0003-4000-a000-000000000001'; -- 朝の散歩で見つけたこと

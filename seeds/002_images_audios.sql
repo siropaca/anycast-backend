@@ -49,7 +49,8 @@ INSERT INTO images (id, mime_type, path, filename, file_size) VALUES
 	('1731f558-78bd-4caa-bdc1-aaf7f4875f87', 'image/jpeg', 'https://picsum.photos/seed/ch-history/400/400', 'ch-history.jpg', 0),
 	('bb6b9e97-2a5e-4bf0-bc60-814d8cbd99d9', 'image/jpeg', 'https://picsum.photos/seed/ch-comedy/400/400', 'ch-comedy.jpg', 0),
 	('ec3b5427-e883-466b-a98d-0f3bc0084da1', 'image/jpeg', 'https://picsum.photos/seed/ch-education/400/400', 'ch-education.jpg', 0),
-	('bdf2b1f0-735a-489b-be3b-97c97c06a2c8', 'image/jpeg', 'https://picsum.photos/seed/ch-fiction/400/400', 'ch-fiction.jpg', 0);
+	('bdf2b1f0-735a-489b-be3b-97c97c06a2c8', 'image/jpeg', 'https://picsum.photos/seed/ch-fiction/400/400', 'ch-fiction.jpg', 0),
+	('50100001-0005-4000-a000-000000000001', 'image/jpeg', 'https://picsum.photos/seed/ch-solo-talk/400/400', 'ch-solo-talk.jpg', 0);
 
 -- ===========================================
 -- エピソードアートワーク画像（36枚）
@@ -90,4 +91,5 @@ INSERT INTO images (id, mime_type, path, filename, file_size) VALUES
 	('fff56536-6457-4a09-b4d1-70407c377138', 'image/jpeg', 'https://picsum.photos/seed/ep-aruaru/400/400', 'ep-aruaru.jpg', 0),
 	('f457b96d-ff33-4ddd-be36-ad4147da8c31', 'image/jpeg', 'https://picsum.photos/seed/ep-math/400/400', 'ep-math.jpg', 0),
 	('53dc6aad-560d-4c48-989c-381187164566', 'image/jpeg', 'https://picsum.photos/seed/ep-starnight/400/400', 'ep-starnight.jpg', 0),
-	('2bc1cfe9-a3c2-4542-839b-4c23532385db', 'image/jpeg', 'https://picsum.photos/seed/ep-catmagic/400/400', 'ep-catmagic.jpg', 0);
+	('2bc1cfe9-a3c2-4542-839b-4c23532385db', 'image/jpeg', 'https://picsum.photos/seed/ep-catmagic/400/400', 'ep-catmagic.jpg', 0),
+	('50100001-0006-4000-a000-000000000001', 'image/jpeg', 'https://picsum.photos/seed/ep-solo-diary/400/400', 'ep-solo-diary.jpg', 0);
