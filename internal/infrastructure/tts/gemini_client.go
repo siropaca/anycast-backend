@@ -111,7 +111,7 @@ func (c *geminiTTSClient) Synthesize(ctx context.Context, text string, emotion *
 }
 
 // SynthesizeMultiSpeaker は複数話者のテキストから音声を合成する（マルチスピーカー）
-func (c *geminiTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []SpeakerTurn, voiceConfigs []SpeakerVoiceConfig, voiceStyle *string) (*SynthesisResult, error) {
+func (c *geminiTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []SpeakerTurn, voiceConfigs []SpeakerVoiceConfig) (*SynthesisResult, error) {
 	log := logger.FromContext(ctx)
 
 	if len(turns) == 0 {
@@ -127,13 +127,6 @@ func (c *geminiTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 
 	// デフォルトの音声スタイルを先頭に追加
 	promptBuilder.WriteString(defaultVoiceStyle)
-
-	// ユーザー指定の voiceStyle がある場合は追記
-	if voiceStyle != nil && *voiceStyle != "" {
-		promptBuilder.WriteString("\n")
-		promptBuilder.WriteString(*voiceStyle)
-	}
-
 	promptBuilder.WriteString("\n\n")
 
 	for _, turn := range turns {
@@ -143,10 +136,6 @@ func (c *geminiTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 		}
 
 		promptBuilder.WriteString(fmt.Sprintf("%s: %s\n", turn.Speaker, text))
-	}
-
-	if voiceStyle != nil && *voiceStyle != "" {
-		log.Debug("Gemini TTS voice style", "voice_style", *voiceStyle)
 	}
 
 	prompt := promptBuilder.String()

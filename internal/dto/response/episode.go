@@ -12,7 +12,6 @@ type EpisodeResponse struct {
 	Owner       ChannelOwnerResponse     `json:"owner" validate:"required"`
 	Title       string                   `json:"title" validate:"required"`
 	Description string                   `json:"description" validate:"required"`
-	VoiceStyle  string                   `json:"voiceStyle" validate:"required"`
 	Artwork     *ArtworkResponse         `json:"artwork" extensions:"x-nullable"`
 	VoiceAudio  *AudioResponse           `json:"voiceAudio,omitempty" extensions:"x-nullable"`
 	FullAudio   *AudioResponse           `json:"fullAudio" extensions:"x-nullable"`

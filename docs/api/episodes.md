@@ -57,7 +57,6 @@ GET /channels/:channelId/episodes/:episodeId
     "owner": { "id": "uuid", "username": "testuser", "displayName": "テストユーザー", "avatar": null },
     "title": "エピソードタイトル",
     "description": "エピソードの説明",
-    "voiceStyle": "Read aloud in a warm, welcoming tone",
     "bgm": { "id": "uuid", "url": "..." },
     "voiceAudio": { "id": "uuid", "url": "...", "durationMs": 120000 },
     "fullAudio": { "id": "uuid", "url": "..." },
@@ -92,8 +91,6 @@ GET /channels/:channelId/episodes/:episodeId
 ```
 
 > **Note:** `voiceAudio` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
->
-> **Note:** `voiceStyle` はオーナーのみに表示されます。他ユーザーがアクセスした場合は含まれません。
 >
 > **Note:** `playback` は認証済みの場合のみ含まれます。未認証または再生履歴がない場合は `null` になります。
 >
@@ -147,8 +144,6 @@ PATCH /channels/:channelId/episodes/:episodeId
 | title | 255文字以内 |
 | description | 2000文字以内 |
 
-> **Note:** `voiceStyle` は音声生成時に自動で保存されます。エピソード更新 API からは編集できません。
->
 > **Note:** 公開状態の変更は専用エンドポイント（[エピソード公開](#エピソード公開) / [エピソード非公開](#エピソード非公開)）を使用してください。
 >
 > **Note:** BGM の変更は専用エンドポイント（[エピソード BGM 設定](#エピソード-bgm-設定) / [エピソード BGM 削除](#エピソード-bgm-削除)）を使用してください。

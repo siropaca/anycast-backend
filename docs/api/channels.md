@@ -57,7 +57,6 @@ GET /channels/:channelId
         "owner": { "id": "uuid", "username": "testuser", "displayName": "テストユーザー", "avatar": null },
         "title": "第1回 AIについて語る",
         "description": "AIの未来について...",
-        "voiceStyle": "normal",
         "artwork": { "id": "uuid", "url": "..." },
         "fullAudio": {
           "id": "uuid",
@@ -509,7 +508,6 @@ GET /me/channels/:channelId
         "owner": { "id": "uuid", "username": "testuser", "displayName": "テストユーザー", "avatar": null },
         "title": "第1回 AIについて語る",
         "description": "AIの未来について...",
-        "voiceStyle": "normal",
         "artwork": { "id": "uuid", "url": "..." },
         "fullAudio": {
           "id": "uuid",

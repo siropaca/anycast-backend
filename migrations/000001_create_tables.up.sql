@@ -232,7 +232,6 @@ CREATE TABLE episodes (
 	full_audio_id UUID REFERENCES audios (id) ON DELETE SET NULL,
 	play_count INTEGER NOT NULL DEFAULT 0,
 	published_at TIMESTAMP,
-	voice_style TEXT NOT NULL DEFAULT '',
 	artwork_id UUID REFERENCES images (id) ON DELETE SET NULL,
 	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -251,7 +250,6 @@ CREATE TABLE audio_jobs (
 	status audio_job_status NOT NULL DEFAULT 'pending',
 	job_type audio_job_type NOT NULL DEFAULT 'voice',
 	progress INTEGER NOT NULL DEFAULT 0,
-	voice_style TEXT NOT NULL DEFAULT '',
 	-- BGM 参照
 	bgm_id UUID REFERENCES bgms (id) ON DELETE SET NULL,
 	system_bgm_id UUID REFERENCES system_bgms (id) ON DELETE SET NULL,

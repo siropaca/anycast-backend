@@ -1347,7 +1347,6 @@ func (s *channelService) toEpisodeResponse(ctx context.Context, e *model.Episode
 		Owner:       ownerResp,
 		Title:       e.Title,
 		Description: e.Description,
-		VoiceStyle:  e.VoiceStyle,
 		PlayCount:   e.PlayCount,
 		PublishedAt: e.PublishedAt,
 		CreatedAt:   e.CreatedAt,

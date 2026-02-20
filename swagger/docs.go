@@ -6877,10 +6877,6 @@ const docTemplate = `{
                         "full",
                         "remix"
                     ]
-                },
-                "voiceStyle": {
-                    "type": "string",
-                    "maxLength": 500
                 }
             }
         },
@@ -7513,9 +7509,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updatedAt": {
-                    "type": "string"
-                },
-                "voiceStyle": {
                     "type": "string"
                 }
             }
@@ -8336,8 +8329,7 @@ const docTemplate = `{
                 "owner",
                 "playCount",
                 "title",
-                "updatedAt",
-                "voiceStyle"
+                "updatedAt"
             ],
             "properties": {
                 "artwork": {
@@ -8411,9 +8403,6 @@ const docTemplate = `{
                         }
                     ],
                     "x-nullable": true
-                },
-                "voiceStyle": {
-                    "type": "string"
                 }
             }
         },

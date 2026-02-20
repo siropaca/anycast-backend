@@ -35,7 +35,6 @@ type AudioJob struct {
 	Status     AudioJobStatus `gorm:"type:audio_job_status;not null;default:'pending'"`
 	JobType    AudioJobType   `gorm:"type:audio_job_type;not null;default:'voice';column:job_type"`
 	Progress   int            `gorm:"not null;default:0"`
-	VoiceStyle string         `gorm:"type:text;not null;default:''"`
 
 	// BGM 参照
 	BgmID       *uuid.UUID `gorm:"type:uuid;column:bgm_id"`

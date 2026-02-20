@@ -119,7 +119,6 @@ erDiagram
         audio_job_status status
         audio_job_type job_type
         integer progress
-        text voice_style
         uuid bgm_id FK
         uuid system_bgm_id FK
         decimal bgm_volume_db
@@ -259,7 +258,6 @@ erDiagram
         uuid channel_id FK
         varchar title
         text description
-        text voice_style
         uuid artwork_id FK
         uuid bgm_id FK
         uuid system_bgm_id FK
@@ -565,7 +563,6 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | channel_id | UUID | | - | 所属チャンネル |
 | title | VARCHAR(255) | | - | エピソードタイトル |
 | description | TEXT | | - | エピソードの説明（公開情報） |
-| voice_style | TEXT | | '' | 音声生成のスタイル指示（音声生成時に自動保存、例: "Read aloud in a warm, welcoming tone"） |
 | artwork_id | UUID | ◯ | - | カバー画像（images 参照） |
 | bgm_id | UUID | ◯ | - | ユーザー BGM（bgms 参照） |
 | system_bgm_id | UUID | ◯ | - | システム BGM（system_bgms 参照） |
@@ -795,7 +792,6 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | status | audio_job_status | | `pending` | ステータス |
 | job_type | audio_job_type | | `voice` | ジョブ種別（voice / full / remix） |
 | progress | INTEGER | | 0 | 進捗（0-100） |
-| voice_style | TEXT | | '' | 音声生成のスタイル指示 |
 | bgm_id | UUID | ◯ | - | ユーザー BGM（bgms 参照） |
 | system_bgm_id | UUID | ◯ | - | システム BGM（system_bgms 参照） |
 | bgm_volume_db | DECIMAL(5,2) | | -20.0 | BGM 音量（dB） |

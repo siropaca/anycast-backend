@@ -52,7 +52,6 @@ POST /channels/{channelId}/episodes/{episodeId}/audio/generate-async
 | フィールド | 型 | 必須 | 説明 |
 |-----------|------|------|------|
 | type | string | ◯ | `voice` / `full` / `remix` |
-| voiceStyle | string | - | 音声のスタイル指示（最大 500 文字、type=voice/full のみ） |
 | bgmId | uuid | - | ユーザー BGM ID（type=full では bgmId か systemBgmId のいずれか必須、type=remix では任意） |
 | systemBgmId | uuid | - | システム BGM ID（同上） |
 | bgmVolumeDb | number | - | BGM 音量（-60 〜 0 dB、デフォルト: -15） |
@@ -77,7 +76,6 @@ POST /channels/{channelId}/episodes/{episodeId}/audio/generate-async
   "status": "pending",
   "progress": 0,
   "jobType": "full",
-  "voiceStyle": "",
   "bgmVolumeDb": -15,
   "fadeOutMs": 3000,
   "paddingStartMs": 500,
@@ -115,7 +113,6 @@ GET /audio-jobs/{jobId}
   "episodeId": "660e8400-e29b-41d4-a716-446655440001",
   "status": "completed",
   "progress": 100,
-  "voiceStyle": "",
   "bgmVolumeDb": -15,
   "fadeOutMs": 3000,
   "paddingStartMs": 500,
@@ -435,7 +432,6 @@ CREATE TABLE audio_jobs (
     status audio_job_status NOT NULL DEFAULT 'pending',
     progress INTEGER NOT NULL DEFAULT 0,
     job_type audio_job_type NOT NULL DEFAULT 'voice',
-    voice_style TEXT NOT NULL DEFAULT '',
 
     -- BGM 参照
     bgm_id UUID REFERENCES bgms (id) ON DELETE SET NULL,

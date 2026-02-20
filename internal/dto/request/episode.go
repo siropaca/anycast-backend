@@ -39,6 +39,4 @@ type SetEpisodeBgmRequest struct {
 }
 
 // エピソード音声生成リクエスト
-type GenerateAudioRequest struct {
-	VoiceStyle *string `json:"voiceStyle" binding:"omitempty,max=500"`
-}
+type GenerateAudioRequest struct{}

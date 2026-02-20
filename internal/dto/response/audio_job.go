@@ -13,7 +13,6 @@ type AudioJobResponse struct {
 	Status         string                   `json:"status" validate:"required"`
 	JobType        string                   `json:"jobType" validate:"required"`
 	Progress       int                      `json:"progress" validate:"required"`
-	VoiceStyle     string                   `json:"voiceStyle"`
 	BgmVolumeDB    float64                  `json:"bgmVolumeDb"`
 	FadeOutMs      int                      `json:"fadeOutMs"`
 	PaddingStartMs int                      `json:"paddingStartMs"`

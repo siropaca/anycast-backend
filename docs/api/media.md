@@ -13,7 +13,6 @@ POST /channels/:channelId/episodes/:episodeId/audio/generate-async
 **リクエスト:**
 ```json
 {
-  "voiceStyle": "Read aloud in a warm, welcoming tone",
   "bgmVolumeDb": -15,
   "fadeOutMs": 3000,
   "paddingStartMs": 500,
@@ -23,7 +22,6 @@ POST /channels/:channelId/episodes/:episodeId/audio/generate-async
 
 | フィールド | 型 | 必須 | デフォルト | 説明 |
 |------------|-----|:----:|------------|------|
-| voiceStyle | string | | - | 音声生成のスタイル指示（500文字以内） |
 | bgmVolumeDb | number | | -15 | BGM 音量（dB）。0 で原音量、負の値で音量を下げる |
 | fadeOutMs | int | | 3000 | BGM のフェードアウト時間（ms） |
 | paddingStartMs | int | | 500 | 音声開始前の BGM のみの余白時間（ms） |
@@ -78,7 +76,6 @@ GET /audio-jobs/:jobId
     "episodeId": "uuid",
     "status": "completed",
     "progress": 100,
-    "voiceStyle": "Read aloud in a warm, welcoming tone",
     "audio": {
       "id": "uuid",
       "url": "https://storage.example.com/full-episode.mp3",

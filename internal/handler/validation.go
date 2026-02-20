@@ -52,8 +52,6 @@ var fieldNameMap = map[string]string{
 	"AudioID":     "音声 ID",
 	"BgmID":       "BGM ID",
 	"SystemBgmID": "システム BGM ID",
-	"VoiceStyle":  "ボイススタイル",
-
 	// 台本
 	"Prompt":          "プロンプト",
 	"DurationMinutes": "再生時間（分）",

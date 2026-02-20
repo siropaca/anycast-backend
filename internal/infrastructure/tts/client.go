@@ -31,5 +31,5 @@ type Client interface {
 	// Synthesize はテキストから音声を合成する（シングルスピーカー）
 	Synthesize(ctx context.Context, text string, emotion *string, voiceID string, gender model.Gender) (*SynthesisResult, error)
 	// SynthesizeMultiSpeaker は複数話者のテキストから音声を合成する（マルチスピーカー）
-	SynthesizeMultiSpeaker(ctx context.Context, turns []SpeakerTurn, voiceConfigs []SpeakerVoiceConfig, voiceStyle *string) (*SynthesisResult, error)
+	SynthesizeMultiSpeaker(ctx context.Context, turns []SpeakerTurn, voiceConfigs []SpeakerVoiceConfig) (*SynthesisResult, error)
 }

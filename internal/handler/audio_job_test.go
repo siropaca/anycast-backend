@@ -126,7 +126,7 @@ func TestAudioJobHandler_GenerateAudioAsync(t *testing.T) {
 		mockService.On("CreateJob", mock.Anything, "user-123", channelID.String(), episodeID.String(), mock.Anything).Return(jobResponse, nil)
 
 		router := setupAudioJobRouter(mockService)
-		body := `{"type":"full","voiceStyle":"warm tone","bgmVolumeDb":-20,"fadeOutMs":5000}`
+		body := `{"type":"full","bgmVolumeDb":-20,"fadeOutMs":5000}`
 		req := httptest.NewRequest(http.MethodPost, "/channels/"+channelID.String()+"/episodes/"+episodeID.String()+"/audio/generate-async", strings.NewReader(body))
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()

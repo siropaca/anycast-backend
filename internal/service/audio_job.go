@@ -224,11 +224,6 @@ func (s *audioJobService) CreateJob(ctx context.Context, userID, channelID, epis
 		paddingEndMs = *req.PaddingEndMs
 	}
 
-	voiceStyle := ""
-	if req.VoiceStyle != nil {
-		voiceStyle = *req.VoiceStyle
-	}
-
 	// ジョブを作成
 	job := &model.AudioJob{
 		EpisodeID:      eid,
@@ -236,7 +231,6 @@ func (s *audioJobService) CreateJob(ctx context.Context, userID, channelID, epis
 		Status:         model.AudioJobStatusPending,
 		JobType:        jobType,
 		Progress:       0,
-		VoiceStyle:     voiceStyle,
 		BgmID:          bgmID,
 		SystemBgmID:    systemBgmID,
 		BgmVolumeDB:    bgmVolumeDB,
@@ -476,12 +470,6 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 		return apperror.ErrValidation.WithMessage(fmt.Sprintf("TTS プロバイダ %q が利用できません", provider)).WithError(err)
 	}
 
-	// TTS で音声を生成
-	var voiceStyle *string
-	if job.VoiceStyle != "" {
-		voiceStyle = &job.VoiceStyle
-	}
-
 	log.Info("generating audio", "total_turns", len(turns), "provider", provider)
 
 	// TTS で音声を生成
@@ -498,7 +486,7 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 		}
 		result, err = ttsClient.Synthesize(ctx, textBuilder.String(), nil, voiceConfigs[0].VoiceID, scriptLines[0].Speaker.Voice.Gender)
 	} else {
-		result, err = ttsClient.SynthesizeMultiSpeaker(ctx, turns, voiceConfigs, voiceStyle)
+		result, err = ttsClient.SynthesizeMultiSpeaker(ctx, turns, voiceConfigs)
 	}
 	if err != nil {
 		log.Error("TTS failed", "error", err)
@@ -661,9 +649,6 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 	// エピソードを更新
 	episode.FullAudioID = &audioID
 	episode.FullAudio = nil
-	if job.VoiceStyle != "" {
-		episode.VoiceStyle = job.VoiceStyle
-	}
 
 	// full の場合は BGM 情報をエピソードに記録
 	if job.JobType == model.AudioJobTypeFull {
@@ -1132,7 +1117,6 @@ func (s *audioJobService) toAudioJobResponse(ctx context.Context, job *model.Aud
 		Status:         string(job.Status),
 		JobType:        string(job.JobType),
 		Progress:       job.Progress,
-		VoiceStyle:     job.VoiceStyle,
 		BgmVolumeDB:    job.BgmVolumeDB,
 		FadeOutMs:      job.FadeOutMs,
 		PaddingStartMs: job.PaddingStartMs,

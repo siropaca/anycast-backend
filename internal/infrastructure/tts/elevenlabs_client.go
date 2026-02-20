@@ -109,7 +109,7 @@ func (c *elevenLabsTTSClient) Synthesize(ctx context.Context, text string, emoti
 }
 
 // SynthesizeMultiSpeaker は複数話者のテキストから音声を合成する（マルチスピーカー）
-func (c *elevenLabsTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []SpeakerTurn, voiceConfigs []SpeakerVoiceConfig, voiceStyle *string) (*SynthesisResult, error) {
+func (c *elevenLabsTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []SpeakerTurn, voiceConfigs []SpeakerVoiceConfig) (*SynthesisResult, error) {
 	log := logger.FromContext(ctx)
 
 	if len(turns) == 0 {

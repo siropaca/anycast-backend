@@ -6871,10 +6871,6 @@
                         "full",
                         "remix"
                     ]
-                },
-                "voiceStyle": {
-                    "type": "string",
-                    "maxLength": 500
                 }
             }
         },
@@ -7507,9 +7503,6 @@
                     "type": "string"
                 },
                 "updatedAt": {
-                    "type": "string"
-                },
-                "voiceStyle": {
                     "type": "string"
                 }
             }
@@ -8330,8 +8323,7 @@
                 "owner",
                 "playCount",
                 "title",
-                "updatedAt",
-                "voiceStyle"
+                "updatedAt"
             ],
             "properties": {
                 "artwork": {
@@ -8405,9 +8397,6 @@
                         }
                     ],
                     "x-nullable": true
-                },
-                "voiceStyle": {
-                    "type": "string"
                 }
             }
         },
