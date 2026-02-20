@@ -4,8 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
+	"sync"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/request"
@@ -474,7 +478,8 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 
 	// TTS で音声を生成
 	var result *tts.SynthesisResult
-	if len(voiceConfigs) == 1 {
+	switch {
+	case len(voiceConfigs) == 1:
 		// シングルスピーカー: 全ターンのテキストを連結して単一話者で合成
 		var textBuilder strings.Builder
 		for _, turn := range turns {
@@ -485,7 +490,11 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 			textBuilder.WriteString(text + "\n")
 		}
 		result, err = ttsClient.Synthesize(ctx, textBuilder.String(), nil, voiceConfigs[0].VoiceID, scriptLines[0].Speaker.Voice.Gender)
-	} else {
+	case provider == tts.ProviderGoogle:
+		// Gemini: 話者別合成 + 無音分割再アセンブル
+		result, err = s.synthesizeMultiSpeakerByReassembly(ctx, job, turns, voiceConfigs, ttsClient, scriptLines)
+	default:
+		// ElevenLabs 等: 従来方式
 		result, err = ttsClient.SynthesizeMultiSpeaker(ctx, turns, voiceConfigs)
 	}
 	if err != nil {
@@ -684,6 +693,210 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 	log.Info("audio job completed successfully", "job_id", job.ID, "audio_id", audioID)
 
 	return nil
+}
+
+// reassemblySegment は再アセンブル用のセグメント情報
+type reassemblySegment struct {
+	originalIndex int    // 元の台本での順序
+	pcmData       []byte // 分割された PCM データ
+}
+
+// reassemblySpeakerGroup は話者ごとのグループ情報
+type reassemblySpeakerGroup struct {
+	alias           string // 話者エイリアス（speaker1 等）
+	voiceID         string // Voice の ProviderVoiceID
+	gender          model.Gender
+	texts           []string // 連結するテキスト一覧
+	originalIndices []int    // 元の台本でのインデックス一覧
+}
+
+// synthesizeMultiSpeakerByReassembly は話者別にシングルスピーカー合成し、
+// 無音分割で個別セグメントに分けた後、元の順序に再アセンブルする
+func (s *audioJobService) synthesizeMultiSpeakerByReassembly(
+	ctx context.Context,
+	job *model.AudioJob,
+	turns []tts.SpeakerTurn,
+	voiceConfigs []tts.SpeakerVoiceConfig,
+	ttsClient tts.Client,
+	scriptLines []model.ScriptLine,
+) (*tts.SynthesisResult, error) {
+	log := logger.FromContext(ctx)
+
+	// VoiceConfig のマップを構築
+	voiceConfigMap := make(map[string]tts.SpeakerVoiceConfig)
+	for _, vc := range voiceConfigs {
+		voiceConfigMap[vc.SpeakerAlias] = vc
+	}
+
+	// 話者の Gender マップを構築
+	genderMap := make(map[string]model.Gender)
+	for _, line := range scriptLines {
+		alias := ""
+		for a, vc := range voiceConfigMap {
+			if vc.VoiceID == line.Speaker.Voice.ProviderVoiceID {
+				alias = a
+				break
+			}
+		}
+		if alias != "" {
+			genderMap[alias] = line.Speaker.Voice.Gender
+		}
+	}
+
+	// Step 1: 話者別にグループ化（元のインデックスを保持）
+	speakerGroups := make(map[string]*reassemblySpeakerGroup)
+	for i, turn := range turns {
+		group, exists := speakerGroups[turn.Speaker]
+		if !exists {
+			vc := voiceConfigMap[turn.Speaker]
+			group = &reassemblySpeakerGroup{
+				alias:   turn.Speaker,
+				voiceID: vc.VoiceID,
+				gender:  genderMap[turn.Speaker],
+			}
+			speakerGroups[turn.Speaker] = group
+		}
+
+		text := turn.Text
+		if turn.Emotion != nil && *turn.Emotion != "" {
+			text = fmt.Sprintf("[%s] %s", *turn.Emotion, turn.Text)
+		}
+		// 句点がなければ追加して文の区切りを明確にする
+		if !strings.HasSuffix(text, "。") {
+			text += "。"
+		}
+		group.texts = append(group.texts, text)
+		group.originalIndices = append(group.originalIndices, i)
+	}
+
+	log.Info("reassembly: grouped turns by speaker",
+		"speaker_count", len(speakerGroups),
+		"total_turns", len(turns),
+	)
+
+	// Step 2: 話者ごとにシングルスピーカー合成（並列実行）
+	type speakerResult struct {
+		alias           string
+		pcmData         []byte
+		originalIndices []int
+	}
+
+	var mu sync.Mutex
+	results := make(map[string]*speakerResult)
+
+	eg, egCtx := errgroup.WithContext(ctx)
+
+	for _, group := range speakerGroups {
+		g := group
+		eg.Go(func() error {
+			// テキストを改行区切りで連結し、音声スタイルを先頭に付加
+			fullText := tts.DefaultVoiceStyle + "\n\n" + strings.Join(g.texts, "\n")
+
+			log.Debug("reassembly: synthesizing speaker",
+				"alias", g.alias,
+				"line_count", len(g.texts),
+				"text_length", len(fullText),
+			)
+
+			result, err := ttsClient.Synthesize(egCtx, fullText, nil, g.voiceID, g.gender)
+			if err != nil {
+				return fmt.Errorf("話者 %s の合成に失敗しました: %w", g.alias, err)
+			}
+
+			if result.Format != "pcm" {
+				return fmt.Errorf("話者 %s の出力フォーマットが pcm ではありません: %s", g.alias, result.Format)
+			}
+
+			mu.Lock()
+			results[g.alias] = &speakerResult{
+				alias:           g.alias,
+				pcmData:         result.Data,
+				originalIndices: g.originalIndices,
+			}
+			mu.Unlock()
+
+			log.Debug("reassembly: speaker synthesis done",
+				"alias", g.alias,
+				"pcm_size", len(result.Data),
+			)
+
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		return nil, err
+	}
+
+	// Step 3: 無音検出で分割（期待セグメント数を指定して最適なカットポイントを選択）
+	var allSegments []reassemblySegment
+
+	for alias, res := range results {
+		expectedCount := len(res.originalIndices)
+		splitConfig := audio.PCMSplitConfig{
+			SampleRate:       24000,
+			Channels:         1,
+			BytesPerSample:   2,
+			NoiseDB:          -30.0,
+			MinSilenceSec:    0.3,
+			ExpectedSegments: expectedCount,
+		}
+
+		segments, err := audio.SplitPCMBySilence(res.pcmData, splitConfig)
+		if err != nil {
+			return nil, fmt.Errorf("話者 %s の無音分割に失敗しました: %w", alias, err)
+		}
+
+		// セグメント数がライン数と一致するか検証
+		if len(segments) != expectedCount {
+			return nil, fmt.Errorf(
+				"話者 %s のセグメント数(%d)がライン数(%d)と一致しません",
+				alias, len(segments), expectedCount,
+			)
+		}
+
+		for i, seg := range segments {
+			allSegments = append(allSegments, reassemblySegment{
+				originalIndex: res.originalIndices[i],
+				pcmData:       seg,
+			})
+		}
+
+		log.Debug("reassembly: split done",
+			"alias", alias,
+			"segments", len(segments),
+			"expected", expectedCount,
+		)
+	}
+
+	// Step 4: 元の順序で再アセンブル（セグメント間に 200ms 無音パディング挿入）
+	sort.Slice(allSegments, func(i, j int) bool {
+		return allSegments[i].originalIndex < allSegments[j].originalIndex
+	})
+
+	silencePadding := audio.GenerateSilencePCM(200, 24000, 1, 2)
+
+	pcmParts := make([][]byte, 0, len(allSegments)*2)
+	for i, seg := range allSegments {
+		pcmParts = append(pcmParts, seg.pcmData)
+		// 最後のセグメント以外にはパディングを挿入
+		if i < len(allSegments)-1 {
+			pcmParts = append(pcmParts, silencePadding)
+		}
+	}
+
+	finalPCM := audio.ConcatPCM(pcmParts)
+
+	log.Info("reassembly: completed",
+		"total_segments", len(allSegments),
+		"final_pcm_size", len(finalPCM),
+	)
+
+	return &tts.SynthesisResult{
+		Data:       finalPCM,
+		Format:     "pcm",
+		SampleRate: 24000,
+	}, nil
 }
 
 // downloadFromStorage は指定されたパスのファイルを GCS からダウンロードする

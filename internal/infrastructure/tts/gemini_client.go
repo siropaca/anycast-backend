@@ -19,9 +19,8 @@ const (
 	// デフォルト言語コード
 	geminiDefaultLanguageCode = "ja-JP"
 
-	// デフォルトの音声スタイルプロンプト
-	// ポッドキャストとして聞き取りやすいベーススタイルを定義する
-	defaultVoiceStyle = "ポッドキャスト番組の収録です。落ち着いたテンポでゆっくり話しつつも、自然な抑揚と感情を込めて、友達と雑談するように楽しく語ってください。"
+	// DefaultVoiceStyle はデフォルトの音声スタイルプロンプト
+	DefaultVoiceStyle = "ポッドキャスト番組の収録です。落ち着いたテンポでゆっくり話しつつも、自然な抑揚と感情を込めて、友達と雑談するように楽しく語ってください。"
 
 	// Gemini TTS の出力フォーマット
 	geminiOutputFormat     = "pcm"
@@ -126,7 +125,7 @@ func (c *geminiTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 	var promptBuilder strings.Builder
 
 	// デフォルトの音声スタイルを先頭に追加
-	promptBuilder.WriteString(defaultVoiceStyle)
+	promptBuilder.WriteString(DefaultVoiceStyle)
 	promptBuilder.WriteString("\n\n")
 
 	for _, turn := range turns {
