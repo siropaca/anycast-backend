@@ -29,12 +29,12 @@ const (
 
 // AudioJob は非同期音声生成ジョブを表す
 type AudioJob struct {
-	ID         uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
-	EpisodeID  uuid.UUID      `gorm:"type:uuid;not null;column:episode_id"`
-	UserID     uuid.UUID      `gorm:"type:uuid;not null;column:user_id"`
-	Status     AudioJobStatus `gorm:"type:audio_job_status;not null;default:'pending'"`
-	JobType    AudioJobType   `gorm:"type:audio_job_type;not null;default:'voice';column:job_type"`
-	Progress   int            `gorm:"not null;default:0"`
+	ID        uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	EpisodeID uuid.UUID      `gorm:"type:uuid;not null;column:episode_id"`
+	UserID    uuid.UUID      `gorm:"type:uuid;not null;column:user_id"`
+	Status    AudioJobStatus `gorm:"type:audio_job_status;not null;default:'pending'"`
+	JobType   AudioJobType   `gorm:"type:audio_job_type;not null;default:'voice';column:job_type"`
+	Progress  int            `gorm:"not null;default:0"`
 
 	// BGM 参照
 	BgmID       *uuid.UUID `gorm:"type:uuid;column:bgm_id"`

@@ -12,6 +12,7 @@ import (
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/request"
+	"github.com/siropaca/anycast-backend/internal/infrastructure/slack"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/model"
 	"github.com/siropaca/anycast-backend/internal/pkg/optional"
@@ -317,6 +318,50 @@ func (m *mockStorageClientForAuth) Delete(ctx context.Context, path string) erro
 	return args.Error(0)
 }
 
+type mockSlackClientForAuth struct {
+	mock.Mock
+}
+
+func (m *mockSlackClientForAuth) SendFeedback(ctx context.Context, feedback slack.FeedbackNotification) error {
+	args := m.Called(ctx, feedback)
+	return args.Error(0)
+}
+
+func (m *mockSlackClientForAuth) SendContact(ctx context.Context, contact slack.ContactNotification) error {
+	args := m.Called(ctx, contact)
+	return args.Error(0)
+}
+
+func (m *mockSlackClientForAuth) SendAlert(ctx context.Context, alert slack.AlertNotification) error {
+	args := m.Called(ctx, alert)
+	return args.Error(0)
+}
+
+func (m *mockSlackClientForAuth) SendRegistration(ctx context.Context, registration slack.RegistrationNotification) error {
+	args := m.Called(ctx, registration)
+	return args.Error(0)
+}
+
+func (m *mockSlackClientForAuth) IsFeedbackEnabled() bool {
+	args := m.Called()
+	return args.Bool(0)
+}
+
+func (m *mockSlackClientForAuth) IsContactEnabled() bool {
+	args := m.Called()
+	return args.Bool(0)
+}
+
+func (m *mockSlackClientForAuth) IsAlertEnabled() bool {
+	args := m.Called()
+	return args.Bool(0)
+}
+
+func (m *mockSlackClientForAuth) IsRegistrationEnabled() bool {
+	args := m.Called()
+	return args.Bool(0)
+}
+
 // --- テストヘルパー ---
 
 // newAuthServiceForTest はテスト用の authService を組み立てるヘルパー
@@ -327,12 +372,15 @@ func newAuthServiceForTest(
 	imageRepo *mockImageRepositoryForAuth,
 	storageClient *mockStorageClientForAuth,
 ) *authService {
+	sc := new(mockSlackClientForAuth)
+	sc.On("IsRegistrationEnabled").Return(false)
 	return &authService{
 		userRepo:         userRepo,
 		credentialRepo:   credentialRepo,
 		oauthAccountRepo: oauthAccountRepo,
 		imageRepo:        imageRepo,
 		storageClient:    storageClient,
+		slackClient:      sc,
 	}
 }
 
@@ -342,10 +390,13 @@ func newAuthServiceForTestWithJobs(
 	audioJobRepo *mockAudioJobRepositoryForAuth,
 	scriptJobRepo *mockScriptJobRepositoryForAuth,
 ) *authService {
+	sc := new(mockSlackClientForAuth)
+	sc.On("IsRegistrationEnabled").Return(false)
 	return &authService{
 		userRepo:      userRepo,
 		audioJobRepo:  audioJobRepo,
 		scriptJobRepo: scriptJobRepo,
+		slackClient:   sc,
 	}
 }
 
@@ -354,9 +405,12 @@ func newAuthServiceForTestWithPassword(
 	credentialRepo *mockCredentialRepository,
 	passwordHasher *mockPasswordHasher,
 ) *authService {
+	sc := new(mockSlackClientForAuth)
+	sc.On("IsRegistrationEnabled").Return(false)
 	return &authService{
 		credentialRepo: credentialRepo,
 		passwordHasher: passwordHasher,
+		slackClient:    sc,
 	}
 }
 

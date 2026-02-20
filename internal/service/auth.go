@@ -11,6 +11,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/request"
 	"github.com/siropaca/anycast-backend/internal/dto/response"
+	"github.com/siropaca/anycast-backend/internal/infrastructure/slack"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/model"
 	"github.com/siropaca/anycast-backend/internal/pkg/crypto"
@@ -63,6 +64,7 @@ type authService struct {
 	scriptJobRepo    repository.ScriptJobRepository
 	passwordHasher   crypto.PasswordHasher
 	storageClient    storage.Client
+	slackClient      slack.Client
 }
 
 // NewAuthService は authService を生成して AuthService として返す
@@ -77,6 +79,7 @@ func NewAuthService(
 	scriptJobRepo repository.ScriptJobRepository,
 	passwordHasher crypto.PasswordHasher,
 	storageClient storage.Client,
+	slackClient slack.Client,
 ) AuthService {
 	return &authService{
 		userRepo:         userRepo,
@@ -89,6 +92,7 @@ func NewAuthService(
 		scriptJobRepo:    scriptJobRepo,
 		passwordHasher:   passwordHasher,
 		storageClient:    storageClient,
+		slackClient:      slackClient,
 	}
 }
 
@@ -145,6 +149,22 @@ func (s *authService) Register(ctx context.Context, req request.RegisterRequest)
 	refreshToken, err := s.createRefreshToken(ctx, user.ID)
 	if err != nil {
 		return nil, err
+	}
+
+	// Slack 新規登録通知（非同期で実行し、エラーは無視）
+	if s.slackClient.IsRegistrationEnabled() {
+		go func() {
+			notification := slack.RegistrationNotification{
+				UserID:      user.ID.String(),
+				DisplayName: user.DisplayName,
+				Email:       user.Email,
+				Method:      "email",
+				CreatedAt:   user.CreatedAt,
+			}
+			if err := s.slackClient.SendRegistration(context.Background(), notification); err != nil {
+				logger.Default().Warn("Slack新規登録通知の送信に失敗しました", "error", err)
+			}
+		}()
 	}
 
 	return &AuthResult{
@@ -279,6 +299,22 @@ func (s *authService) OAuthGoogle(ctx context.Context, req request.OAuthGoogleRe
 	refreshToken, err := s.createRefreshToken(ctx, user.ID)
 	if err != nil {
 		return nil, err
+	}
+
+	// Slack 新規登録通知（非同期で実行し、エラーは無視）
+	if s.slackClient.IsRegistrationEnabled() {
+		go func() {
+			notification := slack.RegistrationNotification{
+				UserID:      user.ID.String(),
+				DisplayName: user.DisplayName,
+				Email:       user.Email,
+				Method:      "google",
+				CreatedAt:   user.CreatedAt,
+			}
+			if err := s.slackClient.SendRegistration(context.Background(), notification); err != nil {
+				logger.Default().Warn("Slack新規登録通知の送信に失敗しました", "error", err)
+			}
+		}()
 	}
 
 	return &AuthResult{

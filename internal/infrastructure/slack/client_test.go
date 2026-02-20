@@ -14,36 +14,36 @@ import (
 
 func TestNewClient(t *testing.T) {
 	t.Run("Slack クライアントを作成できる", func(t *testing.T) {
-		client := NewClient("https://hooks.slack.com/feedback", "https://hooks.slack.com/contact", "")
+		client := NewClient("https://hooks.slack.com/feedback", "https://hooks.slack.com/contact", "", "")
 		assert.NotNil(t, client)
 	})
 
 	t.Run("空の URL でもクライアントを作成できる", func(t *testing.T) {
-		client := NewClient("", "", "")
+		client := NewClient("", "", "", "")
 		assert.NotNil(t, client)
 	})
 }
 
 func TestClient_IsFeedbackEnabled(t *testing.T) {
 	t.Run("URL が設定されている場合は有効", func(t *testing.T) {
-		client := NewClient("https://hooks.slack.com/feedback", "", "")
+		client := NewClient("https://hooks.slack.com/feedback", "", "", "")
 		assert.True(t, client.IsFeedbackEnabled())
 	})
 
 	t.Run("URL が空の場合は無効", func(t *testing.T) {
-		client := NewClient("", "", "")
+		client := NewClient("", "", "", "")
 		assert.False(t, client.IsFeedbackEnabled())
 	})
 }
 
 func TestClient_IsContactEnabled(t *testing.T) {
 	t.Run("URL が設定されている場合は有効", func(t *testing.T) {
-		client := NewClient("", "https://hooks.slack.com/contact", "")
+		client := NewClient("", "https://hooks.slack.com/contact", "", "")
 		assert.True(t, client.IsContactEnabled())
 	})
 
 	t.Run("URL が空の場合は無効", func(t *testing.T) {
-		client := NewClient("", "", "")
+		client := NewClient("", "", "", "")
 		assert.False(t, client.IsContactEnabled())
 	})
 }
@@ -62,7 +62,7 @@ func TestClient_SendFeedback(t *testing.T) {
 		}))
 		defer server.Close()
 
-		client := NewClient(server.URL, "", "")
+		client := NewClient(server.URL, "", "", "")
 		feedback := FeedbackNotification{
 			UserEmail: "test@example.com",
 			UserName:  "Test User",
@@ -85,7 +85,7 @@ func TestClient_SendFeedback(t *testing.T) {
 		}))
 		defer server.Close()
 
-		client := NewClient(server.URL, "", "")
+		client := NewClient(server.URL, "", "", "")
 		pageURL := "https://app.example.com/test"
 		userAgent := "Mozilla/5.0"
 		screenshotURL := "https://storage.example.com/screenshot.png"
@@ -108,7 +108,7 @@ func TestClient_SendFeedback(t *testing.T) {
 	})
 
 	t.Run("無効な場合は何もしない", func(t *testing.T) {
-		client := NewClient("", "", "")
+		client := NewClient("", "", "", "")
 		feedback := FeedbackNotification{
 			UserEmail: "test@example.com",
 			UserName:  "Test User",
@@ -127,7 +127,7 @@ func TestClient_SendFeedback(t *testing.T) {
 		}))
 		defer server.Close()
 
-		client := NewClient(server.URL, "", "")
+		client := NewClient(server.URL, "", "", "")
 		feedback := FeedbackNotification{
 			UserEmail: "test@example.com",
 			UserName:  "Test User",
@@ -150,7 +150,7 @@ func TestClient_SendFeedback(t *testing.T) {
 		}))
 		defer server.Close()
 
-		client := NewClient(server.URL, "", "")
+		client := NewClient(server.URL, "", "", "")
 		// 200文字の User-Agent
 		longUA := string(make([]byte, 200))
 		for i := range longUA {

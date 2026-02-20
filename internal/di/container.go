@@ -200,7 +200,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	go wsHub.Run()
 
 	// Slack クライアント
-	slackClient := slack.NewClient(cfg.SlackFeedbackWebhookURL, cfg.SlackContactWebhookURL, cfg.SlackAlertWebhookURL)
+	slackClient := slack.NewClient(cfg.SlackFeedbackWebhookURL, cfg.SlackContactWebhookURL, cfg.SlackAlertWebhookURL, cfg.SlackRegistrationWebhookURL)
 
 	// FFmpeg サービス
 	ffmpegService := service.NewFFmpegService()
@@ -233,7 +233,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 
 	// Service 層
 	voiceService := service.NewVoiceService(voiceRepo, favVoiceRepo)
-	authService := service.NewAuthService(userRepo, credentialRepo, oauthAccountRepo, refreshTokenRepo, imageRepo, playlistRepo, audioJobRepo, scriptJobRepo, passwordHasher, storageClient)
+	authService := service.NewAuthService(userRepo, credentialRepo, oauthAccountRepo, refreshTokenRepo, imageRepo, playlistRepo, audioJobRepo, scriptJobRepo, passwordHasher, storageClient, slackClient)
 	channelService := service.NewChannelService(db, channelRepo, characterRepo, categoryRepo, imageRepo, voiceRepo, episodeRepo, scriptLineRepo, bgmRepo, systemBgmRepo, playbackHistoryRepo, storageClient)
 	characterService := service.NewCharacterService(characterRepo, voiceRepo, imageRepo, storageClient)
 	categoryService := service.NewCategoryService(categoryRepo, storageClient)

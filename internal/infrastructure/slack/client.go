@@ -16,9 +16,11 @@ type Client interface {
 	SendFeedback(ctx context.Context, feedback FeedbackNotification) error
 	SendContact(ctx context.Context, contact ContactNotification) error
 	SendAlert(ctx context.Context, alert AlertNotification) error
+	SendRegistration(ctx context.Context, registration RegistrationNotification) error
 	IsFeedbackEnabled() bool
 	IsContactEnabled() bool
 	IsAlertEnabled() bool
+	IsRegistrationEnabled() bool
 }
 
 // FeedbackNotification はフィードバック通知の内容を表す
@@ -41,6 +43,15 @@ type AlertNotification struct {
 	OccurredAt   time.Time
 }
 
+// RegistrationNotification は新規ユーザー登録通知の内容を表す
+type RegistrationNotification struct {
+	UserID      string
+	DisplayName string
+	Email       string
+	Method      string
+	CreatedAt   time.Time
+}
+
 // ContactNotification はお問い合わせ通知の内容を表す
 type ContactNotification struct {
 	Category      string
@@ -54,10 +65,11 @@ type ContactNotification struct {
 }
 
 type slackClient struct {
-	feedbackWebhookURL string
-	contactWebhookURL  string
-	alertWebhookURL    string
-	httpClient         *http.Client
+	feedbackWebhookURL     string
+	contactWebhookURL      string
+	alertWebhookURL        string
+	registrationWebhookURL string
+	httpClient             *http.Client
 }
 
 // NewClient は Slack クライアントを生成する
@@ -67,12 +79,14 @@ type slackClient struct {
 // feedbackWebhookURL: フィードバック通知用の Slack Webhook URL
 // contactWebhookURL: お問い合わせ通知用の Slack Webhook URL
 // alertWebhookURL: アラート通知用の Slack Webhook URL
-func NewClient(feedbackWebhookURL, contactWebhookURL, alertWebhookURL string) Client {
+// registrationWebhookURL: 新規登録通知用の Slack Webhook URL
+func NewClient(feedbackWebhookURL, contactWebhookURL, alertWebhookURL, registrationWebhookURL string) Client {
 	return &slackClient{
-		feedbackWebhookURL: feedbackWebhookURL,
-		contactWebhookURL:  contactWebhookURL,
-		alertWebhookURL:    alertWebhookURL,
-		httpClient:         &http.Client{Timeout: 10 * time.Second},
+		feedbackWebhookURL:     feedbackWebhookURL,
+		contactWebhookURL:      contactWebhookURL,
+		alertWebhookURL:        alertWebhookURL,
+		registrationWebhookURL: registrationWebhookURL,
+		httpClient:             &http.Client{Timeout: 10 * time.Second},
 	}
 }
 
@@ -89,6 +103,11 @@ func (c *slackClient) IsContactEnabled() bool {
 // IsAlertEnabled は Slack アラート通知が有効かどうかを返す
 func (c *slackClient) IsAlertEnabled() bool {
 	return c.alertWebhookURL != ""
+}
+
+// IsRegistrationEnabled は Slack 新規登録通知が有効かどうかを返す
+func (c *slackClient) IsRegistrationEnabled() bool {
+	return c.registrationWebhookURL != ""
 }
 
 // SendFeedback はフィードバック通知を Slack に送信する
@@ -343,6 +362,71 @@ func (c *slackClient) SendAlert(ctx context.Context, alert AlertNotification) er
 	if resp.StatusCode != http.StatusOK {
 		logger.FromContext(ctx).Warn("slack alert failed", "status", resp.StatusCode)
 		return fmt.Errorf("slack alert returned status %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
+// SendRegistration は新規ユーザー登録通知を Slack に送信する
+func (c *slackClient) SendRegistration(ctx context.Context, registration RegistrationNotification) error {
+	if !c.IsRegistrationEnabled() {
+		return nil
+	}
+
+	blocks := []map[string]any{
+		{
+			"type": "header",
+			"text": map[string]string{
+				"type": "plain_text",
+				"text": "🎉 New User Registered",
+			},
+		},
+		{
+			"type": "section",
+			"fields": []map[string]string{
+				{"type": "mrkdwn", "text": fmt.Sprintf("*Name:*\n%s", registration.DisplayName)},
+				{"type": "mrkdwn", "text": fmt.Sprintf("*Email:*\n%s", registration.Email)},
+			},
+		},
+		{
+			"type": "section",
+			"fields": []map[string]string{
+				{"type": "mrkdwn", "text": fmt.Sprintf("*Method:*\n%s", registration.Method)},
+				{"type": "mrkdwn", "text": fmt.Sprintf("*Date:*\n%s", registration.CreatedAt.Format(time.RFC3339))},
+			},
+		},
+		{
+			"type": "section",
+			"fields": []map[string]string{
+				{"type": "mrkdwn", "text": fmt.Sprintf("*User ID:*\n%s", registration.UserID)},
+			},
+		},
+	}
+
+	payload := map[string]any{
+		"blocks": blocks,
+	}
+
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal slack registration payload: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.registrationWebhookURL, bytes.NewBuffer(body))
+	if err != nil {
+		return fmt.Errorf("failed to create slack registration request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to send slack registration notification: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		logger.FromContext(ctx).Warn("slack registration notification failed", "status", resp.StatusCode)
+		return fmt.Errorf("slack registration returned status %d", resp.StatusCode)
 	}
 
 	return nil

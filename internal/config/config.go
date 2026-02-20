@@ -57,6 +57,8 @@ type Config struct {
 	SlackContactWebhookURL string
 	// Slack アラート用 Webhook URL（空の場合はアラート通知無効）
 	SlackAlertWebhookURL string
+	// Slack 新規登録通知用 Webhook URL（空の場合は通知無効）
+	SlackRegistrationWebhookURL string
 	// トレースモード（none, log, file）
 	TraceMode string
 	// ElevenLabs API キー
@@ -89,6 +91,7 @@ func Load() *Config {
 		SlackFeedbackWebhookURL:             getEnv("SLACK_FEEDBACK_WEBHOOK_URL", ""),
 		SlackContactWebhookURL:              getEnv("SLACK_CONTACT_WEBHOOK_URL", ""),
 		SlackAlertWebhookURL:                getEnv("SLACK_ALERT_WEBHOOK_URL", ""),
+		SlackRegistrationWebhookURL:         getEnv("SLACK_REGISTRATION_WEBHOOK_URL", ""),
 		TraceMode:                           getEnv("TRACE_MODE", "none"),
 		ElevenLabsAPIKey:                    getEnv("ELEVENLABS_API_KEY", ""),
 	}
