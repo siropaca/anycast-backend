@@ -103,6 +103,71 @@ func TestSelectTopSilenceIntervals(t *testing.T) {
 	})
 }
 
+func TestDetectSilenceIntervals(t *testing.T) {
+	// ffmpeg が利用可能かチェック
+	if _, err := exec.LookPath("ffmpeg"); err != nil {
+		t.Skip("ffmpeg not available, skipping test")
+	}
+
+	config := PCMSplitConfig{
+		SampleRate:     24000,
+		Channels:       1,
+		BytesPerSample: 2,
+		NoiseDB:        -30.0,
+		MinSilenceSec:  0.3,
+	}
+
+	t.Run("空データの場合はエラーを返す", func(t *testing.T) {
+		_, err := DetectSilenceIntervals([]byte{}, config)
+
+		assert.Error(t, err)
+	})
+
+	t.Run("無音を含む PCM から無音区間を検出する", func(t *testing.T) {
+		bytesPerSec := 24000 * 1 * 2
+
+		// 500ms のノイズ + 500ms の無音 + 500ms のノイズ
+		noise1 := make([]byte, bytesPerSec/2)
+		silence := make([]byte, bytesPerSec/2)
+		noise2 := make([]byte, bytesPerSec/2)
+
+		// s16le で十分大きな振幅のノイズを生成（値 0x2000 = 8192）
+		for i := 0; i+1 < len(noise1); i += 2 {
+			noise1[i] = 0x00
+			noise1[i+1] = 0x20
+		}
+		for i := 0; i+1 < len(noise2); i += 2 {
+			noise2[i] = 0x00
+			noise2[i+1] = 0x20
+		}
+
+		pcmData := ConcatPCM([][]byte{noise1, silence, noise2})
+
+		intervals, err := DetectSilenceIntervals(pcmData, config)
+
+		require.NoError(t, err)
+		require.NotEmpty(t, intervals)
+		// 無音区間は 0.5s 付近から始まるはず
+		assert.InDelta(t, 0.5, intervals[0].StartSec, 0.15)
+	})
+
+	t.Run("無音がない PCM では空スライスを返す", func(t *testing.T) {
+		bytesPerSec := 24000 * 1 * 2
+		noise := make([]byte, bytesPerSec) // 1秒のノイズ
+
+		// s16le で十分大きな振幅のノイズを生成
+		for i := 0; i+1 < len(noise); i += 2 {
+			noise[i] = 0x00
+			noise[i+1] = 0x20
+		}
+
+		intervals, err := DetectSilenceIntervals(noise, config)
+
+		require.NoError(t, err)
+		assert.Empty(t, intervals)
+	})
+}
+
 func TestSplitPCMBySilence(t *testing.T) {
 	// ffmpeg が利用可能かチェック
 	if _, err := exec.LookPath("ffmpeg"); err != nil {

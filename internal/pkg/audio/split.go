@@ -27,17 +27,17 @@ type PCMSplitConfig struct {
 	ExpectedSegments int     // 期待するセグメント数（0 の場合は全無音区間で分割）
 }
 
-// SplitPCMBySilence は PCM データを無音区間で分割する
+// DetectSilenceIntervals は PCM データから無音区間を検出して返す
 //
-// ffmpeg の silencedetect フィルターを使用して無音区間を検出し、
-// 無音区間の中間点でカットして複数のセグメントに分割する。
-func SplitPCMBySilence(pcmData []byte, config PCMSplitConfig) ([][]byte, error) {
+// ffmpeg の silencedetect フィルターを使用して無音区間を検出する。
+// config の SampleRate, Channels, BytesPerSample, NoiseDB, MinSilenceSec を使用する。
+func DetectSilenceIntervals(pcmData []byte, config PCMSplitConfig) ([]SilenceInterval, error) {
 	if len(pcmData) == 0 {
 		return nil, fmt.Errorf("PCM データが空です")
 	}
 
 	// PCM を一時ファイルに書き出し
-	tmpFile, err := os.CreateTemp("", "pcm-split-*.raw")
+	tmpFile, err := os.CreateTemp("", "pcm-silence-*.raw")
 	if err != nil {
 		return nil, fmt.Errorf("一時ファイルの作成に失敗しました: %w", err)
 	}
@@ -68,8 +68,18 @@ func SplitPCMBySilence(pcmData []byte, config PCMSplitConfig) ([][]byte, error) 
 		return nil, fmt.Errorf("ffmpeg silencedetect に失敗しました: %w (stderr: %s)", err, stderr.String())
 	}
 
-	// stderr から無音区間をパース
-	intervals := parseSilenceDetectOutput(stderr.String())
+	return parseSilenceDetectOutput(stderr.String()), nil
+}
+
+// SplitPCMBySilence は PCM データを無音区間で分割する
+//
+// ffmpeg の silencedetect フィルターを使用して無音区間を検出し、
+// 無音区間の中間点でカットして複数のセグメントに分割する。
+func SplitPCMBySilence(pcmData []byte, config PCMSplitConfig) ([][]byte, error) {
+	intervals, err := DetectSilenceIntervals(pcmData, config)
+	if err != nil {
+		return nil, err
+	}
 
 	if len(intervals) == 0 {
 		// 無音区間がない場合は全体を1セグメントとして返す

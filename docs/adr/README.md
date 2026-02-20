@@ -29,6 +29,7 @@ ADR（Architecture Decision Record）は、アーキテクチャ上の重要な�
 | [016](016-e2e-testing-testcontainers.md) | E2E テスト: httptest + testcontainers | Proposed |
 | [017](017-audio-mixing-ffmpeg.md) | 音声ミキシングに FFmpeg を使用 | Accepted |
 | [018](018-monolith-with-cloud-tasks.md) | ワーカー処理を分離せずモノリス + Cloud Tasks 構成を維持 | Proposed |
+| [019](019-stt-timestamp-audio-segmentation.md) | STT タイムスタンプによる音声セグメント分割 | Accepted |
 
 ## ステータス
 
