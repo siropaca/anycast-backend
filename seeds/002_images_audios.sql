@@ -92,4 +92,5 @@ INSERT INTO images (id, mime_type, path, filename, file_size) VALUES
 	('f457b96d-ff33-4ddd-be36-ad4147da8c31', 'image/jpeg', 'https://picsum.photos/seed/ep-math/400/400', 'ep-math.jpg', 0),
 	('53dc6aad-560d-4c48-989c-381187164566', 'image/jpeg', 'https://picsum.photos/seed/ep-starnight/400/400', 'ep-starnight.jpg', 0),
 	('2bc1cfe9-a3c2-4542-839b-4c23532385db', 'image/jpeg', 'https://picsum.photos/seed/ep-catmagic/400/400', 'ep-catmagic.jpg', 0),
-	('50100001-0006-4000-a000-000000000001', 'image/jpeg', 'https://picsum.photos/seed/ep-solo-diary/400/400', 'ep-solo-diary.jpg', 0);
+	('50100001-0006-4000-a000-000000000001', 'image/jpeg', 'https://picsum.photos/seed/ep-solo-diary/400/400', 'ep-solo-diary.jpg', 0),
+	('a0100001-0002-4000-a000-000000000001', 'image/jpeg', 'https://picsum.photos/seed/ep-programming-lang/400/400', 'ep-programming-lang.jpg', 0);
