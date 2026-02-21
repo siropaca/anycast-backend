@@ -168,7 +168,9 @@ func AlignTextToTimestamps(lines []string, words []WordTimestamp) ([]LineBoundar
 // SnapBoundariesToSilence は STT で得た行境界を最寄りの無音区間中間点にスナップする
 //
 // 各内部カットポイント（boundaries[i].EndTime / boundaries[i+1].StartTime）について、
-// maxSnapDistance 以内の最寄り無音区間の中間点にスナップする。
+// maxSnapDistance 以内で最も長い無音区間の中間点にスナップする。
+// 文間ポーズは文中の句読点ポーズより長いため、最長の無音を選ぶことで
+// STT の文字カウントドリフトによる誤スナップを防ぐ。
 // 先頭境界の StartTime と末尾境界の EndTime は変更しない。
 func SnapBoundariesToSilence(boundaries []LineBoundary, silences []SilenceInterval, maxSnapDistance time.Duration) []LineBoundary {
 	if len(boundaries) <= 1 || len(silences) == 0 {
@@ -187,7 +189,7 @@ func SnapBoundariesToSilence(boundaries []LineBoundary, silences []SilenceInterv
 		cutSec := cutTime.Seconds()
 
 		bestIdx := -1
-		bestDist := maxSnapDistance + 1 // 初期値は最大距離を超える値
+		bestDuration := 0.0
 
 		for j, s := range silences {
 			if usedSilences[j] {
@@ -201,9 +203,11 @@ func SnapBoundariesToSilence(boundaries []LineBoundary, silences []SilenceInterv
 				distSec = cutSec - s.EndSec
 			}
 			dist := time.Duration(distSec * float64(time.Second))
-			if dist <= maxSnapDistance && dist < bestDist {
+			duration := s.EndSec - s.StartSec
+			// 範囲内で最も長い無音区間を選択する
+			if dist <= maxSnapDistance && duration > bestDuration {
 				bestIdx = j
-				bestDist = dist
+				bestDuration = duration
 			}
 		}
 

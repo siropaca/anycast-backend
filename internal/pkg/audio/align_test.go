@@ -272,7 +272,7 @@ func TestAlignTextToTimestamps(t *testing.T) {
 }
 
 func TestSnapBoundariesToSilence(t *testing.T) {
-	t.Run("カットポイントを最寄りの無音区間中間点にスナップする", func(t *testing.T) {
+	t.Run("カットポイントを無音区間中間点にスナップする", func(t *testing.T) {
 		boundaries := []LineBoundary{
 			{StartTime: 0, EndTime: 1000 * time.Millisecond},
 			{StartTime: 1000 * time.Millisecond, EndTime: 2500 * time.Millisecond},
@@ -390,6 +390,27 @@ func TestSnapBoundariesToSilence(t *testing.T) {
 		assert.Equal(t, 2225*time.Millisecond, result[1].EndTime)
 		assert.Equal(t, 2225*time.Millisecond, result[2].StartTime)
 		assert.Equal(t, 3500*time.Millisecond, result[2].EndTime)
+	})
+
+	t.Run("範囲内に複数の無音がある場合は最長の無音にスナップする", func(t *testing.T) {
+		// STT の文字カウントドリフトで境界が次の行に入り込んだケース:
+		// STT 境界が行8の途中にあり、近くに短い句読点ポーズ（0.15s）と
+		// 少し遠いが長い文間ポーズ（0.6s）がある
+		boundaries := []LineBoundary{
+			{StartTime: 0, EndTime: 5200 * time.Millisecond},
+			{StartTime: 5200 * time.Millisecond, EndTime: 8000 * time.Millisecond},
+		}
+		silences := []SilenceInterval{
+			{StartSec: 4.8, EndSec: 5.4},   // 文間ポーズ（0.6s）— 端は 200ms 手前
+			{StartSec: 5.35, EndSec: 5.50},  // 句読点ポーズ（0.15s）— 端は 150ms 先
+		}
+
+		result := SnapBoundariesToSilence(boundaries, silences, 500*time.Millisecond)
+
+		require.Len(t, result, 2)
+		// 最長の無音（4.8-5.4, 中間点 5.1s）にスナップされるべき
+		assert.Equal(t, 5100*time.Millisecond, result[0].EndTime)
+		assert.Equal(t, 5100*time.Millisecond, result[1].StartTime)
 	})
 
 	t.Run("長い無音区間でも端が近ければスナップする", func(t *testing.T) {
