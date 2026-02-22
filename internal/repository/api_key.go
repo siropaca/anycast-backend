@@ -19,6 +19,7 @@ type APIKeyRepository interface {
 	FindByKeyHash(ctx context.Context, keyHash string) (*model.APIKey, error)
 	FindByUserID(ctx context.Context, userID uuid.UUID) ([]model.APIKey, error)
 	FindByUserIDAndID(ctx context.Context, userID, id uuid.UUID) (*model.APIKey, error)
+	ExistsByUserIDAndName(ctx context.Context, userID uuid.UUID, name string) (bool, error)
 	UpdateLastUsedAt(ctx context.Context, id uuid.UUID, lastUsedAt time.Time) error
 	Delete(ctx context.Context, id uuid.UUID) error
 }
@@ -68,6 +69,21 @@ func (r *apiKeyRepository) FindByUserID(ctx context.Context, userID uuid.UUID) (
 	}
 
 	return apiKeys, nil
+}
+
+// ExistsByUserIDAndName は同一ユーザー内で同じ名前の API キーが存在するかどうかを確認する
+func (r *apiKeyRepository) ExistsByUserIDAndName(ctx context.Context, userID uuid.UUID, name string) (bool, error) {
+	var count int64
+
+	if err := r.db.WithContext(ctx).
+		Model(&model.APIKey{}).
+		Where("user_id = ? AND name = ?", userID, name).
+		Count(&count).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to check api key existence", "error", err, "user_id", userID, "name", name)
+		return false, apperror.ErrInternal.WithMessage("API キーの確認に失敗しました").WithError(err)
+	}
+
+	return count > 0, nil
 }
 
 // FindByUserIDAndID は指定されたユーザーの指定された API キーを取得する

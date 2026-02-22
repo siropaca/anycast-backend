@@ -49,6 +49,11 @@ func (m *mockAPIKeyRepository) FindByUserIDAndID(ctx context.Context, userID, id
 	return args.Get(0).(*model.APIKey), args.Error(1)
 }
 
+func (m *mockAPIKeyRepository) ExistsByUserIDAndName(ctx context.Context, userID uuid.UUID, name string) (bool, error) {
+	args := m.Called(ctx, userID, name)
+	return args.Bool(0), args.Error(1)
+}
+
 func (m *mockAPIKeyRepository) UpdateLastUsedAt(ctx context.Context, id uuid.UUID, lastUsedAt time.Time) error {
 	args := m.Called(ctx, id, lastUsedAt)
 	return args.Error(0)
@@ -64,6 +69,9 @@ func TestAPIKeyService_Create(t *testing.T) {
 		mockRepo := new(mockAPIKeyRepository)
 		svc := NewAPIKeyService(mockRepo)
 
+		uid := uuid.MustParse(testUserID)
+		mockRepo.On("ExistsByUserIDAndName", mock.Anything, uid, "Test Key").
+			Return(false, nil)
 		mockRepo.On("Create", mock.Anything, mock.AnythingOfType("*model.APIKey")).
 			Return(nil)
 
@@ -76,6 +84,24 @@ func TestAPIKeyService_Create(t *testing.T) {
 		assert.Equal(t, "Test Key", resp.Name)
 		assert.Contains(t, resp.Key, "ak_")
 		assert.Contains(t, resp.Prefix, "ak_")
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("同名の API キーが存在する場合はエラーを返す", func(t *testing.T) {
+		mockRepo := new(mockAPIKeyRepository)
+		svc := NewAPIKeyService(mockRepo)
+
+		uid := uuid.MustParse(testUserID)
+		mockRepo.On("ExistsByUserIDAndName", mock.Anything, uid, "Duplicate Key").
+			Return(true, nil)
+
+		resp, err := svc.Create(context.Background(), testUserID, request.CreateAPIKeyRequest{
+			Name: "Duplicate Key",
+		})
+
+		assert.Error(t, err)
+		assert.Nil(t, resp)
+		assert.True(t, apperror.IsCode(err, apperror.CodeDuplicateName))
 		mockRepo.AssertExpectations(t)
 	})
 

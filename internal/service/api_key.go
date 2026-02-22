@@ -40,6 +40,15 @@ func (s *apiKeyService) Create(ctx context.Context, userID string, req request.C
 		return nil, err
 	}
 
+	// 同一ユーザー内で同じ名前の API キーが存在するかチェック
+	exists, err := s.apiKeyRepo.ExistsByUserIDAndName(ctx, uid, req.Name)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, apperror.ErrDuplicateName.WithMessage("同名の API キーが既に存在します")
+	}
+
 	result, err := apikey.Generate()
 	if err != nil {
 		logger.FromContext(ctx).Error("failed to generate api key", "error", err)
@@ -54,10 +63,6 @@ func (s *apiKeyService) Create(ctx context.Context, userID string, req request.C
 	}
 
 	if err := s.apiKeyRepo.Create(ctx, ak); err != nil {
-		if apperror.IsCode(err, apperror.CodeDuplicateName) || apperror.IsCode(err, apperror.CodeInternal) {
-			// GORM が重複エラーを返した場合の対応
-			return nil, apperror.ErrDuplicateName.WithMessage("同名の API キーが既に存在します")
-		}
 		return nil, err
 	}
 

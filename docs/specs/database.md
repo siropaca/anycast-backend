@@ -450,7 +450,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | user_id | UUID | | - | ユーザー（users 参照） |
 | name | VARCHAR(100) | | - | 管理名 |
 | key_hash | VARCHAR(64) | | - | API Key の SHA-256 ハッシュ |
-| prefix | VARCHAR(12) | | - | 表示用プレフィックス（例: ak_a1b2c3...） |
+| prefix | VARCHAR(20) | | - | 表示用プレフィックス（例: ak_a1b2c3...） |
 | last_used_at | TIMESTAMP | ◯ | - | 最終使用日時 |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
