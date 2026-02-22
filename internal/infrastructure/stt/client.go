@@ -49,12 +49,21 @@ func NewGoogleSTTClient(ctx context.Context, projectID, location, credentialsJSO
 	}, nil
 }
 
-// chunkDurationSec はチャンク分割時の1チャンクあたりの秒数
-// 同期 Recognize API は最大 60 秒なので余裕を持って 55 秒に設定
-const chunkDurationSec = 55
+const (
+	// chunkDurationSec はチャンク分割時の1チャンクあたりの秒数
+	// 同期 Recognize API は最大 60 秒なので余裕を持って 55 秒に設定
+	chunkDurationSec = 55
+	// chunkOverlapSec はチャンク間のオーバーラップ秒数。
+	// 境界付近の単語が途切れて誤認識されるのを防ぐため、両チャンクで重複認識し、
+	// オーバーラップ中間点で切り替えることで精度を向上させる。
+	chunkOverlapSec = 5
+	// chunkStepSec は次のチャンク開始までの実効ステップ秒数
+	chunkStepSec = chunkDurationSec - chunkOverlapSec
+)
 
 // RecognizeWithTimestamps は PCM 音声（s16le, mono）を文字起こしし、単語レベルのタイムスタンプを返す。
 // 音声が 55 秒を超える場合は自動的にチャンク分割して処理する。
+// チャンク間に 5 秒のオーバーラップを設け、境界付近の認識精度を向上させる。
 func (c *googleSTTClient) RecognizeWithTimestamps(ctx context.Context, pcmData []byte, sampleRate int) ([]WordTimestamp, error) {
 	bytesPerSec := sampleRate * 1 * 2 // mono, s16le
 	maxChunkBytes := chunkDurationSec * bytesPerSec
@@ -62,14 +71,17 @@ func (c *googleSTTClient) RecognizeWithTimestamps(ctx context.Context, pcmData [
 		return c.recognizeChunk(ctx, pcmData, sampleRate, 0)
 	}
 
-	// チャンク分割して順次処理し、タイムスタンプをオフセット調整してマージ
-	chunkBytes := chunkDurationSec * bytesPerSec
-	// 2バイトアライメントに合わせる
-	chunkBytes = (chunkBytes / 2) * 2
+	// オーバーラップ付きチャンク分割で順次処理
+	stepBytes := chunkStepSec * bytesPerSec
+	stepBytes = (stepBytes / 2) * 2 // 2バイトアライメント
+	chunkMaxBytes := chunkDurationSec * bytesPerSec
+	chunkMaxBytes = (chunkMaxBytes / 2) * 2
 
 	var allWords []WordTimestamp
-	for offset := 0; offset < len(pcmData); offset += chunkBytes {
-		end := offset + chunkBytes
+	isFirstChunk := true
+
+	for offset := 0; offset < len(pcmData); offset += stepBytes {
+		end := offset + chunkMaxBytes
 		if end > len(pcmData) {
 			end = len(pcmData)
 		}
@@ -79,7 +91,28 @@ func (c *googleSTTClient) RecognizeWithTimestamps(ctx context.Context, pcmData [
 		if err != nil {
 			return nil, err
 		}
-		allWords = append(allWords, words...)
+
+		if isFirstChunk {
+			allWords = append(allWords, words...)
+			isFirstChunk = false
+			continue
+		}
+
+		// オーバーラップ領域の中間点（絶対時間）で前チャンクと現チャンクの単語を切り替える
+		overlapStartSec := float64(offset) / float64(bytesPerSec)
+		overlapMid := time.Duration((overlapStartSec + float64(chunkOverlapSec)/2.0) * float64(time.Second))
+
+		// 前チャンクの単語からオーバーラップ後半の単語を除去
+		for len(allWords) > 0 && allWords[len(allWords)-1].StartTime >= overlapMid {
+			allWords = allWords[:len(allWords)-1]
+		}
+
+		// 現チャンクの単語からオーバーラップ前半の単語を除外して追加
+		for _, w := range words {
+			if w.StartTime >= overlapMid {
+				allWords = append(allWords, w)
+			}
+		}
 	}
 
 	if len(allWords) == 0 {
