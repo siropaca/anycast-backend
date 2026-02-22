@@ -1,6 +1,6 @@
 # Architecture Decision Records (ADR)
 
-このディレクトリには、Anycast Backend の技術的意思決定を記録した ADR を格納しています。
+このディレクトリには、技術的意思決定を記録した ADR を格納しています。
 
 ## ADR とは
 
