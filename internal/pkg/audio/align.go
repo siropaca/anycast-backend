@@ -295,8 +295,10 @@ func SnapBoundariesToSilence(boundaries []LineBoundary, silences []SilenceInterv
 	}
 
 	// スナップ後に時系列順が崩れた場合は元の境界にフォールバック
+	// 0-duration セグメント（StartTime == EndTime）はスキップ行で合法的に発生するため、
+	// 厳密な逆転（negative duration）のみをチェックする
 	for i := 0; i < len(result)-1; i++ {
-		if result[i].EndTime <= result[i].StartTime || result[i+1].StartTime >= result[i+1].EndTime {
+		if result[i].EndTime < result[i].StartTime || result[i+1].StartTime > result[i+1].EndTime {
 			return boundaries
 		}
 	}

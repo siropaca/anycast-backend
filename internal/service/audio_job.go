@@ -37,6 +37,14 @@ const (
 	defaultPaddingEndMs   = 3000
 )
 
+// Gemini TTS 再アセンブル用 PCM パラメータ
+const (
+	reassemblySampleRate     = 24000
+	reassemblyChannels       = 1
+	reassemblyBytesPerSample = 2
+	reassemblyBytesPerSec    = reassemblySampleRate * reassemblyChannels * reassemblyBytesPerSample
+)
+
 // AudioJobService は非同期音声生成ジョブを管理するインターフェースを表す
 type AudioJobService interface {
 	CreateJob(ctx context.Context, userID, channelID, episodeID string, req request.GenerateAudioAsyncRequest) (*response.AudioJobResponse, error)
@@ -729,6 +737,10 @@ func (s *audioJobService) synthesizeMultiSpeakerByReassembly(
 ) (*tts.SynthesisResult, error) {
 	log := logger.FromContext(ctx)
 
+	if s.sttClient == nil {
+		return nil, fmt.Errorf("STT クライアントが設定されていません（GoogleCloudProjectID を確認してください）")
+	}
+
 	// VoiceConfig のマップを構築
 	voiceConfigMap := make(map[string]tts.SpeakerVoiceConfig)
 	for _, vc := range voiceConfigs {
@@ -864,22 +876,24 @@ func (s *audioJobService) synthesizeMultiSpeakerByReassembly(
 	}
 
 	// Step 3: STT アライメント + silencedetect スナップのハイブリッド方式で行境界を特定し分割
-	// デバッグ用: 分割前のスピーカー別オリジナル音源をファイルに保存
-	debugDir := filepath.Join("tmp", "audio-debug", job.ID.String())
-	if err := os.MkdirAll(debugDir, 0o755); err != nil {
-		log.Warn("reassembly: failed to create debug directory", "error", err)
-	} else {
-		for alias, res := range results {
-			wavData := audio.EncodeWAV(res.pcmData, 24000, 1, 2)
-			debugPath := filepath.Join(debugDir, fmt.Sprintf("speaker_%s_original.wav", alias))
-			if writeErr := os.WriteFile(debugPath, wavData, 0o644); writeErr != nil {
-				log.Warn("reassembly: failed to write debug audio", "alias", alias, "error", writeErr)
-			} else {
-				log.Debug("reassembly: saved original speaker audio",
-					"alias", alias,
-					"path", debugPath,
-					"pcm_bytes", len(res.pcmData),
-				)
+	// デバッグ用: 分割前のスピーカー別オリジナル音源をファイルに保存（development 環境のみ）
+	if os.Getenv("APP_ENV") != "production" {
+		debugDir := filepath.Join("tmp", "audio-debug", job.ID.String())
+		if err := os.MkdirAll(debugDir, 0o755); err != nil {
+			log.Warn("reassembly: failed to create debug directory", "error", err)
+		} else {
+			for alias, res := range results {
+				wavData := audio.EncodeWAV(res.pcmData, reassemblySampleRate, reassemblyChannels, reassemblyBytesPerSample)
+				debugPath := filepath.Join(debugDir, fmt.Sprintf("speaker_%s_original.wav", alias))
+				if writeErr := os.WriteFile(debugPath, wavData, 0o644); writeErr != nil {
+					log.Warn("reassembly: failed to write debug audio", "alias", alias, "error", writeErr)
+				} else {
+					log.Debug("reassembly: saved original speaker audio",
+						"alias", alias,
+						"path", debugPath,
+						"pcm_bytes", len(res.pcmData),
+					)
+				}
 			}
 		}
 	}
@@ -891,7 +905,7 @@ func (s *audioJobService) synthesizeMultiSpeakerByReassembly(
 
 		// STT で単語レベルのタイムスタンプを取得
 		log.Debug("reassembly: recognizing speech for alignment", "alias", alias)
-		sttWords, err := s.sttClient.RecognizeWithTimestamps(ctx, res.pcmData, 24000)
+		sttWords, err := s.sttClient.RecognizeWithTimestamps(ctx, res.pcmData, reassemblySampleRate)
 		if err != nil {
 			return nil, fmt.Errorf("話者 %s の音声認識に失敗しました: %w", alias, err)
 		}
@@ -941,7 +955,7 @@ func (s *audioJobService) synthesizeMultiSpeakerByReassembly(
 
 		// 先頭と末尾の境界を PCM データの実際の範囲に拡張する
 		// STT の単語タイムスタンプは音声の先頭/末尾の余白をカバーしないため
-		pcmDuration := time.Duration(float64(len(res.pcmData)) / float64(24000*1*2) * float64(time.Second))
+		pcmDuration := time.Duration(float64(len(res.pcmData)) / float64(reassemblyBytesPerSec) * float64(time.Second))
 		boundaries[0].StartTime = 0
 		boundaries[len(boundaries)-1].EndTime = pcmDuration
 
@@ -958,9 +972,9 @@ func (s *audioJobService) synthesizeMultiSpeakerByReassembly(
 		// 行が2行以上の場合、silencedetect で正確なカット位置にスナップする
 		if len(group.spokenTexts) >= 2 {
 			silences, silenceErr := audio.DetectSilenceIntervals(res.pcmData, audio.PCMSplitConfig{
-				SampleRate:     24000,
-				Channels:       1,
-				BytesPerSample: 2,
+				SampleRate:     reassemblySampleRate,
+				Channels:       reassemblyChannels,
+				BytesPerSample: reassemblyBytesPerSample,
 				NoiseDB:        -30,
 				MinSilenceSec:  0.2,
 			})
@@ -1010,7 +1024,7 @@ func (s *audioJobService) synthesizeMultiSpeakerByReassembly(
 		}
 
 		// タイムスタンプ境界で PCM を分割
-		segments := audio.SplitPCMByTimestamps(res.pcmData, boundaries, 24000, 1, 2)
+		segments := audio.SplitPCMByTimestamps(res.pcmData, boundaries, reassemblySampleRate, reassemblyChannels, reassemblyBytesPerSample)
 
 		for i, seg := range segments {
 			allSegments = append(allSegments, reassemblySegment{
@@ -1031,7 +1045,7 @@ func (s *audioJobService) synthesizeMultiSpeakerByReassembly(
 		return allSegments[i].originalIndex < allSegments[j].originalIndex
 	})
 
-	silencePadding := audio.GenerateSilencePCM(200, 24000, 1, 2)
+	silencePadding := audio.GenerateSilencePCM(200, reassemblySampleRate, reassemblyChannels, reassemblyBytesPerSample)
 
 	pcmParts := make([][]byte, 0, len(allSegments)*2)
 	for i, seg := range allSegments {
@@ -1052,7 +1066,7 @@ func (s *audioJobService) synthesizeMultiSpeakerByReassembly(
 	return &tts.SynthesisResult{
 		Data:       finalPCM,
 		Format:     "pcm",
-		SampleRate: 24000,
+		SampleRate: reassemblySampleRate,
 	}, nil
 }
 
