@@ -401,11 +401,11 @@ func TestDpAlignment(t *testing.T) {
 		mapping := dpAlignment(orig, stt)
 
 		require.Len(t, mapping, 5)
-		assert.Equal(t, 0, mapping[0]) // あ → 0
-		assert.Equal(t, 1, mapping[1]) // い → 1
+		assert.Equal(t, 0, mapping[0])  // あ → 0
+		assert.Equal(t, 1, mapping[1])  // い → 1
 		assert.Equal(t, -1, mapping[2]) // う → gap
-		assert.Equal(t, 2, mapping[3]) // え → 2
-		assert.Equal(t, 3, mapping[4]) // お → 3
+		assert.Equal(t, 2, mapping[3])  // え → 2
+		assert.Equal(t, 3, mapping[4])  // お → 3
 	})
 
 	t.Run("STT に追加文字がある場合もマッピングが正しい", func(t *testing.T) {
@@ -571,7 +571,7 @@ func TestSnapBoundariesToSilence(t *testing.T) {
 		}
 		silences := []SilenceInterval{
 			{StartSec: 4.8, EndSec: 5.4},   // 文間ポーズ（0.6s）— 端は 200ms 手前
-			{StartSec: 5.35, EndSec: 5.50},  // 句読点ポーズ（0.15s）— 端は 150ms 先
+			{StartSec: 5.35, EndSec: 5.50}, // 句読点ポーズ（0.15s）— 端は 150ms 先
 		}
 
 		result := SnapBoundariesToSilence(boundaries, silences, 500*time.Millisecond)

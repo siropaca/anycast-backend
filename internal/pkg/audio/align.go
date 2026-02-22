@@ -201,7 +201,7 @@ func dpAlignment(orig, stt []rune) []int {
 				score = dpMatchScore
 			}
 			dp[i][j] = max(
-				dp[i-1][j-1]+score,   // match/mismatch（対角）
+				dp[i-1][j-1]+score,    // match/mismatch（対角）
 				dp[i-1][j]+dpGapScore, // gap in STT（元テキストの文字をスキップ）
 				dp[i][j-1]+dpGapScore, // gap in orig（STT の文字をスキップ）
 			)
@@ -221,13 +221,13 @@ func dpAlignment(orig, stt []rune) []int {
 			score = dpMatchScore
 		}
 
-		switch {
-		case dp[i][j] == dp[i-1][j-1]+score:
+		switch dp[i][j] {
+		case dp[i-1][j-1] + score:
 			// match/mismatch: 両方の文字を対応させる
 			mapping[i-1] = j - 1
 			i--
 			j--
-		case dp[i][j] == dp[i-1][j]+dpGapScore:
+		case dp[i-1][j] + dpGapScore:
 			// gap in STT: 元テキストの文字に対応なし（TTS がスキップ）
 			i--
 		default:
