@@ -131,6 +131,15 @@ make dev
 
 サーバーは http://localhost:8081 で起動します。
 
+### ローカル開発時のデバッグ出力
+
+ローカル開発時、以下のディレクトリにデバッグ用ファイルが出力されます（`tmp/` は `.gitignore` に含まれています）。
+
+| ディレクトリ | 内容 | 条件 |
+|-------------|------|------|
+| `tmp/audio-debug/{jobID}/` | 再アセンブル前のスピーカー別音源（WAV） | `APP_ENV` が `production` 以外 |
+| `tmp/traces/{エピソードタイトル}/` | 台本生成の Phase ごとのトレース（Markdown） | `TRACE_MODE=file` |
+
 ## API ドキュメント
 
 ### Swagger UI
