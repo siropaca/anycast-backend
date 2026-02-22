@@ -45,6 +45,10 @@ const (
 	reassemblyBytesPerSec    = reassemblySampleRate * reassemblyChannels * reassemblyBytesPerSample
 )
 
+// reassemblyDummyTrailingText は Gemini TTS が末尾の音声を切り落とす問題を回避するための
+// ダミー末尾行。各話者の最後に追加し、分割後に破棄する。
+const reassemblyDummyTrailingText = "以上です。"
+
 // AudioJobService は非同期音声生成ジョブを管理するインターフェースを表す
 type AudioJobService interface {
 	CreateJob(ctx context.Context, userID, channelID, episodeID string, req request.GenerateAudioAsyncRequest) (*response.AudioJobResponse, error)
@@ -793,6 +797,13 @@ func (s *audioJobService) synthesizeMultiSpeakerByReassembly(
 		group.originalIndices = append(group.originalIndices, i)
 	}
 
+	// Gemini TTS が末尾の音声を切り落とす問題を回避するため、
+	// 各話者にダミー末尾行を追加し、切り落としがダミー行にのみ影響するようにする
+	for _, group := range speakerGroups {
+		group.texts = append(group.texts, reassemblyDummyTrailingText)
+		group.spokenTexts = append(group.spokenTexts, reassemblyDummyTrailingText)
+	}
+
 	log.Info("reassembly: grouped turns by speaker",
 		"speaker_count", len(speakerGroups),
 		"total_turns", len(turns),
@@ -1026,16 +1037,28 @@ func (s *audioJobService) synthesizeMultiSpeakerByReassembly(
 		// タイムスタンプ境界で PCM を分割
 		segments := audio.SplitPCMByTimestamps(res.pcmData, boundaries, reassemblySampleRate, reassemblyChannels, reassemblyBytesPerSample)
 
-		for i, seg := range segments {
+		// ダミー末尾行のセグメントを除外し、実セグメントのみ追加
+		for i := 0; i < len(res.originalIndices); i++ {
 			allSegments = append(allSegments, reassemblySegment{
 				originalIndex: res.originalIndices[i],
-				pcmData:       seg,
+				pcmData:       segments[i],
 			})
+		}
+
+		if len(segments) > len(res.originalIndices) {
+			dummySeg := segments[len(segments)-1]
+			dummyDuration := time.Duration(float64(len(dummySeg)) / float64(reassemblyBytesPerSec) * float64(time.Second))
+			log.Debug("reassembly: discarded dummy trailing segment",
+				"alias", alias,
+				"dummy_pcm_bytes", len(dummySeg),
+				"dummy_duration_ms", dummyDuration.Milliseconds(),
+			)
 		}
 
 		log.Debug("reassembly: alignment split done",
 			"alias", alias,
-			"segments", len(segments),
+			"real_segments", len(res.originalIndices),
+			"total_segments", len(segments),
 			"lines", len(group.texts),
 		)
 	}
