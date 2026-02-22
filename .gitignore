@@ -35,3 +35,6 @@ go.work.sum
 # Build output
 bin/
 tmp/
+
+# macOS
+.DS_Store

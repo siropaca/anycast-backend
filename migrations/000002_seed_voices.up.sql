@@ -34,8 +34,8 @@ INSERT INTO voices (provider, provider_voice_id, name, gender, sample_audio_url)
 
 -- ElevenLabs TTS ボイスの seed データ
 
-INSERT INTO voices (provider, provider_voice_id, name, gender, sample_audio_url) VALUES
-	('elevenlabs', 'b34JylakFZPlGS0BnwyY', 'Kenzo', 'male', '/voice/elevenlabs/kenzo.wav'),
-	('elevenlabs', '4lOQ7A2l7HPuG7UIHiKA', 'Kyoko', 'female', '/voice/elevenlabs/kyoko.wav'),
-	('elevenlabs', 'JTlYtJrcTzPC71hMLOxo', 'Yuki', 'female', '/voice/elevenlabs/yuki.wav'),
-	('elevenlabs', 'NO5A3b3sSzDyJQF7MiNS', 'Shohei', 'male', '/voice/elevenlabs/shohei.wav');
+INSERT INTO voices (provider, provider_voice_id, name, gender, sample_audio_url, is_active) VALUES
+	('elevenlabs', 'b34JylakFZPlGS0BnwyY', 'Kenzo', 'male', '/voice/elevenlabs/kenzo.wav', false),
+	('elevenlabs', '4lOQ7A2l7HPuG7UIHiKA', 'Kyoko', 'female', '/voice/elevenlabs/kyoko.wav', false),
+	('elevenlabs', 'JTlYtJrcTzPC71hMLOxo', 'Yuki', 'female', '/voice/elevenlabs/yuki.wav', false),
+	('elevenlabs', 'NO5A3b3sSzDyJQF7MiNS', 'Shohei', 'male', '/voice/elevenlabs/shohei.wav', false);

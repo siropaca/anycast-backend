@@ -12,7 +12,7 @@ import (
 
 const (
 	// Claude デフォルトモデル
-	claudeDefaultModel = anthropic.ModelClaudeSonnet4_20250514
+	claudeDefaultModel = anthropic.ModelClaudeSonnet4_6
 	// Claude の最大出力トークン数
 	claudeMaxTokens = 8192
 )

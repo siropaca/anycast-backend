@@ -4,8 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
 	"strings"
+	"sync"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/dto/request"
@@ -13,6 +19,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/infrastructure/cloudtasks"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/slack"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
+	"github.com/siropaca/anycast-backend/internal/infrastructure/stt"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/tts"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/websocket"
 	"github.com/siropaca/anycast-backend/internal/model"
@@ -29,6 +36,18 @@ const (
 	defaultPaddingStartMs = 1000
 	defaultPaddingEndMs   = 3000
 )
+
+// Gemini TTS 再アセンブル用 PCM パラメータ
+const (
+	reassemblySampleRate     = 24000
+	reassemblyChannels       = 1
+	reassemblyBytesPerSample = 2
+	reassemblyBytesPerSec    = reassemblySampleRate * reassemblyChannels * reassemblyBytesPerSample
+)
+
+// reassemblyDummyTrailingText は Gemini TTS が末尾の音声を切り落とす問題を回避するための
+// ダミー末尾行。各話者の最後に追加し、分割後に破棄する。
+const reassemblyDummyTrailingText = "以上です。"
 
 // AudioJobService は非同期音声生成ジョブを管理するインターフェースを表す
 type AudioJobService interface {
@@ -49,6 +68,7 @@ type audioJobService struct {
 	systemBgmRepo  repository.SystemBgmRepository
 	storageClient  storage.Client
 	ttsRegistry    *tts.Registry
+	sttClient      stt.Client
 	ffmpegService  FFmpegService
 	tasksClient    cloudtasks.Client
 	wsHub          *websocket.Hub
@@ -66,6 +86,7 @@ func NewAudioJobService(
 	systemBgmRepo repository.SystemBgmRepository,
 	storageClient storage.Client,
 	ttsRegistry *tts.Registry,
+	sttClient stt.Client,
 	ffmpegService FFmpegService,
 	tasksClient cloudtasks.Client,
 	wsHub *websocket.Hub,
@@ -81,6 +102,7 @@ func NewAudioJobService(
 		systemBgmRepo:  systemBgmRepo,
 		storageClient:  storageClient,
 		ttsRegistry:    ttsRegistry,
+		sttClient:      sttClient,
 		ffmpegService:  ffmpegService,
 		tasksClient:    tasksClient,
 		wsHub:          wsHub,
@@ -474,7 +496,8 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 
 	// TTS で音声を生成
 	var result *tts.SynthesisResult
-	if len(voiceConfigs) == 1 {
+	switch {
+	case len(voiceConfigs) == 1:
 		// シングルスピーカー: 全ターンのテキストを連結して単一話者で合成
 		var textBuilder strings.Builder
 		for _, turn := range turns {
@@ -485,7 +508,11 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 			textBuilder.WriteString(text + "\n")
 		}
 		result, err = ttsClient.Synthesize(ctx, textBuilder.String(), nil, voiceConfigs[0].VoiceID, scriptLines[0].Speaker.Voice.Gender)
-	} else {
+	case provider == tts.ProviderGoogle:
+		// Gemini: 話者別合成 + 無音分割再アセンブル
+		result, err = s.synthesizeMultiSpeakerByReassembly(ctx, job, turns, voiceConfigs, ttsClient, scriptLines)
+	default:
+		// ElevenLabs 等: 従来方式
 		result, err = ttsClient.SynthesizeMultiSpeaker(ctx, turns, voiceConfigs)
 	}
 	if err != nil {
@@ -684,6 +711,386 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 	log.Info("audio job completed successfully", "job_id", job.ID, "audio_id", audioID)
 
 	return nil
+}
+
+// reassemblySegment は再アセンブル用のセグメント情報
+type reassemblySegment struct {
+	originalIndex int    // 元の台本での順序
+	pcmData       []byte // 分割された PCM データ
+}
+
+// reassemblySpeakerGroup は話者ごとのグループ情報
+type reassemblySpeakerGroup struct {
+	alias           string // 話者エイリアス（speaker1 等）
+	voiceID         string // Voice の ProviderVoiceID
+	gender          model.Gender
+	texts           []string // TTS に送るテキスト一覧（感情指示を含む）
+	spokenTexts     []string // 実際に発話されるテキスト一覧（感情指示を除く、アライメント用）
+	originalIndices []int    // 元の台本でのインデックス一覧
+}
+
+// synthesizeMultiSpeakerByReassembly は話者別にシングルスピーカー合成し、
+// 無音分割で個別セグメントに分けた後、元の順序に再アセンブルする
+func (s *audioJobService) synthesizeMultiSpeakerByReassembly(
+	ctx context.Context,
+	job *model.AudioJob,
+	turns []tts.SpeakerTurn,
+	voiceConfigs []tts.SpeakerVoiceConfig,
+	ttsClient tts.Client,
+	scriptLines []model.ScriptLine,
+) (*tts.SynthesisResult, error) {
+	log := logger.FromContext(ctx)
+
+	if s.sttClient == nil {
+		return nil, fmt.Errorf("STT クライアントが設定されていません（GoogleCloudProjectID を確認してください）")
+	}
+
+	// VoiceConfig のマップを構築
+	voiceConfigMap := make(map[string]tts.SpeakerVoiceConfig)
+	for _, vc := range voiceConfigs {
+		voiceConfigMap[vc.SpeakerAlias] = vc
+	}
+
+	// 話者の Gender マップを構築
+	genderMap := make(map[string]model.Gender)
+	for _, line := range scriptLines {
+		alias := ""
+		for a, vc := range voiceConfigMap {
+			if vc.VoiceID == line.Speaker.Voice.ProviderVoiceID {
+				alias = a
+				break
+			}
+		}
+		if alias != "" {
+			genderMap[alias] = line.Speaker.Voice.Gender
+		}
+	}
+
+	// Step 1: 話者別にグループ化（元のインデックスを保持）
+	speakerGroups := make(map[string]*reassemblySpeakerGroup)
+	for i, turn := range turns {
+		group, exists := speakerGroups[turn.Speaker]
+		if !exists {
+			vc := voiceConfigMap[turn.Speaker]
+			group = &reassemblySpeakerGroup{
+				alias:   turn.Speaker,
+				voiceID: vc.VoiceID,
+				gender:  genderMap[turn.Speaker],
+			}
+			speakerGroups[turn.Speaker] = group
+		}
+
+		// 発話テキスト（感情指示を除く）: アライメントに使用
+		spokenText := turn.Text
+		if !strings.HasSuffix(spokenText, "。") {
+			spokenText += "。"
+		}
+
+		// TTS 用テキスト（感情指示を含む）
+		ttsText := spokenText
+		if turn.Emotion != nil && *turn.Emotion != "" {
+			ttsText = fmt.Sprintf("[%s] %s", *turn.Emotion, spokenText)
+		}
+
+		group.texts = append(group.texts, ttsText)
+		group.spokenTexts = append(group.spokenTexts, spokenText)
+		group.originalIndices = append(group.originalIndices, i)
+	}
+
+	// Gemini TTS が末尾の音声を切り落とす問題を回避するため、
+	// 各話者にダミー末尾行を追加し、切り落としがダミー行にのみ影響するようにする
+	for _, group := range speakerGroups {
+		group.texts = append(group.texts, reassemblyDummyTrailingText)
+		group.spokenTexts = append(group.spokenTexts, reassemblyDummyTrailingText)
+	}
+
+	log.Info("reassembly: grouped turns by speaker",
+		"speaker_count", len(speakerGroups),
+		"total_turns", len(turns),
+	)
+
+	// Step 2: 話者ごとにシングルスピーカー合成（並列実行）
+	type speakerResult struct {
+		alias           string
+		pcmData         []byte
+		originalIndices []int
+	}
+
+	var mu sync.Mutex
+	results := make(map[string]*speakerResult)
+
+	eg, egCtx := errgroup.WithContext(ctx)
+
+	const maxTTSRetries = 2
+
+	for _, group := range speakerGroups {
+		g := group
+		eg.Go(func() error {
+			// テキストを改行区切りで連結し、音声スタイルを先頭に付加
+			fullText := tts.DefaultVoiceStyle + "\n\n" + strings.Join(g.texts, "\n")
+
+			log.Debug("reassembly: synthesizing speaker",
+				"alias", g.alias,
+				"line_count", len(g.texts),
+				"text_length", len(fullText),
+			)
+
+			var result *tts.SynthesisResult
+			var lastErr error
+			for attempt := 0; attempt <= maxTTSRetries; attempt++ {
+				if attempt > 0 {
+					log.Warn("reassembly: retrying TTS synthesis",
+						"alias", g.alias,
+						"attempt", attempt+1,
+						"prev_error", lastErr,
+					)
+					// リトライ前に少し待つ
+					select {
+					case <-egCtx.Done():
+						return fmt.Errorf("話者 %s の合成に失敗しました: %w", g.alias, egCtx.Err())
+					case <-time.After(time.Duration(attempt*2) * time.Second):
+					}
+				}
+
+				result, lastErr = ttsClient.Synthesize(egCtx, fullText, nil, g.voiceID, g.gender)
+				if lastErr == nil {
+					break
+				}
+			}
+			if lastErr != nil {
+				return fmt.Errorf("話者 %s の合成に失敗しました: %w", g.alias, lastErr)
+			}
+
+			if result.Format != "pcm" {
+				return fmt.Errorf("話者 %s の出力フォーマットが pcm ではありません: %s", g.alias, result.Format)
+			}
+
+			mu.Lock()
+			results[g.alias] = &speakerResult{
+				alias:           g.alias,
+				pcmData:         result.Data,
+				originalIndices: g.originalIndices,
+			}
+			mu.Unlock()
+
+			log.Debug("reassembly: speaker synthesis done",
+				"alias", g.alias,
+				"pcm_size", len(result.Data),
+			)
+
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		return nil, err
+	}
+
+	// Step 3: STT アライメント + silencedetect スナップのハイブリッド方式で行境界を特定し分割
+	// デバッグ用: 分割前のスピーカー別オリジナル音源をファイルに保存（development 環境のみ）
+	if os.Getenv("APP_ENV") != "production" {
+		debugDir := filepath.Join("tmp", "audio-debug", job.ID.String())
+		if err := os.MkdirAll(debugDir, 0o755); err != nil {
+			log.Warn("reassembly: failed to create debug directory", "error", err)
+		} else {
+			for alias, res := range results {
+				wavData := audio.EncodeWAV(res.pcmData, reassemblySampleRate, reassemblyChannels, reassemblyBytesPerSample)
+				debugPath := filepath.Join(debugDir, fmt.Sprintf("speaker_%s_original.wav", alias))
+				if writeErr := os.WriteFile(debugPath, wavData, 0o644); writeErr != nil {
+					log.Warn("reassembly: failed to write debug audio", "alias", alias, "error", writeErr)
+				} else {
+					log.Debug("reassembly: saved original speaker audio",
+						"alias", alias,
+						"path", debugPath,
+						"pcm_bytes", len(res.pcmData),
+					)
+				}
+			}
+		}
+	}
+
+	var allSegments []reassemblySegment
+
+	for alias, res := range results {
+		group := speakerGroups[alias]
+
+		// STT で単語レベルのタイムスタンプを取得
+		log.Debug("reassembly: recognizing speech for alignment", "alias", alias)
+		sttWords, err := s.sttClient.RecognizeWithTimestamps(ctx, res.pcmData, reassemblySampleRate)
+		if err != nil {
+			return nil, fmt.Errorf("話者 %s の音声認識に失敗しました: %w", alias, err)
+		}
+
+		log.Debug("reassembly: STT result",
+			"alias", alias,
+			"word_count", len(sttWords),
+		)
+		for i, w := range sttWords {
+			log.Debug("reassembly: STT word",
+				"alias", alias,
+				"index", i,
+				"word", w.Word,
+				"start_ms", w.StartTime.Milliseconds(),
+				"end_ms", w.EndTime.Milliseconds(),
+			)
+		}
+
+		// STT の WordTimestamp を audio パッケージの型に変換
+		audioWords := make([]audio.WordTimestamp, len(sttWords))
+		for i, w := range sttWords {
+			audioWords[i] = audio.WordTimestamp{
+				Word:      w.Word,
+				StartTime: w.StartTime,
+				EndTime:   w.EndTime,
+			}
+		}
+
+		// DP アライメントで行境界を特定
+		boundaries, err := audio.AlignTextToTimestamps(group.spokenTexts, audioWords)
+		if err != nil {
+			return nil, fmt.Errorf("話者 %s のテキストアライメントに失敗しました: %w", alias, err)
+		}
+		for i, b := range boundaries {
+			text := ""
+			if i < len(group.spokenTexts) {
+				text = group.spokenTexts[i]
+			}
+			log.Debug("reassembly: DP alignment boundary",
+				"alias", alias,
+				"line", i,
+				"text", text,
+				"start_ms", b.StartTime.Milliseconds(),
+				"end_ms", b.EndTime.Milliseconds(),
+			)
+		}
+
+		// 先頭と末尾の境界を PCM データの実際の範囲に拡張する
+		// STT の単語タイムスタンプは音声の先頭/末尾の余白をカバーしないため
+		pcmDuration := time.Duration(float64(len(res.pcmData)) / float64(reassemblyBytesPerSec) * float64(time.Second))
+		boundaries[0].StartTime = 0
+		boundaries[len(boundaries)-1].EndTime = pcmDuration
+
+		// STT アライメントで得た行境界をログ出力
+		for i, b := range boundaries {
+			log.Debug("reassembly: STT boundary",
+				"alias", alias,
+				"line", i,
+				"start_ms", b.StartTime.Milliseconds(),
+				"end_ms", b.EndTime.Milliseconds(),
+			)
+		}
+
+		// 行が2行以上の場合、silencedetect で正確なカット位置にスナップする
+		if len(group.spokenTexts) >= 2 {
+			silences, silenceErr := audio.DetectSilenceIntervals(res.pcmData, audio.PCMSplitConfig{
+				SampleRate:     reassemblySampleRate,
+				Channels:       reassemblyChannels,
+				BytesPerSample: reassemblyBytesPerSample,
+				NoiseDB:        -30,
+				MinSilenceSec:  0.2,
+			})
+			if silenceErr != nil {
+				log.Warn("reassembly: silencedetect failed, using STT boundaries",
+					"alias", alias,
+					"error", silenceErr,
+				)
+			} else {
+				// 検出された全無音区間をログ出力
+				for j, s := range silences {
+					log.Debug("reassembly: silence interval",
+						"alias", alias,
+						"index", j,
+						"start_ms", int(s.StartSec*1000),
+						"end_ms", int(s.EndSec*1000),
+						"mid_ms", int((s.StartSec+s.EndSec)/2.0*1000),
+					)
+				}
+
+				sttBoundaries := make([]audio.LineBoundary, len(boundaries))
+				copy(sttBoundaries, boundaries)
+
+				boundaries = audio.SnapBoundariesToSilence(boundaries, silences, 500*time.Millisecond)
+
+				// スナップ前後の差分をログ出力
+				for i := 0; i < len(boundaries)-1; i++ {
+					before := sttBoundaries[i].EndTime.Milliseconds()
+					after := boundaries[i].EndTime.Milliseconds()
+					if before != after {
+						log.Debug("reassembly: boundary snapped",
+							"alias", alias,
+							"cut", i,
+							"before_ms", before,
+							"after_ms", after,
+							"delta_ms", after-before,
+						)
+					} else {
+						log.Debug("reassembly: boundary not snapped",
+							"alias", alias,
+							"cut", i,
+							"at_ms", before,
+						)
+					}
+				}
+			}
+		}
+
+		// タイムスタンプ境界で PCM を分割
+		segments := audio.SplitPCMByTimestamps(res.pcmData, boundaries, reassemblySampleRate, reassemblyChannels, reassemblyBytesPerSample)
+
+		// ダミー末尾行のセグメントを除外し、実セグメントのみ追加
+		for i := 0; i < len(res.originalIndices); i++ {
+			allSegments = append(allSegments, reassemblySegment{
+				originalIndex: res.originalIndices[i],
+				pcmData:       segments[i],
+			})
+		}
+
+		if len(segments) > len(res.originalIndices) {
+			dummySeg := segments[len(segments)-1]
+			dummyDuration := time.Duration(float64(len(dummySeg)) / float64(reassemblyBytesPerSec) * float64(time.Second))
+			log.Debug("reassembly: discarded dummy trailing segment",
+				"alias", alias,
+				"dummy_pcm_bytes", len(dummySeg),
+				"dummy_duration_ms", dummyDuration.Milliseconds(),
+			)
+		}
+
+		log.Debug("reassembly: alignment split done",
+			"alias", alias,
+			"real_segments", len(res.originalIndices),
+			"total_segments", len(segments),
+			"lines", len(group.texts),
+		)
+	}
+
+	// Step 4: 元の順序で再アセンブル（セグメント間に 200ms 無音パディング挿入）
+	sort.Slice(allSegments, func(i, j int) bool {
+		return allSegments[i].originalIndex < allSegments[j].originalIndex
+	})
+
+	silencePadding := audio.GenerateSilencePCM(200, reassemblySampleRate, reassemblyChannels, reassemblyBytesPerSample)
+
+	pcmParts := make([][]byte, 0, len(allSegments)*2)
+	for i, seg := range allSegments {
+		pcmParts = append(pcmParts, seg.pcmData)
+		// 最後のセグメント以外にはパディングを挿入
+		if i < len(allSegments)-1 {
+			pcmParts = append(pcmParts, silencePadding)
+		}
+	}
+
+	finalPCM := audio.ConcatPCM(pcmParts)
+
+	log.Info("reassembly: completed",
+		"total_segments", len(allSegments),
+		"final_pcm_size", len(finalPCM),
+	)
+
+	return &tts.SynthesisResult{
+		Data:       finalPCM,
+		Format:     "pcm",
+		SampleRate: reassemblySampleRate,
+	}, nil
 }
 
 // downloadFromStorage は指定されたパスのファイルを GCS からダウンロードする

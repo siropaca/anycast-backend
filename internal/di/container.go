@@ -13,6 +13,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/infrastructure/llm"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/slack"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
+	"github.com/siropaca/anycast-backend/internal/infrastructure/stt"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/tts"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/websocket"
 	"github.com/siropaca/anycast-backend/internal/pkg/crypto"
@@ -148,6 +149,17 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 
 	log.Info("TTS providers registered", "providers", ttsRegistry.Providers())
 
+	// STT クライアント（Gemini TTS の音声分割に使用）
+	var sttClient stt.Client
+	if cfg.GoogleCloudProjectID != "" {
+		sttClient, err = stt.NewGoogleSTTClient(ctx, cfg.GoogleCloudProjectID, cfg.GoogleCloudTTSLocation, cfg.GoogleCloudCredentialsJSON)
+		if err != nil {
+			log.Error("failed to create Google STT client", "error", err)
+			os.Exit(1)
+		}
+		log.Info("STT client created")
+	}
+
 	// 画像生成クライアント（レジストリパターン）
 	imagegenRegistry := imagegen.NewRegistry()
 
@@ -254,6 +266,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		systemBgmRepo,
 		storageClient,
 		ttsRegistry,
+		sttClient,
 		ffmpegService,
 		tasksClient,
 		wsHub,
