@@ -1,0 +1,29 @@
+@baseUrl = http://localhost:8081/api/v1
+
+# トークン生成: make token
+@token = YOUR_TOKEN_HERE
+
+### API キー作成
+POST {{baseUrl}}/me/api-keys
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "テスト用 API キー"
+}
+
+### API キー一覧取得
+GET {{baseUrl}}/me/api-keys
+Authorization: Bearer {{token}}
+
+### API キー削除
+DELETE {{baseUrl}}/me/api-keys/YOUR_API_KEY_ID_HERE
+Authorization: Bearer {{token}}
+
+### API キーで認証テスト（X-API-Key ヘッダー）
+GET {{baseUrl}}/me
+X-API-Key: YOUR_API_KEY_HERE
+
+### API キーで認証テスト（Bearer）
+GET {{baseUrl}}/me
+Authorization: Bearer YOUR_API_KEY_HERE

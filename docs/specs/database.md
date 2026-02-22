@@ -7,6 +7,7 @@ erDiagram
     users ||--o| credentials : has
     users ||--o{ oauth_accounts : has
     users ||--o{ refresh_tokens : has
+    users ||--o{ api_keys : has
     users ||--o{ channels : owns
     users ||--o{ characters : owns
     users ||--o{ bgms : owns
@@ -195,6 +196,17 @@ erDiagram
         varchar token
         timestamp expires_at
         timestamp created_at
+    }
+
+    api_keys {
+        uuid id PK
+        uuid user_id FK
+        varchar name
+        varchar key_hash
+        varchar prefix
+        timestamp last_used_at
+        timestamp created_at
+        timestamp updated_at
     }
 
     categories {
@@ -422,6 +434,32 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 - UNIQUE (token)
 - INDEX (user_id)
 - INDEX (expires_at)
+
+**外部キー:**
+- user_id → users(id) ON DELETE CASCADE
+
+---
+
+#### api_keys
+
+ユーザーの API キーを管理する。JWT Bearer トークンの代替認証手段。平文は作成時に 1 度だけ返却し、DB には SHA-256 ハッシュのみ保存する。
+
+| カラム名 | 型 | NULLABLE | デフォルト | 説明 |
+|----------|-----|:--------:|------------|------|
+| id | UUID | | gen_random_uuid() | 主キー |
+| user_id | UUID | | - | ユーザー（users 参照） |
+| name | VARCHAR(100) | | - | 管理名 |
+| key_hash | VARCHAR(64) | | - | API Key の SHA-256 ハッシュ |
+| prefix | VARCHAR(12) | | - | 表示用プレフィックス（例: ak_a1b2c3...） |
+| last_used_at | TIMESTAMP | ◯ | - | 最終使用日時 |
+| created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
+| updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
+
+**インデックス:**
+- PRIMARY KEY (id)
+- UNIQUE (key_hash)
+- UNIQUE (user_id, name)
+- INDEX (user_id)
 
 **外部キー:**
 - user_id → users(id) ON DELETE CASCADE
@@ -1056,7 +1094,7 @@ PostgreSQL の enum 型を使用して、値の制約を DB レベルで保証�
 
 ### カスケード削除
 
-- User 削除時: 関連する RefreshTokens, Characters, BGMs, Channels, Episodes, ScriptLines, FavoriteVoices が削除
+- User 削除時: 関連する RefreshTokens, ApiKeys, Characters, BGMs, Channels, Episodes, ScriptLines, FavoriteVoices が削除
 - Channel 削除時: 関連する channel_characters, Episodes, ScriptLines が削除
 - Episode 削除時: 関連する ScriptLines が削除
 - Character 削除時: channel_characters で使用中の場合は RESTRICT（削除不可）

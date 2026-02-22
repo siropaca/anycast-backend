@@ -49,6 +49,7 @@ AIポッドキャスト作成・配信プラットフォーム。
 │  User ─┬─ (0..1) Credential                                                 │
 │        ├─ (0..N) OAuthAccount                                               │
 │        ├─ (0..N) RefreshToken                                               │
+│        ├─ (0..N) ApiKey                                                     │
 │        ├─ (0..1) Avatar [Image]                                             │
 │        ├─ (0..1) HeaderImage [Image]                                        │
 │        └─ (0..N) Character ─┬─ Voice [参照]                                 │
@@ -272,6 +273,27 @@ OAuth プロバイダとの連携情報。
 - トークンリフレッシュ時はトークンローテーションを行う（旧トークンを削除し、新しいトークンを発行）
 - ログアウト時にトークンを削除して無効化
 - 有効期限: 30日
+
+### ApiKey（API キー）
+
+JWT Bearer トークンの代替認証手段。セキュリティ上、平文は作成時に 1 度だけ表示し、DB には SHA-256 ハッシュのみ保存する。
+
+| 属性 | 型 | 必須 | 説明 |
+|------|-----|:----:|------|
+| id | UUID | ◯ | 識別子 |
+| userId | UUID | ◯ | 所属する User |
+| name | String | ◯ | 管理名（100文字以内） |
+| keyHash | String | ◯ | API Key の SHA-256 ハッシュ |
+| prefix | String | ◯ | 表示用プレフィックス（例: ak_a1b2c3...） |
+| lastUsedAt | DateTime | | 最終使用日時 |
+
+#### 制約
+
+- User と 1:N の関係（複数の API Key を所持可能）
+- 同一 User 内で name は一意
+- keyHash は全体で一意
+- 認証方式: `X-API-Key` ヘッダーまたは `Authorization: Bearer ak_...` をサポート
+- 平文キーは `ak_` プレフィックス + 32 バイトのランダム hex 文字列
 
 ### Character（キャラクター）
 

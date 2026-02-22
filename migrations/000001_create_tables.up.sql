@@ -149,6 +149,22 @@ CREATE TABLE refresh_tokens (
 CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens (user_id);
 CREATE INDEX idx_refresh_tokens_expires_at ON refresh_tokens (expires_at);
 
+-- API キー
+CREATE TABLE api_keys (
+	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+	user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+	name VARCHAR(100) NOT NULL,
+	key_hash VARCHAR(64) NOT NULL UNIQUE,
+	prefix VARCHAR(12) NOT NULL,
+	last_used_at TIMESTAMP,
+	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	UNIQUE (user_id, name)
+);
+
+CREATE INDEX idx_api_keys_user_id ON api_keys (user_id);
+CREATE INDEX idx_api_keys_key_hash ON api_keys (key_hash);
+
 -- ===========================================
 -- ユーザーデータテーブル
 -- ===========================================

@@ -51,8 +51,10 @@ type Container struct {
 	RecommendationHandler  *handler.RecommendationHandler
 	SearchHandler          *handler.SearchHandler
 	UserHandler            *handler.UserHandler
+	APIKeyHandler          *handler.APIKeyHandler
 	TokenManager           jwt.TokenManager
 	UserRepository         repository.UserRepository
+	APIKeyService          service.APIKeyService
 	WebSocketHub           *websocket.Hub
 }
 
@@ -242,6 +244,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	reactionRepo := repository.NewReactionRepository(db)
 	recommendationRepo := repository.NewRecommendationRepository(db)
 	refreshTokenRepo := repository.NewRefreshTokenRepository(db)
+	apiKeyRepo := repository.NewAPIKeyRepository(db)
 
 	// Service 層
 	voiceService := service.NewVoiceService(voiceRepo, favVoiceRepo)
@@ -293,6 +296,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	reactionService := service.NewReactionService(reactionRepo, storageClient)
 	recommendationService := service.NewRecommendationService(recommendationRepo, categoryRepo, storageClient)
 	searchService := service.NewSearchService(channelRepo, episodeRepo, userRepo, storageClient)
+	apiKeyService := service.NewAPIKeyService(apiKeyRepo)
 	userService := service.NewUserService(userRepo, channelRepo, episodeRepo, followRepo, storageClient)
 	// Handler 層
 	voiceHandler := handler.NewVoiceHandler(voiceService)
@@ -319,6 +323,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	reactionHandler := handler.NewReactionHandler(reactionService)
 	recommendationHandler := handler.NewRecommendationHandler(recommendationService)
 	searchHandler := handler.NewSearchHandler(searchService)
+	apiKeyHandler := handler.NewAPIKeyHandler(apiKeyService)
 	userHandler := handler.NewUserHandler(userService)
 	return &Container{
 		VoiceHandler:           voiceHandler,
@@ -346,8 +351,10 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		RecommendationHandler:  recommendationHandler,
 		SearchHandler:          searchHandler,
 		UserHandler:            userHandler,
+		APIKeyHandler:          apiKeyHandler,
 		TokenManager:           tokenManager,
 		UserRepository:         userRepo,
+		APIKeyService:          apiKeyService,
 		WebSocketHub:           wsHub,
 	}
 }

@@ -5,7 +5,7 @@
 - **ベース URL**: `/api/v1`
 - **形式**: REST API
 - **データ形式**: JSON
-- **認証**: Bearer Token（JWT）
+- **認証**: Bearer Token（JWT）/ API Key（`X-API-Key` ヘッダーまたは `Authorization: Bearer ak_...`）
 
 ---
 
@@ -23,6 +23,10 @@
 | POST | `/api/v1/auth/refresh` | トークンリフレッシュ | Guest | ✅ | [詳細](./auth.md#トークンリフレッシュ) |
 | POST | `/api/v1/auth/logout` | ログアウト | Owner | ✅ | [詳細](./auth.md#ログアウト) |
 | PUT | `/api/v1/auth/password` | パスワード更新 | Owner | ✅ | [詳細](./auth.md#パスワード更新) |
+| **API Keys（API キー）** | - | - | - | - | [api-keys.md](./api-keys.md) |
+| POST | `/api/v1/me/api-keys` | API キー作成 | Owner | ✅ | [詳細](./api-keys.md#api-キー作成) |
+| GET | `/api/v1/me/api-keys` | API キー一覧取得 | Owner | ✅ | [詳細](./api-keys.md#api-キー一覧取得) |
+| DELETE | `/api/v1/me/api-keys/:apiKeyId` | API キー削除 | Owner | ✅ | [詳細](./api-keys.md#api-キー削除) |
 | **Users（ユーザー）** | - | - | - | - | [users.md](./users.md) |
 | GET | `/api/v1/users/:username` | ユーザー取得 | Public | ✅ | [詳細](./users.md#ユーザー取得) |
 | GET | `/api/v1/me` | 現在のユーザー取得 | Owner | ✅ | [詳細](./users.md#現在のユーザー取得) |

@@ -31,7 +31,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     cfg.CORSAllowedOrigins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-API-Key"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}))
@@ -67,7 +67,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 
 	// 認証必須のエンドポイント
 	authenticated := api.Group("")
-	authenticated.Use(middleware.Auth(container.TokenManager))
+	authenticated.Use(middleware.AuthWithAPIKey(container.TokenManager, container.APIKeyService))
 
 	// Auth（認証必須）
 	authenticated.POST("/auth/logout", container.AuthHandler.Logout)
@@ -89,6 +89,11 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.POST("/me/characters", container.CharacterHandler.CreateCharacter)
 	authenticated.PATCH("/me/characters/:characterId", container.CharacterHandler.UpdateCharacter)
 	authenticated.DELETE("/me/characters/:characterId", container.CharacterHandler.DeleteCharacter)
+	// API Keys
+	authenticated.POST("/me/api-keys", container.APIKeyHandler.CreateAPIKey)
+	authenticated.GET("/me/api-keys", container.APIKeyHandler.ListAPIKeys)
+	authenticated.DELETE("/me/api-keys/:apiKeyId", container.APIKeyHandler.DeleteAPIKey)
+
 	authenticated.GET("/me/bgms", container.BgmHandler.ListMyBgms)
 	authenticated.POST("/me/bgms", container.BgmHandler.CreateBgm)
 	authenticated.GET("/me/bgms/:bgmId", container.BgmHandler.GetMyBgm)
@@ -193,7 +198,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 
 	// 任意認証（ログイン時はオーナー判定、未ログインは公開コンテンツのみ）
 	optionalAuth := api.Group("")
-	optionalAuth.Use(middleware.OptionalAuth(container.TokenManager))
+	optionalAuth.Use(middleware.OptionalAuthWithAPIKey(container.TokenManager, container.APIKeyService))
 	optionalAuth.GET("/channels/:channelId", container.ChannelHandler.GetChannel)
 	optionalAuth.GET("/channels/:channelId/episodes", container.EpisodeHandler.ListChannelEpisodes)
 	optionalAuth.GET("/channels/:channelId/episodes/:episodeId", container.EpisodeHandler.GetEpisode)
