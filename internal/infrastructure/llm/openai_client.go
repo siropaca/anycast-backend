@@ -14,7 +14,7 @@ import (
 
 const (
 	// OpenAI デフォルトモデル
-	openAIDefaultModel = openai.ChatModelGPT5_2
+	openAIDefaultModel = openai.ChatModelGPT5_2_2025_12_11
 	// 生成時の Temperature（0.0〜2.0）
 	defaultTemperature = 0.7
 	// API タイムアウト
