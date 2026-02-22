@@ -2,7 +2,7 @@
 
 ## ステータス
 
-Accepted（ハイブリッド方式に発展）
+Accepted（DP アライメント方式に発展）
 
 ## コンテキスト
 
@@ -16,6 +16,7 @@ Gemini TTS のマルチスピーカーモードは、長い台本を一括送信
 
 Google Cloud Speech-to-Text v2 API の単語レベルタイムスタンプ機能を使用し、生成済み音声を文字起こしして各単語の時刻情報を取得し、既知の台本テキストと照合して行境界を特定する。
 さらに、STT で得た行境界を FFmpeg `silencedetect` の無音区間中間点にスナップするハイブリッド方式に発展させた。
+行境界の特定には DP 配列アライメント（Needleman-Wunsch）を使用し、TTS がテキストをスキップ・追加した場合にも正確な境界を特定できるようにした。
 
 ## 方式の発展経緯
 
@@ -33,12 +34,12 @@ STT で単語レベルのタイムスタンプを取得し、文字カウント�
 - **改善**: テキストとの照合に基づくため、行の順序は正しくなった
 - **問題**: STT の単語境界は必ずしも実際の無音区間と一致しない。単語間の中間点でカットするため、発話途中の音声が微妙に欠けたり残ったりして、カット品質（自然さ）が低い
 
-### Phase 3: ハイブリッド方式（現行）
+### Phase 3: ハイブリッド方式（文字カウント）
 
 STT で「どこで切るか」（行境界の特定）を決め、silencedetect で「正確なカット位置」（無音区間の中間点）を決めるハイブリッド方式。
 
 ```
-STT → AlignTextToTimestamps → DetectSilenceIntervals → SnapBoundariesToSilence → SplitPCMByTimestamps
+STT → AlignTextToTimestamps(文字カウント) → DetectSilenceIntervals → SnapBoundariesToSilence → SplitPCMByTimestamps
 ```
 
 - STT の行境界を、`maxSnapDistance`（500ms）以内の最寄り無音区間の中間点にスナップする
@@ -50,6 +51,33 @@ STT → AlignTextToTimestamps → DetectSilenceIntervals → SnapBoundariesToSil
 当初は無音区間の中間点までの距離で判定していたが、TTS が生成する文間ポーズは 500ms〜1s 程度の長い無音になることがある。
 この場合、STT 境界が無音の開始付近にあっても中間点までの距離が `maxSnapDistance` を超えてしまい、スナップが発動しないケースがあった。
 実際の運用で、STT 境界から無音開始点まで 317ms（十分近い）にもかかわらず、中間点まで 774ms のためスナップされず、発話途中でカットされる問題を確認した。
+
+- **問題**: 行境界の特定に「累積文字カウント + グローバルスケーリング」を使用しており、TTS がテキストの一部をスキップ・追加した場合に境界が大きくずれる
+- TTS が行の冒頭フレーズ（例: 「よろしくお願いします」）をスキップすると、その行の文字数分だけ全後続行の境界が前方にシフトし、次の行の内容が前の行に混入する
+- スケーリングはグローバルな文字数比で補正するため、ローカルな偏差（特定箇所のスキップ）に対処できない
+
+### Phase 4: DP アライメント方式（現行）
+
+行境界の特定に DP 配列アライメント（Needleman-Wunsch）を使用する方式。
+ハイブリッド構成（STT + silencedetect スナップ）は Phase 3 と同じだが、`AlignTextToTimestamps` 内部の行境界特定ロジックを置き換えた。
+
+```
+STT → AlignTextToTimestamps(DP アライメント) → DetectSilenceIntervals → SnapBoundariesToSilence → SplitPCMByTimestamps
+```
+
+- 元テキストと STT テキストの正規化文字列を文字レベルで DP アライメントし、最適な文字対応マッピングを計算
+- アライメント結果から各行の最終対応文字を特定し、対応する STT 単語のタイムスタンプで境界を設定
+- TTS がテキストをスキップした場合は DP 上で gap として処理され、前後の対応文字が正しくマッチするため境界がずれない
+- TTS がテキストを追加した場合も同様に gap として吸収される
+
+#### 文字カウント方式との比較
+
+| 観点 | 文字カウント（Phase 3） | DP アライメント（Phase 4） |
+|------|------------------------|--------------------------|
+| 境界特定の原理 | 累積文字数 + グローバルスケーリング | 文字レベルの最適対応 |
+| TTS テキストスキップ | 全後続境界がシフト | gap として局所的に吸収 |
+| TTS テキスト追加 | 全後続境界がシフト | gap として局所的に吸収 |
+| 計算量 | O(n) | O(n×m)（n,m ≈ 100〜500 で十分高速） |
 
 ## 選択肢
 
@@ -97,7 +125,7 @@ STT → AlignTextToTimestamps → DetectSilenceIntervals → SnapBoundariesToSil
 ## 結果
 
 - `internal/infrastructure/stt/` に Cloud STT クライアントを追加
-- `internal/pkg/audio/align.go` にテキストアライメントロジックと `SnapBoundariesToSilence` を追加
+- `internal/pkg/audio/align.go` に DP アライメントによるテキスト照合ロジックと `SnapBoundariesToSilence` を追加
 - `internal/pkg/audio/split.go` に `DetectSilenceIntervals` を公開関数として追加
 - `internal/service/audio_job.go` の再アセンブルロジックをハイブリッド方式に変更
 - DI コンテナと環境変数設定を更新

@@ -21,18 +21,27 @@ type LineBoundary struct {
 	EndTime   time.Duration
 }
 
-// tightGapThreshold は単語間が密接に接続されていると見なす最大ギャップ。
-// これより小さいギャップは STT による単語分割の結果と判断し、先読み吸収の対象とする。
-const tightGapThreshold = 80 * time.Millisecond
+// DP アライメントのスコア定数
+const (
+	dpMatchScore    = 2
+	dpMismatchScore = -1
+	dpGapScore      = -1
+)
+
+// maxDivergenceRatio は元テキストと STT テキストの文字数比の最大許容乖離。
+// DP アライメントはローカルな偏差に強いため、文字カウント方式より緩い閾値を設定する。
+const maxDivergenceRatio = 0.5
 
 // AlignTextToTimestamps は既知のテキスト行と STT の単語タイムスタンプを照合し、
 // 各行の時間境界を返す
 //
 // アルゴリズム:
-//  1. 全行のテキストを正規化して累積文字数で行境界を計算
-//  2. STT 単語を累積的に消費し、文字数が行境界に到達した単語をカットポイントとする
-//  3. カットポイント直後のギャップが極小の場合、次の有意なギャップまで先読み吸収する
-//  4. カットポイントでは隣接単語間の中間点を使用し、音声の欠落を防ぐ
+//  1. 元テキストと STT テキストの正規化文字列を構築
+//  2. Needleman-Wunsch DP アライメントで文字レベルの最適対応を計算
+//  3. アライメント結果から各行の最終対応文字を特定し、対応する STT 単語のタイムスタンプで境界を設定
+//
+// TTS がテキストをスキップ・追加した場合も DP 上で gap として処理され、
+// 前後の対応文字が正しくマッチするため境界がずれない。
 func AlignTextToTimestamps(lines []string, words []WordTimestamp) ([]LineBoundary, error) {
 	if len(lines) == 0 {
 		return nil, fmt.Errorf("テキスト行が空です")
@@ -41,35 +50,34 @@ func AlignTextToTimestamps(lines []string, words []WordTimestamp) ([]LineBoundar
 		return nil, fmt.Errorf("単語タイムスタンプが空です")
 	}
 
-	// 各行の正規化文字数を計算
-	lineLengths := make([]int, len(lines))
+	// Phase 1: 元テキストの正規化文字列を構築し、行境界位置を記録
+	var origRunes []rune
+	// lineEndIndices[i] は行 i の末尾の次のインデックス（exclusive）
+	lineEndIndices := make([]int, len(lines))
 	for i, line := range lines {
-		lineLengths[i] = len([]rune(normalizeText(line)))
+		normalized := []rune(normalizeText(line))
+		origRunes = append(origRunes, normalized...)
+		lineEndIndices[i] = len(origRunes)
 	}
 
-	// 累積文字数で行境界を計算（行 i の終端 = sum(lineLengths[0..i])）
-	boundaries := make([]int, len(lines))
-	cumulative := 0
-	for i, length := range lineLengths {
-		cumulative += length
-		boundaries[i] = cumulative
-	}
-
-	totalOriginalChars := cumulative
-
-	// STT の総文字数を計算
-	sttTotalChars := 0
-	for _, w := range words {
-		sttTotalChars += len([]rune(normalizeText(w.Word)))
+	// Phase 2: STT テキストの正規化文字列を構築し、各文字→単語のマッピングを記録
+	var sttRunes []rune
+	var sttRuneToWordIdx []int
+	for wIdx, w := range words {
+		normalized := []rune(normalizeText(w.Word))
+		for range normalized {
+			sttRuneToWordIdx = append(sttRuneToWordIdx, wIdx)
+		}
+		sttRunes = append(sttRunes, normalized...)
 	}
 
 	// 乖離チェック
-	if totalOriginalChars > 0 {
-		ratio := float64(sttTotalChars) / float64(totalOriginalChars)
-		if math.Abs(ratio-1.0) > 0.3 {
+	if len(origRunes) > 0 {
+		ratio := float64(len(sttRunes)) / float64(len(origRunes))
+		if math.Abs(ratio-1.0) > maxDivergenceRatio {
 			return nil, fmt.Errorf(
 				"STT 認識結果とテキストの文字数が大きく乖離しています（元: %d, STT: %d, 比率: %.2f）",
-				totalOriginalChars, sttTotalChars, ratio,
+				len(origRunes), len(sttRunes), ratio,
 			)
 		}
 	}
@@ -82,87 +90,153 @@ func AlignTextToTimestamps(lines []string, words []WordTimestamp) ([]LineBoundar
 		}}, nil
 	}
 
-	// STT と元テキストの文字数差を補正するため、境界を STT 文字空間にスケーリング
-	scaledBoundaries := make([]int, len(boundaries))
-	if totalOriginalChars > 0 && sttTotalChars > 0 {
-		scale := float64(sttTotalChars) / float64(totalOriginalChars)
-		for i, b := range boundaries {
-			scaledBoundaries[i] = int(math.Round(float64(b) * scale))
-		}
-	} else {
-		copy(scaledBoundaries, boundaries)
-	}
+	// Phase 3: DP アライメントで文字レベルの最適対応を計算
+	mapping := dpAlignment(origRunes, sttRunes)
 
-	// STT 単語の正規化文字を累積的に消費して行境界を特定
+	// Phase 4: アライメント結果から行境界を特定
 	results := make([]LineBoundary, len(lines))
-	charCount := 0
-	lineIdx := 0
-	wordIdx := 0
-
 	results[0].StartTime = words[0].StartTime
 
-	for wordIdx < len(words) && lineIdx < len(lines)-1 {
-		wordChars := len([]rune(normalizeText(words[wordIdx].Word)))
-		charCount += wordChars
-		wordIdx++
+	for lineIdx := 0; lineIdx < len(lines)-1; lineIdx++ {
+		lineStart := 0
+		if lineIdx > 0 {
+			lineStart = lineEndIndices[lineIdx-1]
+		}
+		lineEnd := lineEndIndices[lineIdx]
+		nextLineEnd := lineEndIndices[lineIdx+1]
 
-		// 累積文字数がスケーリング済み行境界に到達したらカットポイントを確定
-		if charCount >= scaledBoundaries[lineIdx] {
-			cutIdx := wordIdx - 1
-
-			// 先読み吸収: カット直後のギャップが極小（< 80ms）の場合、
-			// STT が単語を分割した可能性がある（例: 「きまし」+「た」）。
-			// 次の有意なギャップまで単語を吸収して正しい文境界まで進める。
-			for cutIdx+1 < len(words) {
-				gapAfterCut := words[cutIdx+1].StartTime - words[cutIdx].EndTime
-				if gapAfterCut >= tightGapThreshold {
-					break // 有意なギャップに到達、ここでカット
-				}
-				// ギャップが小さい — この先に有意なギャップがあるか確認
-				foundBoundary := false
-				for j := cutIdx + 2; j < len(words) && j <= cutIdx+5; j++ {
-					if words[j].StartTime-words[j-1].EndTime >= tightGapThreshold {
-						foundBoundary = true
-						break
-					}
-				}
-				if !foundBoundary {
-					break // 近くに有意なギャップがないので吸収しない
-				}
-				cutIdx++
-				charCount += len([]rune(normalizeText(words[cutIdx].Word)))
+		// 現在の行の最後にマッチした STT 位置を探す
+		lastSttPos := -1
+		for i := lineEnd - 1; i >= lineStart; i-- {
+			if mapping[i] >= 0 {
+				lastSttPos = mapping[i]
+				break
 			}
-			wordIdx = cutIdx + 1
+		}
 
-			// カットポイント: 隣接単語間の中間点を使用して音声の欠落を防ぐ
-			if cutIdx+1 < len(words) {
-				midpoint := words[cutIdx].EndTime +
-					(words[cutIdx+1].StartTime-words[cutIdx].EndTime)/2
+		// 次の行の最初にマッチした STT 位置を探す
+		firstSttPos := -1
+		for i := lineEnd; i < nextLineEnd; i++ {
+			if mapping[i] >= 0 {
+				firstSttPos = mapping[i]
+				break
+			}
+		}
+
+		// カットポイントを決定
+		switch {
+		case lastSttPos >= 0 && firstSttPos >= 0:
+			// 通常ケース: 次の行の最初の単語の直前でカット
+			// TTS が追加したテキストは現在の行側に含まれる
+			firstWordIdx := sttRuneToWordIdx[firstSttPos]
+			if firstWordIdx > 0 {
+				prevWordIdx := firstWordIdx - 1
+				midpoint := words[prevWordIdx].EndTime +
+					(words[firstWordIdx].StartTime-words[prevWordIdx].EndTime)/2
 				results[lineIdx].EndTime = midpoint
 				results[lineIdx+1].StartTime = midpoint
 			} else {
-				results[lineIdx].EndTime = words[cutIdx].EndTime
-				if lineIdx+1 < len(lines) {
-					results[lineIdx+1].StartTime = words[cutIdx].EndTime
-				}
+				results[lineIdx].EndTime = words[firstWordIdx].StartTime
+				results[lineIdx+1].StartTime = words[firstWordIdx].StartTime
 			}
 
-			lineIdx++
+		case lastSttPos >= 0:
+			// 次の行にマッチがない — 現在の行の末尾で区切り
+			cutWordIdx := sttRuneToWordIdx[lastSttPos]
+			if cutWordIdx+1 < len(words) {
+				midpoint := words[cutWordIdx].EndTime +
+					(words[cutWordIdx+1].StartTime-words[cutWordIdx].EndTime)/2
+				results[lineIdx].EndTime = midpoint
+				results[lineIdx+1].StartTime = midpoint
+			} else {
+				results[lineIdx].EndTime = words[cutWordIdx].EndTime
+				results[lineIdx+1].StartTime = words[cutWordIdx].EndTime
+			}
+
+		case firstSttPos >= 0:
+			// 現在の行にマッチがない — 次の行の先頭で区切り
+			firstWordIdx := sttRuneToWordIdx[firstSttPos]
+			results[lineIdx].EndTime = words[firstWordIdx].StartTime
+			results[lineIdx+1].StartTime = words[firstWordIdx].StartTime
+
+		default:
+			// 両方にマッチがない — 0 duration のセグメント
+			results[lineIdx].EndTime = results[lineIdx].StartTime
+			results[lineIdx+1].StartTime = results[lineIdx].StartTime
 		}
 	}
 
-	// 残りの行が未割り当ての場合（STT 単語が足りない）
-	if lineIdx < len(lines) {
-		lastEnd := words[len(words)-1].EndTime
-		for i := lineIdx; i < len(lines); i++ {
-			if results[i].StartTime == 0 && i > 0 {
-				results[i].StartTime = lastEnd
-			}
-			results[i].EndTime = lastEnd
-		}
-	}
+	// 最後の行の EndTime
+	results[len(lines)-1].EndTime = words[len(words)-1].EndTime
 
 	return results, nil
+}
+
+// dpAlignment は Needleman-Wunsch アルゴリズムで2つの文字列の最適アライメントを計算し、
+// 元テキストの各文字が STT テキストのどの位置に対応するかを返す。
+// 対応がない文字（gap）は -1 になる。
+func dpAlignment(orig, stt []rune) []int {
+	n := len(orig)
+	m := len(stt)
+
+	// DP テーブル: dp[i][j] = orig[:i] と stt[:j] の最適アライメントスコア
+	dp := make([][]int, n+1)
+	for i := range dp {
+		dp[i] = make([]int, m+1)
+	}
+
+	// 初期化: 先頭からの gap
+	for i := 1; i <= n; i++ {
+		dp[i][0] = dp[i-1][0] + dpGapScore
+	}
+	for j := 1; j <= m; j++ {
+		dp[0][j] = dp[0][j-1] + dpGapScore
+	}
+
+	// DP テーブルを埋める
+	for i := 1; i <= n; i++ {
+		for j := 1; j <= m; j++ {
+			score := dpMismatchScore
+			if orig[i-1] == stt[j-1] {
+				score = dpMatchScore
+			}
+			dp[i][j] = max(
+				dp[i-1][j-1]+score,   // match/mismatch（対角）
+				dp[i-1][j]+dpGapScore, // gap in STT（元テキストの文字をスキップ）
+				dp[i][j-1]+dpGapScore, // gap in orig（STT の文字をスキップ）
+			)
+		}
+	}
+
+	// トレースバック: 最適パスを辿り、元テキスト → STT の対応マッピングを構築
+	mapping := make([]int, n)
+	for i := range mapping {
+		mapping[i] = -1
+	}
+
+	i, j := n, m
+	for i > 0 && j > 0 {
+		score := dpMismatchScore
+		if orig[i-1] == stt[j-1] {
+			score = dpMatchScore
+		}
+
+		switch {
+		case dp[i][j] == dp[i-1][j-1]+score:
+			// match/mismatch: 両方の文字を対応させる
+			mapping[i-1] = j - 1
+			i--
+			j--
+		case dp[i][j] == dp[i-1][j]+dpGapScore:
+			// gap in STT: 元テキストの文字に対応なし（TTS がスキップ）
+			i--
+		default:
+			// gap in orig: STT の文字に対応なし（TTS が追加）
+			j--
+		}
+	}
+
+	return mapping
 }
 
 // SnapBoundariesToSilence は STT で得た行境界を最寄りの無音区間中間点にスナップする
@@ -170,7 +244,7 @@ func AlignTextToTimestamps(lines []string, words []WordTimestamp) ([]LineBoundar
 // 各内部カットポイント（boundaries[i].EndTime / boundaries[i+1].StartTime）について、
 // maxSnapDistance 以内で最も長い無音区間の中間点にスナップする。
 // 文間ポーズは文中の句読点ポーズより長いため、最長の無音を選ぶことで
-// STT の文字カウントドリフトによる誤スナップを防ぐ。
+// 誤スナップを防ぐ。
 // 先頭境界の StartTime と末尾境界の EndTime は変更しない。
 func SnapBoundariesToSilence(boundaries []LineBoundary, silences []SilenceInterval, maxSnapDistance time.Duration) []LineBoundary {
 	if len(boundaries) <= 1 || len(silences) == 0 {

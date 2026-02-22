@@ -20,7 +20,7 @@ const (
 	geminiDefaultLanguageCode = "ja-JP"
 
 	// DefaultVoiceStyle はデフォルトの音声スタイルプロンプト
-	DefaultVoiceStyle = "ポッドキャスト番組の収録です。落ち着いたテンポでゆっくり話しつつも、自然な抑揚と感情を込めて、友達と雑談するように楽しく語ってください。"
+	DefaultVoiceStyle = "ポッドキャスト番組の収録です。落ち着いたテンポでゆっくり話しつつも、台本の内容は遵守しつつ、自然な抑揚と感情を込めて、友達と雑談するように楽しく語ってください。"
 
 	// Gemini TTS の出力フォーマット
 	geminiOutputFormat     = "pcm"

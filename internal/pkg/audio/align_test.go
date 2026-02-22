@@ -106,7 +106,7 @@ func TestAlignTextToTimestamps(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	t.Run("STT の文字数が元テキストより多い場合にスケーリングで補正する", func(t *testing.T) {
+	t.Run("STT の文字数が元テキストより多い場合に DP アライメントで正しく分割する", func(t *testing.T) {
 		lines := []string{
 			"あいう",
 			"えおか",
@@ -138,10 +138,10 @@ func TestAlignTextToTimestamps(t *testing.T) {
 		assert.Contains(t, err.Error(), "乖離")
 	})
 
-	t.Run("STT のトークン分割が異なっても文字カウントで正しく分割する", func(t *testing.T) {
+	t.Run("STT のトークン分割が異なっても DP アライメントで正しく分割する", func(t *testing.T) {
 		// STT が「きました」を「きまし」「た」に分割するケース。
-		// 文字カウントは「た」の時点で境界(8文字)に到達し、
-		// 直後のギャップ(300ms >= 80ms)で先読み吸収せずそのままカットする。
+		// DP アライメントにより「た」が行1に正しく対応し、
+		// 「た」と「酒蔵」の間の中間点でカットする。
 		lines := []string{
 			"わかってきました",
 			"酒蔵って行ったことない",
@@ -169,10 +169,10 @@ func TestAlignTextToTimestamps(t *testing.T) {
 		assert.Equal(t, 2400*time.Millisecond, boundaries[1].EndTime)
 	})
 
-	t.Run("STT の文字脱落があってもスケーリング補正で正しく分割する", func(t *testing.T) {
+	t.Run("STT の文字脱落があっても DP アライメントで正しく分割する", func(t *testing.T) {
 		// STT が助詞「の」を脱落させて文字数が1少ない。
-		// スケーリング補正により境界が STT 文字空間にマッピングされ、
-		// 「きました」の時点で境界に到達して正しく分割される。
+		// DP アライメントにより「の」は gap として処理され、
+		// 前後の文字が正しく対応するため境界がずれない。
 		lines := []string{
 			"日本酒の美味しさがわかってきました",
 			"酒蔵って行ったことはない",
@@ -204,11 +204,10 @@ func TestAlignTextToTimestamps(t *testing.T) {
 		assert.Equal(t, 2700*time.Millisecond, boundaries[1].EndTime)
 	})
 
-	t.Run("先読み吸収で STT の単語分割ドリフトを補正する", func(t *testing.T) {
-		// STT が2行目を短縮認識し、スケーリングで行1の境界が 8→7 文字に縮小。
-		// 文字カウントは「きまし」(7文字)で境界に到達するが、
-		// 「きまし」→「た」のギャップが 0ms < 80ms のため先読み吸収が発動。
-		// 「た」→「さけぐら」のギャップが 300ms >= 80ms なので「た」を吸収してカット。
+	t.Run("STT が2行目を短縮認識しても DP アライメントで正しく分割する", func(t *testing.T) {
+		// STT が2行目を短縮認識（「にいった」→「いた」）。
+		// DP アライメントにより「た」が行1に正しく対応し、
+		// 「た」と「さけぐら」の間の中間点でカットする。
 		lines := []string{
 			"わかってきました", // 8文字
 			"さけぐらにいった", // 8文字
@@ -268,6 +267,176 @@ func TestAlignTextToTimestamps(t *testing.T) {
 		assert.Equal(t, 2350*time.Millisecond, boundaries[1].EndTime)
 		assert.Equal(t, 2350*time.Millisecond, boundaries[2].StartTime)
 		assert.Equal(t, 3200*time.Millisecond, boundaries[2].EndTime)
+	})
+	t.Run("TTS が行の冒頭フレーズをスキップした場合に DP アライメントで正しく分割する", func(t *testing.T) {
+		// TTS が行1の「よろしくお願いします」をスキップして「実は私...」から読み始めるケース。
+		// 文字カウント方式では全後続境界がシフトするが、DP アライメントではスキップが
+		// gap として局所的に処理されるため、行2以降の境界がずれない。
+		lines := []string{
+			"よろしくお願いします。実は私、最近プログラミングを始めたいなって思ってるんですけど。",
+			"えっ、ユウキさんでも悩んだんですか。",
+			"なるほど。例えばWebサイトを作りたい場合はどうなりますか。",
+		}
+		words := []WordTimestamp{
+			// 行1: 「よろしくお願いします」がスキップされて「実は私」から始まる
+			{Word: "実は", StartTime: 0, EndTime: 300 * time.Millisecond},
+			{Word: "私", StartTime: 300 * time.Millisecond, EndTime: 500 * time.Millisecond},
+			{Word: "最近", StartTime: 500 * time.Millisecond, EndTime: 700 * time.Millisecond},
+			{Word: "プログラミング", StartTime: 700 * time.Millisecond, EndTime: 1200 * time.Millisecond},
+			{Word: "を", StartTime: 1200 * time.Millisecond, EndTime: 1300 * time.Millisecond},
+			{Word: "始めたいなって", StartTime: 1300 * time.Millisecond, EndTime: 1700 * time.Millisecond},
+			{Word: "思ってるんですけど", StartTime: 1700 * time.Millisecond, EndTime: 2200 * time.Millisecond},
+			// ↓ 文間ポーズ 300ms
+			{Word: "えっ", StartTime: 2500 * time.Millisecond, EndTime: 2700 * time.Millisecond},
+			{Word: "ユウキ", StartTime: 2700 * time.Millisecond, EndTime: 2900 * time.Millisecond},
+			{Word: "さんでも", StartTime: 2900 * time.Millisecond, EndTime: 3200 * time.Millisecond},
+			{Word: "悩んだんですか", StartTime: 3200 * time.Millisecond, EndTime: 3700 * time.Millisecond},
+			// ↓ 文間ポーズ 300ms
+			{Word: "なるほど", StartTime: 4000 * time.Millisecond, EndTime: 4300 * time.Millisecond},
+			{Word: "例えば", StartTime: 4300 * time.Millisecond, EndTime: 4500 * time.Millisecond},
+			{Word: "Web", StartTime: 4500 * time.Millisecond, EndTime: 4600 * time.Millisecond},
+			{Word: "サイト", StartTime: 4600 * time.Millisecond, EndTime: 4800 * time.Millisecond},
+			{Word: "を", StartTime: 4800 * time.Millisecond, EndTime: 4900 * time.Millisecond},
+			{Word: "作りたい", StartTime: 4900 * time.Millisecond, EndTime: 5200 * time.Millisecond},
+			{Word: "場合は", StartTime: 5200 * time.Millisecond, EndTime: 5400 * time.Millisecond},
+			{Word: "どうなりますか", StartTime: 5400 * time.Millisecond, EndTime: 5800 * time.Millisecond},
+		}
+
+		boundaries, err := AlignTextToTimestamps(lines, words)
+
+		require.NoError(t, err)
+		require.Len(t, boundaries, 3)
+
+		// 行1-2 境界: 「思ってるんですけど」(EndTime=2200ms) と「えっ」(StartTime=2500ms) の中間点
+		assert.Equal(t, time.Duration(0), boundaries[0].StartTime)
+		assert.Equal(t, 2350*time.Millisecond, boundaries[0].EndTime)
+		// 行2-3 境界: 「悩んだんですか」(EndTime=3700ms) と「なるほど」(StartTime=4000ms) の中間点
+		assert.Equal(t, 2350*time.Millisecond, boundaries[1].StartTime)
+		assert.Equal(t, 3850*time.Millisecond, boundaries[1].EndTime)
+		assert.Equal(t, 3850*time.Millisecond, boundaries[2].StartTime)
+		assert.Equal(t, 5800*time.Millisecond, boundaries[2].EndTime)
+	})
+
+	t.Run("TTS がテキストを追加した場合に DP アライメントで正しく分割する", func(t *testing.T) {
+		// TTS が行1と行2の間に「そうですね」を追加したケース。
+		// DP アライメントにより追加テキストは gap として処理され、
+		// 元の行境界が正しく保たれる。
+		lines := []string{
+			"こんにちは世界",
+			"今日は天気が良い",
+		}
+		words := []WordTimestamp{
+			{Word: "こんにちは", StartTime: 0, EndTime: 500 * time.Millisecond},
+			{Word: "世界", StartTime: 500 * time.Millisecond, EndTime: 1000 * time.Millisecond},
+			// TTS が追加した「そうですね」
+			{Word: "そうですね", StartTime: 1000 * time.Millisecond, EndTime: 1400 * time.Millisecond},
+			// ↓ 文間ポーズ
+			{Word: "今日", StartTime: 1600 * time.Millisecond, EndTime: 1800 * time.Millisecond},
+			{Word: "は", StartTime: 1800 * time.Millisecond, EndTime: 1900 * time.Millisecond},
+			{Word: "天気", StartTime: 1900 * time.Millisecond, EndTime: 2100 * time.Millisecond},
+			{Word: "が", StartTime: 2100 * time.Millisecond, EndTime: 2200 * time.Millisecond},
+			{Word: "良い", StartTime: 2200 * time.Millisecond, EndTime: 2500 * time.Millisecond},
+		}
+
+		boundaries, err := AlignTextToTimestamps(lines, words)
+
+		require.NoError(t, err)
+		require.Len(t, boundaries, 2)
+		// 行1-2 境界: 「世界」の EndTime(1000ms) と「そうですね」の StartTime(1000ms) は同じ。
+		// 追加テキストは行1側に含まれ、「そうですね」(EndTime=1400ms) と「今日」(StartTime=1600ms) の中間点でカット。
+		assert.Equal(t, time.Duration(0), boundaries[0].StartTime)
+		assert.Equal(t, 1500*time.Millisecond, boundaries[0].EndTime)
+		assert.Equal(t, 1500*time.Millisecond, boundaries[1].StartTime)
+		assert.Equal(t, 2500*time.Millisecond, boundaries[1].EndTime)
+	})
+
+	t.Run("TTS が行全体をスキップした場合にスキップ行が無音セグメントとなる", func(t *testing.T) {
+		// TTS が行2「さようなら」を完全にスキップしたケース。
+		// 行2のセグメントには word0 と word1 の間の無音区間が含まれる。
+		// 行1 末尾は word0-word1 間の中間点（650ms）、行3 先頭は word1 開始（800ms）。
+		lines := []string{
+			"こんにちは",
+			"さようなら",
+			"またね",
+		}
+		words := []WordTimestamp{
+			{Word: "こんにちは", StartTime: 0, EndTime: 500 * time.Millisecond},
+			// ↓ 行2「さようなら」がスキップ
+			{Word: "またね", StartTime: 800 * time.Millisecond, EndTime: 1200 * time.Millisecond},
+		}
+
+		boundaries, err := AlignTextToTimestamps(lines, words)
+
+		require.NoError(t, err)
+		require.Len(t, boundaries, 3)
+		// 行1: こんにちは — word0 と word1 の中間点でカット
+		assert.Equal(t, time.Duration(0), boundaries[0].StartTime)
+		assert.Equal(t, 650*time.Millisecond, boundaries[0].EndTime)
+		// 行2: スキップされた行は word0-word1 間の無音区間を含む
+		assert.Equal(t, 650*time.Millisecond, boundaries[1].StartTime)
+		assert.Equal(t, 800*time.Millisecond, boundaries[1].EndTime)
+		// 行3: またね
+		assert.Equal(t, 800*time.Millisecond, boundaries[2].StartTime)
+		assert.Equal(t, 1200*time.Millisecond, boundaries[2].EndTime)
+	})
+}
+
+func TestDpAlignment(t *testing.T) {
+	t.Run("完全一致の文字列を正しくマッピングする", func(t *testing.T) {
+		orig := []rune("あいうえお")
+		stt := []rune("あいうえお")
+
+		mapping := dpAlignment(orig, stt)
+
+		require.Len(t, mapping, 5)
+		for i := 0; i < 5; i++ {
+			assert.Equal(t, i, mapping[i])
+		}
+	})
+
+	t.Run("STT に gap がある場合に元テキストの対応文字が -1 になる", func(t *testing.T) {
+		orig := []rune("あいうえお")
+		stt := []rune("あいえお") // 「う」がスキップ
+
+		mapping := dpAlignment(orig, stt)
+
+		require.Len(t, mapping, 5)
+		assert.Equal(t, 0, mapping[0]) // あ → 0
+		assert.Equal(t, 1, mapping[1]) // い → 1
+		assert.Equal(t, -1, mapping[2]) // う → gap
+		assert.Equal(t, 2, mapping[3]) // え → 2
+		assert.Equal(t, 3, mapping[4]) // お → 3
+	})
+
+	t.Run("STT に追加文字がある場合もマッピングが正しい", func(t *testing.T) {
+		orig := []rune("あいうえお")
+		stt := []rune("あいXうえお") // 「X」が追加
+
+		mapping := dpAlignment(orig, stt)
+
+		require.Len(t, mapping, 5)
+		assert.Equal(t, 0, mapping[0]) // あ → 0
+		assert.Equal(t, 1, mapping[1]) // い → 1
+		assert.Equal(t, 3, mapping[2]) // う → 3（X をスキップ）
+		assert.Equal(t, 4, mapping[3]) // え → 4
+		assert.Equal(t, 5, mapping[4]) // お → 5
+	})
+
+	t.Run("先頭のテキストがスキップされた場合も正しくマッピングする", func(t *testing.T) {
+		orig := []rune("よろしくこんにちは")
+		stt := []rune("こんにちは") // 「よろしく」がスキップ
+
+		mapping := dpAlignment(orig, stt)
+
+		require.Len(t, mapping, 9)
+		// 「よろしく」は gap
+		for i := 0; i < 4; i++ {
+			assert.Equal(t, -1, mapping[i])
+		}
+		// 「こんにちは」は正しくマッピング
+		for i := 4; i < 9; i++ {
+			assert.Equal(t, i-4, mapping[i])
+		}
 	})
 }
 

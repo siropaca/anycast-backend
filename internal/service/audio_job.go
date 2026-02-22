@@ -900,6 +900,15 @@ func (s *audioJobService) synthesizeMultiSpeakerByReassembly(
 			"alias", alias,
 			"word_count", len(sttWords),
 		)
+		for i, w := range sttWords {
+			log.Debug("reassembly: STT word",
+				"alias", alias,
+				"index", i,
+				"word", w.Word,
+				"start_ms", w.StartTime.Milliseconds(),
+				"end_ms", w.EndTime.Milliseconds(),
+			)
+		}
 
 		// STT の WordTimestamp を audio パッケージの型に変換
 		audioWords := make([]audio.WordTimestamp, len(sttWords))
@@ -911,10 +920,23 @@ func (s *audioJobService) synthesizeMultiSpeakerByReassembly(
 			}
 		}
 
-		// テキストアライメントで行境界を特定
+		// DP アライメントで行境界を特定
 		boundaries, err := audio.AlignTextToTimestamps(group.spokenTexts, audioWords)
 		if err != nil {
 			return nil, fmt.Errorf("話者 %s のテキストアライメントに失敗しました: %w", alias, err)
+		}
+		for i, b := range boundaries {
+			text := ""
+			if i < len(group.spokenTexts) {
+				text = group.spokenTexts[i]
+			}
+			log.Debug("reassembly: DP alignment boundary",
+				"alias", alias,
+				"line", i,
+				"text", text,
+				"start_ms", b.StartTime.Milliseconds(),
+				"end_ms", b.EndTime.Milliseconds(),
+			)
 		}
 
 		// 先頭と末尾の境界を PCM データの実際の範囲に拡張する
