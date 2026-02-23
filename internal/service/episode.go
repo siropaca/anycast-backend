@@ -885,6 +885,17 @@ func (s *episodeService) toChannelOwnerResponse(ctx context.Context, user *model
 
 // toEpisodeResponses は Episode のスライスをレスポンス DTO のスライスに変換する
 func (s *episodeService) toEpisodeResponses(ctx context.Context, episodes []model.Episode, owner *model.User) ([]response.EpisodeResponse, error) {
+	// エピソード ID を収集して台本行数を一括取得
+	episodeIDs := make([]uuid.UUID, len(episodes))
+	for i, e := range episodes {
+		episodeIDs[i] = e.ID
+	}
+
+	scriptLineCounts, err := s.scriptLineRepo.CountByEpisodeIDs(ctx, episodeIDs)
+	if err != nil {
+		return nil, err
+	}
+
 	result := make([]response.EpisodeResponse, len(episodes))
 
 	for i, e := range episodes {
@@ -892,6 +903,7 @@ func (s *episodeService) toEpisodeResponses(ctx context.Context, episodes []mode
 		if err != nil {
 			return nil, err
 		}
+		resp.ScriptLineCount = scriptLineCounts[e.ID]
 		result[i] = resp
 	}
 

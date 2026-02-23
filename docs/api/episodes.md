@@ -12,6 +12,8 @@ GET /channels/:channelId/episodes
 
 | パラメータ | 型 | デフォルト | 説明 |
 |------------|-----|------------|------|
+| sort | string | `createdAt` | ソート対象: `createdAt` / `updatedAt` |
+| order | string | `asc` | ソート順: `asc`（昇順） / `desc`（降順） |
 | limit | int | 20 | 取得件数（最大 100） |
 | offset | int | 0 | オフセット |
 
@@ -25,6 +27,7 @@ GET /channels/:channelId/episodes
       "title": "エピソードタイトル",
       "description": "エピソードの説明",
       "fullAudio": { "id": "uuid", "url": "...", "durationMs": 180000 },
+      "scriptLineCount": 12,
       "playCount": 123,
       "publishedAt": "2025-01-01T00:00:00Z",
       "createdAt": "2025-01-01T00:00:00Z",
@@ -340,6 +343,8 @@ GET /me/channels/:channelId/episodes
 | パラメータ | 型 | デフォルト | 説明 |
 |------------|-----|------------|------|
 | status | string | - | 公開状態でフィルタ: `published` / `draft` |
+| sort | string | `createdAt` | ソート対象: `createdAt` / `updatedAt` |
+| order | string | `asc` | ソート順: `asc`（昇順） / `desc`（降順） |
 | limit | int | 20 | 取得件数（最大 100） |
 | offset | int | 0 | オフセット |
 
@@ -353,6 +358,7 @@ GET /me/channels/:channelId/episodes
       "title": "エピソードタイトル",
       "description": "エピソードの説明",
       "fullAudio": { "id": "uuid", "url": "...", "durationMs": 180000 },
+      "scriptLineCount": 12,
       "playCount": 123,
       "publishedAt": "2025-01-01T00:00:00Z",
       "createdAt": "2025-01-01T00:00:00Z",

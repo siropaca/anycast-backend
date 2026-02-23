@@ -2,15 +2,23 @@ package request
 
 import "github.com/siropaca/anycast-backend/internal/pkg/optional"
 
+// エピソード一覧のソートリクエスト（共通）
+type EpisodeSortRequest struct {
+	Sort  string `form:"sort,default=createdAt" binding:"omitempty,oneof=createdAt updatedAt"`
+	Order string `form:"order,default=asc" binding:"omitempty,oneof=asc desc"`
+}
+
 // 自分のチャンネルのエピソード一覧取得リクエスト
 type ListMyChannelEpisodesRequest struct {
 	PaginationRequest
+	EpisodeSortRequest
 	Status *string `form:"status" binding:"omitempty,oneof=published draft"`
 }
 
 // チャンネルのエピソード一覧取得リクエスト
 type ListChannelEpisodesRequest struct {
 	PaginationRequest
+	EpisodeSortRequest
 }
 
 // エピソード作成リクエスト

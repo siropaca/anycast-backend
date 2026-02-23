@@ -1267,6 +1267,18 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "type": "string",
+                        "description": "ソート対象（createdAt / updatedAt、デフォルト: createdAt）",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "ソート順（asc / desc、デフォルト: asc）",
+                        "name": "order",
+                        "in": "query"
+                    },
+                    {
                         "type": "integer",
                         "description": "取得件数（デフォルト: 20、最大: 100）",
                         "name": "limit",
@@ -4505,6 +4517,18 @@ const docTemplate = `{
                         "type": "string",
                         "description": "公開状態でフィルタ（published / draft）",
                         "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "ソート対象（createdAt / updatedAt、デフォルト: createdAt）",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "ソート順（asc / desc、デフォルト: asc）",
+                        "name": "order",
                         "in": "query"
                     },
                     {
@@ -8625,6 +8649,9 @@ const docTemplate = `{
                 "publishedAt": {
                     "type": "string",
                     "x-nullable": true
+                },
+                "scriptLineCount": {
+                    "type": "integer"
                 },
                 "title": {
                     "type": "string"

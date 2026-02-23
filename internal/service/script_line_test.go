@@ -92,6 +92,11 @@ func (m *mockScriptLineRepository) UpdateSpeakerIDByChannelID(ctx context.Contex
 	return args.Error(0)
 }
 
+func (m *mockScriptLineRepository) CountByEpisodeIDs(ctx context.Context, episodeIDs []uuid.UUID) (map[uuid.UUID]int, error) {
+	args := m.Called(ctx, episodeIDs)
+	return args.Get(0).(map[uuid.UUID]int), args.Error(1)
+}
+
 func TestToScriptLineResponse(t *testing.T) {
 	now := time.Now()
 	lineID := uuid.New()

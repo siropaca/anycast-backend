@@ -29,8 +29,25 @@ type EpisodeRepository interface {
 // EpisodeFilter はエピソード検索のフィルタ条件を表す
 type EpisodeFilter struct {
 	Status *string // "published" or "draft"
+	Sort   string  // "createdAt" or "updatedAt"
+	Order  string  // "asc" or "desc"
 	Limit  int
 	Offset int
+}
+
+// OrderClause はフィルタのソート条件を SQL の ORDER BY 句に変換する
+func (f EpisodeFilter) OrderClause() string {
+	col := "created_at"
+	if f.Sort == "updatedAt" {
+		col = "updated_at"
+	}
+
+	dir := "ASC"
+	if f.Order == "desc" {
+		dir = "DESC"
+	}
+
+	return col + " " + dir
 }
 
 // SearchEpisodeFilter はエピソード検索のフィルタ条件を表す
@@ -81,7 +98,7 @@ func (r *episodeRepository) FindByChannelID(ctx context.Context, channelID uuid.
 		Preload("Bgm.Audio").
 		Preload("SystemBgm").
 		Preload("SystemBgm.Audio").
-		Order("created_at DESC").
+		Order(filter.OrderClause()).
 		Limit(filter.Limit).
 		Offset(filter.Offset).
 		Find(&episodes).Error; err != nil {

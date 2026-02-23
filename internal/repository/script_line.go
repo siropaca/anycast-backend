@@ -17,6 +17,7 @@ type ScriptLineRepository interface {
 	FindByIDs(ctx context.Context, ids []uuid.UUID) ([]model.ScriptLine, error)
 	FindByEpisodeID(ctx context.Context, episodeID uuid.UUID) ([]model.ScriptLine, error)
 	FindByEpisodeIDWithVoice(ctx context.Context, episodeID uuid.UUID) ([]model.ScriptLine, error)
+	CountByEpisodeIDs(ctx context.Context, episodeIDs []uuid.UUID) (map[uuid.UUID]int, error)
 	Create(ctx context.Context, scriptLine *model.ScriptLine) error
 	Delete(ctx context.Context, id uuid.UUID) error
 	DeleteByEpisodeID(ctx context.Context, episodeID uuid.UUID) error
@@ -53,6 +54,36 @@ func (r *scriptLineRepository) FindByID(ctx context.Context, id uuid.UUID) (*mod
 	}
 
 	return &scriptLine, nil
+}
+
+// CountByEpisodeIDs は指定されたエピソード群ごとの台本行数を取得する
+func (r *scriptLineRepository) CountByEpisodeIDs(ctx context.Context, episodeIDs []uuid.UUID) (map[uuid.UUID]int, error) {
+	if len(episodeIDs) == 0 {
+		return map[uuid.UUID]int{}, nil
+	}
+
+	type countRow struct {
+		EpisodeID uuid.UUID
+		Count     int
+	}
+
+	var rows []countRow
+	if err := r.db.WithContext(ctx).
+		Model(&model.ScriptLine{}).
+		Select("episode_id, COUNT(*) AS count").
+		Where("episode_id IN ?", episodeIDs).
+		Group("episode_id").
+		Find(&rows).Error; err != nil {
+		logger.FromContext(ctx).Error("failed to count script lines by episode IDs", "error", err)
+		return nil, apperror.ErrInternal.WithMessage("台本行数の取得に失敗しました").WithError(err)
+	}
+
+	result := make(map[uuid.UUID]int, len(rows))
+	for _, row := range rows {
+		result[row.EpisodeID] = row.Count
+	}
+
+	return result, nil
 }
 
 // FindByEpisodeID は指定されたエピソードの台本行一覧を取得する

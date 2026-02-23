@@ -67,6 +67,8 @@ func (h *EpisodeHandler) GetEpisode(c *gin.Context) {
 // @Produce json
 // @Param channelId path string true "チャンネル ID"
 // @Param status query string false "公開状態でフィルタ（published / draft）"
+// @Param sort query string false "ソート対象（createdAt / updatedAt、デフォルト: createdAt）"
+// @Param order query string false "ソート順（asc / desc、デフォルト: asc）"
 // @Param limit query int false "取得件数（デフォルト: 20、最大: 100）"
 // @Param offset query int false "オフセット（デフォルト: 0）"
 // @Success 200 {object} response.EpisodeListWithPaginationResponse
@@ -98,6 +100,8 @@ func (h *EpisodeHandler) ListMyChannelEpisodes(c *gin.Context) {
 
 	filter := repository.EpisodeFilter{
 		Status: req.Status,
+		Sort:   req.Sort,
+		Order:  req.Order,
 		Limit:  req.Limit,
 		Offset: req.Offset,
 	}
@@ -118,6 +122,8 @@ func (h *EpisodeHandler) ListMyChannelEpisodes(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param channelId path string true "チャンネル ID"
+// @Param sort query string false "ソート対象（createdAt / updatedAt、デフォルト: createdAt）"
+// @Param order query string false "ソート順（asc / desc、デフォルト: asc）"
 // @Param limit query int false "取得件数（デフォルト: 20、最大: 100）"
 // @Param offset query int false "オフセット（デフォルト: 0）"
 // @Success 200 {object} response.EpisodeListWithPaginationResponse
@@ -141,6 +147,8 @@ func (h *EpisodeHandler) ListChannelEpisodes(c *gin.Context) {
 	}
 
 	filter := repository.EpisodeFilter{
+		Sort:   req.Sort,
+		Order:  req.Order,
 		Limit:  req.Limit,
 		Offset: req.Offset,
 	}

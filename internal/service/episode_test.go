@@ -170,7 +170,12 @@ func TestToEpisodeResponses(t *testing.T) {
 
 	t.Run("複数エピソードを正しく変換する", func(t *testing.T) {
 		mockStorage := new(mockStorageClient)
-		svc := &episodeService{storageClient: mockStorage}
+		mockScriptLineRepo := new(mockScriptLineRepository)
+		mockScriptLineRepo.On("CountByEpisodeIDs", mock.Anything, mock.Anything).Return(map[uuid.UUID]int{
+			episodes[0].ID: 5,
+			episodes[1].ID: 3,
+		}, nil)
+		svc := &episodeService{storageClient: mockStorage, scriptLineRepo: mockScriptLineRepo}
 		ctx := context.Background()
 
 		result, err := svc.toEpisodeResponses(ctx, episodes, owner)
@@ -179,11 +184,15 @@ func TestToEpisodeResponses(t *testing.T) {
 		assert.Len(t, result, 2)
 		assert.Equal(t, "Episode 1", result[0].Title)
 		assert.Equal(t, "Episode 2", result[1].Title)
+		assert.Equal(t, 5, result[0].ScriptLineCount)
+		assert.Equal(t, 3, result[1].ScriptLineCount)
 	})
 
 	t.Run("空のスライスの場合、空のスライスを返す", func(t *testing.T) {
 		mockStorage := new(mockStorageClient)
-		svc := &episodeService{storageClient: mockStorage}
+		mockScriptLineRepo := new(mockScriptLineRepository)
+		mockScriptLineRepo.On("CountByEpisodeIDs", mock.Anything, mock.Anything).Return(map[uuid.UUID]int{}, nil)
+		svc := &episodeService{storageClient: mockStorage, scriptLineRepo: mockScriptLineRepo}
 		ctx := context.Background()
 
 		result, err := svc.toEpisodeResponses(ctx, []model.Episode{}, owner)
