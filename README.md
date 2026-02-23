@@ -2,9 +2,42 @@
 
 AIポッドキャスト作成・配信プラットフォーム「Anycast」のバックエンド API サーバーです。
 
-## フロントエンド
+## 関連リポジトリ
 
-- https://github.com/siropaca/anycast-frontend
+- [anycast-frontend](https://github.com/siropaca/anycast-frontend) - フロントエンド
+- [anycast-mcp-server](https://github.com/siropaca/anycast-mcp-server) - MCP Server
+
+## MCP Server
+
+[anycast-mcp-server](https://www.npmjs.com/package/anycast-mcp-server) は、anycast-backend の REST API をラップする MCP（Model Context Protocol）Server です。Claude Code などの MCP クライアントからチャンネルやエピソードの作成・管理が行えます。
+
+### セットアップ
+
+Node.js 22 以上が必要です。`.claude/settings.json` に以下を追加してください。
+
+```json
+{
+  "mcpServers": {
+    "anycast": {
+      "command": "npx",
+      "args": ["-y", "anycast-mcp-server"],
+      "env": {
+        "ANYCAST_API_KEY": "ak_...",
+        "ANYCAST_BASE_URL": "https://api.anycast.audio"
+      }
+    }
+  }
+}
+```
+
+### 利用可能なツール
+
+| カテゴリ | ツール |
+|----------|--------|
+| チャンネル | `list_channels`, `get_channel`, `create_channel`, `update_channel`, `publish_channel` |
+| エピソード | `list_episodes`, `get_episode`, `create_episode`, `update_episode`, `publish_episode` |
+| 台本 | `generate_script`, `get_script_job`, `list_script_lines` |
+| その他 | `list_categories`, `list_voices`, `list_characters` |
 
 ## 技術スタック
 
