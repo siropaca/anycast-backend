@@ -53,6 +53,11 @@ func (m *mockScriptLineService) Delete(ctx context.Context, userID, channelID, e
 	return args.Error(0)
 }
 
+func (m *mockScriptLineService) DeleteAll(ctx context.Context, userID, channelID, episodeID string) error {
+	args := m.Called(ctx, userID, channelID, episodeID)
+	return args.Error(0)
+}
+
 func (m *mockScriptLineService) Reorder(ctx context.Context, userID, channelID, episodeID string, req request.ReorderScriptLinesRequest) (*response.ScriptLineListResponse, error) {
 	args := m.Called(ctx, userID, channelID, episodeID, req)
 	if args.Get(0) == nil {
@@ -227,6 +232,98 @@ func TestScriptLineHandler_ListScriptLines(t *testing.T) {
 		w := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", "/channels/"+channelID+"/episodes/"+episodeID+"/script/lines", http.NoBody)
 		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
+}
+
+func TestScriptLineHandler_DeleteAllScriptLines(t *testing.T) {
+	userID := uuid.New().String()
+	channelID := uuid.New().String()
+	episodeID := uuid.New().String()
+
+	setupRouter := func(h *ScriptLineHandler, uid string) *gin.Engine {
+		gin.SetMode(gin.TestMode)
+		r := gin.New()
+		r.Use(func(c *gin.Context) {
+			c.Set(string(middleware.UserIDKey), uid)
+			c.Next()
+		})
+		r.DELETE("/channels/:channelId/episodes/:episodeId/script/lines", h.DeleteAllScriptLines)
+		return r
+	}
+
+	t.Run("正常に全削除できる（204）", func(t *testing.T) {
+		mockSvc := new(mockScriptLineService)
+		mockSvc.On("DeleteAll", mock.Anything, userID, channelID, episodeID).Return(nil)
+
+		handler := NewScriptLineHandler(mockSvc)
+		router := setupRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("DELETE", "/channels/"+channelID+"/episodes/"+episodeID+"/script/lines", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNoContent, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("チャンネルが見つからない場合は 404 を返す", func(t *testing.T) {
+		mockSvc := new(mockScriptLineService)
+		mockSvc.On("DeleteAll", mock.Anything, userID, channelID, episodeID).Return(apperror.ErrNotFound.WithMessage("Channel not found"))
+
+		handler := NewScriptLineHandler(mockSvc)
+		router := setupRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("DELETE", "/channels/"+channelID+"/episodes/"+episodeID+"/script/lines", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("権限がない場合は 403 を返す", func(t *testing.T) {
+		mockSvc := new(mockScriptLineService)
+		mockSvc.On("DeleteAll", mock.Anything, userID, channelID, episodeID).Return(apperror.ErrForbidden.WithMessage("Forbidden"))
+
+		handler := NewScriptLineHandler(mockSvc)
+		router := setupRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("DELETE", "/channels/"+channelID+"/episodes/"+episodeID+"/script/lines", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("サービスがエラーを返すとエラーレスポンスを返す", func(t *testing.T) {
+		mockSvc := new(mockScriptLineService)
+		mockSvc.On("DeleteAll", mock.Anything, userID, channelID, episodeID).Return(apperror.ErrInternal)
+
+		handler := NewScriptLineHandler(mockSvc)
+		router := setupRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("DELETE", "/channels/"+channelID+"/episodes/"+episodeID+"/script/lines", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("未認証の場合は 401 を返す", func(t *testing.T) {
+		mockSvc := new(mockScriptLineService)
+		handler := NewScriptLineHandler(mockSvc)
+
+		gin.SetMode(gin.TestMode)
+		r := gin.New()
+		r.DELETE("/channels/:channelId/episodes/:episodeId/script/lines", handler.DeleteAllScriptLines)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("DELETE", "/channels/"+channelID+"/episodes/"+episodeID+"/script/lines", http.NoBody)
+		r.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})

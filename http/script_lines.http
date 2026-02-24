@@ -133,6 +133,10 @@ Content-Type: application/json
 DELETE {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/lines/YOUR_LINE_ID_HERE
 Authorization: Bearer {{token}}
 
+### 台本行全削除
+DELETE {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/lines
+Authorization: Bearer {{token}}
+
 ### 台本行並び替え
 POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/reorder
 Authorization: Bearer {{token}}

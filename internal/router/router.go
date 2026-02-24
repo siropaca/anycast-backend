@@ -168,6 +168,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.GET("/channels/:channelId/episodes/:episodeId/script/lines", container.ScriptLineHandler.ListScriptLines)
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/script/lines", container.ScriptLineHandler.CreateScriptLine)
 	authenticated.PATCH("/channels/:channelId/episodes/:episodeId/script/lines/:lineId", container.ScriptLineHandler.UpdateScriptLine)
+	authenticated.DELETE("/channels/:channelId/episodes/:episodeId/script/lines", container.ScriptLineHandler.DeleteAllScriptLines)
 	authenticated.DELETE("/channels/:channelId/episodes/:episodeId/script/lines/:lineId", container.ScriptLineHandler.DeleteScriptLine)
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/script/reorder", container.ScriptLineHandler.ReorderScriptLines)
 

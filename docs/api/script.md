@@ -447,6 +447,21 @@ DELETE /channels/:channelId/episodes/:episodeId/script/lines/:lineId
 
 ---
 
+## 全行削除
+
+```
+DELETE /channels/:channelId/episodes/:episodeId/script/lines
+```
+
+指定したエピソードの台本行をすべて削除する。
+
+**レスポンス:**
+- `204 No Content`: 削除成功（台本行が 0 件の場合も 204）
+- `403 Forbidden`: チャンネルのオーナーでない場合
+- `404 Not Found`: チャンネルまたはエピソードが存在しない場合
+
+---
+
 ## 行並び替え
 
 ```

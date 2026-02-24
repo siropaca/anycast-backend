@@ -19,6 +19,7 @@ type ScriptLineService interface {
 	Create(ctx context.Context, userID, channelID, episodeID string, req request.CreateScriptLineRequest) (*response.ScriptLineResponse, error)
 	Update(ctx context.Context, userID, channelID, episodeID, lineID string, req request.UpdateScriptLineRequest) (*response.ScriptLineResponse, error)
 	Delete(ctx context.Context, userID, channelID, episodeID, lineID string) error
+	DeleteAll(ctx context.Context, userID, channelID, episodeID string) error
 	Reorder(ctx context.Context, userID, channelID, episodeID string, req request.ReorderScriptLinesRequest) (*response.ScriptLineListResponse, error)
 }
 
@@ -376,6 +377,51 @@ func (s *scriptLineService) Delete(ctx context.Context, userID, channelID, episo
 
 	// 台本行を削除
 	if err := s.scriptLineRepo.Delete(ctx, lid); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeleteAll は指定されたエピソードの台本行をすべて削除する
+func (s *scriptLineService) DeleteAll(ctx context.Context, userID, channelID, episodeID string) error {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return err
+	}
+
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return err
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return err
+	}
+
+	if channel.UserID != uid {
+		return apperror.ErrForbidden.WithMessage("このチャンネルへのアクセス権限がありません")
+	}
+
+	// エピソードの存在確認とチャンネルの一致チェック
+	episode, err := s.episodeRepo.FindByID(ctx, eid)
+	if err != nil {
+		return err
+	}
+
+	if episode.ChannelID != cid {
+		return apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
+	}
+
+	// 台本行を全て削除
+	if err := s.scriptLineRepo.DeleteByEpisodeID(ctx, eid); err != nil {
 		return err
 	}
 

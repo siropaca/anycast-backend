@@ -87,6 +87,7 @@
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines` | 行追加 | Owner | ✅ | [詳細](./script.md#行追加) |
 | PATCH | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | 行更新 | Owner | ✅ | [詳細](./script.md#行更新) |
 | DELETE | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines/:lineId` | 行削除 | Owner | ✅ | [詳細](./script.md#行削除) |
+| DELETE | `/api/v1/channels/:channelId/episodes/:episodeId/script/lines` | 全行削除 | Owner | ✅ | [詳細](./script.md#全行削除) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/script/reorder` | 行並び替え | Owner | ✅ | [詳細](./script.md#行並び替え) |
 | **Audio（音声生成）** | - | - | - | - | [media.md](./media.md) |
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/audio/generate-async` | 非同期音声生成（voice/full/remix） | Owner | ✅ | [詳細](./media.md#非同期音声生成) |

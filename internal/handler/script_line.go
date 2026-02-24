@@ -222,6 +222,48 @@ func (h *ScriptLineHandler) DeleteScriptLine(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// DeleteAllScriptLines godoc
+// @Summary 台本行全削除
+// @Description 指定したエピソードの台本行をすべて削除します
+// @Tags script
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param episodeId path string true "エピソード ID"
+// @Success 204 "No Content"
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/episodes/{episodeId}/script/lines [delete]
+func (h *ScriptLineHandler) DeleteAllScriptLines(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
+		return
+	}
+
+	episodeID := c.Param("episodeId")
+	if episodeID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
+		return
+	}
+
+	if err := h.scriptLineService.DeleteAll(c.Request.Context(), userID, channelID, episodeID); err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
 // ReorderScriptLines godoc
 // @Summary 台本行並び替え
 // @Description 台本行の順序を並び替えます
