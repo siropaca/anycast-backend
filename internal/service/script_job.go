@@ -495,9 +495,12 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 		log.Warn("Phase 4 rewrite failed, using original draft", "error", err)
 		rewrittenText = generatedText
 	} else {
-		// 感情ありの場合、感情タグ数を上限に収める
 		if brief.Constraints.WithEmotion {
+			// 感情ありの場合、感情タグ数を上限に収める
 			rewrittenText = script.CapEmotionTags(rewrittenText, 15)
+		} else {
+			// 感情なしの場合、LLM が付与してしまった感情タグを除去する
+			rewrittenText = script.StripEmotionTags(rewrittenText)
 		}
 
 		// リライト後のテキストを再パース
@@ -683,14 +686,16 @@ func (s *scriptJobService) executePhase4(ctx context.Context, draftText string, 
 
 	userPrompt := "## ブリーフ\n" + briefJSON + "\n\n## ドラフト台本\n" + draftText
 
+	sysPrompt := getPhase4SystemPrompt(brief.Constraints.WithEmotion)
+
 	t.Trace("phase4", "model_info", s.llmRegistry.GetModelInfo(phase4Config.Provider))
-	t.Trace("phase4", "system_prompt", phase4SystemPrompt)
+	t.Trace("phase4", "system_prompt", sysPrompt)
 	t.Trace("phase4", "user_prompt", userPrompt)
 
 	temp := phase4Config.Temperature
 	opts := llm.ChatOptions{Temperature: &temp}
 
-	result, err := client.ChatWithOptions(ctx, phase4SystemPrompt, userPrompt, opts)
+	result, err := client.ChatWithOptions(ctx, sysPrompt, userPrompt, opts)
 	if err != nil {
 		t.Flush("phase4")
 		return "", err
@@ -758,10 +763,12 @@ func (s *scriptJobService) executePhase5(ctx context.Context, job *model.ScriptJ
 	temp := phase5Config.Temperature
 	opts := llm.ChatOptions{Temperature: &temp}
 
-	t.Trace("phase5", "system_prompt", phase5SystemPrompt)
+	sysPrompt := getPhase5SystemPrompt(brief.Constraints.WithEmotion)
+
+	t.Trace("phase5", "system_prompt", sysPrompt)
 	t.Trace("phase5", "user_prompt", patchPrompt)
 
-	patchedText, err := client.ChatWithOptions(ctx, phase5SystemPrompt, patchPrompt, opts)
+	patchedText, err := client.ChatWithOptions(ctx, sysPrompt, patchPrompt, opts)
 	if err != nil {
 		log.Warn("Phase 5: patch LLM call failed", "error", err)
 		t.Flush("phase5")
@@ -788,14 +795,21 @@ func (s *scriptJobService) executePhase5(ctx context.Context, job *model.ScriptJ
 
 	t.Flush("phase5")
 
-	// 感情ありの場合、パッチ後の感情タグ数を上限に収める
 	if brief.Constraints.WithEmotion {
+		// 感情ありの場合、パッチ後の感情タグ数を上限に収める
 		cappedText := script.CapEmotionTags(patchedText, 15)
 		cappedResult := script.Parse(cappedText, allowedSpeakers)
 		log.Info("Phase 5: capped emotion tags",
 			"before", countEmotionTags(patchedResult.Lines), "after", countEmotionTags(cappedResult.Lines))
 		if len(cappedResult.Lines) > 0 {
 			return cappedResult.Lines
+		}
+	} else {
+		// 感情なしの場合、LLM が付与してしまった感情タグを除去する
+		strippedText := script.StripEmotionTags(patchedText)
+		strippedResult := script.Parse(strippedText, allowedSpeakers)
+		if len(strippedResult.Lines) > 0 {
+			return strippedResult.Lines
 		}
 	}
 
