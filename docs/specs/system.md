@@ -15,6 +15,25 @@
 - `WriteTimeout` は LLM による台本生成（最大 120秒）を考慮して長めに設定している
 - 設定箇所: `main.go`
 
+### グレースフルシャットダウン
+
+SIGINT / SIGTERM を受信すると、以下の順序で安全にシャットダウンする。
+
+| 設定 | 値 | 説明 |
+|------|------|------|
+| ShutdownTimeout | 30秒 | インフライトリクエストの完了待ち上限 |
+| 対象シグナル | SIGINT, SIGTERM | OS からの停止シグナル |
+
+**シャットダウン手順:**
+
+1. 新規リクエストの受付を停止
+2. インフライトリクエストの完了を待機（最大 30秒）
+3. 外部リソースのクリーンアップ（DB、GCS、Cloud Tasks）
+4. プロセス終了
+
+- Cloud Run はデプロイ時に SIGTERM を送信し、デフォルト 10 秒後に SIGKILL する。タイムアウトの延長が必要な場合は Cloud Run の設定（`terminationGracePeriodSeconds`）も合わせて変更すること
+- 設定箇所: `main.go`
+
 ## 外部サービス
 
 ### LLM API（マルチプロバイダ）
@@ -140,7 +159,10 @@ OpenAI の画像生成 API を使用。
 クライアント ─── HTTP サーバー ─── LLM API（OpenAI / Claude / Gemini）
                   │                    │
             WriteTimeout: 180s    Timeout: 120s
+
+SIGTERM ─── ShutdownTimeout: 30s ─── リソースクリーンアップ ─── プロセス終了
 ```
 
 - HTTP サーバーの `WriteTimeout`（180秒）> LLM API のタイムアウト（120秒）
 - これにより、LLM 生成中にサーバー側でタイムアウトすることを防いでいる
+- `ShutdownTimeout`（30秒）はインフライトリクエストの完了待ち上限であり、Cloud Run の猶予時間内に収まるよう設定する

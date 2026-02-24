@@ -2,6 +2,7 @@ package di
 
 import (
 	"context"
+	"errors"
 	"os"
 
 	"gorm.io/gorm"
@@ -23,6 +24,11 @@ import (
 	"github.com/siropaca/anycast-backend/internal/repository"
 	"github.com/siropaca/anycast-backend/internal/service"
 )
+
+// closer はリソースクリーンアップ用のインターフェース
+type closer interface {
+	Close() error
+}
 
 // DI コンテナ
 type Container struct {
@@ -56,6 +62,7 @@ type Container struct {
 	UserRepository         repository.UserRepository
 	APIKeyService          service.APIKeyService
 	WebSocketHub           *websocket.Hub
+	closers                []closer
 }
 
 // 依存関係を構築して Container を返す
@@ -325,6 +332,13 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	searchHandler := handler.NewSearchHandler(searchService)
 	apiKeyHandler := handler.NewAPIKeyHandler(apiKeyService)
 	userHandler := handler.NewUserHandler(userService)
+	// クローズ対象のリソースを収集
+	var closers []closer
+	closers = append(closers, storageClient)
+	if tasksClient != nil {
+		closers = append(closers, tasksClient)
+	}
+
 	return &Container{
 		VoiceHandler:           voiceHandler,
 		AuthHandler:            authHandler,
@@ -356,5 +370,17 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 		UserRepository:         userRepo,
 		APIKeyService:          apiKeyService,
 		WebSocketHub:           wsHub,
+		closers:                closers,
 	}
+}
+
+// Close は DI コンテナが管理する外部リソースをすべてクローズする
+func (c *Container) Close() error {
+	var errs []error
+	for _, cl := range c.closers {
+		if err := cl.Close(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return errors.Join(errs...)
 }

@@ -318,6 +318,11 @@ func (m *mockStorageClientForAuth) Delete(ctx context.Context, path string) erro
 	return args.Error(0)
 }
 
+func (m *mockStorageClientForAuth) Close() error {
+	args := m.Called()
+	return args.Error(0)
+}
+
 type mockSlackClientForAuth struct {
 	mock.Mock
 }

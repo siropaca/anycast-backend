@@ -30,6 +30,7 @@ type Client interface {
 	Upload(ctx context.Context, data []byte, path, contentType string) (string, error)
 	GenerateSignedURL(ctx context.Context, path string, expiration time.Duration) (string, error)
 	Delete(ctx context.Context, path string) error
+	Close() error
 }
 
 // GenerateAudioPath は音声ファイルの GCS パスを生成する（TTS 生成用、常に MP3）

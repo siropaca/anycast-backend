@@ -51,6 +51,11 @@ func (m *mockStorageClient) Delete(ctx context.Context, path string) error {
 	return args.Error(0)
 }
 
+func (m *mockStorageClient) Close() error {
+	args := m.Called()
+	return args.Error(0)
+}
+
 func setupCleanupRouter(h *CleanupHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()

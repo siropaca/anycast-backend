@@ -30,6 +30,7 @@ ADR（Architecture Decision Record）は、アーキテクチャ上の重要な�
 | [017](017-audio-mixing-ffmpeg.md) | 音声ミキシングに FFmpeg を使用 | Accepted |
 | [018](018-monolith-with-cloud-tasks.md) | ワーカー処理を分離せずモノリス + Cloud Tasks 構成を維持 | Proposed |
 | [019](019-stt-timestamp-audio-segmentation.md) | STT タイムスタンプによる音声セグメント分割 | Accepted |
+| [020](020-graceful-shutdown.md) | グレースフルシャットダウンの実装 | Accepted |
 
 ## ステータス
 
