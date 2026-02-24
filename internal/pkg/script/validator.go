@@ -6,8 +6,28 @@ import (
 	"unicode/utf8"
 )
 
-// CharsPerMinute は1分あたりの目標文字数（TTS 基準）
-const CharsPerMinute = 300
+const (
+	// CharsPerMinute は1分あたりの目標文字数（TTS 基準）
+	CharsPerMinute = 300
+
+	// LinesPerMinute は1分あたりの目安行数（TTS 基準）
+	LinesPerMinute = 9
+)
+
+// PromptTargetChars はプロンプトで LLM に指示する目標文字数を返す
+//
+// LLM は長い台本ほど指示された文字数を下回る傾向があるため、
+// 10分を超える部分に追加バッファを加算して補正する。
+// バリデーション用の目標は durationMinutes * CharsPerMinute を引き続き使用する。
+func PromptTargetChars(durationMinutes int) int {
+	base := durationMinutes * CharsPerMinute
+	if durationMinutes <= 10 {
+		return base
+	}
+	// 10分超過分: 1分あたり CharsPerMinute の 1.5 倍を追加バッファ
+	extra := (durationMinutes - 10) * CharsPerMinute * 3 / 2
+	return base + extra
+}
 
 // ValidationIssue はバリデーションの問題点
 type ValidationIssue struct {

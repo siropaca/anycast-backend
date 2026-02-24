@@ -321,13 +321,14 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool, durationM
 	}
 
 	// 分量
-	targetChars := durationMinutes * script.CharsPerMinute
-	sb.WriteString("\n## 分量（重要）\n")
+	targetChars := script.PromptTargetChars(durationMinutes)
+	targetLines := durationMinutes * script.LinesPerMinute
+	sb.WriteString("\n## 分量（最重要）\n")
 	sb.WriteString(fmt.Sprintf("- このエピソードは %d分 の音声になります（※この情報は文字数計算用であり、台本のセリフ中で時間・分数に言及してはいけない）\n", durationMinutes))
-	sb.WriteString(fmt.Sprintf("- TTS で読み上げた際に %d分 になるよう、合計文字数を **%d〜%d文字** にしてください\n", durationMinutes, targetChars, targetChars*110/100))
-	sb.WriteString(fmt.Sprintf("- 1分あたり約%d文字が目安です（TTS の読み上げ速度基準）\n", script.CharsPerMinute))
-	sb.WriteString("- 台本が短くなりがちなので、目標文字数を**必ず上回る**ようにしてください。不足するより多い方がよい\n")
-	sb.WriteString(fmt.Sprintf("- 最低でも %d文字 以上（目標の80%%）を厳守すること\n", targetChars*80/100))
+	sb.WriteString(fmt.Sprintf("- 合計文字数を **%d〜%d文字** にしてください\n", targetChars, targetChars*110/100))
+	sb.WriteString(fmt.Sprintf("- 合計行数を **%d〜%d行** にしてください\n", targetLines, targetLines*115/100))
+	sb.WriteString(fmt.Sprintf("- 最低でも %d文字・%d行 以上を厳守すること\n", targetChars*85/100, targetLines*85/100))
+	sb.WriteString("- 台本は短くなりがちです。目標に達しない場合は、具体例の深掘り・聞き手のリアクション追加・雑談の挿入で分量を確保してください\n")
 	sb.WriteString("- 文字数配分の目安:\n")
 	sb.WriteString(fmt.Sprintf("  - オープニング: 約%d文字\n", targetChars*15/100))
 	sb.WriteString(fmt.Sprintf("  - 本題ブロック1: 約%d文字\n", targetChars*25/100))

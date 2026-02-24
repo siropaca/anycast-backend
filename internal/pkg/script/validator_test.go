@@ -364,6 +364,29 @@ func TestValidate_TotalCharacterCount(t *testing.T) {
 	})
 }
 
+func TestPromptTargetChars(t *testing.T) {
+	t.Run("10分以下はフラットに CharsPerMinute を使用", func(t *testing.T) {
+		assert.Equal(t, 3*CharsPerMinute, PromptTargetChars(3))
+		assert.Equal(t, 5*CharsPerMinute, PromptTargetChars(5))
+		assert.Equal(t, 10*CharsPerMinute, PromptTargetChars(10))
+	})
+
+	t.Run("10分超過分にはバッファが加算される", func(t *testing.T) {
+		// 15分: 15*300 + 5*300*1.5 = 4500 + 2250 = 6750
+		assert.Equal(t, 6750, PromptTargetChars(15))
+		// 20分: 20*300 + 10*300*1.5 = 6000 + 4500 = 10500
+		assert.Equal(t, 10500, PromptTargetChars(20))
+	})
+
+	t.Run("10分超過分は基本目標より大きい", func(t *testing.T) {
+		for _, d := range []int{12, 15, 20, 30} {
+			base := d * CharsPerMinute
+			assert.Greater(t, PromptTargetChars(d), base,
+				"PromptTargetChars(%d) should exceed base target %d", d, base)
+		}
+	})
+}
+
 func TestValidate_AllPass(t *testing.T) {
 	t.Run("全チェック合格で Passed が true", func(t *testing.T) {
 		// 5分 × 4行 = 20行以上必要
