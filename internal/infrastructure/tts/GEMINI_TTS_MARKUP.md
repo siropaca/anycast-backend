@@ -9,6 +9,7 @@ Gemini TTS（gemini-2.5-pro-tts）は SSML ではなく、角括弧形式のマ�
 | `[sigh]` | ため息 |
 | `[laughing]` | 笑い |
 | `[uhm]` | 躊躇音 |
+| `[clears throat]` | 咳払い |
 
 ## スタイル修飾子 (Style modifiers)
 
@@ -18,6 +19,7 @@ Gemini TTS（gemini-2.5-pro-tts）は SSML ではなく、角括弧形式のマ�
 | `[robotic]` | ロボット的な声 |
 | `[shouting]` | 大声 |
 | `[whispering]` | ささやく |
+| `[speaking slowly]` | ゆっくり話す |
 | `[extremely fast]` | 非常に速い |
 
 ## 発声されるマークアップ (Spoken markup)
@@ -27,6 +29,10 @@ Gemini TTS（gemini-2.5-pro-tts）は SSML ではなく、角括弧形式のマ�
 | `[scared]` | 怖い |
 | `[curious]` | 好奇心的 |
 | `[bored]` | つまらなそう |
+| `[angry]` | 怒った |
+| `[excited]` | 興奮した |
+| `[empathetic]` | 共感的 |
+| `[scornful]` | 軽蔑的 |
 
 ## ペースと休止 (Pacing and pauses)
 
@@ -38,14 +44,10 @@ Gemini TTS（gemini-2.5-pro-tts）は SSML ではなく、角括弧形式のマ�
 
 標準的な句読点（コンマ、ピリオド、セミコロン）も自然なポーズを生成します。
 
-## 感情タグ
+## 補足
 
-上記以外にも、自然言語で感情を指定できます：
-
-- `[excited]` - 興奮した
-- `[sad]` - 悲しい
-- `[angry]` - 怒った
-- `[笑いながら]` - 日本語での指定も可能
+上記以外にも、自然言語で感情を指定できます（例: `[sad]`）。
+ただし本プロジェクトでは上記テーブルに掲載した17種類のタグのみ使用します。
 
 ## 使用例
 

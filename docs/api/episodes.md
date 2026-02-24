@@ -76,7 +76,7 @@ GET /channels/:channelId/episodes/:episodeId
         "lineOrder": 1,
         "speaker": { "id": "uuid", "name": "花子" },
         "text": "やあ、元気？",
-        "emotion": "嬉しそうに"
+        "emotion": "excited"
       }
     ],
     "playback": {

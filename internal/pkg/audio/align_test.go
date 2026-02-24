@@ -16,9 +16,9 @@ func TestNormalizeText(t *testing.T) {
 	})
 
 	t.Run("ブラケット記号を除去する", func(t *testing.T) {
-		result := normalizeText("[笑いながら] こんにちは")
+		result := normalizeText("[laughing] こんにちは")
 
-		assert.Equal(t, "笑いながらこんにちは", result)
+		assert.Equal(t, "laughingこんにちは", result)
 	})
 
 	t.Run("空文字列の場合は空を返す", func(t *testing.T) {

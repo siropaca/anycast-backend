@@ -931,7 +931,7 @@ OAuth 認証情報を管理する。1 ユーザーに複数の OAuth プロバ�
 | line_order | INTEGER | | - | 行の順序（0 始まり） |
 | speaker_id | UUID | | - | 話者（characters 参照） |
 | text | TEXT | | - | セリフ |
-| emotion | TEXT | ◯ | - | 感情・喋り方。例: 嬉しい、悲しい、笑いながら |
+| emotion | TEXT | ◯ | - | 感情・喋り方。例: excited, laughing, curious |
 | created_at | TIMESTAMP | | CURRENT_TIMESTAMP | 作成日時 |
 | updated_at | TIMESTAMP | | CURRENT_TIMESTAMP | 更新日時 |
 

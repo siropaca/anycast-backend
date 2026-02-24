@@ -36,7 +36,7 @@ Content-Type: application/json
 {
   "speakerId": "YOUR_SPEAKER_ID_HERE",
   "text": "感情付きのセリフです",
-  "emotion": "嬉しそうに",
+  "emotion": "excited",
   "afterLineId": "YOUR_LINE_ID_HERE"
 }
 
@@ -98,7 +98,7 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "emotion": "笑いながら"
+  "emotion": "laughing"
 }
 
 ### 台本行更新（テキストと感情）
@@ -108,7 +108,7 @@ Content-Type: application/json
 
 {
   "text": "新しいセリフ",
-  "emotion": "笑いながら"
+  "emotion": "laughing"
 }
 
 ### 台本行更新（感情削除）

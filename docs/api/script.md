@@ -221,7 +221,7 @@ POST /channels/:channelId/episodes/:episodeId/script/import
 **リクエスト:**
 ```json
 {
-  "text": "太郎: こんにちは\n花子: [嬉しそうに] やあ"
+  "text": "太郎: こんにちは\n花子: [excited] やあ"
 }
 ```
 
@@ -241,7 +241,7 @@ POST /channels/:channelId/episodes/:episodeId/script/import
 **例:**
 ```
 太郎: こんにちは
-花子: [嬉しそうに] やあ
+花子: [excited] やあ
 太郎: 今日はいい天気だね
 ```
 
@@ -283,7 +283,7 @@ GET /channels/:channelId/episodes/:episodeId/script/export
 
 ```
 太郎: こんにちは
-花子: [嬉しそうに] やあ
+花子: [excited] やあ
 ```
 
 ---
@@ -326,7 +326,7 @@ GET /channels/:channelId/episodes/:episodeId/script/lines
         "voice": { "id": "uuid", "name": "Voice2", "provider": "google", "gender": "female" }
       },
       "text": "やあ",
-      "emotion": "嬉しそうに",
+      "emotion": "excited",
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2025-01-01T00:00:00Z"
     }
@@ -349,7 +349,7 @@ POST /channels/:channelId/episodes/:episodeId/script/lines
 {
   "speakerId": "uuid",
   "text": "セリフのテキスト",
-  "emotion": "嬉しそうに",
+  "emotion": "excited",
   "afterLineId": "uuid"
 }
 ```
@@ -373,7 +373,7 @@ POST /channels/:channelId/episodes/:episodeId/script/lines
     "voice": { "id": "uuid", "name": "Voice1", "provider": "google", "gender": "male" }
   },
   "text": "セリフのテキスト",
-  "emotion": "嬉しそうに",
+  "emotion": "excited",
   "createdAt": "2025-01-01T00:00:00Z",
   "updatedAt": "2025-01-01T00:00:00Z"
 }
@@ -397,7 +397,7 @@ PATCH /channels/:channelId/episodes/:episodeId/script/lines/:lineId
 {
   "speakerId": "uuid",
   "text": "新しいセリフ",
-  "emotion": "笑いながら"
+  "emotion": "laughing"
 }
 ```
 
@@ -419,7 +419,7 @@ PATCH /channels/:channelId/episodes/:episodeId/script/lines/:lineId
     "voice": { "id": "uuid", "name": "Voice1", "provider": "google", "gender": "male" }
   },
   "text": "新しいセリフ",
-  "emotion": "笑いながら",
+  "emotion": "laughing",
   "createdAt": "2025-01-01T00:00:00Z",
   "updatedAt": "2025-01-01T00:00:00Z"
 }
@@ -503,7 +503,7 @@ POST /channels/:channelId/episodes/:episodeId/script/reorder
       "lineOrder": 1,
       "speaker": { ... },
       "text": "...",
-      "emotion": "嬉しそうに",
+      "emotion": "excited",
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2025-01-01T00:00:00Z"
     }

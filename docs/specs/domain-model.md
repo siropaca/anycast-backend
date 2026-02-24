@@ -397,15 +397,15 @@ JWT Bearer トークンの代替認証手段。セキュリティ上、平文は
 | lineOrder | Int | ◯ | 行の順序（0 始まり） |
 | speaker | Character | ◯ | 話者 |
 | text | String | ◯ | セリフ（空禁止） |
-| emotion | String | | 感情・喋り方。例: 嬉しい、悲しい、笑いながら |
+| emotion | String | | 感情・喋り方。例: excited, laughing, curious |
 
 #### emotion の反映
 
 emotion は TTS 生成時に text の先頭にカッコで付けて表現する：
 
 ```
-[笑いながら] こんにちは。
-[悲しそうに] さようなら...
+[laughing] こんにちは。
+[empathetic] さようなら...
 ```
 
 #### 制約

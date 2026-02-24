@@ -362,13 +362,13 @@ Phase 2 のアウトラインと素材を元に、台本（台詞形式）を生
 話者名: [感情] セリフ
 
 - 感情は省略可能。指定する場合は [感情] の形式でセリフの前に記載
-- 使用できる感情タグは以下の10種類のみ:
-  考えながら / ため息 / 笑いながら / 大声で / ささやいて / 早口で / 嬉しそうに / 悲しそうに / 真剣に
+- 使用できる感情タグは以下の17種類のみ（英語で指定）:
+  sigh / laughing / uhm / clears throat / sarcasm / robotic / shouting / whispering / speaking slowly / extremely fast / scared / curious / bored / angry / excited / empathetic / scornful
 - 上記以外の感情タグは使用しない
 
 例：
 太郎: こんにちは、今日もよろしくお願いします
-花子: [嬉しそうに] やあ、元気そうで何よりだね
+花子: [excited] やあ、元気そうで何よりだね
 
 ## 制約
 - アウトラインの素材（具体例・落とし穴・実務の一歩）は必ず台詞に組み込む。省略・要約しない
@@ -430,13 +430,13 @@ dialogue 用との差分を **太字** で示す。
 話者名: [感情] セリフ
 
 - 感情は省略可能。指定する場合は [感情] の形式でセリフの前に記載
-- 使用できる感情タグは以下の10種類のみ:
-  考えながら / ため息 / 笑いながら / 大声で / ささやいて / 早口で / 嬉しそうに / 悲しそうに / 真剣に
+- 使用できる感情タグは以下の17種類のみ（英語で指定）:
+  sigh / laughing / uhm / clears throat / sarcasm / robotic / shouting / whispering / speaking slowly / extremely fast / scared / curious / bored / angry / excited / empathetic / scornful
 - 上記以外の感情タグは使用しない
 
 例：
 太郎: こんにちは、今日もよろしくお願いします
-太郎: [驚いて] 今日はちょっと面白いテーマを持ってきました
+太郎: [curious] 今日はちょっと面白いテーマを持ってきました
 
 ## 制約
 - アウトラインの素材（具体例・落とし穴・実務の一歩）は必ず台詞に組み込む。省略・要約しない
@@ -492,7 +492,7 @@ Phase 3 で生成されたドラフト台本の **会話の流れ・自然さ・
 - 全体の構成（オープニング→本題3ブロック→クロージング）は維持する
 - 元の台本の情報量を大幅に減らさない
 - 元の台本に感情タグがある場合は必ず保持する。リライトでセリフを変更・追加する際も適切な感情タグを付ける
-- 感情タグは以下の10種類のみ使用可能: 考えながら / ため息 / 笑いながら / 大声で / ささやいて / 早口で / 嬉しそうに / 悲しそうに / 真剣に
+- 感情タグは以下の17種類のみ使用可能（英語で指定）: sigh / laughing / uhm / clears throat / sarcasm / robotic / shouting / whispering / speaking slowly / extremely fast / scared / curious / bored / angry / excited / empathetic / scornful
 
 ## 台詞ルール
 - 1つのセリフは20〜80文字程度
