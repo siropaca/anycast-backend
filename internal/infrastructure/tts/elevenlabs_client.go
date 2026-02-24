@@ -20,8 +20,10 @@ const (
 	elevenLabsDialogueLanguage  = "ja"
 	elevenLabsDialogueOutputFmt = "mp3_44100_128"
 	elevenLabsOutputFormat      = "mp3"
-	elevenLabsTTSModelID        = "eleven_multilingual_v2"
-	elevenLabsTTSOutputFmt      = "mp3_44100_128"
+	elevenLabsTTSModelID        = "eleven_v3"
+	elevenLabsTTSOutputFmt      = "pcm_24000"
+	elevenLabsTTSOutputFormat   = "pcm"
+	elevenLabsTTSOutputRate     = 24000
 	elevenLabsAPITimeout        = 5 * 60 // 5 分（秒）
 	elevenLabsDefaultSpeed      = 1.2    // デフォルトの読み上げ速度（0.7〜1.2、1.0が標準）
 )
@@ -103,8 +105,9 @@ func (c *elevenLabsTTSClient) Synthesize(ctx context.Context, text string, emoti
 
 	log.Debug("ElevenLabs TTS synthesis succeeded", "audio_size", len(audioData))
 	return &SynthesisResult{
-		Data:   audioData,
-		Format: elevenLabsOutputFormat,
+		Data:       audioData,
+		Format:     elevenLabsTTSOutputFormat,
+		SampleRate: elevenLabsTTSOutputRate,
 	}, nil
 }
 

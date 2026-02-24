@@ -78,6 +78,8 @@ func (c *geminiTTSClient) Synthesize(ctx context.Context, text string, emotion *
 
 	config := &genai.GenerateContentConfig{
 		ResponseModalities: []string{"AUDIO"},
+		// Temperature:        genai.Ptr(float32(0.5)),
+		// Seed:               genai.Ptr(int32(42)),
 		SpeechConfig: &genai.SpeechConfig{
 			LanguageCode: geminiDefaultLanguageCode,
 			VoiceConfig: &genai.VoiceConfig{
@@ -156,6 +158,8 @@ func (c *geminiTTSClient) SynthesizeMultiSpeaker(ctx context.Context, turns []Sp
 
 	config := &genai.GenerateContentConfig{
 		ResponseModalities: []string{"AUDIO"},
+		// Temperature:        genai.Ptr(float32(0.5)),
+		// Seed:               genai.Ptr(int32(42)),
 		SpeechConfig: &genai.SpeechConfig{
 			LanguageCode: geminiDefaultLanguageCode,
 			MultiSpeakerVoiceConfig: &genai.MultiSpeakerVoiceConfig{

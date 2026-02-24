@@ -508,12 +508,9 @@ func (s *audioJobService) executeJobInternal(ctx context.Context, job *model.Aud
 			textBuilder.WriteString(text + "\n")
 		}
 		result, err = ttsClient.Synthesize(ctx, textBuilder.String(), nil, voiceConfigs[0].VoiceID, scriptLines[0].Speaker.Voice.Gender)
-	case provider == tts.ProviderGoogle:
-		// Gemini: 話者別合成 + 無音分割再アセンブル
-		result, err = s.synthesizeMultiSpeakerByReassembly(ctx, job, turns, voiceConfigs, ttsClient, scriptLines)
 	default:
-		// ElevenLabs 等: 従来方式
-		result, err = ttsClient.SynthesizeMultiSpeaker(ctx, turns, voiceConfigs)
+		// 全プロバイダ: 話者別合成 + 再アセンブル
+		result, err = s.synthesizeMultiSpeakerByReassembly(ctx, job, turns, voiceConfigs, ttsClient, scriptLines, provider)
 	}
 	if err != nil {
 		log.Error("TTS failed", "error", err)
@@ -738,6 +735,7 @@ func (s *audioJobService) synthesizeMultiSpeakerByReassembly(
 	voiceConfigs []tts.SpeakerVoiceConfig,
 	ttsClient tts.Client,
 	scriptLines []model.ScriptLine,
+	provider tts.Provider,
 ) (*tts.SynthesisResult, error) {
 	log := logger.FromContext(ctx)
 
@@ -826,8 +824,13 @@ func (s *audioJobService) synthesizeMultiSpeakerByReassembly(
 	for _, group := range speakerGroups {
 		g := group
 		eg.Go(func() error {
-			// テキストを改行区切りで連結し、音声スタイルを先頭に付加
-			fullText := tts.DefaultVoiceStyle + "\n\n" + strings.Join(g.texts, "\n")
+			// テキストを改行区切りで連結（Gemini の場合は音声スタイルプロンプトを先頭に付加）
+			var fullText string
+			if provider == tts.ProviderGoogle {
+				fullText = tts.DefaultVoiceStyle + "\n\n" + strings.Join(g.texts, "\n")
+			} else {
+				fullText = strings.Join(g.texts, "\n")
+			}
 
 			log.Debug("reassembly: synthesizing speaker",
 				"alias", g.alias,
@@ -1031,6 +1034,25 @@ func (s *audioJobService) synthesizeMultiSpeakerByReassembly(
 						)
 					}
 				}
+			}
+		}
+
+		// ダミー末尾行が読み上げられなかった場合の末尾補正
+		// ダミーセグメントの時間が短い場合、実テキスト末尾の音声がダミー側に
+		// 含まれているため、最後の実セグメントの境界を拡張する
+		dummyBoundaryIdx := len(boundaries) - 1
+		lastRealBoundaryIdx := dummyBoundaryIdx - 1
+		if lastRealBoundaryIdx >= 0 {
+			dummyDuration := boundaries[dummyBoundaryIdx].EndTime - boundaries[dummyBoundaryIdx].StartTime
+			// "以上です。" の通常読み上げ時間は約1秒以上
+			// それより短い場合、ダミーは読み上げられておらず残りの音声は実テキスト末尾
+			if dummyDuration < 800*time.Millisecond {
+				log.Debug("reassembly: dummy not spoken, extending last real segment",
+					"alias", alias,
+					"dummy_duration_ms", dummyDuration.Milliseconds(),
+				)
+				boundaries[lastRealBoundaryIdx].EndTime = boundaries[dummyBoundaryIdx].EndTime
+				boundaries[dummyBoundaryIdx].StartTime = boundaries[dummyBoundaryIdx].EndTime
 			}
 		}
 

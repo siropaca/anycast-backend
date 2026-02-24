@@ -1,0 +1,27 @@
+-- ElevenLabs v3 ボイスの seed データを削除
+DELETE FROM voices WHERE provider = 'elevenlabs' AND provider_voice_id IN (
+	'wcs09USXSN5Bl7FXohVZ',
+	'8EkOjt4xTPGMclNlh1pk',
+	'GR4dBIFsYe57TxyrHKXz',
+	'EnLxjGl88dNO1Jv6AZk2',
+	'lhTvHflPVOqgSWyuWQry',
+	'WQz3clzUdMqvBf0jswZQ',
+	'T7yYq3WpB94yAuOXraRi',
+	'g6xIsTj2HwM6VR4iXFCw',
+	'4CrZuIW9am7gYAxgo2Af',
+	'DtsPFCrhbCbbJkwZsb3d',
+	'3JDquces8E8bkmvbh6Bc',
+	'sRYzP8TwEiiqAWebdYPJ',
+	'GxxMAMfQkDlnqjpzjLHH',
+	'lfG6BR3yQRoBrnUm4Z8N',
+	'j210dv0vWm7fCknyQpbA',
+	'YFkT3BsfOFWBx3jfroxH',
+	'tGhb4uYSV8sWBI31DYU8',
+	'urE3OJfJRxJuk9kAMN0Y',
+	'hBWDuZMNs32sP5dKzMuc',
+	'EbuvaInXUGWtpYRUnKLQ',
+	'4sirbXwrtRlmPV80MJkQ',
+	'cGbEKHsmg38m62yxIWFk',
+	'AYFJOmHxRJdmf572TQ7R',
+	'Mv8AjrYZCBkdsmDHNwcB'
+);
