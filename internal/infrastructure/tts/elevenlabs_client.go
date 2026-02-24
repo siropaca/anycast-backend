@@ -25,7 +25,11 @@ const (
 	elevenLabsTTSOutputFormat   = "pcm"
 	elevenLabsTTSOutputRate     = 24000
 	elevenLabsAPITimeout        = 5 * 60 // 5 分（秒）
-	elevenLabsDefaultSpeed      = 1.2    // デフォルトの読み上げ速度（0.7〜1.2、1.0が標準）
+	// 音声生成のパラメータ
+	elevenLabsDefaultStability  = 0.5 // デフォルトの安定性（0.0=Creative, 0.5=Natural, 1.0=Robust）
+	elevenLabsDefaultStyle      = 0.0 // デフォルトのスタイル誇張度（0〜1、0が推奨）
+	elevenLabsDefaultSimilarity = 0.8 // デフォルトの類似度ブースト（0〜1）
+	elevenLabsDefaultSpeed      = 1.2 // デフォルトの読み上げ速度（0.7〜1.2、1.0が標準）
 )
 
 // elevenLabsTTSClient は ElevenLabs API を使った TTS クライアント
@@ -59,7 +63,10 @@ type dialogueRequest struct {
 
 // voiceSettings は Text-to-Speech API のボイス設定
 type voiceSettings struct {
-	Speed float64 `json:"speed"`
+	Stability       float64 `json:"stability"`
+	SimilarityBoost float64 `json:"similarity_boost"`
+	Style           float64 `json:"style"`
+	Speed           float64 `json:"speed"`
 }
 
 // ttsRequest は Text-to-Speech API のリクエストボディ
@@ -87,7 +94,10 @@ func (c *elevenLabsTTSClient) Synthesize(ctx context.Context, text string, emoti
 		ModelID:      elevenLabsTTSModelID,
 		LanguageCode: elevenLabsDialogueLanguage,
 		VoiceSettings: voiceSettings{
-			Speed: elevenLabsDefaultSpeed,
+			Stability:       elevenLabsDefaultStability,
+			SimilarityBoost: elevenLabsDefaultSimilarity,
+			Style:           elevenLabsDefaultStyle,
+			Speed:           elevenLabsDefaultSpeed,
 		},
 	}
 
