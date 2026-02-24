@@ -5,7 +5,7 @@ import (
 )
 
 func TestFormat(t *testing.T) {
-	emotion := "嬉しそうに"
+	emotion := "excited"
 
 	tests := []struct {
 		name  string
@@ -25,7 +25,7 @@ func TestFormat(t *testing.T) {
 			lines: []FormatLine{
 				{SpeakerName: "太郎", Text: "こんにちは", Emotion: &emotion},
 			},
-			want: "太郎: [嬉しそうに] こんにちは",
+			want: "太郎: [excited] こんにちは",
 		},
 		{
 			name:  "正常系: 空のスライス",
@@ -87,7 +87,7 @@ func TestFormat_EdgeCases(t *testing.T) {
 
 func TestFormat_RoundTrip(t *testing.T) {
 	// フォーマット → パース → フォーマットで同じ結果になることを確認
-	emotion := "嬉しそうに"
+	emotion := "excited"
 	original := []FormatLine{
 		{SpeakerName: "太郎", Text: "こんにちは", Emotion: &emotion},
 		{SpeakerName: "花子", Text: "やあ"},

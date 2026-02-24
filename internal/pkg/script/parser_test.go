@@ -24,8 +24,8 @@ func TestParse(t *testing.T) {
 		},
 		{
 			name: "正常系: 感情付きの会話",
-			text: `太郎: [嬉しそうに] こんにちは！
-花子: [驚いて] あ、太郎くん！`,
+			text: `太郎: [excited] こんにちは！
+花子: [curious] あ、太郎くん！`,
 			allowedSpeakers: []string{"太郎", "花子"},
 			wantLines:       2,
 			wantErrors:      0,
@@ -60,7 +60,7 @@ func TestParse(t *testing.T) {
 		},
 		{
 			name:            "エラー: 感情のみでセリフが空",
-			text:            "太郎: [嬉しそうに]",
+			text:            "太郎: [excited]",
 			allowedSpeakers: []string{"太郎"},
 			wantLines:       0,
 			wantErrors:      1,
@@ -90,7 +90,7 @@ func TestParse(t *testing.T) {
 }
 
 func TestParse_EmotionExtraction(t *testing.T) {
-	text := `太郎: [嬉しそうに] こんにちは！
+	text := `太郎: [excited] こんにちは！
 花子: やあ、元気？`
 	allowedSpeakers := []string{"太郎", "花子"}
 
@@ -103,8 +103,8 @@ func TestParse_EmotionExtraction(t *testing.T) {
 	// 1行目: 感情あり
 	if result.Lines[0].Emotion == nil {
 		t.Error("expected emotion for first line")
-	} else if *result.Lines[0].Emotion != "嬉しそうに" {
-		t.Errorf("expected emotion '嬉しそうに', got '%s'", *result.Lines[0].Emotion)
+	} else if *result.Lines[0].Emotion != "excited" {
+		t.Errorf("expected emotion 'excited', got '%s'", *result.Lines[0].Emotion)
 	}
 	if result.Lines[0].Text != "こんにちは！" {
 		t.Errorf("expected text 'こんにちは！', got '%s'", result.Lines[0].Text)
@@ -204,7 +204,7 @@ func TestParseResult_HasErrors(t *testing.T) {
 }
 
 func TestStripEmotionTags(t *testing.T) {
-	text := "ケンタ: [嬉しそうに] こんにちは\nミホ: [笑いながら] よろしく\nケンタ: 普通のセリフ"
+	text := "ケンタ: [excited] こんにちは\nミホ: [laughing] よろしく\nケンタ: 普通のセリフ"
 	result := StripEmotionTags(text)
 	expected := "ケンタ: こんにちは\nミホ: よろしく\nケンタ: 普通のセリフ"
 	if result != expected {
@@ -213,7 +213,7 @@ func TestStripEmotionTags(t *testing.T) {
 }
 
 func TestCapEmotionTags(t *testing.T) {
-	text := "ケンタ: [嬉しそうに] こんにちは\nミホ: [笑いながら] よろしく\nケンタ: [興奮して] テスト\nミホ: [呆れて] もう一つ\nケンタ: 普通のセリフ"
+	text := "ケンタ: [excited] こんにちは\nミホ: [laughing] よろしく\nケンタ: [angry] テスト\nミホ: [scornful] もう一つ\nケンタ: 普通のセリフ"
 	result := CapEmotionTags(text, 2)
 	// Count emotion tags in result
 	lines := splitLines(result)

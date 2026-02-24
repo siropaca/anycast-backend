@@ -141,12 +141,13 @@ func getPhase4SystemPrompt(withEmotion bool) string {
 - 台本全体で感情タグは合計10〜15個まで。感情が明確に切り替わる瞬間だけに付ける
 - 配分の目安: オープニング0〜1個、各ブロック2〜4個、クロージング0〜1個
 - セリフの内容と感情が一致していること。迷ったら付けない
-- 使用できる感情タグ（10種類のみ）:
-  考えながら / 呆れて / 笑いながら / 興奮して / こっそりと / 焦って / 嬉しそうに / 真剣に
+- 感情タグは必ず英語で指定すること（TTS が正しく解釈するため）
+- 使用できる感情タグ（17種類のみ）:
+  sigh / laughing / uhm / clears throat / sarcasm / robotic / shouting / whispering / speaking slowly / extremely fast / scared / curious / bored / angry / excited / empathetic / scornful
 `)
 	} else {
 		sb.WriteString(`## 感情タグについて（重要）
-- 感情タグ（[笑いながら] 等）は一切付けないでください
+- 感情タグ（[laughing] 等）は一切付けないでください
 - 全行を「話者名: セリフ」の形式で出力してください
 `)
 	}
@@ -215,13 +216,14 @@ func getPhase5SystemPrompt(withEmotion bool) string {
 		sb.WriteString(`## 感情タグの修正
 - 台本全体で感情タグは合計10〜15個に収める。超えていたら普通のトーンの行から削除する
 - セリフの内容と感情タグが一致していない箇所は、タグを外すか適切なタグに差し替える
-- 使用可能な感情タグは以下の10種類のみ:
-  考えながら / 呆れて / 笑いながら / 興奮して / こっそりと / 焦って / 嬉しそうに / 真剣に
-- 上記以外の感情タグ（例: うなずいて、微笑みながら、困った顔で 等）が含まれていたら、上記10種類の中から最も近いタグに置き換える
+- 感情タグは必ず英語で指定すること（TTS が正しく解釈するため）
+- 使用可能な感情タグは以下の17種類のみ:
+  sigh / laughing / uhm / clears throat / sarcasm / robotic / shouting / whispering / speaking slowly / extremely fast / scared / curious / bored / angry / excited / empathetic / scornful
+- 上記以外の感情タグが含まれていたら、上記17種類の中から最も近いタグに置き換える
 `)
 	} else {
 		sb.WriteString(`## 感情タグについて
-- 感情タグ（[笑いながら] 等）は一切付けないでください
+- 感情タグ（[laughing] 等）は一切付けないでください
 - 元の台本に感情タグが含まれていた場合は除去してください
 `)
 	}
@@ -397,7 +399,7 @@ func getPhase3SystemPrompt(talkMode script.TalkMode, withEmotion bool, durationM
 
 	// Phase 3 では感情タグを付けない（Phase 4 で追加する）
 	sb.WriteString("\n## 注意\n")
-	sb.WriteString("- 感情タグ（[笑いながら] 等）は付けないでください。後工程で追加します\n")
+	sb.WriteString("- 感情タグ（[laughing] 等）は付けないでください。後工程で追加します\n")
 	sb.WriteString("- 全行を「話者名: セリフ」の形式で出力してください\n")
 
 	// 制約
