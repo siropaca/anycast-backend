@@ -40,36 +40,6 @@ Content-Type: application/json
   "afterLineId": "YOUR_LINE_ID_HERE"
 }
 
-### 台本を AI で生成
-POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/generate
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "prompt": "今日の天気について楽しく話す",
-  "durationMinutes": 3
-}
-
-### 台本を AI で生成（durationMinutes 省略）
-POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/generate
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "prompt": "プログラミングの楽しさについて初心者にわかりやすく解説する"
-}
-
-### 台本を AI で生成（感情付き）
-POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/generate
-Authorization: Bearer {{token}}
-Content-Type: application/json
-
-{
-  "prompt": "今日の天気について楽しく話す",
-  "durationMinutes": 3,
-  "withEmotion": true
-}
-
 ### 台本テキスト取り込み
 POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/import
 Authorization: Bearer {{token}}

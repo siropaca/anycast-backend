@@ -35,6 +35,10 @@ Authorization: Bearer {{token}}
 GET {{baseUrl}}/me/channels/YOUR_CHANNEL_ID_HERE/episodes?sort=updatedAt&order=desc
 Authorization: Bearer {{token}}
 
+### エピソード取得（公開エピソード）
+GET {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE
+Authorization: Bearer {{token}}
+
 ### 自分のチャンネルのエピソード取得
 GET {{baseUrl}}/me/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE
 Authorization: Bearer {{token}}
@@ -165,6 +169,18 @@ Authorization: Bearer {{token}}
 DELETE {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/bgm
 Authorization: Bearer {{token}}
 
+### エピソード音声アップロード
+PUT {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/audio
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="episode.mp3"
+Content-Type: audio/mpeg
+
+< ./path/to/your/audio.mp3
+--boundary--
+
 ### エピソード音声削除
 DELETE {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/audio
 Authorization: Bearer {{token}}
@@ -215,3 +231,7 @@ Authorization: Bearer {{token}}
   "paddingStartMs": 1000,
   "paddingEndMs": 3000
 }
+
+### 再生カウント
+POST {{baseUrl}}/episodes/YOUR_EPISODE_ID_HERE/play
+Authorization: Bearer {{token}}

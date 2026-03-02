@@ -29,3 +29,7 @@ Content-Type: application/json
 ### ユーザー名利用可否チェック
 GET {{baseUrl}}/me/username/check?username=new_username
 Authorization: Bearer {{token}}
+
+### アカウント削除
+DELETE {{baseUrl}}/me
+Authorization: Bearer {{token}}

@@ -23,3 +23,11 @@ Authorization: Bearer {{token}}
 @voiceId = 52cbccc4-46d7-4424-8a37-da36ee2951d1
 GET {{baseUrl}}/voices/{{voiceId}}
 Authorization: Bearer {{token}}
+
+### ボイスお気に入り登録
+POST {{baseUrl}}/voices/YOUR_VOICE_ID_HERE/favorite
+Authorization: Bearer {{token}}
+
+### ボイスお気に入り解除
+DELETE {{baseUrl}}/voices/YOUR_VOICE_ID_HERE/favorite
+Authorization: Bearer {{token}}

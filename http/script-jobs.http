@@ -34,3 +34,28 @@ Authorization: Bearer {{token}}
 ### 台本生成ジョブキャンセル
 POST {{baseUrl}}/script-jobs/YOUR_JOB_ID_HERE/cancel
 Authorization: Bearer {{token}}
+
+### 最新台本生成ジョブ取得
+GET {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script-jobs/latest
+Authorization: Bearer {{token}}
+
+### 台本非同期生成
+POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/generate-async
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "prompt": "今日の天気について楽しく話す",
+  "durationMinutes": 5
+}
+
+### 台本非同期生成（感情付き）
+POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/script/generate-async
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "prompt": "今日の天気について楽しく話す",
+  "durationMinutes": 5,
+  "withEmotion": true
+}

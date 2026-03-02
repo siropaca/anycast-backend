@@ -118,6 +118,85 @@ Authorization: Bearer {{token}}
 DELETE {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE
 Authorization: Bearer {{token}}
 
+### チャンネル台本プロンプト設定
+PUT {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/user-prompt
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "userPrompt": "明るく楽しい雰囲気で話してください"
+}
+
+### チャンネルデフォルトBGM設定（ユーザー BGM）
+PUT {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/default-bgm
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "bgmId": "YOUR_BGM_ID_HERE"
+}
+
+### チャンネルデフォルトBGM設定（システム BGM）
+PUT {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/default-bgm
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "systemBgmId": "YOUR_SYSTEM_BGM_ID_HERE"
+}
+
 ### チャンネルデフォルトBGM削除
 DELETE {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/default-bgm
+Authorization: Bearer {{token}}
+
+### チャンネルにキャラクター追加（既存キャラクター紐づけ）
+POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/characters
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "connect": {
+    "id": "YOUR_CHARACTER_ID_HERE"
+  }
+}
+
+### チャンネルにキャラクター追加（新規作成）
+POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/characters
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "create": {
+    "name": "新キャラクター",
+    "persona": "明るく元気な性格",
+    "voiceId": "YOUR_VOICE_ID_HERE"
+  }
+}
+
+### チャンネルのキャラクター置換（既存キャラクター紐づけ）
+PUT {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/characters/YOUR_CHARACTER_ID_HERE
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "connect": {
+    "id": "YOUR_NEW_CHARACTER_ID_HERE"
+  }
+}
+
+### チャンネルのキャラクター置換（新規作成）
+PUT {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/characters/YOUR_CHARACTER_ID_HERE
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "create": {
+    "name": "置換キャラクター",
+    "persona": "落ち着いた性格",
+    "voiceId": "YOUR_VOICE_ID_HERE"
+  }
+}
+
+### チャンネルからキャラクター削除
+DELETE {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/characters/YOUR_CHARACTER_ID_HERE
 Authorization: Bearer {{token}}

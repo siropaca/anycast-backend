@@ -6,3 +6,7 @@
 ### カテゴリ一覧取得
 GET {{baseUrl}}/categories
 Authorization: Bearer {{token}}
+
+### カテゴリ取得（slug 指定）
+GET {{baseUrl}}/categories/YOUR_CATEGORY_SLUG_HERE
+Authorization: Bearer {{token}}
