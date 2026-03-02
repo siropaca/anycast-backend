@@ -881,6 +881,26 @@ func (s *audioJobService) synthesizeMultiSpeakerByReassembly(
 				"pcm_size", len(result.Data),
 			)
 
+			// デバッグ用: TTS 完了直後にスピーカー別オリジナル音源をファイルに保存（development 環境のみ）
+			if os.Getenv("APP_ENV") != "production" {
+				debugDir := filepath.Join("tmp", "audio-debug", job.ID.String())
+				if mkErr := os.MkdirAll(debugDir, 0o755); mkErr != nil {
+					log.Warn("reassembly: failed to create debug directory", "error", mkErr)
+				} else {
+					wavData := audio.EncodeWAV(result.Data, reassemblySampleRate, reassemblyChannels, reassemblyBytesPerSample)
+					debugPath := filepath.Join(debugDir, fmt.Sprintf("speaker_%s_original.wav", g.alias))
+					if writeErr := os.WriteFile(debugPath, wavData, 0o644); writeErr != nil {
+						log.Warn("reassembly: failed to write debug audio", "alias", g.alias, "error", writeErr)
+					} else {
+						log.Debug("reassembly: saved original speaker audio",
+							"alias", g.alias,
+							"path", debugPath,
+							"pcm_bytes", len(result.Data),
+						)
+					}
+				}
+			}
+
 			return nil
 		})
 	}
@@ -890,27 +910,6 @@ func (s *audioJobService) synthesizeMultiSpeakerByReassembly(
 	}
 
 	// Step 3: STT アライメント + silencedetect スナップのハイブリッド方式で行境界を特定し分割
-	// デバッグ用: 分割前のスピーカー別オリジナル音源をファイルに保存（development 環境のみ）
-	if os.Getenv("APP_ENV") != "production" {
-		debugDir := filepath.Join("tmp", "audio-debug", job.ID.String())
-		if err := os.MkdirAll(debugDir, 0o755); err != nil {
-			log.Warn("reassembly: failed to create debug directory", "error", err)
-		} else {
-			for alias, res := range results {
-				wavData := audio.EncodeWAV(res.pcmData, reassemblySampleRate, reassemblyChannels, reassemblyBytesPerSample)
-				debugPath := filepath.Join(debugDir, fmt.Sprintf("speaker_%s_original.wav", alias))
-				if writeErr := os.WriteFile(debugPath, wavData, 0o644); writeErr != nil {
-					log.Warn("reassembly: failed to write debug audio", "alias", alias, "error", writeErr)
-				} else {
-					log.Debug("reassembly: saved original speaker audio",
-						"alias", alias,
-						"path", debugPath,
-						"pcm_bytes", len(res.pcmData),
-					)
-				}
-			}
-		}
-	}
 
 	var allSegments []reassemblySegment
 
