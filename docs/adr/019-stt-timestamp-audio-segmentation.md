@@ -130,4 +130,5 @@ STT → AlignTextToTimestamps(DP アライメント) → DetectSilenceIntervals 
 - `internal/service/audio_job.go` の再アセンブルロジックをハイブリッド方式に変更
 - DI コンテナと環境変数設定を更新
 - STT API 利用料金が音声生成ごとに発生する
-- デバッグ用に分割前のスピーカー別音源を `tmp/audio-debug/{jobID}/` に WAV で保存
+- 話者ごとの TTS 合成・STT アライメント・セグメント分割はそれぞれ `errgroup` による並列実行
+- デバッグ用にスピーカー別音源を TTS 完了直後に `tmp/audio-debug/{jobID}/` に WAV で保存

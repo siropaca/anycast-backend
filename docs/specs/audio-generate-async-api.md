@@ -54,10 +54,10 @@ POST /channels/{channelId}/episodes/{episodeId}/audio/generate-async
 | type | string | ◯ | `voice` / `full` / `remix` |
 | bgmId | uuid | - | ユーザー BGM ID（type=full では bgmId か systemBgmId のいずれか必須、type=remix では任意） |
 | systemBgmId | uuid | - | システム BGM ID（同上） |
-| bgmVolumeDb | number | - | BGM 音量（-60 〜 0 dB、デフォルト: -15） |
+| bgmVolumeDb | number | - | BGM 音量（-60 〜 0 dB、デフォルト: -20） |
 | fadeOutMs | number | - | フェードアウト時間（0 〜 30000 ms、デフォルト: 3000） |
-| paddingStartMs | number | - | 音声開始前の余白（0 〜 10000 ms、デフォルト: 500） |
-| paddingEndMs | number | - | 音声終了後の余白（0 〜 10000 ms、デフォルト: 1000） |
+| paddingStartMs | number | - | 音声開始前の余白（0 〜 10000 ms、デフォルト: 1000） |
+| paddingEndMs | number | - | 音声終了後の余白（0 〜 10000 ms、デフォルト: 3000） |
 
 **バリデーションルール**:
 
@@ -76,10 +76,10 @@ POST /channels/{channelId}/episodes/{episodeId}/audio/generate-async
   "status": "pending",
   "progress": 0,
   "jobType": "full",
-  "bgmVolumeDb": -15,
+  "bgmVolumeDb": -20,
   "fadeOutMs": 3000,
-  "paddingStartMs": 500,
-  "paddingEndMs": 1000,
+  "paddingStartMs": 1000,
+  "paddingEndMs": 3000,
   "episode": {
     "id": "660e8400-e29b-41d4-a716-446655440001",
     "title": "エピソードタイトル"
@@ -113,10 +113,10 @@ GET /audio-jobs/{jobId}
   "episodeId": "660e8400-e29b-41d4-a716-446655440001",
   "status": "completed",
   "progress": 100,
-  "bgmVolumeDb": -15,
+  "bgmVolumeDb": -20,
   "fadeOutMs": 3000,
-  "paddingStartMs": 500,
-  "paddingEndMs": 1000,
+  "paddingStartMs": 1000,
+  "paddingEndMs": 3000,
   "episode": {
     "id": "660e8400-e29b-41d4-a716-446655440001",
     "title": "エピソードタイトル"
@@ -300,10 +300,10 @@ canceled      canceling ───▶ canceled
 |------|---------|
 | 0% | ジョブ作成 |
 | 10% | エピソード・台本の読み込み |
-| 20% | TTS 音声生成開始 |
-| 25-45% | 複数チャンクの TTS 処理（チャンク数に応じて） |
-| 45% | 音声チャンクの結合 |
+| 20% | TTS 音声合成（話者別並列合成 + 再アセンブル） |
+| 45% | フォーマット変換（PCM → MP3） |
 | 50% | TTS 処理完了 |
+| 52% | ボイス音声の保存 |
 | 85% | 音声ファイルのアップロード |
 | 95% | エピソード情報の更新 |
 | 100% | 完了 |
@@ -314,10 +314,10 @@ canceled      canceling ───▶ canceled
 |------|---------|
 | 0% | ジョブ作成 |
 | 10% | エピソード・台本の読み込み |
-| 20% | TTS 音声生成開始 |
-| 25-45% | 複数チャンクの TTS 処理（チャンク数に応じて） |
-| 45% | 音声チャンクの結合 |
+| 20% | TTS 音声合成（話者別並列合成 + 再アセンブル） |
+| 45% | フォーマット変換（PCM → MP3） |
 | 50% | TTS 処理完了 |
+| 52% | ボイス音声の保存 |
 | 55-70% | BGM ミキシング |
 | 85% | 音声ファイルのアップロード |
 | 95% | エピソード情報の更新 |
@@ -350,13 +350,14 @@ canceled      canceling ───▶ canceled
 
 1. **台本読み込み**: エピソードに紐づく台本を取得（type=voice/full）
 2. **話者マッピング**: キャラクターを TTS の話者 ID にマッピング
-3. **テキスト分割**: TTS の入力制限（3500 バイト）に収まるようチャンク分割
-4. **TTS 合成**: TTS プロバイダ（Gemini TTS / ElevenLabs）で音声合成
-5. **フォーマット変換**: PCM の場合は FFmpeg で MP3 に変換（Gemini）、MP3 の場合はそのまま使用（ElevenLabs）
-6. **ボイス音声保存**: ボイス音声を GCS にアップロードし `voiceAudioId` を更新
-7. **BGM ミキシング**: FFmpeg で BGM と音声をミックス（type=full/remix）
-8. **アップロード**: 生成した音声ファイルを GCS にアップロード
-9. **エピソード更新**: `fullAudioId`、BGM 情報を更新
+3. **TTS 合成**: TTS プロバイダ（Gemini TTS / ElevenLabs）で音声合成
+   - シングルスピーカー: 全テキストを連結して単一合成
+   - マルチスピーカー: 話者別に並列合成し、STT アライメント + silencedetect で行分割後に再アセンブル（詳細は [ADR-019](../adr/019-stt-timestamp-audio-segmentation.md)）
+4. **フォーマット変換**: PCM の場合は FFmpeg で MP3 に変換（Gemini）、MP3 の場合はそのまま使用（ElevenLabs）
+5. **ボイス音声保存**: ボイス音声を GCS にアップロードし `voiceAudioId` を更新
+6. **BGM ミキシング**: FFmpeg で BGM と音声をミックス（type=full/remix）
+7. **アップロード**: 生成した音声ファイルを GCS にアップロード
+8. **エピソード更新**: `fullAudioId`、BGM 情報を更新
 
 ## 外部サービス
 

@@ -170,7 +170,7 @@ make dev
 
 | ディレクトリ | 内容 | 条件 |
 |-------------|------|------|
-| `tmp/audio-debug/{jobID}/` | 再アセンブル前のスピーカー別音源（WAV） | `APP_ENV` が `production` 以外 |
+| `tmp/audio-debug/{jobID}/` | TTS 完了直後のスピーカー別音源（WAV） | `APP_ENV` が `production` 以外 |
 | `tmp/traces/{エピソードタイトル}/` | 台本生成の Phase ごとのトレース（Markdown） | `TRACE_MODE=file` |
 
 ## API ドキュメント

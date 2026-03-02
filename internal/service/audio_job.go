@@ -912,176 +912,189 @@ func (s *audioJobService) synthesizeMultiSpeakerByReassembly(
 	// Step 3: STT アライメント + silencedetect スナップのハイブリッド方式で行境界を特定し分割
 
 	var allSegments []reassemblySegment
+	var segMu sync.Mutex
+
+	eg2, egCtx2 := errgroup.WithContext(ctx)
 
 	for alias, res := range results {
+		alias, res := alias, res
 		group := speakerGroups[alias]
-
-		// STT で単語レベルのタイムスタンプを取得
-		log.Debug("reassembly: recognizing speech for alignment", "alias", alias)
-		sttWords, err := s.sttClient.RecognizeWithTimestamps(ctx, res.pcmData, reassemblySampleRate)
-		if err != nil {
-			return nil, fmt.Errorf("話者 %s の音声認識に失敗しました: %w", alias, err)
-		}
-
-		log.Debug("reassembly: STT result",
-			"alias", alias,
-			"word_count", len(sttWords),
-		)
-		for i, w := range sttWords {
-			log.Debug("reassembly: STT word",
-				"alias", alias,
-				"index", i,
-				"word", w.Word,
-				"start_ms", w.StartTime.Milliseconds(),
-				"end_ms", w.EndTime.Milliseconds(),
-			)
-		}
-
-		// STT の WordTimestamp を audio パッケージの型に変換
-		audioWords := make([]audio.WordTimestamp, len(sttWords))
-		for i, w := range sttWords {
-			audioWords[i] = audio.WordTimestamp{
-				Word:      w.Word,
-				StartTime: w.StartTime,
-				EndTime:   w.EndTime,
+		eg2.Go(func() error {
+			// STT で単語レベルのタイムスタンプを取得
+			log.Debug("reassembly: recognizing speech for alignment", "alias", alias)
+			sttWords, err := s.sttClient.RecognizeWithTimestamps(egCtx2, res.pcmData, reassemblySampleRate)
+			if err != nil {
+				return fmt.Errorf("話者 %s の音声認識に失敗しました: %w", alias, err)
 			}
-		}
 
-		// DP アライメントで行境界を特定
-		boundaries, err := audio.AlignTextToTimestamps(group.spokenTexts, audioWords)
-		if err != nil {
-			return nil, fmt.Errorf("話者 %s のテキストアライメントに失敗しました: %w", alias, err)
-		}
-		for i, b := range boundaries {
-			text := ""
-			if i < len(group.spokenTexts) {
-				text = group.spokenTexts[i]
-			}
-			log.Debug("reassembly: DP alignment boundary",
+			log.Debug("reassembly: STT result",
 				"alias", alias,
-				"line", i,
-				"text", text,
-				"start_ms", b.StartTime.Milliseconds(),
-				"end_ms", b.EndTime.Milliseconds(),
+				"word_count", len(sttWords),
 			)
-		}
-
-		// 先頭と末尾の境界を PCM データの実際の範囲に拡張する
-		// STT の単語タイムスタンプは音声の先頭/末尾の余白をカバーしないため
-		pcmDuration := time.Duration(float64(len(res.pcmData)) / float64(reassemblyBytesPerSec) * float64(time.Second))
-		boundaries[0].StartTime = 0
-		boundaries[len(boundaries)-1].EndTime = pcmDuration
-
-		// STT アライメントで得た行境界をログ出力
-		for i, b := range boundaries {
-			log.Debug("reassembly: STT boundary",
-				"alias", alias,
-				"line", i,
-				"start_ms", b.StartTime.Milliseconds(),
-				"end_ms", b.EndTime.Milliseconds(),
-			)
-		}
-
-		// 行が2行以上の場合、silencedetect で正確なカット位置にスナップする
-		if len(group.spokenTexts) >= 2 {
-			silences, silenceErr := audio.DetectSilenceIntervals(res.pcmData, audio.PCMSplitConfig{
-				SampleRate:     reassemblySampleRate,
-				Channels:       reassemblyChannels,
-				BytesPerSample: reassemblyBytesPerSample,
-				NoiseDB:        -30,
-				MinSilenceSec:  0.2,
-			})
-			if silenceErr != nil {
-				log.Warn("reassembly: silencedetect failed, using STT boundaries",
+			for i, w := range sttWords {
+				log.Debug("reassembly: STT word",
 					"alias", alias,
-					"error", silenceErr,
+					"index", i,
+					"word", w.Word,
+					"start_ms", w.StartTime.Milliseconds(),
+					"end_ms", w.EndTime.Milliseconds(),
 				)
-			} else {
-				// 検出された全無音区間をログ出力
-				for j, s := range silences {
-					log.Debug("reassembly: silence interval",
-						"alias", alias,
-						"index", j,
-						"start_ms", int(s.StartSec*1000),
-						"end_ms", int(s.EndSec*1000),
-						"mid_ms", int((s.StartSec+s.EndSec)/2.0*1000),
-					)
+			}
+
+			// STT の WordTimestamp を audio パッケージの型に変換
+			audioWords := make([]audio.WordTimestamp, len(sttWords))
+			for i, w := range sttWords {
+				audioWords[i] = audio.WordTimestamp{
+					Word:      w.Word,
+					StartTime: w.StartTime,
+					EndTime:   w.EndTime,
 				}
+			}
 
-				sttBoundaries := make([]audio.LineBoundary, len(boundaries))
-				copy(sttBoundaries, boundaries)
+			// DP アライメントで行境界を特定
+			boundaries, err := audio.AlignTextToTimestamps(group.spokenTexts, audioWords)
+			if err != nil {
+				return fmt.Errorf("話者 %s のテキストアライメントに失敗しました: %w", alias, err)
+			}
+			for i, b := range boundaries {
+				text := ""
+				if i < len(group.spokenTexts) {
+					text = group.spokenTexts[i]
+				}
+				log.Debug("reassembly: DP alignment boundary",
+					"alias", alias,
+					"line", i,
+					"text", text,
+					"start_ms", b.StartTime.Milliseconds(),
+					"end_ms", b.EndTime.Milliseconds(),
+				)
+			}
 
-				boundaries = audio.SnapBoundariesToSilence(boundaries, silences, 500*time.Millisecond)
+			// 先頭と末尾の境界を PCM データの実際の範囲に拡張する
+			// STT の単語タイムスタンプは音声の先頭/末尾の余白をカバーしないため
+			pcmDuration := time.Duration(float64(len(res.pcmData)) / float64(reassemblyBytesPerSec) * float64(time.Second))
+			boundaries[0].StartTime = 0
+			boundaries[len(boundaries)-1].EndTime = pcmDuration
 
-				// スナップ前後の差分をログ出力
-				for i := 0; i < len(boundaries)-1; i++ {
-					before := sttBoundaries[i].EndTime.Milliseconds()
-					after := boundaries[i].EndTime.Milliseconds()
-					if before != after {
-						log.Debug("reassembly: boundary snapped",
+			// STT アライメントで得た行境界をログ出力
+			for i, b := range boundaries {
+				log.Debug("reassembly: STT boundary",
+					"alias", alias,
+					"line", i,
+					"start_ms", b.StartTime.Milliseconds(),
+					"end_ms", b.EndTime.Milliseconds(),
+				)
+			}
+
+			// 行が2行以上の場合、silencedetect で正確なカット位置にスナップする
+			if len(group.spokenTexts) >= 2 {
+				silences, silenceErr := audio.DetectSilenceIntervals(res.pcmData, audio.PCMSplitConfig{
+					SampleRate:     reassemblySampleRate,
+					Channels:       reassemblyChannels,
+					BytesPerSample: reassemblyBytesPerSample,
+					NoiseDB:        -30,
+					MinSilenceSec:  0.2,
+				})
+				if silenceErr != nil {
+					log.Warn("reassembly: silencedetect failed, using STT boundaries",
+						"alias", alias,
+						"error", silenceErr,
+					)
+				} else {
+					// 検出された全無音区間をログ出力
+					for j, s := range silences {
+						log.Debug("reassembly: silence interval",
 							"alias", alias,
-							"cut", i,
-							"before_ms", before,
-							"after_ms", after,
-							"delta_ms", after-before,
+							"index", j,
+							"start_ms", int(s.StartSec*1000),
+							"end_ms", int(s.EndSec*1000),
+							"mid_ms", int((s.StartSec+s.EndSec)/2.0*1000),
 						)
-					} else {
-						log.Debug("reassembly: boundary not snapped",
-							"alias", alias,
-							"cut", i,
-							"at_ms", before,
-						)
+					}
+
+					sttBoundaries := make([]audio.LineBoundary, len(boundaries))
+					copy(sttBoundaries, boundaries)
+
+					boundaries = audio.SnapBoundariesToSilence(boundaries, silences, 500*time.Millisecond)
+
+					// スナップ前後の差分をログ出力
+					for i := 0; i < len(boundaries)-1; i++ {
+						before := sttBoundaries[i].EndTime.Milliseconds()
+						after := boundaries[i].EndTime.Milliseconds()
+						if before != after {
+							log.Debug("reassembly: boundary snapped",
+								"alias", alias,
+								"cut", i,
+								"before_ms", before,
+								"after_ms", after,
+								"delta_ms", after-before,
+							)
+						} else {
+							log.Debug("reassembly: boundary not snapped",
+								"alias", alias,
+								"cut", i,
+								"at_ms", before,
+							)
+						}
 					}
 				}
 			}
-		}
 
-		// ダミー末尾行が読み上げられなかった場合の末尾補正
-		// ダミーセグメントの時間が短い場合、実テキスト末尾の音声がダミー側に
-		// 含まれているため、最後の実セグメントの境界を拡張する
-		dummyBoundaryIdx := len(boundaries) - 1
-		lastRealBoundaryIdx := dummyBoundaryIdx - 1
-		if lastRealBoundaryIdx >= 0 {
-			dummyDuration := boundaries[dummyBoundaryIdx].EndTime - boundaries[dummyBoundaryIdx].StartTime
-			// "以上です。" の通常読み上げ時間は約1秒以上
-			// それより短い場合、ダミーは読み上げられておらず残りの音声は実テキスト末尾
-			if dummyDuration < 800*time.Millisecond {
-				log.Debug("reassembly: dummy not spoken, extending last real segment",
+			// ダミー末尾行が読み上げられなかった場合の末尾補正
+			// ダミーセグメントの時間が短い場合、実テキスト末尾の音声がダミー側に
+			// 含まれているため、最後の実セグメントの境界を拡張する
+			dummyBoundaryIdx := len(boundaries) - 1
+			lastRealBoundaryIdx := dummyBoundaryIdx - 1
+			if lastRealBoundaryIdx >= 0 {
+				dummyDuration := boundaries[dummyBoundaryIdx].EndTime - boundaries[dummyBoundaryIdx].StartTime
+				// "以上です。" の通常読み上げ時間は約1秒以上
+				// それより短い場合、ダミーは読み上げられておらず残りの音声は実テキスト末尾
+				if dummyDuration < 800*time.Millisecond {
+					log.Debug("reassembly: dummy not spoken, extending last real segment",
+						"alias", alias,
+						"dummy_duration_ms", dummyDuration.Milliseconds(),
+					)
+					boundaries[lastRealBoundaryIdx].EndTime = boundaries[dummyBoundaryIdx].EndTime
+					boundaries[dummyBoundaryIdx].StartTime = boundaries[dummyBoundaryIdx].EndTime
+				}
+			}
+
+			// タイムスタンプ境界で PCM を分割
+			segments := audio.SplitPCMByTimestamps(res.pcmData, boundaries, reassemblySampleRate, reassemblyChannels, reassemblyBytesPerSample)
+
+			// ダミー末尾行のセグメントを除外し、実セグメントのみ追加
+			segMu.Lock()
+			for i := 0; i < len(res.originalIndices); i++ {
+				allSegments = append(allSegments, reassemblySegment{
+					originalIndex: res.originalIndices[i],
+					pcmData:       segments[i],
+				})
+			}
+			segMu.Unlock()
+
+			if len(segments) > len(res.originalIndices) {
+				dummySeg := segments[len(segments)-1]
+				dummyDuration := time.Duration(float64(len(dummySeg)) / float64(reassemblyBytesPerSec) * float64(time.Second))
+				log.Debug("reassembly: discarded dummy trailing segment",
 					"alias", alias,
+					"dummy_pcm_bytes", len(dummySeg),
 					"dummy_duration_ms", dummyDuration.Milliseconds(),
 				)
-				boundaries[lastRealBoundaryIdx].EndTime = boundaries[dummyBoundaryIdx].EndTime
-				boundaries[dummyBoundaryIdx].StartTime = boundaries[dummyBoundaryIdx].EndTime
 			}
-		}
 
-		// タイムスタンプ境界で PCM を分割
-		segments := audio.SplitPCMByTimestamps(res.pcmData, boundaries, reassemblySampleRate, reassemblyChannels, reassemblyBytesPerSample)
-
-		// ダミー末尾行のセグメントを除外し、実セグメントのみ追加
-		for i := 0; i < len(res.originalIndices); i++ {
-			allSegments = append(allSegments, reassemblySegment{
-				originalIndex: res.originalIndices[i],
-				pcmData:       segments[i],
-			})
-		}
-
-		if len(segments) > len(res.originalIndices) {
-			dummySeg := segments[len(segments)-1]
-			dummyDuration := time.Duration(float64(len(dummySeg)) / float64(reassemblyBytesPerSec) * float64(time.Second))
-			log.Debug("reassembly: discarded dummy trailing segment",
+			log.Debug("reassembly: alignment split done",
 				"alias", alias,
-				"dummy_pcm_bytes", len(dummySeg),
-				"dummy_duration_ms", dummyDuration.Milliseconds(),
+				"real_segments", len(res.originalIndices),
+				"total_segments", len(segments),
+				"lines", len(group.texts),
 			)
-		}
 
-		log.Debug("reassembly: alignment split done",
-			"alias", alias,
-			"real_segments", len(res.originalIndices),
-			"total_segments", len(segments),
-			"lines", len(group.texts),
-		)
+			return nil
+		})
+	}
+
+	if err := eg2.Wait(); err != nil {
+		return nil, err
 	}
 
 	// Step 4: 元の順序で再アセンブル（セグメント間に 200ms 無音パディング挿入）
