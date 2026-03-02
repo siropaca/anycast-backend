@@ -165,6 +165,10 @@ Authorization: Bearer {{token}}
 DELETE {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/bgm
 Authorization: Bearer {{token}}
 
+### エピソード音声削除
+DELETE {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/audio
+Authorization: Bearer {{token}}
+
 ### 音声生成（voice: TTS のみ）
 POST {{baseUrl}}/channels/YOUR_CHANNEL_ID_HERE/episodes/YOUR_EPISODE_ID_HERE/audio/generate-async
 Content-Type: application/json

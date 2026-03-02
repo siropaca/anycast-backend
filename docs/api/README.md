@@ -72,6 +72,8 @@
 | POST | `/api/v1/channels/:channelId/episodes/:episodeId/unpublish` | エピソード非公開 | Owner | ✅ | [詳細](./episodes.md#エピソード非公開) |
 | PUT | `/api/v1/channels/:channelId/episodes/:episodeId/bgm` | エピソード BGM 設定 | Owner | ✅ | [詳細](./episodes.md#エピソード-bgm-設定) |
 | DELETE | `/api/v1/channels/:channelId/episodes/:episodeId/bgm` | エピソード BGM 削除 | Owner | ✅ | [詳細](./episodes.md#エピソード-bgm-削除) |
+| PUT | `/api/v1/channels/:channelId/episodes/:episodeId/audio` | エピソード音声アップロード | Owner | ✅ | [詳細](./episodes.md#エピソード音声アップロード) |
+| DELETE | `/api/v1/channels/:channelId/episodes/:episodeId/audio` | エピソード音声削除 | Owner | ✅ | [詳細](./episodes.md#エピソード音声削除) |
 | GET | `/api/v1/me/channels/:channelId/episodes` | 自分のチャンネルのエピソード一覧 | Owner | ✅ | [詳細](./episodes.md#自分のチャンネルのエピソード一覧取得) |
 | GET | `/api/v1/me/channels/:channelId/episodes/:episodeId` | 自分のチャンネルのエピソード取得 | Owner | ✅ | [詳細](./episodes.md#自分のチャンネルのエピソード取得) |
 | POST | `/api/v1/episodes/:episodeId/play` | 再生回数カウント | Owner | ✅ | [詳細](./episodes.md#再生回数カウント) |

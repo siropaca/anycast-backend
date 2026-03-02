@@ -2,12 +2,15 @@ package service
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
+	"github.com/siropaca/anycast-backend/internal/apperror"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/model"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
@@ -200,5 +203,272 @@ func TestToEpisodeResponses(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Len(t, result, 0)
 		assert.NotNil(t, result)
+	})
+}
+
+func TestEpisodeService_DeleteAudio(t *testing.T) {
+	ctx := context.Background()
+	ownerID := uuid.New()
+	otherUserID := uuid.New()
+	channelID := uuid.New()
+	episodeID := uuid.New()
+	voiceAudioID := uuid.New()
+	fullAudioID := uuid.New()
+
+	t.Run("VoiceAudio と FullAudio の両方を削除できる", func(t *testing.T) {
+		mockChannelRepo := new(mockChannelRepository)
+		mockEpisodeRepo := new(mockEpisodeRepository)
+		mockAudioRepo := new(mockAudioRepository)
+		mockStorageClient := new(mockStorageClient)
+
+		channel := &model.Channel{ID: channelID, UserID: ownerID}
+		episode := &model.Episode{
+			ID:           episodeID,
+			ChannelID:    channelID,
+			VoiceAudioID: &voiceAudioID,
+			FullAudioID:  &fullAudioID,
+			VoiceAudio:   &model.Audio{ID: voiceAudioID, Path: "audios/voice.mp3"},
+			FullAudio:    &model.Audio{ID: fullAudioID, Path: "audios/full.mp3"},
+		}
+
+		mockChannelRepo.On("FindByID", mock.Anything, channelID).Return(channel, nil)
+		mockEpisodeRepo.On("FindByID", mock.Anything, episodeID).Return(episode, nil)
+		mockEpisodeRepo.On("Update", mock.Anything, mock.MatchedBy(func(e *model.Episode) bool {
+			return e.VoiceAudioID == nil && e.FullAudioID == nil
+		})).Return(nil)
+		mockAudioRepo.On("Delete", mock.Anything, voiceAudioID).Return(nil)
+		mockAudioRepo.On("Delete", mock.Anything, fullAudioID).Return(nil)
+		mockStorageClient.On("Delete", mock.Anything, "audios/voice.mp3").Return(nil)
+		mockStorageClient.On("Delete", mock.Anything, "audios/full.mp3").Return(nil)
+
+		svc := &episodeService{
+			channelRepo:   mockChannelRepo,
+			episodeRepo:   mockEpisodeRepo,
+			audioRepo:     mockAudioRepo,
+			storageClient: mockStorageClient,
+		}
+
+		err := svc.DeleteAudio(ctx, ownerID.String(), channelID.String(), episodeID.String())
+
+		assert.NoError(t, err)
+		mockChannelRepo.AssertExpectations(t)
+		mockEpisodeRepo.AssertExpectations(t)
+		mockAudioRepo.AssertExpectations(t)
+		mockStorageClient.AssertExpectations(t)
+	})
+
+	t.Run("VoiceAudio のみある場合に削除できる", func(t *testing.T) {
+		mockChannelRepo := new(mockChannelRepository)
+		mockEpisodeRepo := new(mockEpisodeRepository)
+		mockAudioRepo := new(mockAudioRepository)
+		mockStorageClient := new(mockStorageClient)
+
+		channel := &model.Channel{ID: channelID, UserID: ownerID}
+		episode := &model.Episode{
+			ID:           episodeID,
+			ChannelID:    channelID,
+			VoiceAudioID: &voiceAudioID,
+			VoiceAudio:   &model.Audio{ID: voiceAudioID, Path: "audios/voice.mp3"},
+		}
+
+		mockChannelRepo.On("FindByID", mock.Anything, channelID).Return(channel, nil)
+		mockEpisodeRepo.On("FindByID", mock.Anything, episodeID).Return(episode, nil)
+		mockEpisodeRepo.On("Update", mock.Anything, mock.Anything).Return(nil)
+		mockAudioRepo.On("Delete", mock.Anything, voiceAudioID).Return(nil)
+		mockStorageClient.On("Delete", mock.Anything, "audios/voice.mp3").Return(nil)
+
+		svc := &episodeService{
+			channelRepo:   mockChannelRepo,
+			episodeRepo:   mockEpisodeRepo,
+			audioRepo:     mockAudioRepo,
+			storageClient: mockStorageClient,
+		}
+
+		err := svc.DeleteAudio(ctx, ownerID.String(), channelID.String(), episodeID.String())
+
+		assert.NoError(t, err)
+		mockAudioRepo.AssertExpectations(t)
+		mockStorageClient.AssertExpectations(t)
+	})
+
+	t.Run("FullAudio のみある場合に削除できる", func(t *testing.T) {
+		mockChannelRepo := new(mockChannelRepository)
+		mockEpisodeRepo := new(mockEpisodeRepository)
+		mockAudioRepo := new(mockAudioRepository)
+		mockStorageClient := new(mockStorageClient)
+
+		channel := &model.Channel{ID: channelID, UserID: ownerID}
+		episode := &model.Episode{
+			ID:          episodeID,
+			ChannelID:   channelID,
+			FullAudioID: &fullAudioID,
+			FullAudio:   &model.Audio{ID: fullAudioID, Path: "audios/full.mp3"},
+		}
+
+		mockChannelRepo.On("FindByID", mock.Anything, channelID).Return(channel, nil)
+		mockEpisodeRepo.On("FindByID", mock.Anything, episodeID).Return(episode, nil)
+		mockEpisodeRepo.On("Update", mock.Anything, mock.Anything).Return(nil)
+		mockAudioRepo.On("Delete", mock.Anything, fullAudioID).Return(nil)
+		mockStorageClient.On("Delete", mock.Anything, "audios/full.mp3").Return(nil)
+
+		svc := &episodeService{
+			channelRepo:   mockChannelRepo,
+			episodeRepo:   mockEpisodeRepo,
+			audioRepo:     mockAudioRepo,
+			storageClient: mockStorageClient,
+		}
+
+		err := svc.DeleteAudio(ctx, ownerID.String(), channelID.String(), episodeID.String())
+
+		assert.NoError(t, err)
+		mockAudioRepo.AssertExpectations(t)
+		mockStorageClient.AssertExpectations(t)
+	})
+
+	t.Run("音声がない場合も正常終了する", func(t *testing.T) {
+		mockChannelRepo := new(mockChannelRepository)
+		mockEpisodeRepo := new(mockEpisodeRepository)
+
+		channel := &model.Channel{ID: channelID, UserID: ownerID}
+		episode := &model.Episode{
+			ID:        episodeID,
+			ChannelID: channelID,
+		}
+
+		mockChannelRepo.On("FindByID", mock.Anything, channelID).Return(channel, nil)
+		mockEpisodeRepo.On("FindByID", mock.Anything, episodeID).Return(episode, nil)
+
+		svc := &episodeService{
+			channelRepo: mockChannelRepo,
+			episodeRepo: mockEpisodeRepo,
+		}
+
+		err := svc.DeleteAudio(ctx, ownerID.String(), channelID.String(), episodeID.String())
+
+		assert.NoError(t, err)
+		mockChannelRepo.AssertExpectations(t)
+		mockEpisodeRepo.AssertExpectations(t)
+	})
+
+	t.Run("チャンネルが見つからない場合はエラーを返す", func(t *testing.T) {
+		mockChannelRepo := new(mockChannelRepository)
+
+		mockChannelRepo.On("FindByID", mock.Anything, channelID).Return(nil, apperror.ErrNotFound.WithMessage("チャンネルが見つかりません"))
+
+		svc := &episodeService{
+			channelRepo: mockChannelRepo,
+		}
+
+		err := svc.DeleteAudio(ctx, ownerID.String(), channelID.String(), episodeID.String())
+
+		assert.Error(t, err)
+		var appErr *apperror.AppError
+		assert.True(t, errors.As(err, &appErr))
+		assert.Equal(t, apperror.CodeNotFound, appErr.Code)
+		mockChannelRepo.AssertExpectations(t)
+	})
+
+	t.Run("チャンネルオーナーでない場合は 403 を返す", func(t *testing.T) {
+		mockChannelRepo := new(mockChannelRepository)
+
+		channel := &model.Channel{ID: channelID, UserID: ownerID}
+		mockChannelRepo.On("FindByID", mock.Anything, channelID).Return(channel, nil)
+
+		svc := &episodeService{
+			channelRepo: mockChannelRepo,
+		}
+
+		err := svc.DeleteAudio(ctx, otherUserID.String(), channelID.String(), episodeID.String())
+
+		assert.Error(t, err)
+		var appErr *apperror.AppError
+		assert.True(t, errors.As(err, &appErr))
+		assert.Equal(t, apperror.CodeForbidden, appErr.Code)
+		mockChannelRepo.AssertExpectations(t)
+	})
+
+	t.Run("エピソードが見つからない場合はエラーを返す", func(t *testing.T) {
+		mockChannelRepo := new(mockChannelRepository)
+		mockEpisodeRepo := new(mockEpisodeRepository)
+
+		channel := &model.Channel{ID: channelID, UserID: ownerID}
+		mockChannelRepo.On("FindByID", mock.Anything, channelID).Return(channel, nil)
+		mockEpisodeRepo.On("FindByID", mock.Anything, episodeID).Return(nil, apperror.ErrNotFound.WithMessage("エピソードが見つかりません"))
+
+		svc := &episodeService{
+			channelRepo: mockChannelRepo,
+			episodeRepo: mockEpisodeRepo,
+		}
+
+		err := svc.DeleteAudio(ctx, ownerID.String(), channelID.String(), episodeID.String())
+
+		assert.Error(t, err)
+		var appErr *apperror.AppError
+		assert.True(t, errors.As(err, &appErr))
+		assert.Equal(t, apperror.CodeNotFound, appErr.Code)
+		mockChannelRepo.AssertExpectations(t)
+		mockEpisodeRepo.AssertExpectations(t)
+	})
+
+	t.Run("エピソードが別チャンネルに属している場合はエラーを返す", func(t *testing.T) {
+		mockChannelRepo := new(mockChannelRepository)
+		mockEpisodeRepo := new(mockEpisodeRepository)
+
+		otherChannelID := uuid.New()
+		channel := &model.Channel{ID: channelID, UserID: ownerID}
+		episode := &model.Episode{
+			ID:        episodeID,
+			ChannelID: otherChannelID,
+		}
+
+		mockChannelRepo.On("FindByID", mock.Anything, channelID).Return(channel, nil)
+		mockEpisodeRepo.On("FindByID", mock.Anything, episodeID).Return(episode, nil)
+
+		svc := &episodeService{
+			channelRepo: mockChannelRepo,
+			episodeRepo: mockEpisodeRepo,
+		}
+
+		err := svc.DeleteAudio(ctx, ownerID.String(), channelID.String(), episodeID.String())
+
+		assert.Error(t, err)
+		var appErr *apperror.AppError
+		assert.True(t, errors.As(err, &appErr))
+		assert.Equal(t, apperror.CodeNotFound, appErr.Code)
+		mockChannelRepo.AssertExpectations(t)
+		mockEpisodeRepo.AssertExpectations(t)
+	})
+
+	t.Run("GCS 削除が失敗してもエラーにならない", func(t *testing.T) {
+		mockChannelRepo := new(mockChannelRepository)
+		mockEpisodeRepo := new(mockEpisodeRepository)
+		mockAudioRepo := new(mockAudioRepository)
+		mockStorageClient := new(mockStorageClient)
+
+		channel := &model.Channel{ID: channelID, UserID: ownerID}
+		episode := &model.Episode{
+			ID:           episodeID,
+			ChannelID:    channelID,
+			VoiceAudioID: &voiceAudioID,
+			VoiceAudio:   &model.Audio{ID: voiceAudioID, Path: "audios/voice.mp3"},
+		}
+
+		mockChannelRepo.On("FindByID", mock.Anything, channelID).Return(channel, nil)
+		mockEpisodeRepo.On("FindByID", mock.Anything, episodeID).Return(episode, nil)
+		mockEpisodeRepo.On("Update", mock.Anything, mock.Anything).Return(nil)
+		mockAudioRepo.On("Delete", mock.Anything, voiceAudioID).Return(nil)
+		mockStorageClient.On("Delete", mock.Anything, "audios/voice.mp3").Return(fmt.Errorf("storage error"))
+
+		svc := &episodeService{
+			channelRepo:   mockChannelRepo,
+			episodeRepo:   mockEpisodeRepo,
+			audioRepo:     mockAudioRepo,
+			storageClient: mockStorageClient,
+		}
+
+		err := svc.DeleteAudio(ctx, ownerID.String(), channelID.String(), episodeID.String())
+
+		assert.NoError(t, err)
+		mockStorageClient.AssertExpectations(t)
 	})
 }

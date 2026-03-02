@@ -539,6 +539,48 @@ func (h *EpisodeHandler) DeleteBgm(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// DeleteAudio godoc
+// @Summary エピソード音声削除
+// @Description 指定したエピソードの音声（VoiceAudio / FullAudio）を削除します
+// @Tags episodes
+// @Accept json
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param episodeId path string true "エピソード ID"
+// @Success 204 "No Content"
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/episodes/{episodeId}/audio [delete]
+func (h *EpisodeHandler) DeleteAudio(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
+		return
+	}
+
+	episodeID := c.Param("episodeId")
+	if episodeID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
+		return
+	}
+
+	if err := h.episodeService.DeleteAudio(c.Request.Context(), userID, channelID, episodeID); err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
 // IncrementPlayCount godoc
 // @Summary 再生回数カウント
 // @Description エピソードの再生回数をインクリメントします。クライアントは再生開始から30秒経過した時点で呼び出します。

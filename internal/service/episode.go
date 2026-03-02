@@ -29,6 +29,7 @@ type EpisodeService interface {
 	IncrementPlayCount(ctx context.Context, episodeID string) error
 	SetBgm(ctx context.Context, userID, channelID, episodeID string, req request.SetEpisodeBgmRequest) (*response.EpisodeDataResponse, error)
 	DeleteBgm(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error)
+	DeleteAudio(ctx context.Context, userID, channelID, episodeID string) error
 }
 
 type episodeService struct {
@@ -853,6 +854,88 @@ func (s *episodeService) DeleteBgm(ctx context.Context, userID, channelID, episo
 	return &response.EpisodeDataResponse{
 		Data: resp,
 	}, nil
+}
+
+// DeleteAudio は指定されたエピソードの音声（VoiceAudio / FullAudio）を削除する
+func (s *episodeService) DeleteAudio(ctx context.Context, userID, channelID, episodeID string) error {
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return err
+	}
+
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return err
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return err
+	}
+
+	if channel.UserID != uid {
+		return apperror.ErrForbidden.WithMessage("このエピソードの音声削除権限がありません")
+	}
+
+	// エピソードの存在確認とチャンネルの一致チェック
+	episode, err := s.episodeRepo.FindByID(ctx, eid)
+	if err != nil {
+		return err
+	}
+
+	if episode.ChannelID != cid {
+		return apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
+	}
+
+	// 音声が設定されていなければ早期リターン
+	if episode.VoiceAudioID == nil && episode.FullAudioID == nil {
+		return nil
+	}
+
+	// 削除対象の GCS ファイルパスと audio ID を収集
+	var filesToDelete []string
+	var audioIDsToDelete []uuid.UUID
+
+	if episode.VoiceAudio != nil {
+		filesToDelete = append(filesToDelete, episode.VoiceAudio.Path)
+		audioIDsToDelete = append(audioIDsToDelete, episode.VoiceAudio.ID)
+	}
+	if episode.FullAudio != nil {
+		filesToDelete = append(filesToDelete, episode.FullAudio.Path)
+		audioIDsToDelete = append(audioIDsToDelete, episode.FullAudio.ID)
+	}
+
+	// エピソードの音声参照を NULL に更新
+	episode.VoiceAudioID = nil
+	episode.FullAudioID = nil
+	episode.VoiceAudio = nil
+	episode.FullAudio = nil
+
+	if err := s.episodeRepo.Update(ctx, episode); err != nil {
+		return err
+	}
+
+	// audios レコードを削除
+	for _, audioID := range audioIDsToDelete {
+		if err := s.audioRepo.Delete(ctx, audioID); err != nil {
+			logger.FromContext(ctx).Warn("failed to delete audio record", "audioID", audioID, "error", err)
+		}
+	}
+
+	// GCS からファイルを削除（失敗してもログを出すだけで続行）
+	for _, path := range filesToDelete {
+		if err := s.storageClient.Delete(ctx, path); err != nil {
+			logger.FromContext(ctx).Warn("failed to delete file from storage", "path", path, "error", err)
+		}
+	}
+
+	return nil
 }
 
 // toChannelOwnerResponse は User からチャンネルオーナーレスポンスを生成する

@@ -324,6 +324,117 @@ DELETE /channels/:channelId/episodes/:episodeId/bgm
 
 ---
 
+## エピソード音声削除
+
+```
+DELETE /channels/:channelId/episodes/:episodeId/audio
+```
+
+エピソードに紐づく音声（VoiceAudio / FullAudio）を削除する。対応する `audios` レコードと GCS ファイルも削除される。
+
+**レスポンス（204 No Content）:**
+
+レスポンスボディなし。
+
+**エラー（403 Forbidden）:**
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "このエピソードの音声削除権限がありません"
+  }
+}
+```
+
+**エラー（404 Not Found）:**
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "エピソードが見つかりません"
+  }
+}
+```
+
+> **Note:** 音声が設定されていない場合でもエラーにはならず、204 を返します。
+
+---
+
+## エピソード音声アップロード
+
+```
+PUT /channels/:channelId/episodes/:episodeId/audio
+```
+
+ユーザーが録音・編集した音声ファイルを直接エピソードにアップロードする。アップロードされたファイルは `voiceAudio` と `fullAudio` の両方に設定される（remix で fullAudio のみ BGM 付きに差し替え可能）。
+
+**リクエスト:** `multipart/form-data`
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|-----|:----:|------|
+| file | File | ◯ | アップロードする音声ファイル（mp3, wav, ogg, aac, m4a、最大 50MB） |
+
+**レスポンス（200 OK）:**
+```json
+{
+  "data": {
+    "id": "uuid",
+    "title": "エピソードタイトル",
+    "description": "エピソードの説明",
+    "voiceAudio": {
+      "id": "uuid",
+      "url": "https://storage.example.com/voice-audio.mp3",
+      "mimeType": "audio/mpeg",
+      "fileSize": 1024000,
+      "durationMs": 180000
+    },
+    "fullAudio": {
+      "id": "uuid",
+      "url": "https://storage.example.com/full-audio.mp3",
+      "mimeType": "audio/mpeg",
+      "fileSize": 1024000,
+      "durationMs": 180000
+    },
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-01T00:00:00Z"
+  }
+}
+```
+
+**エラー（400 Bad Request）:**
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "ファイルは必須です"
+  }
+}
+```
+
+**エラー（403 Forbidden）:**
+```json
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "このエピソードの音声アップロード権限がありません"
+  }
+}
+```
+
+**エラー（404 Not Found）:**
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "エピソードが見つかりません"
+  }
+}
+```
+
+> **Note:** 既存の voiceAudio / fullAudio がある場合は上書きされ、古い音声の GCS ファイルはベストエフォートで削除されます。
+
+---
+
 ## 自分のチャンネルのエピソード一覧取得
 
 ```

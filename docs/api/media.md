@@ -193,6 +193,8 @@ POST /audios
 ```
 
 > **Note:** `durationMs` は MP3 形式の場合のみビットレートベースで推定されます。その他の形式では 0 が返されます。
+>
+> **Note:** エピソードに音声ファイルを直接設定する場合は [エピソード音声アップロード](./episodes.md#エピソード音声アップロード)（`PUT /channels/:channelId/episodes/:episodeId/audio`）を使用してください。
 
 ---
 

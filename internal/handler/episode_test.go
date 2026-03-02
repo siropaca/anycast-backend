@@ -116,6 +116,11 @@ func (m *mockEpisodeService) DeleteBgm(ctx context.Context, userID, channelID, e
 	return args.Get(0).(*response.EpisodeDataResponse), args.Error(1)
 }
 
+func (m *mockEpisodeService) DeleteAudio(ctx context.Context, userID, channelID, episodeID string) error {
+	args := m.Called(ctx, userID, channelID, episodeID)
+	return args.Error(0)
+}
+
 // テスト用のルーターをセットアップする
 func setupEpisodeRouter(h *EpisodeHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)
@@ -127,6 +132,7 @@ func setupEpisodeRouter(h *EpisodeHandler) *gin.Engine {
 	r.DELETE("/channels/:channelId/episodes/:episodeId", h.DeleteEpisode)
 	r.POST("/channels/:channelId/episodes/:episodeId/publish", h.PublishEpisode)
 	r.POST("/channels/:channelId/episodes/:episodeId/unpublish", h.UnpublishEpisode)
+	r.DELETE("/channels/:channelId/episodes/:episodeId/audio", h.DeleteAudio)
 	return r
 }
 
@@ -146,6 +152,7 @@ func setupAuthenticatedEpisodeRouter(h *EpisodeHandler, userID string) *gin.Engi
 	r.DELETE("/channels/:channelId/episodes/:episodeId", h.DeleteEpisode)
 	r.POST("/channels/:channelId/episodes/:episodeId/publish", h.PublishEpisode)
 	r.POST("/channels/:channelId/episodes/:episodeId/unpublish", h.UnpublishEpisode)
+	r.DELETE("/channels/:channelId/episodes/:episodeId/audio", h.DeleteAudio)
 	return r
 }
 
@@ -961,5 +968,69 @@ func TestEpisodeHandler_UnpublishEpisode(t *testing.T) {
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
+}
+
+func TestEpisodeHandler_DeleteAudio(t *testing.T) {
+	userID := uuid.New().String()
+	channelID := uuid.New().String()
+	episodeID := uuid.New().String()
+
+	t.Run("エピソードの音声を削除できる", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		mockSvc.On("DeleteAudio", mock.Anything, userID, channelID, episodeID).Return(nil)
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("DELETE", "/channels/"+channelID+"/episodes/"+episodeID+"/audio", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNoContent, w.Code)
+		assert.Empty(t, w.Body.String())
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("未認証の場合は 401 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupEpisodeRouter(handler)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("DELETE", "/channels/"+channelID+"/episodes/"+episodeID+"/audio", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
+
+	t.Run("権限がない場合は 403 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		mockSvc.On("DeleteAudio", mock.Anything, userID, channelID, episodeID).Return(apperror.ErrForbidden.WithMessage("このエピソードの音声削除権限がありません"))
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("DELETE", "/channels/"+channelID+"/episodes/"+episodeID+"/audio", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("エピソードが見つからない場合は 404 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		mockSvc.On("DeleteAudio", mock.Anything, userID, channelID, episodeID).Return(apperror.ErrNotFound.WithMessage("エピソードが見つかりません"))
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("DELETE", "/channels/"+channelID+"/episodes/"+episodeID+"/audio", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		mockSvc.AssertExpectations(t)
 	})
 }
