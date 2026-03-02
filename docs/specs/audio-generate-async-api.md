@@ -54,7 +54,7 @@ POST /channels/{channelId}/episodes/{episodeId}/audio/generate-async
 | type | string | ◯ | `voice` / `full` / `remix` |
 | bgmId | uuid | - | ユーザー BGM ID（type=full では bgmId か systemBgmId のいずれか必須、type=remix では任意） |
 | systemBgmId | uuid | - | システム BGM ID（同上） |
-| bgmVolumeDb | number | - | BGM 音量（-60 〜 0 dB、デフォルト: -20） |
+| bgmVolumeDb | number | - | BGM 音量（-60 〜 0 dB、デフォルト: -25） |
 | fadeOutMs | number | - | フェードアウト時間（0 〜 30000 ms、デフォルト: 3000） |
 | paddingStartMs | number | - | 音声開始前の余白（0 〜 10000 ms、デフォルト: 1000） |
 | paddingEndMs | number | - | 音声終了後の余白（0 〜 10000 ms、デフォルト: 3000） |
@@ -76,7 +76,7 @@ POST /channels/{channelId}/episodes/{episodeId}/audio/generate-async
   "status": "pending",
   "progress": 0,
   "jobType": "full",
-  "bgmVolumeDb": -20,
+  "bgmVolumeDb": -25,
   "fadeOutMs": 3000,
   "paddingStartMs": 1000,
   "paddingEndMs": 3000,
@@ -113,7 +113,7 @@ GET /audio-jobs/{jobId}
   "episodeId": "660e8400-e29b-41d4-a716-446655440001",
   "status": "completed",
   "progress": 100,
-  "bgmVolumeDb": -20,
+  "bgmVolumeDb": -25,
   "fadeOutMs": 3000,
   "paddingStartMs": 1000,
   "paddingEndMs": 3000,
@@ -439,7 +439,7 @@ CREATE TABLE audio_jobs (
     system_bgm_id UUID REFERENCES system_bgms (id) ON DELETE SET NULL,
 
     -- BGM ミキシング設定
-    bgm_volume_db DECIMAL(5, 2) NOT NULL DEFAULT -20.0,
+    bgm_volume_db DECIMAL(5, 2) NOT NULL DEFAULT -25.0,
     fade_out_ms INTEGER NOT NULL DEFAULT 3000,
     padding_start_ms INTEGER NOT NULL DEFAULT 1000,
     padding_end_ms INTEGER NOT NULL DEFAULT 3000,

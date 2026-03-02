@@ -31,7 +31,7 @@ import (
 
 // 音声生成のデフォルトパラメータ
 const (
-	defaultBgmVolumeDB    = -20.0
+	defaultBgmVolumeDB    = -25.0
 	defaultFadeOutMs      = 3000
 	defaultPaddingStartMs = 1000
 	defaultPaddingEndMs   = 3000
