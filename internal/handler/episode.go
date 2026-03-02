@@ -581,6 +581,73 @@ func (h *EpisodeHandler) DeleteAudio(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+// UploadAudio godoc
+// @Summary エピソード音声アップロード
+// @Description エピソードに音声ファイルを直接アップロードします。voiceAudio と fullAudio の両方に設定されます。
+// @Tags episodes
+// @Accept multipart/form-data
+// @Produce json
+// @Param channelId path string true "チャンネル ID"
+// @Param episodeId path string true "エピソード ID"
+// @Param file formData file true "音声ファイル（mp3, wav, ogg, aac, m4a、最大 50MB）"
+// @Success 200 {object} response.EpisodeDataResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Security BearerAuth
+// @Router /channels/{channelId}/episodes/{episodeId}/audio [put]
+func (h *EpisodeHandler) UploadAudio(c *gin.Context) {
+	userID, ok := middleware.GetUserID(c)
+	if !ok {
+		Error(c, apperror.ErrUnauthorized)
+		return
+	}
+
+	channelID := c.Param("channelId")
+	if channelID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("channelId は必須です"))
+		return
+	}
+
+	episodeID := c.Param("episodeId")
+	if episodeID == "" {
+		Error(c, apperror.ErrValidation.WithMessage("episodeId は必須です"))
+		return
+	}
+
+	// ファイルの取得
+	fileHeader, err := c.FormFile("file")
+	if err != nil {
+		Error(c, apperror.ErrValidation.WithMessage("ファイルは必須です"))
+		return
+	}
+
+	// ファイルを開く
+	file, err := fileHeader.Open()
+	if err != nil {
+		Error(c, apperror.ErrInternal.WithMessage("ファイルを開けませんでした").WithError(err))
+		return
+	}
+	defer file.Close()
+
+	input := service.UploadAudioInput{
+		File:        file,
+		Filename:    fileHeader.Filename,
+		ContentType: fileHeader.Header.Get("Content-Type"),
+		FileSize:    int(fileHeader.Size),
+	}
+
+	result, err := h.episodeService.UploadAudio(c.Request.Context(), userID, channelID, episodeID, input)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
 // IncrementPlayCount godoc
 // @Summary 再生回数カウント
 // @Description エピソードの再生回数をインクリメントします。クライアントは再生開始から30秒経過した時点で呼び出します。

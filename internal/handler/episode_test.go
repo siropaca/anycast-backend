@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -19,6 +21,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/middleware"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 	"github.com/siropaca/anycast-backend/internal/repository"
+	"github.com/siropaca/anycast-backend/internal/service"
 )
 
 // EpisodeService のモック
@@ -121,6 +124,14 @@ func (m *mockEpisodeService) DeleteAudio(ctx context.Context, userID, channelID,
 	return args.Error(0)
 }
 
+func (m *mockEpisodeService) UploadAudio(ctx context.Context, userID, channelID, episodeID string, input service.UploadAudioInput) (*response.EpisodeDataResponse, error) {
+	args := m.Called(ctx, userID, channelID, episodeID, input)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*response.EpisodeDataResponse), args.Error(1)
+}
+
 // テスト用のルーターをセットアップする
 func setupEpisodeRouter(h *EpisodeHandler) *gin.Engine {
 	gin.SetMode(gin.TestMode)
@@ -132,6 +143,7 @@ func setupEpisodeRouter(h *EpisodeHandler) *gin.Engine {
 	r.DELETE("/channels/:channelId/episodes/:episodeId", h.DeleteEpisode)
 	r.POST("/channels/:channelId/episodes/:episodeId/publish", h.PublishEpisode)
 	r.POST("/channels/:channelId/episodes/:episodeId/unpublish", h.UnpublishEpisode)
+	r.PUT("/channels/:channelId/episodes/:episodeId/audio", h.UploadAudio)
 	r.DELETE("/channels/:channelId/episodes/:episodeId/audio", h.DeleteAudio)
 	return r
 }
@@ -152,6 +164,7 @@ func setupAuthenticatedEpisodeRouter(h *EpisodeHandler, userID string) *gin.Engi
 	r.DELETE("/channels/:channelId/episodes/:episodeId", h.DeleteEpisode)
 	r.POST("/channels/:channelId/episodes/:episodeId/publish", h.PublishEpisode)
 	r.POST("/channels/:channelId/episodes/:episodeId/unpublish", h.UnpublishEpisode)
+	r.PUT("/channels/:channelId/episodes/:episodeId/audio", h.UploadAudio)
 	r.DELETE("/channels/:channelId/episodes/:episodeId/audio", h.DeleteAudio)
 	return r
 }
@@ -1032,5 +1045,130 @@ func TestEpisodeHandler_DeleteAudio(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, w.Code)
 		mockSvc.AssertExpectations(t)
+	})
+}
+
+// createEpisodeAudioMultipartForm はテスト用のマルチパートフォームを作成する
+func createEpisodeAudioMultipartForm(t *testing.T, filename string, content []byte) (body *bytes.Buffer, formContentType string) {
+	t.Helper()
+	body = new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+
+	part, err := writer.CreateFormFile("file", filename)
+	assert.NoError(t, err)
+
+	_, err = io.Copy(part, bytes.NewReader(content))
+	assert.NoError(t, err)
+
+	err = writer.Close()
+	assert.NoError(t, err)
+
+	return body, writer.FormDataContentType()
+}
+
+func TestEpisodeHandler_UploadAudio(t *testing.T) {
+	userID := uuid.New().String()
+	channelID := uuid.New().String()
+	episodeID := uuid.New().String()
+
+	t.Run("音声ファイルをアップロードできる", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		episodeResp := createTestEpisodeResponse()
+		result := &response.EpisodeDataResponse{Data: episodeResp}
+		mockSvc.On("UploadAudio", mock.Anything, userID, channelID, episodeID, mock.AnythingOfType("service.UploadAudioInput")).Return(result, nil)
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		body, contentType := createEpisodeAudioMultipartForm(t, "test.mp3", []byte("fake audio data"))
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("PUT", "/channels/"+channelID+"/episodes/"+episodeID+"/audio", body)
+		req.Header.Set("Content-Type", contentType)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var resp response.EpisodeDataResponse
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, resp.Data.ID)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("ファイルが指定されていない場合は 400 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("PUT", "/channels/"+channelID+"/episodes/"+episodeID+"/audio", http.NoBody)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+	})
+
+	t.Run("権限がない場合は 403 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		mockSvc.On("UploadAudio", mock.Anything, userID, channelID, episodeID, mock.AnythingOfType("service.UploadAudioInput")).Return(nil, apperror.ErrForbidden.WithMessage("このエピソードの音声アップロード権限がありません"))
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		body, contentType := createEpisodeAudioMultipartForm(t, "test.mp3", []byte("fake audio data"))
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("PUT", "/channels/"+channelID+"/episodes/"+episodeID+"/audio", body)
+		req.Header.Set("Content-Type", contentType)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusForbidden, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("エピソードが見つからない場合は 404 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		mockSvc.On("UploadAudio", mock.Anything, userID, channelID, episodeID, mock.AnythingOfType("service.UploadAudioInput")).Return(nil, apperror.ErrNotFound.WithMessage("エピソードが見つかりません"))
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		body, contentType := createEpisodeAudioMultipartForm(t, "test.mp3", []byte("fake audio data"))
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("PUT", "/channels/"+channelID+"/episodes/"+episodeID+"/audio", body)
+		req.Header.Set("Content-Type", contentType)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusNotFound, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("サービスがエラーを返すとエラーレスポンスを返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		mockSvc.On("UploadAudio", mock.Anything, userID, channelID, episodeID, mock.AnythingOfType("service.UploadAudioInput")).Return(nil, apperror.ErrInternal)
+
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupAuthenticatedEpisodeRouter(handler, userID)
+
+		body, contentType := createEpisodeAudioMultipartForm(t, "test.mp3", []byte("fake audio data"))
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("PUT", "/channels/"+channelID+"/episodes/"+episodeID+"/audio", body)
+		req.Header.Set("Content-Type", contentType)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		mockSvc.AssertExpectations(t)
+	})
+
+	t.Run("未認証の場合は 401 を返す", func(t *testing.T) {
+		mockSvc := new(mockEpisodeService)
+		handler := NewEpisodeHandler(mockSvc)
+		router := setupEpisodeRouter(handler)
+
+		body, contentType := createEpisodeAudioMultipartForm(t, "test.mp3", []byte("fake audio data"))
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("PUT", "/channels/"+channelID+"/episodes/"+episodeID+"/audio", body)
+		req.Header.Set("Content-Type", contentType)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
 	})
 }

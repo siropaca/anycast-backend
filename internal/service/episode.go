@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"io"
 	"time"
 
 	"github.com/siropaca/anycast-backend/internal/apperror"
@@ -10,6 +11,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/infrastructure/storage"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/tts"
 	"github.com/siropaca/anycast-backend/internal/model"
+	"github.com/siropaca/anycast-backend/internal/pkg/audio"
 	"github.com/siropaca/anycast-backend/internal/pkg/logger"
 	"github.com/siropaca/anycast-backend/internal/pkg/uuid"
 	"github.com/siropaca/anycast-backend/internal/repository"
@@ -30,6 +32,7 @@ type EpisodeService interface {
 	SetBgm(ctx context.Context, userID, channelID, episodeID string, req request.SetEpisodeBgmRequest) (*response.EpisodeDataResponse, error)
 	DeleteBgm(ctx context.Context, userID, channelID, episodeID string) (*response.EpisodeDataResponse, error)
 	DeleteAudio(ctx context.Context, userID, channelID, episodeID string) error
+	UploadAudio(ctx context.Context, userID, channelID, episodeID string, input UploadAudioInput) (*response.EpisodeDataResponse, error)
 }
 
 type episodeService struct {
@@ -936,6 +939,151 @@ func (s *episodeService) DeleteAudio(ctx context.Context, userID, channelID, epi
 	}
 
 	return nil
+}
+
+// maxAudioFileSize はアップロード可能な音声ファイルの最大サイズ（50MB）
+const maxAudioFileSize = 50 * 1024 * 1024
+
+// UploadAudio はエピソードに音声ファイルをアップロードする
+func (s *episodeService) UploadAudio(ctx context.Context, userID, channelID, episodeID string, input UploadAudioInput) (*response.EpisodeDataResponse, error) {
+	log := logger.FromContext(ctx)
+
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	cid, err := uuid.Parse(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	eid, err := uuid.Parse(episodeID)
+	if err != nil {
+		return nil, err
+	}
+
+	// チャンネルの存在確認とオーナーチェック
+	channel, err := s.channelRepo.FindByID(ctx, cid)
+	if err != nil {
+		return nil, err
+	}
+
+	if channel.UserID != uid {
+		return nil, apperror.ErrForbidden.WithMessage("このエピソードの音声アップロード権限がありません")
+	}
+
+	// エピソードの存在確認とチャンネルの一致チェック
+	episode, err := s.episodeRepo.FindByID(ctx, eid)
+	if err != nil {
+		return nil, err
+	}
+
+	if episode.ChannelID != cid {
+		return nil, apperror.ErrNotFound.WithMessage("このチャンネルにエピソードが見つかりません")
+	}
+
+	// MIME タイプのバリデーション
+	ext, ok := allowedAudioMimeTypes[input.ContentType]
+	if !ok {
+		return nil, apperror.ErrValidation.WithMessage("無効な音声形式です。使用可能な形式: mp3, wav, ogg, aac, m4a")
+	}
+
+	// ファイルサイズのバリデーション
+	if input.FileSize > maxAudioFileSize {
+		return nil, apperror.ErrValidation.WithMessage("ファイルサイズが上限（50MB）を超えています")
+	}
+
+	// ファイルデータの読み込み
+	data, err := io.ReadAll(input.File)
+	if err != nil {
+		log.Error("failed to read audio data", "error", err)
+		return nil, apperror.ErrInternal.WithMessage("音声データの読み込みに失敗しました").WithError(err)
+	}
+
+	// 再生時間を取得
+	durationMs := audio.GetDurationMs(data)
+
+	// voiceAudio 用 Audio レコード作成 + GCS アップロード
+	voiceAudioID := uuid.New()
+	voicePath := storage.GenerateAudioPathWithExt(voiceAudioID.String(), ext)
+	if _, err := s.storageClient.Upload(ctx, data, voicePath, input.ContentType); err != nil {
+		return nil, err
+	}
+
+	voiceAudio := &model.Audio{
+		ID:         voiceAudioID,
+		MimeType:   input.ContentType,
+		Path:       voicePath,
+		Filename:   input.Filename,
+		FileSize:   input.FileSize,
+		DurationMs: durationMs,
+	}
+	if err := s.audioRepo.Create(ctx, voiceAudio); err != nil {
+		if deleteErr := s.storageClient.Delete(ctx, voicePath); deleteErr != nil {
+			log.Warn("failed to cleanup uploaded audio", "error", deleteErr, "path", voicePath)
+		}
+		return nil, err
+	}
+
+	// fullAudio 用 Audio レコード作成 + GCS アップロード（同じデータを別パスで保存）
+	fullAudioID := uuid.New()
+	fullPath := storage.GenerateAudioPathWithExt(fullAudioID.String(), ext)
+	if _, err := s.storageClient.Upload(ctx, data, fullPath, input.ContentType); err != nil {
+		return nil, err
+	}
+
+	fullAudio := &model.Audio{
+		ID:         fullAudioID,
+		MimeType:   input.ContentType,
+		Path:       fullPath,
+		Filename:   input.Filename,
+		FileSize:   input.FileSize,
+		DurationMs: durationMs,
+	}
+	if err := s.audioRepo.Create(ctx, fullAudio); err != nil {
+		if deleteErr := s.storageClient.Delete(ctx, fullPath); deleteErr != nil {
+			log.Warn("failed to cleanup uploaded audio", "error", deleteErr, "path", fullPath)
+		}
+		return nil, err
+	}
+
+	// 古い voiceAudio/fullAudio のストレージファイルを削除（ベストエフォート）
+	if episode.VoiceAudio != nil {
+		if err := s.storageClient.Delete(ctx, episode.VoiceAudio.Path); err != nil {
+			log.Warn("failed to delete old voice audio from storage", "path", episode.VoiceAudio.Path, "error", err)
+		}
+	}
+	if episode.FullAudio != nil {
+		if err := s.storageClient.Delete(ctx, episode.FullAudio.Path); err != nil {
+			log.Warn("failed to delete old full audio from storage", "path", episode.FullAudio.Path, "error", err)
+		}
+	}
+
+	// エピソードの voiceAudioID / fullAudioID を更新
+	episode.VoiceAudioID = &voiceAudioID
+	episode.FullAudioID = &fullAudioID
+	episode.VoiceAudio = nil
+	episode.FullAudio = nil
+
+	if err := s.episodeRepo.Update(ctx, episode); err != nil {
+		return nil, err
+	}
+
+	// リレーションをプリロードして取得
+	updated, err := s.episodeRepo.FindByID(ctx, episode.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := s.toEpisodeResponse(ctx, updated, &channel.User, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &response.EpisodeDataResponse{
+		Data: resp,
+	}, nil
 }
 
 // toChannelOwnerResponse は User からチャンネルオーナーレスポンスを生成する
