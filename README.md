@@ -66,16 +66,41 @@ Node.js 22 以上が必要です。`.claude/settings.json` に以下を追加し
 レイヤードアーキテクチャ + 軽量 DDD を採用しています。
 
 ```
-Handler → Service → Repository → DB
+Client (Frontend / MCP Server)
+  ↓ HTTP / WebSocket
+Router / Middleware
+  ↓
+Handler
+  ↓
+Service
+  ├→ Repository → PostgreSQL (Railway)
+  └→ Infrastructure → External Services
 ```
 
 | レイヤー | 責務 |
 |----------|------|
 | Handler | HTTP リクエスト/レスポンス処理 |
 | Service | ビジネスロジック |
-| Repository | データアクセス |
+| Repository | データアクセス（GORM） |
+| Infrastructure | 外部サービス連携（LLM / TTS / STT / 画像生成 / ストレージ / ジョブキュー / 通知） |
 | Model | ドメインモデル |
 | DTO | リクエスト/レスポンス構造体 |
+
+### インフラストラクチャ
+
+| カテゴリ | サービス | 用途 |
+|----------|----------|------|
+| ホスティング | Railway | Backend / PostgreSQL |
+| LLM | Vertex AI (Gemini) / OpenAI / Claude | 台本生成（Phase ごとにプロバイダ切替可能） |
+| TTS | Vertex AI (Gemini TTS) / ElevenLabs | 音声合成（プロバイダ切替可能） |
+| STT | Google Cloud Speech API | 音声認識 |
+| 画像生成 | Vertex AI (Gemini) / OpenAI | サムネイル等の画像生成（プロバイダ切替可能） |
+| ストレージ | Google Cloud Storage (GCS) | 音声・画像ファイルの保存 |
+| ジョブキュー | Google Cloud Tasks | 台本生成・音声生成の非同期処理 |
+| リアルタイム通信 | WebSocket | ジョブ進捗の通知 |
+| 通知 | Slack Webhooks | フィードバック・アラート・お問い合わせ通知 |
+
+> **Note:** Google Cloud の AI 関連サービス（LLM / TTS / STT / 画像生成）は Vertex AI 経由で利用しています。Cloud Tasks はジョブ完了後に Backend の Worker エンドポイントへコールバックし、結果を処理します。ローカル開発時は Cloud Tasks の代わりに goroutine で直接実行されます。
 
 ### 設計アプローチ
 
