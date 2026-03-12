@@ -1,293 +1,71 @@
-# Anycast Backend - Claude Code 向けガイド
+# Anycast Backend
 
-## ドキュメント
+AI ポッドキャスト配信プラットフォームのバックエンド API サーバー。Go 1.24 / Gin / GORM / PostgreSQL / GCS / Gemini TTS / OpenAI。レイヤードアーキテクチャ + 軽量 DDD。
 
-| ファイル | 説明 |
-|----------|------|
-| [docs/specs/domain-model.md](docs/specs/domain-model.md) | 仕様書（DDD ベースのドメインモデル定義） |
-| [docs/specs/database.md](docs/specs/database.md) | データベース設計 |
-| [docs/specs/system.md](docs/specs/system.md) | システム設定（タイムアウト、外部サービス連携など） |
-| [docs/specs/script-generate-async-api.md](docs/specs/script-generate-async-api.md) | 台本生成 API（非同期）詳細設計 |
-| [docs/specs/script-prompt-workflow.md](docs/specs/script-prompt-workflow.md) | 台本生成プロンプトワークフロー仕様（多段階生成・品質検証） |
-| [docs/specs/audio-generate-async-api.md](docs/specs/audio-generate-async-api.md) | 音声生成 API（非同期）詳細設計 |
-| [docs/api/README.md](docs/api/README.md) | API 設計 |
-| [docs/adr/](docs/adr/) | Architecture Decision Records |
+## ドキュメントの設計と管理
 
-### 設計アプローチ
+このリポジトリのドキュメントは **プログレッシブディスクロージャー** で設計されている。
 
-本プロジェクトでは **ドメインモデル駆動** で設計を行う。
+### 設計原則
+
+- **AGENTS.md** は地図に徹する。詳細な情報は持たず、適切なドキュメントへのポインタを提供する
+- **docs/ 配下の各ディレクトリ** には `INDEX.md` を設置し、そのディレクトリ内のファイル案内を担う
+- エージェントは必要なときに必要なドキュメントだけを読み込む。全てを一度に読む必要はない
+- AGENTS.md から最大 3 ステップ以内に目的のドキュメントへたどり着ける構造を維持する
+
+### 管理ルール
+
+- AGENTS.md に実装パターンやコード例を直接書かない（docs/ 配下に分離する）
+- AGENTS.md は 200 行以内に収める。超える場合は docs/ へ分離する
+- 新しい docs/ サブディレクトリを作成した場合は INDEX.md を設置する
+- ドキュメントを追加・更新・移動した際は、関連する INDEX.md のリンクも必ず更新する
+- ドキュメント内のリンクは、そのファイルからの相対パスで記述する（リンクが壊れないことを最優先）
+- README.md から読み取れる情報（技術スタック、ディレクトリ構成、コマンドなど）は AGENTS.md に重複して記載しない
+- ディレクトリ構成、技術スタック、バージョンなどプロジェクトの基本情報が変わった際は、README.md と AGENTS.md の両方を更新する
+- ADR を追加した際は `docs/adr/INDEX.md` の一覧にも追記する
+- ドメインモデルの変更時は `docs/domain-model/` → `docs/api/` → `docs/specs/database.md` の順で更新する
+
+## ドキュメントマップ
+
+| パス | 内容 | いつ読むか |
+|------|------|------------|
+| [docs/INDEX.md](docs/INDEX.md) | ドキュメント全体の案内 | プロジェクト構造を把握したいとき |
+| [docs/domain-model/INDEX.md](docs/domain-model/INDEX.md) | ドメインモデル | 機能の追加・変更時 |
+| [docs/specs/INDEX.md](docs/specs/INDEX.md) | 仕様書（DB、システム設計） | DB・システム設計の確認時 |
+| [docs/api/INDEX.md](docs/api/INDEX.md) | API 設計・一覧 | API の実装・確認時 |
+| [docs/adr/INDEX.md](docs/adr/INDEX.md) | Architecture Decision Records | 技術選定・背景理解時 |
+| [docs/conventions.md](docs/conventions.md) | 実装パターン・規約集 | コード実装時 |
+| [docs/testing.md](docs/testing.md) | テスト・手動検証ガイド | テスト実行時 |
+| [docs/definition-of-done.md](docs/definition-of-done.md) | 完了の定義（DoD） | タスク完了の判断時 |
+| [docs/ubiquitous-language.md](docs/ubiquitous-language.md) | ユビキタス言語集 | 用語の確認時 |
+
+## 設計アプローチ
+
+**ドメインモデル駆動** で設計を行う。
 
 ```
-ドメインモデル設計（specs/domain-model.md） → API 設計（api/） → DB 設計（specs/database.md）
+ドメインモデル（docs/domain-model/） → API 設計（docs/api/） → DB 設計（docs/specs/database.md）
 ```
 
-- 新しい機能を追加する際は、まず domain-model.md のドメインモデルを設計する
+- 新しい機能を追加する際は、まず docs/domain-model/ 配下のドメインモデルを設計する
 - DB スキーマや API は、ドメインモデルを永続化・公開するための手段として設計する
-- ドメインモデルの変更時は上記の順序でドキュメントを更新する
 
-### 外部ドキュメント
+## Git / GitHub
+
+- ユーザーから指示があるまでコミットやプッシュを行わない（勝手にプッシュしない）
+- ブランチを新規作成する際は、必ずユーザーに確認を取ってから作成する（勝手にブランチを切らない）
+- コミット前に `make fmt` → `make lint` を実行する
+- PR 作成時は `.github/PULL_REQUEST_TEMPLATE.md` をテンプレートとして使用する
+
+## 基本姿勢
+
+- ユーザーの指示であっても、設計として良くないものや一般的でないものがあれば、修正を実行する前に確認を入れる
+- 常にメンテナビリティやテスタビリティを意識した実装を心がける
+
+## 外部ドキュメント
 
 | サービス | リンク |
 |----------|--------|
 | Gemini TTS (Vertex AI) | https://ai.google.dev/gemini-api/docs/audio |
 | ElevenLabs API | https://elevenlabs.io/docs/api-reference |
 | OpenAI API | https://platform.openai.com/docs |
-
-## ドキュメント管理ルール
-
-- README.md から読み取れる情報（技術スタック、ディレクトリ構成、コマンドなど）は CLAUDE.md に重複して記載しない
-- ディレクトリ構成、技術スタック、バージョンなどプロジェクトの基本情報が変わった際は、README.md と CLAUDE.md の両方を更新する
-- ADR を追加した際は `docs/adr/README.md` の一覧にも追記する
-
-## 重要事項
-
-- **Swagger を生成・更新する際は必ず `make swagger` を使用する**（`swag init` を直接実行しない）
-
-## 開発規約
-
-### 基本姿勢
-
-- ユーザーの指示であっても、設計として良くないものや一般的でないものがあれば、修正を実行する前に確認を入れる
-- 常にメンテナビリティやテスタビリティを意識した実装を心がける
-
-### テスト
-
-- 外部依存のないユニットテストは、実装時に必ず作成する
-
-### コーディング規約
-
-- Go の標準的なコーディング規約に従う
-- `gofmt` でフォーマットを統一する
-- エラーハンドリングは適切に行う
-- ソースコードには日本語でコメントを残す（細かすぎず適切に）
-- すべての関数には、その関数が何をするかを説明するコメントを追加する
-- エクスポートされるシンボル（型・関数・メソッド）のコメントは、Go の標準スタイルに従いシンボル名から始める
-  - 例: `// New は〜`、`// Client は〜のインターフェース`
-  - 非エクスポートシンボル（小文字始まり）やコードブロック内コメントは対象外
-- `interface{}` ではなく `any` を使用する
-- エラーの型チェックには型アサーションではなく `errors.As` を使用する
-- 標準ライブラリの新しいパッケージ（`slices`, `maps`, `cmp` など）を積極的に活用する
-- Go のコメントに `@param` / `@returns` などの JSDoc スタイルのタグを使わない（swag が Swagger アノテーションとして誤解釈しビルドエラーになる）
-- エラーコードやエラーメッセージは日本語で記載する
-- バリデーションエラーは `internal/handler/validation.go` の `formatValidationError` 関数で日本語化する
-  - 新しいフィールドを追加した場合は `fieldNameMap` にマッピングを追加する
-  - 新しいバリデーションタグを使用する場合は `translateFieldError` 関数にケースを追加する
-
-### ディレクトリ構成
-
-- [golang-standards/project-layout](https://github.com/golang-standards/project-layout) を参考にする
-
-### Git / GitHub
-
-- ユーザーから指示があるまでコミットやプッシュを行わない（勝手にプッシュしない）
-- ブランチを新規作成する際は、必ずユーザーに確認を取ってから作成する（勝手にブランチを切らない）
-- コミット前に `make fmt` でフォーマットを実行する
-- コミット前に `make lint` で静的解析を実行する
-- PR 作成時は `.github/PULL_REQUEST_TEMPLATE.md` をテンプレートとして使用する
-
-## API の手動テスト
-
-### 前提条件
-
-- Docker で DB が起動していること（`docker compose up -d`）
-- シードデータが投入済みであること（`make seed`）
-
-### 手順
-
-1. **サーバー起動**: `make dev`（ホットリロード）または `make run`
-2. **JWT トークン取得**: `make token` を実行し、出力されたトークンを使用する
-3. **API 呼び出し**: `curl` で実行する
-
-### シードデータのテスト用 ID
-
-| リソース | ID | 説明 |
-|----------|------|------|
-| test_user | `8def69af-dae9-4641-a0e5-100107626933` | `make token` で生成されるユーザー |
-| channel (テックトーク) | `ea9a266e-f532-417c-8916-709d0233941c` | test_user 所有、キャラクター2名 |
-| episode (AI の未来を語る) | `eb960304-f86e-4364-be5d-d3d5126c9601` | テックトーク内のエピソード |
-
-### curl の例
-
-```bash
-# トークン取得
-TOKEN=$(make token 2>&1)
-
-# 台本生成（非同期）
-curl -s -X POST "http://localhost:8081/api/v1/channels/ea9a266e-f532-417c-8916-709d0233941c/episodes/eb960304-f86e-4364-be5d-d3d5126c9601/script/generate-async" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"prompt":"AIの未来について","durationMinutes":3,"withEmotion":true}' | jq .
-
-# ジョブ状態確認
-curl -s "http://localhost:8081/api/v1/script-jobs/{JOB_ID}" \
-  -H "Authorization: Bearer $TOKEN" | jq .
-
-# 自分のジョブ一覧
-curl -s "http://localhost:8081/api/v1/me/script-jobs" \
-  -H "Authorization: Bearer $TOKEN" | jq .
-
-# 自分のジョブ一覧（ステータスフィルタ）
-curl -s "http://localhost:8081/api/v1/me/script-jobs?status=completed" \
-  -H "Authorization: Bearer $TOKEN" | jq .
-```
-
-### 開発用エンドポイント（認証不要）
-
-DB やシードデータ不要で台本生成を直接テストできる。`APP_ENV=development` のときのみ有効。
-
-```bash
-curl -s -X POST "http://localhost:8081/dev/script/generate" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "episodeTitle": "テスト回",
-    "durationMinutes": 3,
-    "episodeNumber": 1,
-    "channelName": "テストチャンネル",
-    "channelCategory": "テクノロジー",
-    "characters": [
-      {"name": "太郎", "gender": "male", "persona": "テック好きの大学生"},
-      {"name": "花子", "gender": "female", "persona": "AI研究者"}
-    ],
-    "theme": "最近のAI技術について",
-    "withEmotion": true
-  }' | jq .
-```
-
-- 同期処理のためレスポンスまで数十秒かかる
-- `tmp/traces/{episodeTitle}/` 以下に phase1〜phase5 のトレースが出力される
-
-### 注意事項
-
-- `make token` の出力には stderr の情報が混ざる場合があるため、`TOKEN=$(make token 2>&1)` で取得する
-- 台本生成は非同期処理のため、レスポンスで返る `jobId` を使ってジョブ状態をポーリングする
-- ローカル環境では Cloud Tasks がないため goroutine で直接実行される
-
-## 用語
-
-| 英語 | 日本語 |
-|------|--------|
-| Script | 台本 |
-
-## 学習事項
-
-このセクションには、実装中にユーザーから指摘された内容のうち、今後の実装に役立つものを抽象化して記載する。具体的なケースではなく、同様の状況に適用できる一般的なルールとして記述すること。
-
-### ファイル・ディレクトリ管理
-
-- 新しいディレクトリを作成する際、空のままでも Git で管理する必要がある場合は `.gitkeep` を追加する
-
-### 環境変数
-
-- 環境変数を追加・変更した際は `.env.example` も更新する
-
-### パッケージ管理
-
-- **ライブラリ**（コードから import するもの）: `go.mod` で管理（`go get`）
-- **CLI ツール**（ターミナルから実行するもの）: `.mise.toml` で管理（`mise install`）
-- 依存パッケージを追加・削除した後は `go mod tidy` を実行して依存関係を整理する
-
-### ライブラリ選定
-
-- 標準ライブラリで対応可能でも、より便利なサードパーティライブラリがあればそちらを優先する
-- Go コミュニティで広く使われているライブラリを優先的に選択する
-- 新しいライブラリを導入する際は ADR を作成して決定理由を記録する
-
-### API 実装の流れ
-
-新しい API エンドポイントを実装する際は、以下の順序で作業する。
-
-1. **Request DTO 追加** - `internal/dto/request/` に新しいリクエスト構造体を追加
-2. **Repository** - `internal/repository/` に必要なメソッドを追加（インターフェースと実装）
-3. **Service** - `internal/service/` にビジネスロジックを追加（インターフェースと実装）
-4. **Handler** - `internal/handler/` にハンドラーメソッドを追加（Swagger コメント含む）
-5. **Router** - `internal/router/router.go` にエンドポイントを追加
-6. **DI Container** - `internal/di/container.go` の依存関係を更新（必要な場合）
-7. **テスト** - モックの更新とテスト実行（`go test ./...`）
-8. **ドキュメント更新**
-   - `make swagger` で Swagger ドキュメントを再生成
-   - `http/` ディレクトリ内の対応する `.http` ファイルを更新
-   - `docs/api/README.md` の実装欄を ✅ に更新
-
-### API ドキュメント
-
-- ハンドラー（`internal/handler/`）を追加・変更した際は `make swagger` で Swagger ドキュメントを再生成する
-- API を作成・更新した際は `http/` ディレクトリ内の対応する `.http` ファイルも作成・更新する
-
-### DTO
-
-- レスポンス DTO で常に値が存在するフィールドには `validate:"required"` タグを付ける
-  - Swagger 生成時に `required` として出力され、フロントエンドの型がオプショナルにならない
-  - `binding:"required"` はリクエストのバリデーション用なので、レスポンスには使用しない
-- ポインタ型（`*string` など）や省略可能なフィールドには `validate:"required"` を付けない
-- ポインタ型で `null` を返すフィールド（`omitempty` なし）には `extensions:"x-nullable"` タグを付ける
-  - TypeScript の型が `string | null` のように nullable として生成される
-  - `omitempty` があるフィールドは JSON から除外されるため不要
-- リレーション操作（既存の紐づけ / 新規作成）を含むリクエストは `connect` / `create` パターンを使用する
-  ```go
-  type XxxInput struct {
-      Connect []ConnectXxxInput `json:"connect"`
-      Create  []CreateXxxInput  `json:"create"`
-  }
-  ```
-
-### マイグレーション
-
-- スキーマを変更した際は `docs/database.md` も更新する
-
-### pkg ユーティリティ
-
-- `internal/pkg/` 配下のユーティリティを積極的に使用する
-  - `audio/` - 音声ファイル処理
-  - `crypto/` - パスワードハッシュ
-  - `db/` - DB 接続
-  - `jwt/` - JWT トークン管理
-  - `logger/` - 構造化ログ
-  - `prompt/` - プロンプト圧縮
-  - `script/` - 台本パーサー
-  - `token/` - トークン生成
-  - `tracer/` - 台本生成トレーサー
-  - `uuid/` - UUID パース
-- `github.com/google/uuid` の代わりに `internal/pkg/uuid` を使用する（統一されたエラーハンドリングのため）
-- 汎用的な処理は `internal/pkg/` にまとめ、テストを必ず実装する
-
-### GORM
-
-- **プリロードされたリレーションの更新時は、リレーションフィールドを nil にクリアする**
-  - `FindByID` 等でプリロードされたエンティティの外部キー（例: `ArtworkID`）を変更する際、対応するリレーションフィールド（例: `Artwork`）も `nil` に設定する
-  - これをしないと、`Save` 時に古いリレーションが残り、外部キーの変更が反映されない
-  ```go
-  // 悪い例
-  channel.ArtworkID = &newArtworkID
-  repo.Update(ctx, channel)  // Artwork リレーションが古いまま → 更新されない
-
-  // 良い例
-  channel.ArtworkID = &newArtworkID
-  channel.Artwork = nil  // リレーションをクリア
-  repo.Update(ctx, channel)  // 正しく更新される
-  ```
-
-- **DB に保存するタイムスタンプには `time.Now().UTC()` を使用する**
-  - `time.Now()` はローカルタイムゾーン（例: JST）の時刻を返すが、PostgreSQL の `TIMESTAMP` 型（タイムゾーンなし）にそのまま保存すると、読み出し時に UTC として解釈されてタイムゾーン分ずれる
-  - GORM の自動設定（`CreatedAt` / `UpdatedAt`）は内部的に UTC を使うため問題ないが、アプリケーションコードで手動設定する `StartedAt` / `CompletedAt` 等は明示的に `.UTC()` を付ける
-  ```go
-  // 悪い例
-  now := time.Now()
-  job.StartedAt = &now  // JST がそのまま UTC として保存される
-
-  // 良い例
-  now := time.Now().UTC()
-  job.StartedAt = &now  // 正しい UTC が保存される
-  ```
-
-### ログ
-
-| レベル | 用途 | 自動追加 |
-|--------|------|:--------:|
-| `Debug` | 開発時のデバッグ情報 | ✗ |
-| `Info` | 運用監視用の情報（リクエストログなど） | ✗ |
-| `Warn` | 注意が必要な状況（認証失敗、不正リクエストなど） | ◯ |
-| `Error` | 本番環境で Slack 等に通知すべき重大なエラー | ◯ |
-
-- ログメッセージは英語で記載する（エラーメッセージは日本語のまま）
-- Go 標準の `log` パッケージは使用せず、`internal/pkg/logger` を使用する
-  - 致命的なエラーで終了する場合は `logger.Default().Error(...)` の後に `os.Exit(1)` を呼び出す
