@@ -110,7 +110,7 @@ Service
 ドメインモデル設計 → API 設計 → DB 設計
 ```
 
-新しい機能を追加する際は、まずドメインモデルを設計し、それを永続化・公開するための手段として API と DB を設計します。詳細は [docs/specs/domain-model.md](docs/specs/domain-model.md) を参照。
+新しい機能を追加する際は、まずドメインモデルを設計し、それを永続化・公開するための手段として API と DB を設計します。詳細は [docs/domain-model/INDEX.md](docs/domain-model/INDEX.md) を参照。
 
 アーキテクチャ決定の詳細は [docs/adr/](docs/adr/) を参照。
 
@@ -275,7 +275,8 @@ make swagger
 ├── docs/                # ドキュメント
 │   ├── adr/             # Architecture Decision Records
 │   ├── api/             # API 設計
-│   └── specs/           # 仕様ドキュメント（ドメインモデル、DB 設計など）
+│   ├── domain-model/    # ドメインモデル（集約・エンティティ・値オブジェクト）
+│   └── specs/           # 仕様ドキュメント（DB 設計、非同期 API 詳細設計など）
 ├── swagger/             # Swagger ドキュメント（自動生成）
 ├── http/                # HTTP リクエストファイル
 ├── internal/            # 内部パッケージ

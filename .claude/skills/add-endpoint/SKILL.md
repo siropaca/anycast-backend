@@ -16,7 +16,7 @@ argument-hint: エンドポイントの仕様（例: "POST /channels/:channelId/
 
 ### 1-1. ドメインモデル（必要な場合）
 
-- **ファイル**: `docs/specs/domain-model.md`
+- **ファイル**: `docs/domain-model/` 配下の該当ファイル
 - 新しいエンティティや属性の追加がある場合のみ更新
 
 ### 1-2. API ドキュメント
@@ -56,7 +56,7 @@ METHOD /path/:param
 
 ### 1-3. API 一覧テーブル
 
-- **ファイル**: `docs/api/README.md`
+- **ファイル**: `docs/api/INDEX.md`
 - API 一覧テーブルに行を追加（実装欄は空のまま）
 - フォーマット: `| METHOD | \`/api/v1/path\` | 説明 | 権限 | | [詳細](./xxx.md#アンカー) |`
 
@@ -337,7 +337,7 @@ Authorization: Bearer {{token}}
 
 ### 3-4. API 一覧テーブル更新
 
-- `docs/api/README.md` の実装欄を ✅ に更新
+- `docs/api/INDEX.md` の実装欄を ✅ に更新
 
 ---
 
@@ -351,4 +351,4 @@ Authorization: Bearer {{token}}
 - [ ] エクスポートされるシンボルのコメントはシンボル名から始めている
 - [ ] `make swagger` で Swagger ドキュメントを再生成した
 - [ ] `http/` ファイルを更新した
-- [ ] `docs/api/README.md` の実装欄を ✅ に更新した
+- [ ] `docs/api/INDEX.md` の実装欄を ✅ に更新した
