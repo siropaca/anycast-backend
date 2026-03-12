@@ -4,7 +4,7 @@
 
 ## 概要
 
-台本生成は LLM（OpenAI GPT）を使用した処理のため、数秒〜数十秒かかる。
+台本生成は LLM（OpenAI / Claude / Gemini のマルチプロバイダ対応）を使用した処理のため、数秒〜数十秒かかる。
 非同期ジョブとして実行し、クライアントはポーリングまたは WebSocket でジョブの進捗・完了を監視できる。
 
 ## システム構成
@@ -23,8 +23,9 @@
       │                   │                      │
       │                   ▼                      ▼
       │             ┌─────────────┐     ┌──────────────────┐
-      │             │  PostgreSQL │     │  OpenAI API      │
-      │             │             │     │  (GPT)           │
+      │             │  PostgreSQL │     │  LLM API         │
+      │             │             │     │(OpenAI/Claude/   │
+      │             │             │     │ Gemini)          │
       │             └─────────────┘     └──────────────────┘
       │                   │
       ▼                   │
@@ -315,7 +316,7 @@ canceled      canceling ───▶ canceled
 
 ### 進捗の目安
 
-多段階ワークフローで処理する。詳細は [台本生成プロンプトワークフロー仕様](./script-prompt-workflow.md) を参照。
+多段階ワークフローで処理する。詳細は [台本生成プロンプトワークフロー仕様](script-prompt-workflow.md) を参照。
 
 | 進捗 | Phase | 処理内容 |
 |------|-------|---------|
@@ -325,9 +326,10 @@ canceled      canceling ───▶ canceled
 | 15% | Phase 2 | 素材+アウトライン生成（LLM 1回目）開始 |
 | 35% | Phase 2 | 素材+アウトライン生成 完了 |
 | 40% | Phase 3 | 台本ドラフト生成（LLM 2回目）開始 |
-| 75% | Phase 3 | 台本ドラフト生成 完了 |
-| 80% | Phase 4 | QA 定量チェック |
-| 85% | Phase 4 | パッチ修正（LLM 3回目、条件付き） |
+| 70% | Phase 3 | 台本ドラフト生成 完了 |
+| 72% | Phase 4 | リライト（LLM 3回目） |
+| 80% | Phase 5 | QA 定量チェック |
+| 85% | Phase 5 | パッチ修正（LLM 4回目、条件付き） |
 | 90% | - | 台本パース・DB 保存 |
 | 95% | - | 完了処理 |
 | 100% | - | 完了 |
@@ -338,13 +340,14 @@ canceled      canceling ───▶ canceled
 2. **ブリーフ正規化** (Phase 1): User/Channel/Episode/Character 情報を構造化スロットに正規化
 3. **素材+アウトライン生成** (Phase 2): LLM で具体例・落とし穴・疑問を生成し、3ブロック構成のアウトラインを設計
 4. **台本ドラフト生成** (Phase 3): アウトラインと素材を元に台本を生成
-5. **QA 検証+パッチ修正** (Phase 4): コードで定量チェック → 不合格時のみ LLM で局所修正
-6. **データ保存**: 既存の台本行を削除し、新しい台本行をバッチ作成
+5. **リライト** (Phase 4): 台本ドラフトをブラッシュアップ
+6. **QA 検証+パッチ修正** (Phase 5): コードで定量チェック → 不合格時のみ LLM で局所修正
+7. **データ保存**: 既存の台本行を削除し、新しい台本行をバッチ作成
 
 ### システムプロンプト
 
 `talk_mode`（dialogue/monologue）と感情タグの有無で Phase 別のプロンプトを使い分ける。
-詳細は [台本生成プロンプトワークフロー仕様](./script-prompt-workflow.md) を参照。
+詳細は [台本生成プロンプトワークフロー仕様](script-prompt-workflow.md) を参照。
 
 **出力形式（感情なし）**:
 ```
@@ -379,8 +382,9 @@ Phase 別設定:
 | Phase | Provider | Temperature | 理由 |
 |-------|----------|-------------|------|
 | Phase 2 | OpenAI | 0.9 | 創造的な素材生成 |
-| Phase 3 | OpenAI | 0.7 | 内容の忠実性と自然さのバランス |
-| Phase 4 | OpenAI | 0.5 | 局所修正のため低め |
+| Phase 3 | Claude | 0.7 | 内容の忠実性と自然さのバランス |
+| Phase 4 | Claude | 0.7 | リライトによるブラッシュアップ |
+| Phase 5 | OpenAI | 0.5 | 局所修正のため低め |
 
 - プロバイダ設定箇所: `internal/service/script_prompts.go`（`PhaseConfig`）
 - クライアント実装: `internal/infrastructure/llm/`

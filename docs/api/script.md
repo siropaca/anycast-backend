@@ -2,7 +2,7 @@
 
 ## 台本を AI で生成（非同期）
 
-台本生成は LLM（OpenAI GPT）を使用した処理のため、非同期ジョブとして実行されます。
+台本生成は LLM（OpenAI / Claude / Gemini）を使用した処理のため、非同期ジョブとして実行されます。
 詳細は [台本生成 API（非同期）仕様書](../specs/script-generate-async-api.md) を参照してください。
 
 ```

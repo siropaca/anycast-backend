@@ -22,10 +22,10 @@ POST /channels/:channelId/episodes/:episodeId/audio/generate-async
 
 | フィールド | 型 | 必須 | デフォルト | 説明 |
 |------------|-----|:----:|------------|------|
-| bgmVolumeDb | number | | -15 | BGM 音量（dB）。0 で原音量、負の値で音量を下げる |
+| bgmVolumeDb | number | | -25 | BGM 音量（dB）。0 で原音量、負の値で音量を下げる |
 | fadeOutMs | int | | 3000 | BGM のフェードアウト時間（ms） |
-| paddingStartMs | int | | 500 | 音声開始前の BGM のみの余白時間（ms） |
-| paddingEndMs | int | | 1000 | 音声終了後の BGM のみの余白時間（ms） |
+| paddingStartMs | int | | 1000 | 音声開始前の BGM のみの余白時間（ms） |
+| paddingEndMs | int | | 3000 | 音声終了後の BGM のみの余白時間（ms） |
 
 **処理フロー:**
 
@@ -56,7 +56,7 @@ POST /channels/:channelId/episodes/:episodeId/audio/generate-async
 | コード | 説明 |
 |--------|------|
 | VALIDATION_ERROR | 台本に speech 行が存在しない |
-| JOB_ENQUEUE_FAILED | ジョブのキューイングに失敗 |
+| INTERNAL_ERROR | ジョブのキューイングに失敗 |
 
 ---
 
@@ -194,7 +194,7 @@ POST /audios
 
 > **Note:** `durationMs` は MP3 形式の場合のみビットレートベースで推定されます。その他の形式では 0 が返されます。
 >
-> **Note:** エピソードに音声ファイルを直接設定する場合は [エピソード音声アップロード](./episodes.md#エピソード音声アップロード)（`PUT /channels/:channelId/episodes/:episodeId/audio`）を使用してください。
+> **Note:** エピソードに音声ファイルを直接設定する場合は [エピソード音声アップロード](episodes.md#エピソード音声アップロード)（`PUT /channels/:channelId/episodes/:episodeId/audio`）を使用してください。
 
 ---
 

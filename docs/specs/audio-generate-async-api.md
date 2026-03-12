@@ -207,10 +207,10 @@ GET /ws/jobs?token={jwt}
 
 ```json
 // ジョブの購読開始
-{"type": "subscribe", "jobId": "..."}
+{"type": "subscribe", "payload": {"jobId": "..."}}
 
 // ジョブの購読解除
-{"type": "unsubscribe", "jobId": "..."}
+{"type": "unsubscribe", "payload": {"jobId": "..."}}
 
 // ヘルスチェック
 {"type": "ping"}
@@ -363,7 +363,7 @@ canceled      canceling ───▶ canceled
 
 ### TTS（マルチプロバイダ）
 
-キャラクターの Voice に紐づく Provider から動的にプロバイダを選択する。詳細は [system.md](./system.md) を参照。
+キャラクターの Voice に紐づく Provider から動的にプロバイダを選択する。詳細は [system.md](system.md) を参照。
 
 #### Gemini TTS（デフォルト）
 

@@ -570,7 +570,7 @@ GET /me/channels/:channelId
 
 # チャンネルへのキャラクター紐づけ
 
-チャンネルに登場させるキャラクターを管理する。キャラクター自体の CRUD は [Characters API](./characters.md) を参照。
+チャンネルに登場させるキャラクターを管理する。キャラクター自体の CRUD は [Characters API](characters.md) を参照。
 
 ## チャンネルにキャラクター追加
 

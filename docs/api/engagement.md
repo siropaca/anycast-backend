@@ -188,6 +188,7 @@ POST /episodes/:episodeId/reactions
     "createdAt": "2025-01-01T00:00:00Z"
   }
 }
+```
 
 ---
 
@@ -856,7 +857,7 @@ POST /episodes/:episodeId/comments
 ```json
 {
   "error": {
-    "code": "INVALID_CONTENT_LENGTH",
+    "code": "VALIDATION_ERROR",
     "message": "コメントは1〜1000文字で入力してください"
   }
 }

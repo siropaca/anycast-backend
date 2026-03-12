@@ -29,13 +29,18 @@ POST /admin/cleanup/orphaned-media
 **対象となる孤児レコード:**
 
 audios（以下すべてに該当しないもの）:
-- `episodes.bgm_id`
 - `episodes.full_audio_id`
+- `episodes.voice_audio_id`
+- `bgms.audio_id`
+- `system_bgms.audio_id`
+- `audio_jobs.result_audio_id`
 
 images（以下すべてに該当しないもの）:
 - `users.avatar_id`
+- `users.header_image_id`
 - `channels.artwork_id`
 - `episodes.artwork_id`
+- `characters.avatar_id`
 
 **対象条件:**
 - `created_at` から 1 時間以上経過したレコードのみ
@@ -100,10 +105,10 @@ images（以下すべてに該当しないもの）:
 
 ```bash
 # dry-run（削除対象を確認）
-curl -X POST "http://localhost:8080/admin/cleanup/orphaned-media?dry_run=true" \
+curl -X POST "http://localhost:8081/admin/cleanup/orphaned-media?dry_run=true" \
   -H "Authorization: Bearer <admin-token>"
 
 # 実行（実際に削除）
-curl -X POST "http://localhost:8080/admin/cleanup/orphaned-media" \
+curl -X POST "http://localhost:8081/admin/cleanup/orphaned-media" \
   -H "Authorization: Bearer <admin-token>"
 ```
