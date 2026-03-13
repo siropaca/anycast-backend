@@ -184,6 +184,27 @@ func (s *playbackHistoryService) toPlaybackHistoryItemResponse(ctx context.Conte
 		}
 	}
 
+	// エピソードのアートワーク URL
+	var episodeArtwork *response.ArtworkResponse
+	if episode.Artwork != nil {
+		var epArtworkURL string
+		if storage.IsExternalURL(episode.Artwork.Path) {
+			epArtworkURL = episode.Artwork.Path
+		} else {
+			var err error
+			epArtworkURL, err = s.storageClient.GenerateSignedURL(ctx, episode.Artwork.Path, storage.SignedURLExpirationImage)
+			if err != nil {
+				epArtworkURL = ""
+			}
+		}
+		if epArtworkURL != "" {
+			episodeArtwork = &response.ArtworkResponse{
+				ID:  episode.Artwork.ID,
+				URL: epArtworkURL,
+			}
+		}
+	}
+
 	// エピソードの音声 URL
 	var fullAudio *response.AudioResponse
 	if episode.FullAudio != nil {
@@ -202,6 +223,7 @@ func (s *playbackHistoryService) toPlaybackHistoryItemResponse(ctx context.Conte
 			ID:          episode.ID,
 			Title:       episode.Title,
 			Description: episode.Description,
+			Artwork:     episodeArtwork,
 			FullAudio:   fullAudio,
 			Channel: response.PlaybackHistoryChannelResponse{
 				ID:      channel.ID,

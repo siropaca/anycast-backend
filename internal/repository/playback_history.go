@@ -46,6 +46,7 @@ func (r *playbackHistoryRepository) FindByUserID(ctx context.Context, userID uui
 
 	if err := query.
 		Preload("Episode").
+		Preload("Episode.Artwork").
 		Preload("Episode.Channel").
 		Preload("Episode.Channel.Artwork").
 		Preload("Episode.FullAudio").

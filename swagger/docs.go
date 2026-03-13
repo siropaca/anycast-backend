@@ -9400,6 +9400,14 @@ const docTemplate = `{
                 "title"
             ],
             "properties": {
+                "artwork": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/response.ArtworkResponse"
+                        }
+                    ],
+                    "x-nullable": true
+                },
                 "channel": {
                     "$ref": "#/definitions/response.PlaybackHistoryChannelResponse"
                 },
