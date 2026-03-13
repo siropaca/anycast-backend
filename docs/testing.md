@@ -76,8 +76,15 @@ curl -s -X POST "http://localhost:8081/dev/script/generate" \
 ```
 
 - 同期処理のためレスポンスまで数十秒かかる
-- `TRACE_MODE=file` の場合、`tmp/traces/{episodeTitle}/` 以下に phase1〜phase5 のトレースが Markdown 形式で出力される（非同期 API でも同様）
-- トレースにはブリーフ JSON、システムプロンプト、ユーザープロンプト、LLM レスポンスなどが含まれるため、生成結果のデバッグに活用できる
+
+### デバッグ出力（`tmp/`）
+
+ローカル開発時、以下のディレクトリにデバッグ用ファイルが出力される（`tmp/` は `.gitignore` に含まれる）。
+
+| ディレクトリ | 内容 | 出力条件 |
+|-------------|------|----------|
+| `tmp/traces/{episodeTitle}/` | 台本生成の Phase ごとのトレース（Markdown）。ブリーフ JSON、プロンプト、LLM レスポンスなどを含む | `TRACE_MODE=file` |
+| `tmp/audio-debug/{jobID}/` | TTS 完了直後のスピーカー別オリジナル音源（WAV） | `APP_ENV != production` |
 
 ### 注意事項
 
