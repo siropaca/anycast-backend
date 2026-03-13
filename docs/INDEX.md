@@ -13,20 +13,26 @@
 | [definition-of-done.md](definition-of-done.md) | DoD | タスク完了の判断基準チェックリスト |
 | [ubiquitous-language.md](ubiquitous-language.md) | ユビキタス言語集 | プロジェクト全体で統一する用語の定義 |
 
-## 設計の流れ
+## ドキュメント間の依存関係
 
-本プロジェクトではドメインモデル駆動で設計を行う。
+ドメインモデルを起点に、各ドキュメントは以下の依存関係を持つ。変更時は上流から順に更新する。
 
 ```
-1. ドメインモデル設計（docs/domain-model/）
-   ↓
-2. API 設計（docs/api/）
-   ↓
-3. DB 設計（docs/specs/database.md）
+domain-model/  ──→  api/         ──→  specs/database.md
+ (ドメイン定義)      (API 仕様)        (DB スキーマ)
+      │                                      ↑
+      └──────────────────────────────────────┘
+                   直接参照（属性 ↔ カラム対応）
+
+conventions.md ← 実装時に参照（全レイヤー共通）
+testing.md     ← テスト実装時に参照
+adr/           ← 新規ライブラリ導入時に作成、技術選定の理由確認時に参照
 ```
 
 ## ドキュメント更新ルール
 
-- ドメインモデルの変更時は `docs/domain-model/` → `docs/api/` → `docs/specs/database.md` の順で更新
-- ADR を追加した際は `docs/adr/INDEX.md` の一覧にも追記
-- DB のみの変更（インデックス追加など）は `docs/specs/database.md` のみ更新可
+- ドメインモデルの変更時は `domain-model/` → `api/` → `specs/database.md` の順で更新
+- ADR を追加した際は `adr/INDEX.md` の一覧にも追記
+- DB のみの変更（インデックス追加など）は `specs/database.md` のみ更新可
+- 新しいサブディレクトリを作成した場合は INDEX.md を設置する
+- ドキュメント内のリンクは相対パスで記述する

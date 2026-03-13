@@ -10,21 +10,8 @@
 
 ## Definition of Done
 
-### コード品質
+[docs/definition-of-done.md](../docs/definition-of-done.md) のチェックリストを確認済み。
 
-- [ ] `make fmt` でフォーマット済み
-- [ ] `make lint` でエラーなし
-- [ ] `make test` で全テスト通過
-
-### テスト
-
-- [ ] ユニットテストを実装した
-- [ ] `.http` ファイルで手動テストを確認した（API の場合）
-
-### ドキュメント（該当するもののみチェック）
-
-- [ ] `make swagger` で Swagger ドキュメントを再生成した
-- [ ] `docs/api/INDEX.md` の API 一覧テーブルを更新した
-- [ ] ドメインモデル / DB 設計を更新した
-- [ ] ADR を作成した
-- [ ] `.env.example` を更新した
+- [ ] コード品質（fmt / lint / test）
+- [ ] テスト（ユニットテスト / 手動テスト）
+- [ ] ドキュメント（該当するもののみ：Swagger / API 一覧 / ドメインモデル / DB 設計 / ADR / .env.example / .http）

@@ -33,11 +33,22 @@ AI ポッドキャスト配信プラットフォームのバックエンド API 
 | [docs/domain-model/INDEX.md](docs/domain-model/INDEX.md) | ドメインモデル | 機能の追加・変更時 |
 | [docs/specs/INDEX.md](docs/specs/INDEX.md) | 仕様書（DB、システム設計） | DB・システム設計の確認時 |
 | [docs/api/INDEX.md](docs/api/INDEX.md) | API 設計・一覧 | API の実装・確認時 |
-| [docs/adr/INDEX.md](docs/adr/INDEX.md) | Architecture Decision Records | 技術選定・背景理解時 |
+| [docs/adr/INDEX.md](docs/adr/INDEX.md) | Architecture Decision Records | 新規ライブラリ導入時（ADR 作成必須）、既存技術選定の理由確認時 |
 | [docs/conventions.md](docs/conventions.md) | 実装パターン・規約集 | コード実装時 |
 | [docs/testing.md](docs/testing.md) | テスト・手動検証ガイド | テスト実行時 |
 | [docs/definition-of-done.md](docs/definition-of-done.md) | 完了の定義（DoD） | タスク完了の判断時 |
 | [docs/ubiquitous-language.md](docs/ubiquitous-language.md) | ユビキタス言語集 | 用語の確認時 |
+
+## タスク別ガイド
+
+| タスク | 読む順序 |
+|--------|----------|
+| 新規 API 追加 | domain-model → api/INDEX → conventions → 実装 → DoD |
+| 既存 API 変更 | api/INDEX → 対象の詳細ファイル → conventions → 実装 → DoD |
+| DB スキーマ変更 | domain-model → specs/database → api → DoD |
+| バグ修正 | conventions → testing → 実装 → DoD |
+| 新規ライブラリ導入 | adr/INDEX → ADR 作成 → 実装 → DoD |
+| テスト追加 | testing → conventions → 実装 |
 
 ## 設計アプローチ
 
@@ -54,7 +65,7 @@ AI ポッドキャスト配信プラットフォームのバックエンド API 
 
 - ユーザーから指示があるまでコミットやプッシュを行わない（勝手にプッシュしない）
 - ブランチを新規作成する際は、必ずユーザーに確認を取ってから作成する（勝手にブランチを切らない）
-- コミット前に `make fmt` → `make lint` を実行する
+- コミット前に `make fmt` → `make lint` → `make test` を実行する
 - PR 作成時は `.github/PULL_REQUEST_TEMPLATE.md` をテンプレートとして使用する
 
 ## 基本姿勢
@@ -64,8 +75,8 @@ AI ポッドキャスト配信プラットフォームのバックエンド API 
 
 ## 外部ドキュメント
 
-| サービス | リンク |
-|----------|--------|
-| Gemini TTS (Vertex AI) | https://ai.google.dev/gemini-api/docs/audio |
-| ElevenLabs API | https://elevenlabs.io/docs/api-reference |
-| OpenAI API | https://platform.openai.com/docs |
+| サービス | リンク | 主な参照目的 |
+|----------|--------|-------------|
+| Gemini TTS (Vertex AI) | https://ai.google.dev/gemini-api/docs/audio | 音声生成 API のパラメータ、対応言語・ボイス |
+| ElevenLabs API | https://elevenlabs.io/docs/api-reference | 音声合成の voice_id、モデル設定 |
+| OpenAI API | https://platform.openai.com/docs | Chat Completions（台本生成）、Images（画像生成） |
