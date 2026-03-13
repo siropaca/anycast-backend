@@ -1226,7 +1226,7 @@ func (s *audioJobService) notifyProgress(jobID, userID string, progress int, mes
 	}
 	s.wsHub.SendToUser(userID, websocket.Message{
 		Type: "audio_progress",
-		Payload: map[string]interface{}{
+		Payload: map[string]any{
 			"jobId":    jobID,
 			"progress": progress,
 			"message":  message,
@@ -1244,9 +1244,9 @@ func (s *audioJobService) notifyCompleted(jobID, userID string, audioModel *mode
 	log.Info("notifying completion via WebSocket", "job_id", jobID, "user_id", userID, "audio_id", audioModel.ID.String())
 	s.wsHub.SendToUser(userID, websocket.Message{
 		Type: "audio_completed",
-		Payload: map[string]interface{}{
+		Payload: map[string]any{
 			"jobId": jobID,
-			"audio": map[string]interface{}{
+			"audio": map[string]any{
 				"id":         audioModel.ID.String(),
 				"durationMs": audioModel.DurationMs,
 			},
@@ -1327,7 +1327,7 @@ func (s *audioJobService) notifyCanceling(jobID, userID string) {
 	}
 	s.wsHub.SendToUser(userID, websocket.Message{
 		Type: "audio_canceling",
-		Payload: map[string]interface{}{
+		Payload: map[string]any{
 			"jobId": jobID,
 		},
 	})
@@ -1340,7 +1340,7 @@ func (s *audioJobService) notifyCanceled(jobID, userID string) {
 	}
 	s.wsHub.SendToUser(userID, websocket.Message{
 		Type: "audio_canceled",
-		Payload: map[string]interface{}{
+		Payload: map[string]any{
 			"jobId": jobID,
 		},
 	})
@@ -1364,7 +1364,7 @@ func (s *audioJobService) notifyFailed(jobID, userID string, errorCode, errorMes
 	log.Info("notifying failure via WebSocket", "job_id", jobID, "user_id", userID, "error_code", code, "error_message", msg)
 	s.wsHub.SendToUser(userID, websocket.Message{
 		Type: "audio_failed",
-		Payload: map[string]interface{}{
+		Payload: map[string]any{
 			"jobId":        jobID,
 			"errorCode":    code,
 			"errorMessage": msg,

@@ -97,7 +97,7 @@ func (s *playbackHistoryService) UpdatePlayback(ctx context.Context, userID, epi
 				EpisodeID:  eid,
 				ProgressMs: 0,
 				Completed:  false,
-				PlayedAt:   time.Now(),
+				PlayedAt:   time.Now().UTC(),
 			}
 		} else {
 			return nil, err
@@ -111,7 +111,7 @@ func (s *playbackHistoryService) UpdatePlayback(ctx context.Context, userID, epi
 	if req.Completed != nil {
 		history.Completed = *req.Completed
 	}
-	history.PlayedAt = time.Now()
+	history.PlayedAt = time.Now().UTC()
 
 	if err := s.playbackHistoryRepo.Upsert(ctx, history); err != nil {
 		return nil, err

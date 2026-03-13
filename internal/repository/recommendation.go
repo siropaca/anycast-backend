@@ -67,7 +67,7 @@ func (r *recommendationRepository) FindRecommendedChannels(ctx context.Context, 
 	var channels []RecommendedChannel
 	var total int64
 
-	now := time.Now()
+	now := time.Now().UTC()
 
 	baseCondition := r.db.WithContext(ctx).
 		Model(&model.Channel{}).
@@ -214,7 +214,7 @@ func (r *recommendationRepository) FindPublishedEpisodes(ctx context.Context, pa
 	var episodes []model.Episode
 	var total int64
 
-	now := time.Now()
+	now := time.Now().UTC()
 
 	channelSubquery := r.db.Table("channels").Select("id").
 		Where("published_at IS NOT NULL AND published_at <= ?", now)

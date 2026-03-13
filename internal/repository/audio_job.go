@@ -171,7 +171,7 @@ func (r *audioJobRepository) Delete(ctx context.Context, id uuid.UUID) error {
 
 // CancelActiveByUserID はユーザーの実行中ジョブを一括キャンセルする
 func (r *audioJobRepository) CancelActiveByUserID(ctx context.Context, userID uuid.UUID) error {
-	now := time.Now()
+	now := time.Now().UTC()
 
 	if err := r.db.WithContext(ctx).
 		Model(&model.AudioJob{}).
@@ -181,7 +181,7 @@ func (r *audioJobRepository) CancelActiveByUserID(ctx context.Context, userID uu
 			model.AudioJobStatusProcessing,
 			model.AudioJobStatusCanceling,
 		}).
-		Updates(map[string]interface{}{
+		Updates(map[string]any{
 			"status":       model.AudioJobStatusCanceled,
 			"completed_at": &now,
 		}).Error; err != nil {

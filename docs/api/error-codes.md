@@ -4,6 +4,7 @@
 |--------|-------------|------|
 | VALIDATION_ERROR | 400 | バリデーションエラー |
 | SCRIPT_PARSE_ERROR | 400 | 台本のパースに失敗 |
+| SCRIPT_TOO_MANY_LINES | 400 | 台本の行数が上限を超えている |
 | UNAUTHORIZED | 401 | 認証が必要 |
 | INVALID_CREDENTIALS | 401 | メールアドレスまたはパスワードが正しくない |
 | INVALID_REFRESH_TOKEN | 401 | リフレッシュトークンが無効または期限切れ |

@@ -232,7 +232,7 @@ func (s *authService) OAuthGoogle(ctx context.Context, req request.OAuthGoogleRe
 			expiresAt := time.Unix(*req.ExpiresAt, 0)
 			existingAccount.ExpiresAt = &expiresAt
 		}
-		existingAccount.UpdatedAt = time.Now()
+		existingAccount.UpdatedAt = time.Now().UTC()
 
 		if err := s.oauthAccountRepo.Update(ctx, existingAccount); err != nil {
 			return nil, err
@@ -424,7 +424,7 @@ func (s *authService) createRefreshToken(ctx context.Context, userID uuid.UUID) 
 	refreshToken := &model.RefreshToken{
 		UserID:    userID,
 		Token:     tokenStr,
-		ExpiresAt: time.Now().Add(refreshTokenExpiration),
+		ExpiresAt: time.Now().UTC().Add(refreshTokenExpiration),
 	}
 	if err := s.refreshTokenRepo.Create(ctx, refreshToken); err != nil {
 		return "", err

@@ -199,6 +199,8 @@ POST /internal/worker/audio
 リアルタイムで進捗を受け取るための WebSocket エンドポイント。
 台本生成ジョブと共通のエンドポイントを使用する。
 
+> **Note**: 現在の実装では、メッセージは userID 単位で送信される（`SendToUser`）。subscribe/unsubscribe による jobId 購読機構は Hub に実装済みだが、サービス層では未使用。クライアントはメッセージ内の `jobId` でフィルタリングすること。
+
 ```
 GET /ws/jobs?token={jwt}
 ```

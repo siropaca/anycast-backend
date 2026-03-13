@@ -85,14 +85,22 @@ AIポッドキャスト作成・配信プラットフォーム。
 │  Reaction        : User ─── Episode + リアクションタイプ（like/bad）          │
 │  PlaybackHistory : User ─── Episode + 再生状態                              │
 │  Follow          : User ─── User（自分以外のユーザーのみ）                  │
-│  Comment         : User ─── Episode + コメント内容                          │
+│  Comment         : User ─── Episode + コメント内容【未実装】                │
 │  FavoriteVoice   : User ─── Voice（ボイスのお気に入り）                     │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                           サポート                                           │
 ├─────────────────────────────────────────────────────────────────────────────┤
+│  Feedback        : ユーザーからのフィードバック                              │
 │  Contact         : お問い合わせ（認証任意、カテゴリ付き）                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          非同期ジョブ                                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  ScriptJob       : 台本生成ジョブ（LLM 多段階ワークフロー）                 │
+│  AudioJob        : 音声生成ジョブ（TTS + BGM ミキシング）                   │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -125,7 +133,9 @@ AIポッドキャスト作成・配信プラットフォーム。
 |------|------|------|
 | エンティティ | User, Channel, Character, Episode, ScriptLine | 一意の識別子を持ち、ライフサイクルを通じて追跡される |
 | エンティティ | Playlist, PlaylistItem | ユーザー所有の再生リストとアイテム |
-| エンティティ | Reaction, PlaybackHistory, Follow, Comment, FavoriteVoice | ユーザーとエピソード/ユーザー/ボイスの関連を表す |
+| エンティティ | Reaction, PlaybackHistory, Follow, Comment【未実装】, FavoriteVoice | ユーザーとエピソード/ユーザー/ボイスの関連を表す |
+| エンティティ | ScriptJob, AudioJob | 非同期生成ジョブの管理 |
+| エンティティ | Feedback | ユーザーフィードバック |
 | エンティティ | Voice, Category, SystemBgm | システム管理のマスタデータ |
 | エンティティ | Audio, Image, Bgm | メディアファイル・BGM（外部ストレージへの参照） |
 | 値オブジェクト | Email, Username, OAuthProvider, Gender, MimeType | ドメイン固有のルール・制約を持つ値 |
@@ -137,9 +147,9 @@ AIポッドキャスト作成・配信プラットフォーム。
 | [overview.md](overview.md) | 公開状態・アクセス制御・値オブジェクト定義 |
 | [user.md](user.md) | User 集約（User, Credential, OAuthAccount, RefreshToken, ApiKey, Character） |
 | [channel.md](channel.md) | Channel 集約 |
-| [episode.md](episode.md) | Episode 集約（Episode, ScriptLine, 台本フォーマット、音声生成） |
+| [episode.md](episode.md) | Episode 集約（Episode, ScriptLine, ScriptJob, AudioJob, 台本フォーマット、音声生成） |
 | [playlist.md](playlist.md) | Playlist 集約（Playlist, PlaylistItem） |
 | [interaction.md](interaction.md) | ユーザーインタラクション（Reaction, Follow, PlaybackHistory, Comment, FavoriteVoice） |
 | [master.md](master.md) | マスタデータ（Voice, Category, SystemBgm） |
 | [media.md](media.md) | メディア（Audio, Image, Bgm） |
-| [support.md](support.md) | サポート（Contact） |
+| [support.md](support.md) | サポート（Feedback, Contact） |

@@ -193,7 +193,7 @@ func (r *scriptJobRepository) Delete(ctx context.Context, id uuid.UUID) error {
 
 // CancelActiveByUserID はユーザーの実行中ジョブを一括キャンセルする
 func (r *scriptJobRepository) CancelActiveByUserID(ctx context.Context, userID uuid.UUID) error {
-	now := time.Now()
+	now := time.Now().UTC()
 
 	if err := r.db.WithContext(ctx).
 		Model(&model.ScriptJob{}).
@@ -203,7 +203,7 @@ func (r *scriptJobRepository) CancelActiveByUserID(ctx context.Context, userID u
 			model.ScriptJobStatusProcessing,
 			model.ScriptJobStatusCanceling,
 		}).
-		Updates(map[string]interface{}{
+		Updates(map[string]any{
 			"status":       model.ScriptJobStatusCanceled,
 			"completed_at": &now,
 		}).Error; err != nil {

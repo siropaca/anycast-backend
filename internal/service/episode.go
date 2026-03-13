@@ -567,7 +567,7 @@ func (s *episodeService) PublishEpisode(ctx context.Context, userID, channelID, 
 	// 公開日時を設定
 	if publishedAt == nil || *publishedAt == "" {
 		// 省略時は現在時刻で即時公開
-		now := time.Now()
+		now := time.Now().UTC()
 		episode.PublishedAt = &now
 	} else {
 		// 指定された日時でパース

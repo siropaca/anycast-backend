@@ -222,6 +222,8 @@ POST /internal/worker/script
 リアルタイムで進捗を受け取るための WebSocket エンドポイント。
 音声生成ジョブと共通のエンドポイントを使用する。
 
+> **Note**: 現在の実装では、メッセージは userID 単位で送信される（`SendToUser`）。subscribe/unsubscribe による jobId 購読機構は Hub に実装済みだが、サービス層では未使用。クライアントはメッセージ内の `jobId` でフィルタリングすること。
+
 ```
 GET /ws/jobs?token={jwt}
 ```
@@ -326,11 +328,12 @@ canceled      canceling ───▶ canceled
 | 15% | Phase 2 | 素材+アウトライン生成（LLM 1回目）開始 |
 | 35% | Phase 2 | 素材+アウトライン生成 完了 |
 | 40% | Phase 3 | 台本ドラフト生成（LLM 2回目）開始 |
-| 70% | Phase 3 | 台本ドラフト生成 完了 |
-| 72% | Phase 4 | リライト（LLM 3回目） |
+| 65% | Phase 3 | 台本ドラフト生成 完了・パース |
+| 68% | Phase 4 | リライト（LLM 3回目） |
+| 78% | Phase 4 | リライト完了 |
 | 80% | Phase 5 | QA 定量チェック |
 | 85% | Phase 5 | パッチ修正（LLM 4回目、条件付き） |
-| 90% | - | 台本パース・DB 保存 |
+| 90% | - | 台本 DB 保存 |
 | 95% | - | 完了処理 |
 | 100% | - | 完了 |
 

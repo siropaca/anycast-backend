@@ -945,7 +945,7 @@ func (s *scriptJobService) notifyProgress(jobID, userID string, progress int, me
 	}
 	s.wsHub.SendToUser(userID, websocket.Message{
 		Type: "script_progress",
-		Payload: map[string]interface{}{
+		Payload: map[string]any{
 			"jobId":    jobID,
 			"progress": progress,
 			"message":  message,
@@ -960,7 +960,7 @@ func (s *scriptJobService) notifyCompleted(jobID, userID string, scriptLinesCoun
 	}
 	s.wsHub.SendToUser(userID, websocket.Message{
 		Type: "script_completed",
-		Payload: map[string]interface{}{
+		Payload: map[string]any{
 			"jobId":            jobID,
 			"scriptLinesCount": scriptLinesCount,
 		},
@@ -1040,7 +1040,7 @@ func (s *scriptJobService) notifyCanceling(jobID, userID string) {
 	}
 	s.wsHub.SendToUser(userID, websocket.Message{
 		Type: "script_canceling",
-		Payload: map[string]interface{}{
+		Payload: map[string]any{
 			"jobId": jobID,
 		},
 	})
@@ -1053,7 +1053,7 @@ func (s *scriptJobService) notifyCanceled(jobID, userID string) {
 	}
 	s.wsHub.SendToUser(userID, websocket.Message{
 		Type: "script_canceled",
-		Payload: map[string]interface{}{
+		Payload: map[string]any{
 			"jobId": jobID,
 		},
 	})
@@ -1074,7 +1074,7 @@ func (s *scriptJobService) notifyFailed(jobID, userID string, errorCode, errorMe
 	}
 	s.wsHub.SendToUser(userID, websocket.Message{
 		Type: "script_failed",
-		Payload: map[string]interface{}{
+		Payload: map[string]any{
 			"jobId":        jobID,
 			"errorCode":    code,
 			"errorMessage": msg,

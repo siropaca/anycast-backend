@@ -21,8 +21,8 @@ const (
 
 // Message は WebSocket で送受信するメッセージ
 type Message struct {
-	Type    string      `json:"type"`
-	Payload interface{} `json:"payload,omitempty"`
+	Type    string `json:"type"`
+	Payload any    `json:"payload,omitempty"`
 }
 
 // Client は WebSocket クライアント接続を表す
@@ -230,8 +230,8 @@ func (c *Client) handleMessage(data []byte) {
 }
 
 // handleSubscribe はジョブ購読リクエストを処理する
-func (c *Client) handleSubscribe(payload interface{}) {
-	p, ok := payload.(map[string]interface{})
+func (c *Client) handleSubscribe(payload any) {
+	p, ok := payload.(map[string]any)
 	if !ok {
 		return
 	}
@@ -246,8 +246,8 @@ func (c *Client) handleSubscribe(payload interface{}) {
 }
 
 // handleUnsubscribe はジョブ購読解除リクエストを処理する
-func (c *Client) handleUnsubscribe(payload interface{}) {
-	p, ok := payload.(map[string]interface{})
+func (c *Client) handleUnsubscribe(payload any) {
+	p, ok := payload.(map[string]any)
 	if !ok {
 		return
 	}

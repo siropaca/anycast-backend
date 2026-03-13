@@ -86,7 +86,7 @@ func (r *categoryRepository) FindStatsByCategoryIDs(ctx context.Context, categor
 	}
 
 	var rows []CategoryStats
-	now := time.Now()
+	now := time.Now().UTC()
 
 	if err := r.db.WithContext(ctx).
 		Table("channels").
