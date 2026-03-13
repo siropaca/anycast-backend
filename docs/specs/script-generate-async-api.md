@@ -369,7 +369,7 @@ canceled      canceling ───▶ canceled
 - セリフの末尾に句点（。）は付けない
 - セリフ中に句点を含めない（1行に1文）
 - 自然なフィラー（「えーと」「まあ」等）を適度に含める
-- 設定箇所: `internal/service/script_prompts.go`
+- 設定箇所: internal/service/script_prompts.go
 
 ## 外部サービス
 
@@ -378,7 +378,7 @@ canceled      canceling ───▶ canceled
 マルチプロバイダ対応（OpenAI / Claude / Gemini）。`llm.Registry` で複数プロバイダのクライアントを管理し、Phase ごとに使用するプロバイダを切り替え可能。
 
 - API キーが設定されたプロバイダが起動時に自動登録される
-- Phase ごとの設定（プロバイダ・Temperature）は `internal/service/script_prompts.go` の `PhaseConfig` で定義
+- Phase ごとの設定（プロバイダ・Temperature）は internal/service/script_prompts.go の `PhaseConfig` で定義
 - 起動時に Phase 設定で必要なプロバイダが未登録の場合はエラーで起動失敗する
 
 Phase 別設定:
@@ -389,8 +389,8 @@ Phase 別設定:
 | Phase 4 | Claude | 0.7 | リライトによるブラッシュアップ |
 | Phase 5 | OpenAI | 0.5 | 局所修正のため低め |
 
-- プロバイダ設定箇所: `internal/service/script_prompts.go`（`PhaseConfig`）
-- クライアント実装: `internal/infrastructure/llm/`
+- プロバイダ設定箇所: internal/service/script_prompts.go（`PhaseConfig`）
+- クライアント実装: internal/infrastructure/llm/
 
 ### Google Cloud Tasks
 
@@ -401,7 +401,7 @@ Phase 別設定:
 | 認証 | OIDC | Service Account による認証 |
 | ワーカー URL | {baseURL}/script | ベース URL + `/script` |
 
-- 設定箇所: `internal/infrastructure/cloudtasks/client.go`
+- 設定箇所: internal/infrastructure/cloudtasks/client.go
 - ベース URL は環境変数 `GOOGLE_CLOUD_TASKS_WORKER_URL` で設定
 - Cloud Tasks が未設定の場合（ローカル開発）は goroutine で直接実行
 
@@ -472,19 +472,19 @@ CREATE TABLE script_lines (
 
 | ファイル | 説明 |
 |---------|------|
-| `internal/handler/script_job.go` | REST API ハンドラー |
-| `internal/handler/worker.go` | ワーカーエンドポイント |
-| `internal/handler/websocket.go` | WebSocket ハンドラー |
-| `internal/service/script_job.go` | 多段階ワークフロー実行ロジック |
-| `internal/service/script_prompts.go` | Phase 2/3/4 のシステムプロンプト定義 |
-| `internal/repository/script_job.go` | データベースアクセス |
-| `internal/model/script_job.go` | データモデル |
-| `internal/infrastructure/llm/client.go` | LLM クライアントインターフェース |
-| `internal/infrastructure/llm/registry.go` | LLM プロバイダ Registry |
-| `internal/infrastructure/cloudtasks/client.go` | Cloud Tasks クライアント |
-| `internal/infrastructure/websocket/hub.go` | WebSocket ハブ |
-| `internal/pkg/script/parser.go` | 台本テキストパーサー |
-| `internal/pkg/script/brief.go` | ブリーフ正規化（Phase 1） |
-| `internal/pkg/script/grounding.go` | Phase 2 出力構造体とパーサー |
-| `internal/pkg/script/validator.go` | QA 定量チェック（Phase 4） |
-| `internal/pkg/script/json_extractor.go` | LLM 出力からの JSON 抽出 |
+| internal/handler/script_job.go | REST API ハンドラー |
+| internal/handler/worker.go | ワーカーエンドポイント |
+| internal/handler/websocket.go | WebSocket ハンドラー |
+| internal/service/script_job.go | 多段階ワークフロー実行ロジック |
+| internal/service/script_prompts.go | Phase 2/3/4 のシステムプロンプト定義 |
+| internal/repository/script_job.go | データベースアクセス |
+| internal/model/script_job.go | データモデル |
+| internal/infrastructure/llm/client.go | LLM クライアントインターフェース |
+| internal/infrastructure/llm/registry.go | LLM プロバイダ Registry |
+| internal/infrastructure/cloudtasks/client.go | Cloud Tasks クライアント |
+| internal/infrastructure/websocket/hub.go | WebSocket ハブ |
+| internal/pkg/script/parser.go | 台本テキストパーサー |
+| internal/pkg/script/brief.go | ブリーフ正規化（Phase 1） |
+| internal/pkg/script/grounding.go | Phase 2 出力構造体とパーサー |
+| internal/pkg/script/validator.go | QA 定量チェック（Phase 4） |
+| internal/pkg/script/json_extractor.go | LLM 出力からの JSON 抽出 |

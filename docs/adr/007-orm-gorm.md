@@ -87,6 +87,6 @@ db.Where("provider = ?", provider).Find(&voices)
 ## 結果
 
 - `gorm.io/gorm` と `gorm.io/driver/postgres` を使用
-- モデル定義は `internal/model/` に配置
+- モデル定義は internal/model/ に配置
 - 複雑なクエリはパフォーマンスを考慮して最適化
 - マイグレーションは golang-migrate で別管理（ADR-008 参照）

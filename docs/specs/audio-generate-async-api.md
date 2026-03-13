@@ -375,7 +375,7 @@ canceled      canceling ───▶ canceled
 | 言語 | ja-JP | 日本語 |
 | 出力形式 | PCM 16bit 24kHz → MP3 | FFmpeg で変換 |
 
-- 設定箇所: `internal/infrastructure/tts/gemini_client.go`
+- 設定箇所: internal/infrastructure/tts/gemini_client.go
 
 #### ElevenLabs
 
@@ -387,7 +387,7 @@ canceled      canceling ───▶ canceled
 | 言語 | ja | 日本語 |
 | 出力形式 | MP3 44.1kHz 128kbps | 変換不要 |
 
-- 設定箇所: `internal/infrastructure/tts/elevenlabs_client.go`
+- 設定箇所: internal/infrastructure/tts/elevenlabs_client.go
 
 ### Google Cloud Tasks
 
@@ -398,7 +398,7 @@ canceled      canceling ───▶ canceled
 | 認証 | OIDC | Service Account による認証 |
 | ワーカー URL | {baseURL}/audio | ベース URL + `/audio` |
 
-- 設定箇所: `internal/infrastructure/cloudtasks/client.go`
+- 設定箇所: internal/infrastructure/cloudtasks/client.go
 - ベース URL は環境変数 `GOOGLE_CLOUD_TASKS_WORKER_URL` で設定
 - Cloud Tasks が未設定の場合（ローカル開発）は goroutine で直接実行
 
@@ -409,7 +409,7 @@ canceled      canceling ───▶ canceled
 | パス | audios/{audioId}.mp3 | 音声ファイルの保存パス |
 | 署名付き URL 有効期限 | 1 時間 | V4 スキーム使用 |
 
-- 設定箇所: `internal/infrastructure/storage/gcs_client.go`
+- 設定箇所: internal/infrastructure/storage/gcs_client.go
 
 ## エラーコード
 
@@ -483,17 +483,17 @@ CREATE TABLE audios (
 
 | ファイル | 説明 |
 |---------|------|
-| `internal/handler/audio_job.go` | REST API ハンドラー |
-| `internal/handler/worker.go` | ワーカーエンドポイント |
-| `internal/handler/websocket.go` | WebSocket ハンドラー |
-| `internal/service/audio_job.go` | ビジネスロジック |
-| `internal/service/ffmpeg.go` | FFmpeg 処理 |
-| `internal/repository/audio_job.go` | データベースアクセス |
-| `internal/model/audio_job.go` | データモデル |
-| `internal/infrastructure/tts/client.go` | TTS クライアントインターフェース |
-| `internal/infrastructure/tts/gemini_client.go` | Gemini TTS クライアント |
-| `internal/infrastructure/tts/elevenlabs_client.go` | ElevenLabs TTS クライアント |
-| `internal/infrastructure/tts/registry.go` | TTS プロバイダレジストリ |
-| `internal/infrastructure/cloudtasks/client.go` | Cloud Tasks クライアント |
-| `internal/infrastructure/storage/gcs_client.go` | GCS クライアント |
-| `internal/infrastructure/websocket/hub.go` | WebSocket ハブ |
+| internal/handler/audio_job.go | REST API ハンドラー |
+| internal/handler/worker.go | ワーカーエンドポイント |
+| internal/handler/websocket.go | WebSocket ハンドラー |
+| internal/service/audio_job.go | ビジネスロジック |
+| internal/service/ffmpeg.go | FFmpeg 処理 |
+| internal/repository/audio_job.go | データベースアクセス |
+| internal/model/audio_job.go | データモデル |
+| internal/infrastructure/tts/client.go | TTS クライアントインターフェース |
+| internal/infrastructure/tts/gemini_client.go | Gemini TTS クライアント |
+| internal/infrastructure/tts/elevenlabs_client.go | ElevenLabs TTS クライアント |
+| internal/infrastructure/tts/registry.go | TTS プロバイダレジストリ |
+| internal/infrastructure/cloudtasks/client.go | Cloud Tasks クライアント |
+| internal/infrastructure/storage/gcs_client.go | GCS クライアント |
+| internal/infrastructure/websocket/hub.go | WebSocket ハブ |

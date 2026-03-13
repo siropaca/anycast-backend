@@ -13,7 +13,7 @@ Accepted
 
 **手動 DI** を採用する。
 
-`internal/di/container.go` に DI コンテナを実装し、`main.go` で依存関係を構築する。
+internal/di/container.go に DI コンテナを実装し、main.go で依存関係を構築する。
 
 ```go
 type Container struct {
@@ -74,6 +74,6 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 
 ## 結果
 
-- `internal/di/container.go` で全ての依存関係を構築
+- internal/di/container.go で全ての依存関係を構築
 - 新しいハンドラー追加時は `Container` struct と `NewContainer` 関数を更新
 - 依存関係が 20+ を超えた場合は Wire への移行を検討

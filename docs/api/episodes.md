@@ -603,4 +603,4 @@ POST /episodes/:episodeId/play
 
 ---
 
-> **Note:** 音声生成 API の詳細仕様は `docs/specs/audio-generate-async-api.md` を参照してください。`type` パラメータで `voice`（TTS のみ）、`full`（TTS + BGM）、`remix`（BGM 差し替え）を切り替えます。
+> **Note:** 音声生成 API の詳細仕様は docs/specs/audio-generate-async-api.md を参照してください。`type` パラメータで `voice`（TTS のみ）、`full`（TTS + BGM）、`remix`（BGM 差し替え）を切り替えます。

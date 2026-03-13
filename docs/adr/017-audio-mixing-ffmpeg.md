@@ -63,6 +63,6 @@ BGM も同様に MP3 形式で管理されている。
 この決定により、以下の作業が必要になる：
 
 1. Docker イメージに FFmpeg をインストールする（`apt-get install ffmpeg` または Alpine の場合 `apk add ffmpeg`）
-2. `internal/pkg/audio` または `internal/infrastructure` 配下に FFmpeg ラッパーを実装する
+2. internal/pkg/audio または internal/infrastructure 配下に FFmpeg ラッパーを実装する
 3. 音声生成フローに BGM ミキシング処理を追加する
 4. ミキシング時の音量バランス（BGM の音量を下げるなど）を設定可能にする

@@ -82,14 +82,14 @@ return apperror.ErrNotFound.WithMessage("Voice not found")
 
 ## 理由
 
-1. **API 設計との整合性**: `docs/api.md` で定義したエラーコードを実装に反映
+1. **API 設計との整合性**: docs/api.md で定義したエラーコードを実装に反映
 2. **型安全性**: コンパイル時にエラー型を検証可能
 3. **柔軟性**: `WithMessage`, `WithDetails`, `WithError` でカスタマイズ可能
 4. **デバッグ容易性**: 元のエラーを保持しつつ、クライアントには安全なメッセージを返す
 
 ## 結果
 
-- `internal/apperror/error.go` に `AppError` 型を定義
-- `internal/apperror/codes.go` に定義済みエラーを列挙
+- internal/apperror/error.go に `AppError` 型を定義
+- internal/apperror/codes.go に定義済みエラーを列挙
 - Handler では `handler.Error(c, err)` で統一的にエラーレスポンスを返す
-- 新しいエラーコードが必要な場合は `codes.go` に追加
+- 新しいエラーコードが必要な場合は codes.go に追加

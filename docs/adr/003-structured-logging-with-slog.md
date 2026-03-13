@@ -78,7 +78,7 @@ func Init(env string) {
 
 ## 結果
 
-- `internal/logger/logger.go` に slog ラッパーを実装
+- internal/logger/logger.go に slog ラッパーを実装
 - ミドルウェアでリクエスト ID を付与
 - Context 経由でロガーを伝播
 - 環境変数 `APP_ENV` でログ形式を切り替え

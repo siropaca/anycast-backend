@@ -706,7 +706,7 @@ func (r *Registry) Has(provider Provider) bool
 
 ### Phase 別設定
 
-`internal/service/script_prompts.go` の `PhaseConfig` 構造体で Phase ごとのプロバイダと Temperature を定義する。
+internal/service/script_prompts.go の `PhaseConfig` 構造体で Phase ごとのプロバイダと Temperature を定義する。
 
 ```go
 type PhaseConfig struct {
@@ -722,7 +722,7 @@ type PhaseConfig struct {
 | Phase 4 | Claude | 0.7 | リライト（会話の流れ・自然さ・面白さの改善） |
 | Phase 5 | OpenAI | 0.5 | QA パッチ修正のため低め |
 
-プロバイダを変更したい場合は `script_prompts.go` の `phaseXConfig` の `Provider` を変更するだけでよい。
+プロバイダを変更したい場合は script_prompts.go の `phaseXConfig` の `Provider` を変更するだけでよい。
 
 #### レートリミットに関する注意
 
@@ -730,7 +730,7 @@ Claude API には入力トークン数のレートリミット（例: 30,000 tok
 Web Search を有効にした Phase で大量のトークンを消費すると、直後の Phase がレートリミットに引っかかる可能性がある。
 
 現在の構成では Phase 2 を OpenAI（Web Search あり）にしているのは、この問題を回避するため。
-Claude の `claude_client.go` には Web Search 機能（`WebSearchTool20250305`）が実装済みなので、
+Claude の claude_client.go には Web Search 機能（`WebSearchTool20250305`）が実装済みなので、
 レートリミットが緩和された場合は Phase 2 を Claude に切り替えることも可能。
 
 ### Client インターフェース
@@ -790,13 +790,13 @@ Phase 別に Temperature を変えるため `ChatWithOptions` メソッドを使
 
 | ファイル | 説明 |
 |---------|------|
-| `internal/service/script_prompts.go` | Phase 2/3/4/5 のシステムプロンプト定義 |
-| `internal/service/script_job.go` | 多段階ワークフローの実行ロジック |
-| `internal/pkg/script/brief.go` | ブリーフ正規化（Phase 1） |
-| `internal/pkg/script/grounding.go` | Phase 2 出力構造体とパーサー |
-| `internal/pkg/script/validator.go` | QA 定量チェック（Phase 5） |
-| `internal/pkg/script/json_extractor.go` | LLM 出力からの JSON 抽出ユーティリティ |
-| `internal/infrastructure/llm/client.go` | `ChatWithOptions` インターフェース定義（`EnableWebSearch` オプション含む） |
-| `internal/infrastructure/llm/openai_client.go` | OpenAI クライアント（Chat Completions API + Responses API） |
-| `internal/infrastructure/llm/registry.go` | LLM プロバイダ Registry |
-| `internal/pkg/tracer/` | 台本生成トレーサー（各 Phase のプロンプト・レスポンス出力） |
+| internal/service/script_prompts.go | Phase 2/3/4/5 のシステムプロンプト定義 |
+| internal/service/script_job.go | 多段階ワークフローの実行ロジック |
+| internal/pkg/script/brief.go | ブリーフ正規化（Phase 1） |
+| internal/pkg/script/grounding.go | Phase 2 出力構造体とパーサー |
+| internal/pkg/script/validator.go | QA 定量チェック（Phase 5） |
+| internal/pkg/script/json_extractor.go | LLM 出力からの JSON 抽出ユーティリティ |
+| internal/infrastructure/llm/client.go | `ChatWithOptions` インターフェース定義（`EnableWebSearch` オプション含む） |
+| internal/infrastructure/llm/openai_client.go | OpenAI クライアント（Chat Completions API + Responses API） |
+| internal/infrastructure/llm/registry.go | LLM プロバイダ Registry |
+| internal/pkg/tracer/ | 台本生成トレーサー（各 Phase のプロンプト・レスポンス出力） |

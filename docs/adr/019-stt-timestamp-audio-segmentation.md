@@ -124,11 +124,11 @@ STT → AlignTextToTimestamps(DP アライメント) → DetectSilenceIntervals 
 
 ## 結果
 
-- `internal/infrastructure/stt/` に Cloud STT クライアントを追加
-- `internal/pkg/audio/align.go` に DP アライメントによるテキスト照合ロジックと `SnapBoundariesToSilence` を追加
-- `internal/pkg/audio/split.go` に `DetectSilenceIntervals` を公開関数として追加
-- `internal/service/audio_job.go` の再アセンブルロジックをハイブリッド方式に変更
+- internal/infrastructure/stt/ に Cloud STT クライアントを追加
+- internal/pkg/audio/align.go に DP アライメントによるテキスト照合ロジックと `SnapBoundariesToSilence` を追加
+- internal/pkg/audio/split.go に `DetectSilenceIntervals` を公開関数として追加
+- internal/service/audio_job.go の再アセンブルロジックをハイブリッド方式に変更
 - DI コンテナと環境変数設定を更新
 - STT API 利用料金が音声生成ごとに発生する
 - 話者ごとの TTS 合成・STT アライメント・セグメント分割はそれぞれ `errgroup` による並列実行
-- デバッグ用にスピーカー別音源を TTS 完了直後に `tmp/audio-debug/{jobID}/` に WAV で保存
+- デバッグ用にスピーカー別音源を TTS 完了直後に tmp/audio-debug/{jobID}/ に WAV で保存

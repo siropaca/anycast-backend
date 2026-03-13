@@ -23,8 +23,8 @@ AIポッドキャスト作成・配信プラットフォーム。
    - DB スキーマや API は、ドメインモデルを永続化・公開するための手段として設計する
 
 2. **ドキュメントの更新順序**
-   - ドメインモデルに変更がある場合: `docs/domain-model/` → `docs/api/` → `docs/specs/database.md` の順で更新
-   - DB のみの変更（インデックス追加など）: `docs/specs/database.md` のみ更新可
+   - ドメインモデルに変更がある場合: docs/domain-model/ → docs/api/ → docs/specs/database.md の順で更新
+   - DB のみの変更（インデックス追加など）: docs/specs/database.md のみ更新可
 
 3. **整合性の維持**
    - ドメインモデルの属性と DB カラムの対応を明確にする

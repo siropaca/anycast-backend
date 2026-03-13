@@ -76,6 +76,6 @@ func (h *VoiceHandler) ListVoices(c *gin.Context) {
 ## 結果
 
 - Handler に Swagger アノテーションを追加
-- `make swagger` で `docs/` ディレクトリにドキュメント生成
+- `make swagger` で docs/ ディレクトリにドキュメント生成
 - `/swagger/*` で Swagger UI にアクセス可能
 - API 変更時はアノテーションの更新と `make swagger` の実行が必要

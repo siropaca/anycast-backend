@@ -20,11 +20,12 @@ AI ポッドキャスト配信プラットフォームのバックエンド API 
 - 新しい docs/ サブディレクトリを作成した場合は INDEX.md を設置する
 - ドキュメントを追加・更新・移動した際は、関連する INDEX.md のリンクも必ず更新する
 - ドキュメント内のリンクは、そのファイルからの相対パスで記述する（リンクが壊れないことを最優先）
+- ポインタとしてのパスはバッククオートで囲まない（例: ○ docs/api/INDEX.md、× `docs/api/INDEX.md`）
 - README.md から読み取れる情報（技術スタック、ディレクトリ構成、コマンドなど）は AGENTS.md に重複して記載しない
 - ディレクトリ構成、技術スタック、バージョンなどプロジェクトの基本情報が変わった際は、README.md と AGENTS.md の両方を更新する
-- ADR を追加した際は `docs/adr/INDEX.md` の一覧にも追記する
-- ドメインモデルの変更時は `docs/domain-model/` → `docs/api/` → `docs/specs/database.md` の順で更新する
-- DB のみの変更（インデックス追加など）は `docs/specs/database.md` のみ更新可
+- ADR を追加した際は docs/adr/INDEX.md の一覧にも追記する
+- ドメインモデルの変更時は docs/domain-model/ → docs/api/ → docs/specs/database.md の順で更新する
+- DB のみの変更（インデックス追加など）は docs/specs/database.md のみ更新可
 
 ## ドキュメントマップ
 
@@ -67,7 +68,7 @@ AI ポッドキャスト配信プラットフォームのバックエンド API 
 - ユーザーから指示があるまでコミットやプッシュを行わない（勝手にプッシュしない）
 - ブランチを新規作成する際は、必ずユーザーに確認を取ってから作成する（勝手にブランチを切らない）
 - コミット前に `make fmt` → `make lint` → `make test` を実行する
-- PR 作成時は `.github/PULL_REQUEST_TEMPLATE.md` をテンプレートとして使用する
+- PR 作成時は .github/PULL_REQUEST_TEMPLATE.md をテンプレートとして使用する
 
 ## 基本姿勢
 

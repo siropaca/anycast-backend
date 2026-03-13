@@ -7,9 +7,9 @@
 ## 禁止事項
 
 - `swag init` を直接実行しない（必ず `make swagger` を使う）
-- `github.com/google/uuid` を直接使わない（`internal/pkg/uuid` を使う）
+- `github.com/google/uuid` を直接使わない（internal/pkg/uuid を使う）
 - `time.Now()` で DB タイムスタンプを設定しない（`time.Now().UTC()` を使う）
-- Go 標準の `log` パッケージを使わない（`internal/pkg/logger` を使う）
+- Go 標準の `log` パッケージを使わない（internal/pkg/logger を使う）
 - Go のコメントに `@param` / `@returns` などの JSDoc スタイルのタグを使わない（swag が Swagger アノテーションとして誤解釈しビルドエラーになる）
 
 ---
@@ -35,7 +35,7 @@
 
 ## バリデーション
 
-- バリデーションエラーは `internal/handler/validation.go` の `formatValidationError` 関数で日本語化する
+- バリデーションエラーは internal/handler/validation.go の `formatValidationError` 関数で日本語化する
   - 新しいフィールドを追加した場合は `fieldNameMap` にマッピングを追加する
   - 新しいバリデーションタグを使用する場合は `translateFieldError` 関数にケースを追加する
 
@@ -47,7 +47,7 @@
 
 - `binding` タグでバリデーション
 - クエリパラメータ: `form` タグを使用
-- nullable な更新フィールド: `optional.Field[T]` を使用（`internal/pkg/optional`）
+- nullable な更新フィールド: `optional.Field[T]` を使用（internal/pkg/optional）
 - リレーション操作（既存の紐づけ / 新規作成）を含むリクエストは `connect` / `create` パターンを使用する
 
 ```go
@@ -113,30 +113,30 @@ job.StartedAt = &now  // 正しい UTC が保存される
 | `Warn` | 注意が必要な状況（認証失敗、不正リクエストなど） | ◯ |
 | `Error` | 本番環境で Slack 等に通知すべき重大なエラー | ◯ |
 
-- Go 標準の `log` パッケージは使用せず、`internal/pkg/logger` を使用する
+- Go 標準の `log` パッケージは使用せず、internal/pkg/logger を使用する
   - 致命的なエラーで終了する場合は `logger.Default().Error(...)` の後に `os.Exit(1)` を呼び出す
 
 ---
 
 ## pkg ユーティリティ
 
-`internal/pkg/` 配下のユーティリティを積極的に使用する。
+internal/pkg/ 配下のユーティリティを積極的に使用する。
 
 | パッケージ | 用途 |
 |------------|------|
-| `audio/` | 音声ファイル処理 |
-| `crypto/` | パスワードハッシュ |
-| `db/` | DB 接続 |
-| `jwt/` | JWT トークン管理 |
-| `logger/` | 構造化ログ |
-| `prompt/` | プロンプト圧縮 |
-| `script/` | 台本パーサー |
-| `token/` | トークン生成 |
-| `tracer/` | 台本生成トレーサー |
-| `uuid/` | UUID パース |
+| audio/ | 音声ファイル処理 |
+| crypto/ | パスワードハッシュ |
+| db/ | DB 接続 |
+| jwt/ | JWT トークン管理 |
+| logger/ | 構造化ログ |
+| prompt/ | プロンプト圧縮 |
+| script/ | 台本パーサー |
+| token/ | トークン生成 |
+| tracer/ | 台本生成トレーサー |
+| uuid/ | UUID パース |
 
-- `github.com/google/uuid` の代わりに `internal/pkg/uuid` を使用する（統一されたエラーハンドリングのため）
-- 汎用的な処理は `internal/pkg/` にまとめ、テストを必ず実装する
+- `github.com/google/uuid` の代わりに internal/pkg/uuid を使用する（統一されたエラーハンドリングのため）
+- 汎用的な処理は internal/pkg/ にまとめ、テストを必ず実装する
 
 ---
 
@@ -156,11 +156,11 @@ job.StartedAt = &now  // 正しい UTC が保存される
 
 ## マイグレーション
 
-- スキーマを変更した際は `docs/specs/database.md` も更新する
+- スキーマを変更した際は docs/specs/database.md も更新する
 
 ## 環境変数
 
-- 環境変数を追加・変更した際は `.env.example` も更新する
+- 環境変数を追加・変更した際は .env.example も更新する
 
 ## ファイル・ディレクトリ管理
 

@@ -73,6 +73,6 @@ Handler → Service → Repository → DB
 
 ## 結果
 
-- `internal/` 配下に `handler`, `service`, `repository`, `model` パッケージを配置
+- internal/ 配下に `handler`, `service`, `repository`, `model` パッケージを配置
 - 各レイヤー間はインターフェースで疎結合化
 - テスト時はモックによる差し替えが可能
