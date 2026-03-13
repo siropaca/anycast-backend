@@ -14,12 +14,14 @@ const (
 
 // Brief は正規化されたブリーフ情報
 type Brief struct {
-	Episode     BriefEpisode     `json:"episode"`
-	Channel     BriefChannel     `json:"channel"`
-	Characters  []BriefCharacter `json:"characters"`
-	MasterGuide string           `json:"master_guide"`
-	Theme       string           `json:"theme"`
-	Constraints BriefConstraints `json:"constraints"`
+	Episode          BriefEpisode       `json:"episode"`
+	Channel          BriefChannel       `json:"channel"`
+	Characters       []BriefCharacter   `json:"characters"`
+	MasterGuide      string             `json:"master_guide"`
+	Theme            string             `json:"theme"`
+	Constraints      BriefConstraints   `json:"constraints"`
+	PreviousEpisodes []BriefPastEpisode `json:"previous_episodes,omitempty"`
+	PreviousScript   string             `json:"previous_script,omitempty"`
 }
 
 // BriefEpisode はエピソード情報のスロット
@@ -45,6 +47,13 @@ type BriefCharacter struct {
 	Persona            string `json:"persona,omitempty"`
 	RoleInConversation string `json:"role_in_conversation,omitempty"`
 	InteractionStyle   string `json:"interaction_style,omitempty"`
+}
+
+// BriefPastEpisode は過去エピソードの概要情報
+type BriefPastEpisode struct {
+	EpisodeNumber int    `json:"episode_number"`
+	Title         string `json:"title"`
+	Description   string `json:"description,omitempty"`
 }
 
 // BriefConstraints は制約条件のスロット

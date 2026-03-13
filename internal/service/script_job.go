@@ -392,6 +392,51 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 		speakerMap[cc.Character.Name] = &channel.ChannelCharacters[i].Character
 	}
 
+	// 同チャンネルの他エピソード一覧を取得（過去エピソードのコンテキスト用）
+	otherEpisodes, _, err := s.episodeRepo.FindByChannelID(ctx, episode.ChannelID, repository.EpisodeFilter{
+		Sort:  "createdAt",
+		Order: "asc",
+		Limit: 50,
+	})
+	if err != nil {
+		return 0, fmt.Errorf("他エピソードの取得に失敗: %w", err)
+	}
+
+	// 過去エピソードの概要リストと直前エピソードの特定
+	var pastEpisodes []script.BriefPastEpisode
+	var prevEpisodeID *uuid.UUID
+	epNum := 0
+	for _, ep := range otherEpisodes {
+		if ep.ID == episode.ID {
+			continue
+		}
+		epNum++
+		// 現在のエピソードより前に作成されたもののみ
+		if ep.CreatedAt.Before(episode.CreatedAt) {
+			pastEpisodes = append(pastEpisodes, script.BriefPastEpisode{
+				EpisodeNumber: epNum,
+				Title:         ep.Title,
+				Description:   ep.Description,
+			})
+			prevEpisodeID = &ep.ID
+		}
+	}
+
+	// 直前エピソードの台本を取得
+	var prevScriptText string
+	if prevEpisodeID != nil {
+		prevLines, err := s.scriptLineRepo.FindByEpisodeID(ctx, *prevEpisodeID)
+		if err != nil {
+			log.Warn("前回エピソードの台本取得に失敗（スキップ）", "error", err)
+		} else if len(prevLines) > 0 {
+			var sb strings.Builder
+			for _, line := range prevLines {
+				sb.WriteString(fmt.Sprintf("%s: %s\n", line.Speaker.Name, line.Text))
+			}
+			prevScriptText = sb.String()
+		}
+	}
+
 	// ===== Phase 1: ブリーフ正規化 =====
 	s.updateProgress(ctx, job, 10, "ブリーフを正規化中...")
 
@@ -418,6 +463,8 @@ func (s *scriptJobService) executeJobInternal(ctx context.Context, job *model.Sc
 	}
 
 	brief := script.NormalizeBrief(briefInput)
+	brief.PreviousEpisodes = pastEpisodes
+	brief.PreviousScript = prevScriptText
 
 	briefJSON, err := brief.ToJSON()
 	if err != nil {
@@ -828,6 +875,28 @@ func buildPhase3UserPrompt(brief script.Brief, phase2 *script.Phase2Output) stri
 	sb.WriteString("## ブリーフ\n")
 	sb.WriteString(briefJSON)
 	sb.WriteString("\n\n")
+
+	// 過去エピソードの概要（テーマの重複回避用）
+	if len(brief.PreviousEpisodes) > 0 {
+		sb.WriteString("## 過去エピソード一覧\n")
+		sb.WriteString("以下は同じチャンネルの過去エピソードです。内容の重複を避け、過去の話題を踏まえた展開を意識してください。\n")
+		for _, ep := range brief.PreviousEpisodes {
+			sb.WriteString(fmt.Sprintf("- 第%d回「%s」", ep.EpisodeNumber, ep.Title))
+			if ep.Description != "" {
+				sb.WriteString(fmt.Sprintf(": %s", ep.Description))
+			}
+			sb.WriteString("\n")
+		}
+		sb.WriteString("\n")
+	}
+
+	// 前回エピソードの台本（トーンや展開の参考用）
+	if brief.PreviousScript != "" {
+		sb.WriteString("## 前回エピソードの台本\n")
+		sb.WriteString("以下は直前のエピソードの台本です。トーンや会話スタイルの参考にしてください。ただし、同じ展開や表現の繰り返しは避けてください。\n")
+		sb.WriteString(brief.PreviousScript)
+		sb.WriteString("\n\n")
+	}
 
 	// Phase 2 の出力を埋め込む
 	phase2JSON, err := json.Marshal(phase2)

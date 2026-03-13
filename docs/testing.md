@@ -76,10 +76,12 @@ curl -s -X POST "http://localhost:8081/dev/script/generate" \
 ```
 
 - 同期処理のためレスポンスまで数十秒かかる
-- `tmp/traces/{episodeTitle}/` 以下に phase1〜phase5 のトレースが出力される
+- `TRACE_MODE=file` の場合、`tmp/traces/{episodeTitle}/` 以下に phase1〜phase5 のトレースが Markdown 形式で出力される（非同期 API でも同様）
+- トレースにはブリーフ JSON、システムプロンプト、ユーザープロンプト、LLM レスポンスなどが含まれるため、生成結果のデバッグに活用できる
 
 ### 注意事項
 
 - `make token` の出力には stderr の情報が混ざる場合があるため、`TOKEN=$(make token 2>&1)` で取得する
 - 台本生成は非同期処理のため、レスポンスで返る `jobId` を使ってジョブ状態をポーリングする
 - ローカル環境では Cloud Tasks がないため goroutine で直接実行される
+- **MCP ツール（`mcp__anycast__*`）は本番環境に接続されているため、動作確認やテスト目的で使用しない。** 開発環境でのテストは上記の curl による直接 API 呼び出しで行うこと
