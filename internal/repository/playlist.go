@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -64,13 +65,20 @@ func (r *playlistRepository) FindByID(ctx context.Context, id uuid.UUID) (*model
 	return &playlist, nil
 }
 
-// FindByIDWithItems は指定された ID の再生リストをアイテムと一緒に取得する
+// FindByIDWithItems は指定された ID の再生リストをアイテムと一緒に取得する（公開済みエピソード・チャンネルのみ）
 func (r *playlistRepository) FindByIDWithItems(ctx context.Context, id uuid.UUID) (*model.Playlist, error) {
 	var playlist model.Playlist
 
+	now := time.Now()
+
 	if err := r.db.WithContext(ctx).
 		Preload("Items", func(db *gorm.DB) *gorm.DB {
-			return db.Order("position ASC")
+			return db.
+				Joins("JOIN episodes ON episodes.id = playlist_items.episode_id").
+				Joins("JOIN channels ON channels.id = episodes.channel_id").
+				Where("episodes.published_at IS NOT NULL AND episodes.published_at <= ?", now).
+				Where("channels.published_at IS NOT NULL AND channels.published_at <= ?", now).
+				Order("playlist_items.position ASC")
 		}).
 		Preload("Items.Episode").
 		Preload("Items.Episode.Artwork").

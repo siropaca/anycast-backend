@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -32,18 +33,25 @@ func (r *reactionRepository) FindLikesByUserID(ctx context.Context, userID uuid.
 	var reactions []model.Reaction
 	var total int64
 
+	now := time.Now()
+
 	query := r.db.WithContext(ctx).Model(&model.Reaction{}).
-		Where("user_id = ? AND reaction_type = ?", userID, model.ReactionTypeLike)
+		Joins("JOIN episodes ON episodes.id = reactions.episode_id").
+		Joins("JOIN channels ON channels.id = episodes.channel_id").
+		Where("reactions.user_id = ? AND reactions.reaction_type = ?", userID, model.ReactionTypeLike).
+		Where("episodes.published_at IS NOT NULL AND episodes.published_at <= ?", now).
+		Where("channels.published_at IS NOT NULL AND channels.published_at <= ?", now)
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
 	if err := query.
+		Select("reactions.*").
 		Preload("Episode").
 		Preload("Episode.Channel").
 		Preload("Episode.Channel.Artwork").
-		Order("created_at DESC").
+		Order("reactions.created_at DESC").
 		Limit(limit).
 		Offset(offset).
 		Find(&reactions).Error; err != nil {

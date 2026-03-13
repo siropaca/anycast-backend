@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -34,10 +35,17 @@ func (r *playbackHistoryRepository) FindByUserID(ctx context.Context, userID uui
 	var histories []model.PlaybackHistory
 	var total int64
 
-	query := r.db.WithContext(ctx).Model(&model.PlaybackHistory{}).Where("user_id = ?", userID)
+	now := time.Now()
+
+	query := r.db.WithContext(ctx).Model(&model.PlaybackHistory{}).
+		Joins("JOIN episodes ON episodes.id = playback_histories.episode_id").
+		Joins("JOIN channels ON channels.id = episodes.channel_id").
+		Where("playback_histories.user_id = ?", userID).
+		Where("episodes.published_at IS NOT NULL AND episodes.published_at <= ?", now).
+		Where("channels.published_at IS NOT NULL AND channels.published_at <= ?", now)
 
 	if completed != nil {
-		query = query.Where("completed = ?", *completed)
+		query = query.Where("playback_histories.completed = ?", *completed)
 	}
 
 	if err := query.Count(&total).Error; err != nil {
@@ -45,12 +53,13 @@ func (r *playbackHistoryRepository) FindByUserID(ctx context.Context, userID uui
 	}
 
 	if err := query.
+		Select("playback_histories.*").
 		Preload("Episode").
 		Preload("Episode.Artwork").
 		Preload("Episode.Channel").
 		Preload("Episode.Channel.Artwork").
 		Preload("Episode.FullAudio").
-		Order("played_at DESC").
+		Order("playback_histories.played_at DESC").
 		Limit(limit).
 		Offset(offset).
 		Find(&histories).Error; err != nil {
