@@ -12,8 +12,8 @@ type ScriptLine struct {
 	EpisodeID uuid.UUID `gorm:"type:uuid;not null;column:episode_id"`
 	LineOrder int       `gorm:"not null;column:line_order"`
 	SpeakerID uuid.UUID `gorm:"type:uuid;not null;column:speaker_id"`
-	Text      string    `gorm:"type:text;not null"`
-	Emotion   *string   `gorm:"type:text"`
+	Text      string    `gorm:"type:varchar(500);not null"`
+	Emotion   *string   `gorm:"type:varchar(20)"`
 	CreatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP"`
 	UpdatedAt time.Time `gorm:"not null;default:CURRENT_TIMESTAMP"`
 

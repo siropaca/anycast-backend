@@ -51,7 +51,7 @@
 |------|-----|:----:|------|
 | id | UUID | ◯ | 識別子 |
 | mimeType | String | ◯ | MIME タイプ（image/png, image/jpeg など） |
-| url | String | ◯ | ストレージ URL（GCS） |
+| path | String | ◯ | GCS 上のパスまたは外部 URL |
 | filename | String | ◯ | 元ファイル名 |
 | fileSize | Int | ◯ | ファイルサイズ（バイト） |
 

@@ -55,8 +55,9 @@ Phase 別設定（`internal/service/script_prompts.go`）:
 | Phase | Provider | Temperature | 用途 |
 |-------|----------|-------------|------|
 | Phase 2 | OpenAI | 0.9 | 素材+アウトライン生成 |
-| Phase 3 | OpenAI | 0.7 | 台本ドラフト生成 |
-| Phase 4 | OpenAI | 0.5 | QA パッチ修正 |
+| Phase 3 | Claude | 0.7 | 台本ドラフト生成 |
+| Phase 4 | Claude | 0.7 | リライト |
+| Phase 5 | OpenAI | 0.5 | QA パッチ修正 |
 
 - 設定箇所: `internal/infrastructure/llm/`、`internal/service/script_prompts.go`
 

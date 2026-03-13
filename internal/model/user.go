@@ -16,7 +16,7 @@ type User struct {
 	Role          Role       `gorm:"type:user_role;not null;default:'user'"`
 	AvatarID      *uuid.UUID `gorm:"type:uuid"`
 	HeaderImageID *uuid.UUID `gorm:"type:uuid;column:header_image_id"`
-	UserPrompt    string     `gorm:"type:text;not null;default:'';column:user_prompt"`
+	UserPrompt    string     `gorm:"type:varchar(2000);not null;default:'';column:user_prompt"`
 	CreatedAt     time.Time  `gorm:"not null;default:CURRENT_TIMESTAMP"`
 	UpdatedAt     time.Time  `gorm:"not null;default:CURRENT_TIMESTAMP"`
 
