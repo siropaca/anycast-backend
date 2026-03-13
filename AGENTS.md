@@ -24,6 +24,7 @@ AI ポッドキャスト配信プラットフォームのバックエンド API 
 - ディレクトリ構成、技術スタック、バージョンなどプロジェクトの基本情報が変わった際は、README.md と AGENTS.md の両方を更新する
 - ADR を追加した際は `docs/adr/INDEX.md` の一覧にも追記する
 - ドメインモデルの変更時は `docs/domain-model/` → `docs/api/` → `docs/specs/database.md` の順で更新する
+- DB のみの変更（インデックス追加など）は `docs/specs/database.md` のみ更新可
 
 ## ドキュメントマップ
 
