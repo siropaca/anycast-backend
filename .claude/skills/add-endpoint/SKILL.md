@@ -16,12 +16,12 @@ argument-hint: エンドポイントの仕様（例: "POST /channels/:channelId/
 
 ### 1-1. ドメインモデル（必要な場合）
 
-- **ファイル**: `docs/domain-model/` 配下の該当ファイル
+- **ファイル**: docs/domain-model/ 配下の該当ファイル
 - 新しいエンティティや属性の追加がある場合のみ更新
 
 ### 1-2. API ドキュメント
 
-- **ファイル**: `docs/api/` 配下の該当ドキュメント（例: `episodes.md`, `channels.md`）
+- **ファイル**: docs/api/ 配下の該当ドキュメント（例: episodes.md, channels.md）
 - 既存のドキュメントのフォーマットに合わせる:
 
 ```
@@ -56,13 +56,13 @@ METHOD /path/:param
 
 ### 1-3. API 一覧テーブル
 
-- **ファイル**: `docs/api/INDEX.md`
+- **ファイル**: docs/api/INDEX.md
 - API 一覧テーブルに行を追加（実装欄は空のまま）
 - フォーマット: `| METHOD | \`/api/v1/path\` | 説明 | 権限 | | [詳細](./xxx.md#アンカー) |`
 
 ### 1-4. データベース設計（必要な場合）
 
-- **ファイル**: `docs/specs/database.md`
+- **ファイル**: docs/specs/database.md
 - テーブルやカラムの追加がある場合のみ更新
 
 ---
@@ -71,7 +71,7 @@ METHOD /path/:param
 
 ### 2-1. Request DTO
 
-- **ファイル**: `internal/dto/request/` 配下
+- **ファイル**: internal/dto/request/ 配下
 - `binding` タグでバリデーション
 
 ```go
@@ -111,7 +111,7 @@ type XxxInput struct {
 
 ### 2-2. Response DTO（新規の場合）
 
-- **ファイル**: `internal/dto/response/` 配下
+- **ファイル**: internal/dto/response/ 配下
 - 常に値が存在するフィールド: `validate:"required"` タグ
 - ポインタ型で `null` を返すフィールド（`omitempty` なし）: `extensions:"x-nullable"` タグ
 - `omitempty` ありフィールド: `x-nullable` 不要
@@ -145,13 +145,13 @@ type XxxDataResponse struct {
 
 ### 2-3. Repository（必要な場合）
 
-- **ファイル**: `internal/repository/` 配下
+- **ファイル**: internal/repository/ 配下
 - インターフェース定義 → 実装の順
 - `internal/pkg/uuid` を使用（`github.com/google/uuid` は使わない）
 
 ### 2-4. Service
 
-- **ファイル**: `internal/service/` 配下
+- **ファイル**: internal/service/ 配下
 - インターフェース定義 → 実装の順
 
 ```go
@@ -176,7 +176,7 @@ func NewXxxService(xxxRepo repository.XxxRepository) XxxService {
 
 ### 2-5. Handler
 
-- **ファイル**: `internal/handler/` 配下
+- **ファイル**: internal/handler/ 配下
 - **Swagger アノテーション必須**（godoc コメントの形式）
 
 ```go
@@ -227,14 +227,14 @@ if err := c.ShouldBindJSON(&req); err != nil {
 
 ### 2-6. Router
 
-- **ファイル**: `internal/router/router.go`
+- **ファイル**: internal/router/router.go
 - 認証必須: `authenticated` グループに追加
 - 任意認証: `optionalAuth` グループに追加
 - 既存の同カテゴリのエンドポイント近くに配置
 
 ### 2-7. DI Container（必要な場合）
 
-- **ファイル**: `internal/di/container.go`
+- **ファイル**: internal/di/container.go
 - Repository → Service → Handler の順に初期化
 - `Container` 構造体にハンドラーフィールドを追加
 
@@ -244,7 +244,7 @@ if err := c.ShouldBindJSON(&req); err != nil {
 
 ### 3-1. ハンドラーテスト
 
-- **ファイル**: `internal/handler/*_test.go`
+- **ファイル**: internal/handler/*_test.go
 - `testify/mock` でサービスをモック
 
 ```go
@@ -316,7 +316,7 @@ make swagger
 
 ### 3-3. `.http` ファイル更新
 
-- **ファイル**: `http/` 配下の該当ファイル
+- **ファイル**: http/ 配下の該当ファイル
 - フォーマット:
 
 ```http
@@ -337,7 +337,7 @@ Authorization: Bearer {{token}}
 
 ### 3-4. API 一覧テーブル更新
 
-- `docs/api/INDEX.md` の実装欄を ✅ に更新
+- docs/api/INDEX.md の実装欄を ✅ に更新
 
 ---
 
@@ -346,9 +346,9 @@ Authorization: Bearer {{token}}
 - [ ] Go コメントに `@param` / `@returns` などの JSDoc タグを使っていない
 - [ ] エラーメッセージは日本語
 - [ ] ログメッセージは英語
-- [ ] 新しいフィールドを `fieldNameMap`（`internal/handler/validation.go`）に追加した
-- [ ] `internal/pkg/uuid` を使用している（`github.com/google/uuid` ではない）
+- [ ] 新しいフィールドを `fieldNameMap`（internal/handler/validation.go）に追加した
+- [ ] internal/pkg/uuid を使用している（`github.com/google/uuid` ではない）
 - [ ] エクスポートされるシンボルのコメントはシンボル名から始めている
 - [ ] `make swagger` で Swagger ドキュメントを再生成した
 - [ ] `http/` ファイルを更新した
-- [ ] `docs/api/INDEX.md` の実装欄を ✅ に更新した
+- [ ] docs/api/INDEX.md の実装欄を ✅ に更新した
