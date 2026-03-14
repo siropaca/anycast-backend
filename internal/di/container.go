@@ -17,6 +17,7 @@ import (
 	"github.com/siropaca/anycast-backend/internal/infrastructure/stt"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/tts"
 	"github.com/siropaca/anycast-backend/internal/infrastructure/websocket"
+	"github.com/siropaca/anycast-backend/internal/pkg/cache"
 	"github.com/siropaca/anycast-backend/internal/pkg/crypto"
 	"github.com/siropaca/anycast-backend/internal/pkg/jwt"
 	"github.com/siropaca/anycast-backend/internal/pkg/logger"
@@ -226,8 +227,15 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	// FFmpeg サービス
 	ffmpegService := service.NewFFmpegService()
 
+	// キャッシュクライアント
+	cacheClient, err := cache.New(ctx, cfg.RedisURL)
+	if err != nil {
+		log.Error("failed to create cache client", "error", err)
+		os.Exit(1)
+	}
+
 	// Repository 層
-	voiceRepo := repository.NewVoiceRepository(db)
+	voiceRepo := repository.NewCachedVoiceRepository(repository.NewVoiceRepository(db), cacheClient)
 	favVoiceRepo := repository.NewFavoriteVoiceRepository(db)
 	userRepo := repository.NewUserRepository(db)
 	credentialRepo := repository.NewCredentialRepository(db)
@@ -235,7 +243,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	imageRepo := repository.NewImageRepository(db)
 	channelRepo := repository.NewChannelRepository(db)
 	characterRepo := repository.NewCharacterRepository(db)
-	categoryRepo := repository.NewCategoryRepository(db)
+	categoryRepo := repository.NewCachedCategoryRepository(repository.NewCategoryRepository(db), cacheClient)
 	episodeRepo := repository.NewEpisodeRepository(db)
 	scriptLineRepo := repository.NewScriptLineRepository(db)
 	audioRepo := repository.NewAudioRepository(db)
@@ -334,6 +342,7 @@ func NewContainer(ctx context.Context, db *gorm.DB, cfg *config.Config) *Contain
 	userHandler := handler.NewUserHandler(userService)
 	// クローズ対象のリソースを収集
 	var closers []closer
+	closers = append(closers, cacheClient)
 	closers = append(closers, storageClient)
 	if tasksClient != nil {
 		closers = append(closers, tasksClient)

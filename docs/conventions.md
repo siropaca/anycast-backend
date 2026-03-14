@@ -134,6 +134,7 @@ internal/pkg/ 配下のユーティリティを積極的に使用する。
 | token/ | トークン生成 |
 | tracer/ | 台本生成トレーサー |
 | uuid/ | UUID パース |
+| cache/ | Redis キャッシュ |
 
 - `github.com/google/uuid` の代わりに internal/pkg/uuid を使用する（統一されたエラーハンドリングのため）
 - 汎用的な処理は internal/pkg/ にまとめ、テストを必ず実装する

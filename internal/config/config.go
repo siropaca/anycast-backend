@@ -39,6 +39,8 @@ type Config struct {
 	GoogleCloudTasksQueueName           string
 	GoogleCloudTasksServiceAccountEmail string
 	GoogleCloudTasksWorkerURL           string
+	// Redis 接続 URL（未設定時はキャッシュ無効）
+	RedisURL string
 	// Gemini TTS の location（デフォルト: global）
 	GoogleCloudTTSLocation string
 	// Claude API キー
@@ -82,6 +84,7 @@ func Load() *Config {
 		GoogleCloudTasksQueueName:           getEnv("GOOGLE_CLOUD_TASKS_QUEUE_NAME", "audio-generation-queue"),
 		GoogleCloudTasksServiceAccountEmail: getEnv("GOOGLE_CLOUD_TASKS_SERVICE_ACCOUNT_EMAIL", ""),
 		GoogleCloudTasksWorkerURL:           getEnv("GOOGLE_CLOUD_TASKS_WORKER_URL", ""),
+		RedisURL:                            getEnv("REDIS_URL", ""),
 		GoogleCloudTTSLocation:              getEnv("GOOGLE_CLOUD_TTS_LOCATION", "global"),
 		ClaudeAPIKey:                        getEnv("CLAUDE_API_KEY", ""),
 		GeminiLLMLocation:                   getEnv("GEMINI_LLM_LOCATION", "asia-northeast1"),
