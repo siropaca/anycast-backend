@@ -40,6 +40,12 @@ func TestNoopClient_DeleteDoesNothing(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestNoopClient_DeleteByPrefixDoesNothing(t *testing.T) {
+	client := &noopClient{}
+	err := client.DeleteByPrefix(context.Background(), "prefix:")
+	assert.NoError(t, err)
+}
+
 func TestNoopClient_CloseDoesNothing(t *testing.T) {
 	client := &noopClient{}
 	err := client.Close()

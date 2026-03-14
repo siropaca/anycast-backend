@@ -21,6 +21,10 @@ func (c *noopClient) Delete(_ context.Context, _ ...string) error {
 	return nil
 }
 
+func (c *noopClient) DeleteByPrefix(_ context.Context, _ string) error {
+	return nil
+}
+
 func (c *noopClient) Close() error {
 	return nil
 }

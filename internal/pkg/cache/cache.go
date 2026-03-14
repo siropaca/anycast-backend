@@ -16,6 +16,7 @@ type Client interface {
 	Get(ctx context.Context, key string, dest any) (bool, error)
 	Set(ctx context.Context, key string, value any, ttl time.Duration) error
 	Delete(ctx context.Context, keys ...string) error
+	DeleteByPrefix(ctx context.Context, prefix string) error
 	Close() error
 }
 
@@ -87,6 +88,28 @@ func (c *redisClient) Delete(ctx context.Context, keys ...string) error {
 		logger.FromContext(ctx).Warn("cache delete failed", "keys", keys, "error", err)
 	}
 
+	return nil
+}
+
+// DeleteByPrefix は指定されたプレフィックスに一致するキーをすべて削除する
+func (c *redisClient) DeleteByPrefix(ctx context.Context, prefix string) error {
+	var cursor uint64
+	for {
+		keys, nextCursor, err := c.rdb.Scan(ctx, cursor, prefix+"*", 100).Result()
+		if err != nil {
+			logger.FromContext(ctx).Warn("cache scan failed", "prefix", prefix, "error", err)
+			return nil
+		}
+		if len(keys) > 0 {
+			if err := c.rdb.Del(ctx, keys...).Err(); err != nil {
+				logger.FromContext(ctx).Warn("cache delete by prefix failed", "prefix", prefix, "error", err)
+			}
+		}
+		cursor = nextCursor
+		if cursor == 0 {
+			break
+		}
+	}
 	return nil
 }
 
