@@ -180,9 +180,6 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	authenticated.POST("/channels/:channelId/episodes/:episodeId/script/import", container.ScriptHandler.ImportScript)
 	authenticated.GET("/channels/:channelId/episodes/:episodeId/script/export", container.ScriptHandler.ExportScript)
 
-	// Categories
-	authenticated.GET("/categories/:slug", container.CategoryHandler.GetCategoryBySlug)
-
 	// Voices
 	authenticated.GET("/voices", container.VoiceHandler.ListVoices)
 	authenticated.GET("/voices/:voiceId", container.VoiceHandler.GetVoice)
@@ -208,6 +205,7 @@ func Setup(container *di.Container, cfg *config.Config) *gin.Engine {
 	optionalAuth.GET("/recommendations/channels", container.RecommendationHandler.GetRecommendedChannels)
 	optionalAuth.GET("/recommendations/episodes", container.RecommendationHandler.GetRecommendedEpisodes)
 	optionalAuth.GET("/categories", container.CategoryHandler.ListCategories)
+	optionalAuth.GET("/categories/:slug", container.CategoryHandler.GetCategoryBySlug)
 	optionalAuth.GET("/search/channels", container.SearchHandler.SearchChannels)
 	optionalAuth.GET("/search/episodes", container.SearchHandler.SearchEpisodes)
 	optionalAuth.GET("/search/users", container.SearchHandler.SearchUsers)
