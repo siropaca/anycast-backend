@@ -26,6 +26,7 @@ AI ポッドキャスト配信プラットフォームのバックエンド API 
 - ADR を追加した際は docs/adr/INDEX.md の一覧にも追記する
 - ドメインモデルの変更時は docs/domain-model/ → docs/api/ → docs/specs/database.md の順で更新する
 - DB のみの変更（インデックス追加など）は docs/specs/database.md のみ更新可
+- エンドポイントの認証・権限設定を変更した際は docs/api/INDEX.md の権限列も更新する
 - ドキュメントの文章はできる限り句点（。）で改行する。
   改行後には半角スペース 2 つを末尾に付けて Markdown の soft line break とする
 
