@@ -128,11 +128,9 @@ func TestToScriptLineResponse(t *testing.T) {
 	}
 
 	t.Run("基本的な変換が正しく行われる", func(t *testing.T) {
-		svc := &scriptLineService{}
-
 		sl := *baseScriptLine
 
-		resp := svc.toScriptLineResponse(&sl)
+		resp := toScriptLineResponse(&sl)
 
 		assert.Equal(t, lineID, resp.ID)
 		assert.Equal(t, 1, resp.LineOrder)
@@ -143,11 +141,9 @@ func TestToScriptLineResponse(t *testing.T) {
 	})
 
 	t.Run("Speaker が正しく変換される", func(t *testing.T) {
-		svc := &scriptLineService{}
-
 		sl := *baseScriptLine
 
-		resp := svc.toScriptLineResponse(&sl)
+		resp := toScriptLineResponse(&sl)
 
 		assert.Equal(t, speakerID, resp.Speaker.ID)
 		assert.Equal(t, "テストスピーカー", resp.Speaker.Name)
@@ -159,12 +155,10 @@ func TestToScriptLineResponse(t *testing.T) {
 	})
 
 	t.Run("Emotion が nil の場合、レスポンスの Emotion も nil", func(t *testing.T) {
-		svc := &scriptLineService{}
-
 		sl := *baseScriptLine
 		sl.Emotion = nil
 
-		resp := svc.toScriptLineResponse(&sl)
+		resp := toScriptLineResponse(&sl)
 
 		assert.Nil(t, resp.Emotion)
 	})
@@ -216,9 +210,7 @@ func TestToScriptLineResponses(t *testing.T) {
 	}
 
 	t.Run("複数の台本行を正しく変換する", func(t *testing.T) {
-		svc := &scriptLineService{}
-
-		result := svc.toScriptLineResponses(scriptLines)
+		result := toScriptLineResponses(scriptLines)
 
 		assert.Len(t, result, 2)
 		assert.Equal(t, 1, result[0].LineOrder)
@@ -228,9 +220,7 @@ func TestToScriptLineResponses(t *testing.T) {
 	})
 
 	t.Run("空のスライスの場合、空のスライスを返す", func(t *testing.T) {
-		svc := &scriptLineService{}
-
-		result := svc.toScriptLineResponses([]model.ScriptLine{})
+		result := toScriptLineResponses([]model.ScriptLine{})
 
 		assert.Len(t, result, 0)
 		assert.NotNil(t, result)

@@ -18,6 +18,7 @@ type EpisodeResponse struct {
 	Bgm             *EpisodeBgmResponse      `json:"bgm" extensions:"x-nullable"`
 	Playback        *EpisodePlaybackResponse `json:"playback" extensions:"x-nullable"`
 	PlaylistIDs     []uuid.UUID              `json:"playlistIds" extensions:"x-nullable"`
+	ScriptLines     []ScriptLineResponse     `json:"scriptLines,omitempty" extensions:"x-nullable"`
 	ScriptLineCount int                      `json:"scriptLineCount"`
 	PlayCount       int                      `json:"playCount" validate:"required"`
 	PublishedAt     *time.Time               `json:"publishedAt" extensions:"x-nullable"`

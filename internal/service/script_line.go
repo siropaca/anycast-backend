@@ -89,7 +89,7 @@ func (s *scriptLineService) ListByEpisodeID(ctx context.Context, userID, channel
 	}
 
 	// レスポンスに変換
-	responses := s.toScriptLineResponses(scriptLines)
+	responses := toScriptLineResponses(scriptLines)
 
 	return &response.ScriptLineListResponse{
 		Data: responses,
@@ -212,7 +212,7 @@ func (s *scriptLineService) Create(ctx context.Context, userID, channelID, episo
 	}
 
 	// レスポンスに変換
-	resp := s.toScriptLineResponse(createdLine)
+	resp := toScriptLineResponse(createdLine)
 
 	return &resp, nil
 }
@@ -318,7 +318,7 @@ func (s *scriptLineService) Update(ctx context.Context, userID, channelID, episo
 	}
 
 	// レスポンスに変換
-	resp := s.toScriptLineResponse(scriptLine)
+	resp := toScriptLineResponse(scriptLine)
 
 	return &resp, nil
 }
@@ -525,7 +525,7 @@ func (s *scriptLineService) Reorder(ctx context.Context, userID, channelID, epis
 	}
 
 	// レスポンスに変換
-	responses := s.toScriptLineResponses(updatedLines)
+	responses := toScriptLineResponses(updatedLines)
 
 	return &response.ScriptLineListResponse{
 		Data: responses,
@@ -533,18 +533,18 @@ func (s *scriptLineService) Reorder(ctx context.Context, userID, channelID, epis
 }
 
 // toScriptLineResponses は ScriptLine のスライスをレスポンス DTO のスライスに変換する
-func (s *scriptLineService) toScriptLineResponses(scriptLines []model.ScriptLine) []response.ScriptLineResponse {
+func toScriptLineResponses(scriptLines []model.ScriptLine) []response.ScriptLineResponse {
 	result := make([]response.ScriptLineResponse, len(scriptLines))
 
 	for i, sl := range scriptLines {
-		result[i] = s.toScriptLineResponse(&sl)
+		result[i] = toScriptLineResponse(&sl)
 	}
 
 	return result
 }
 
 // toScriptLineResponse は ScriptLine をレスポンス DTO に変換する
-func (s *scriptLineService) toScriptLineResponse(sl *model.ScriptLine) response.ScriptLineResponse {
+func toScriptLineResponse(sl *model.ScriptLine) response.ScriptLineResponse {
 	return response.ScriptLineResponse{
 		ID:        sl.ID,
 		LineOrder: sl.LineOrder,

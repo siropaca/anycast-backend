@@ -71,6 +71,7 @@ AI ポッドキャスト配信プラットフォームのバックエンド API 
 - ユーザーから指示があるまでコミットやプッシュを行わない（勝手にプッシュしない）
 - ブランチを新規作成する際は、必ずユーザーに確認を取ってから作成する（勝手にブランチを切らない）
 - コミット前に `make fmt` → `make lint` → `make test` を実行する
+- DTO（`internal/dto/`）やハンドラー（`internal/handler/`）を変更した場合は `make swagger` も実行する
 - PR 作成時は .github/PULL_REQUEST_TEMPLATE.md をテンプレートとして使用する
 
 ## 基本姿勢

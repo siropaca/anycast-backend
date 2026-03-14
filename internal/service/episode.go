@@ -145,6 +145,17 @@ func (s *episodeService) GetEpisode(ctx context.Context, userID, channelID, epis
 		return nil, err
 	}
 
+	// 台本行を取得
+	scriptLines, err := s.scriptLineRepo.FindByEpisodeID(ctx, eid)
+	if err != nil {
+		return nil, err
+	}
+	resp.ScriptLines = make([]response.ScriptLineResponse, len(scriptLines))
+	for i, sl := range scriptLines {
+		resp.ScriptLines[i] = toScriptLineResponse(&sl)
+	}
+	resp.ScriptLineCount = len(scriptLines)
+
 	// 認証済みの場合は再生リスト所属情報を取得
 	if userID != "" {
 		playlistIDs, err := s.playlistRepo.FindPlaylistIDsByUserIDAndEpisodeID(ctx, uid, eid)
@@ -209,6 +220,17 @@ func (s *episodeService) GetMyChannelEpisode(ctx context.Context, userID, channe
 	if err != nil {
 		return nil, err
 	}
+
+	// 台本行を取得
+	scriptLines, err := s.scriptLineRepo.FindByEpisodeID(ctx, eid)
+	if err != nil {
+		return nil, err
+	}
+	resp.ScriptLines = make([]response.ScriptLineResponse, len(scriptLines))
+	for i, sl := range scriptLines {
+		resp.ScriptLines[i] = toScriptLineResponse(&sl)
+	}
+	resp.ScriptLineCount = len(scriptLines)
 
 	// 再生リスト所属情報を取得
 	playlistIDs, err := s.playlistRepo.FindPlaylistIDsByUserIDAndEpisodeID(ctx, uid, eid)

@@ -63,22 +63,37 @@ GET /channels/:channelId/episodes/:episodeId
     "bgm": { "id": "uuid", "url": "..." },
     "voiceAudio": { "id": "uuid", "url": "...", "durationMs": 120000 },
     "fullAudio": { "id": "uuid", "url": "..." },
-    "script": [
+    "scriptLines": [
       {
         "id": "uuid",
         "lineOrder": 0,
-        "speaker": { "id": "uuid", "name": "太郎" },
+        "speaker": {
+          "id": "uuid",
+          "name": "太郎",
+          "persona": "明るい青年",
+          "voice": { "id": "uuid", "name": "ボイス名", "provider": "google", "gender": "male" }
+        },
         "text": "こんにちは",
-        "emotion": null
+        "emotion": null,
+        "createdAt": "2025-01-01T00:00:00Z",
+        "updatedAt": "2025-01-01T00:00:00Z"
       },
       {
         "id": "uuid",
         "lineOrder": 1,
-        "speaker": { "id": "uuid", "name": "花子" },
+        "speaker": {
+          "id": "uuid",
+          "name": "花子",
+          "persona": "元気な女の子",
+          "voice": { "id": "uuid", "name": "ボイス名", "provider": "google", "gender": "female" }
+        },
         "text": "やあ、元気？",
-        "emotion": "excited"
+        "emotion": "excited",
+        "createdAt": "2025-01-01T00:00:00Z",
+        "updatedAt": "2025-01-01T00:00:00Z"
       }
     ],
+    "scriptLineCount": 2,
     "playback": {
       "progressMs": 60000,
       "completed": false,

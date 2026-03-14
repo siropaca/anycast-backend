@@ -8860,6 +8860,13 @@ const docTemplate = `{
                 "scriptLineCount": {
                     "type": "integer"
                 },
+                "scriptLines": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/response.ScriptLineResponse"
+                    },
+                    "x-nullable": true
+                },
                 "title": {
                     "type": "string"
                 },
