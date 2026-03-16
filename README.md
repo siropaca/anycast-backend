@@ -85,7 +85,7 @@ Service
 台本生成・音声生成の詳細設計：
 
 - 台本生成（LLM 多段階ワークフロー）: [docs/specs/script-generate-async-api.md](docs/specs/script-generate-async-api.md)、[docs/specs/script-prompt-workflow.md](docs/specs/script-prompt-workflow.md)
-- 音声生成（TTS + BGM ミキシング）: [docs/specs/audio-generate-async-api.md](docs/specs/audio-generate-async-api.md)
+- 音声生成パイプライン（話者別合成・STT セグメント分割・BGM ミキシング）: [docs/specs/audio-generation-pipeline.md](docs/specs/audio-generation-pipeline.md)
 
 アーキテクチャ決定の詳細は [docs/adr/INDEX.md](docs/adr/INDEX.md) を参照。
 

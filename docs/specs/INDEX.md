@@ -9,6 +9,7 @@
 | [database.md](database.md) | データベース設計書。ER 図、テーブル定義、制約 |
 | [script-generate-async-api.md](script-generate-async-api.md) | 台本生成 API（非同期）の詳細設計。LLM プロンプト設計、Cloud Tasks、WebSocket |
 | [script-prompt-workflow.md](script-prompt-workflow.md) | 台本生成プロンプトワークフロー仕様。多段階生成・品質検証の設計 |
+| [audio-generation-pipeline.md](audio-generation-pipeline.md) | 音声生成パイプライン。マルチスピーカー再アセンブル、STT アライメント、BGM ミキシング |
 | [audio-generate-async-api.md](audio-generate-async-api.md) | 音声生成 API（非同期）の詳細設計。Cloud Tasks、TTS、WebSocket |
 | [system.md](system.md) | システム設定。タイムアウト、外部サービス設定 |
 
