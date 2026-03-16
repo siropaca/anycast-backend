@@ -79,10 +79,15 @@ Service
 ドメインモデル設計 → API 設計 → DB 設計
 ```
 
-新しい機能を追加する際は、まずドメインモデルを設計し、それを永続化・公開するための手段として API と DB を設計します。  
+新しい機能を追加する際は、まずドメインモデルを設計し、それを永続化・公開するための手段として API と DB を設計します。
 詳細は [docs/domain-model/INDEX.md](docs/domain-model/INDEX.md) を参照。
 
-アーキテクチャ決定の詳細は [docs/adr/](docs/adr/) を参照。
+台本生成・音声生成の詳細設計：
+
+- 台本生成（LLM 多段階ワークフロー）: [docs/specs/script-generate-async-api.md](docs/specs/script-generate-async-api.md)、[docs/specs/script-prompt-workflow.md](docs/specs/script-prompt-workflow.md)
+- 音声生成（TTS + BGM ミキシング）: [docs/specs/audio-generate-async-api.md](docs/specs/audio-generate-async-api.md)
+
+アーキテクチャ決定の詳細は [docs/adr/INDEX.md](docs/adr/INDEX.md) を参照。
 
 ## セットアップ
 
@@ -193,7 +198,7 @@ make swagger
 
 ### API エンドポイント
 
-詳細は [docs/api/](docs/api/) を参照。
+詳細は [docs/api/INDEX.md](docs/api/INDEX.md) を参照。
 
 ## コマンド一覧
 
