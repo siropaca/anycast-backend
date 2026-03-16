@@ -6,6 +6,7 @@
 
 | ファイル | 説明 |
 |----------|------|
+| [infrastructure.md](infrastructure.md) | インフラストラクチャ設計。Railway、GCP、外部 SaaS、マルチプロバイダ構成 |
 | [database.md](database.md) | データベース設計書。ER 図、テーブル定義、制約 |
 | [script-generate-async-api.md](script-generate-async-api.md) | 台本生成 API（非同期）の詳細設計。LLM プロンプト設計、Cloud Tasks、WebSocket |
 | [script-prompt-workflow.md](script-prompt-workflow.md) | 台本生成プロンプトワークフロー仕様。多段階生成・品質検証の設計 |
